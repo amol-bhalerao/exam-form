@@ -1,0 +1,542 @@
+[
+  {
+    "sheet": "language",
+    "code": "1",
+    "name": "English"
+  },
+  {
+    "sheet": "language",
+    "code": "2",
+    "name": "Marathi"
+  },
+  {
+    "sheet": "language",
+    "code": "3",
+    "name": "Gujarati"
+  },
+  {
+    "sheet": "language",
+    "code": "4",
+    "name": "Hindi"
+  },
+  {
+    "sheet": "language",
+    "code": "5",
+    "name": "Urdu"
+  },
+  {
+    "sheet": "language",
+    "code": "6",
+    "name": "Kannada"
+  },
+  {
+    "sheet": "language",
+    "code": "7",
+    "name": "Sindhi"
+  },
+  {
+    "sheet": "language",
+    "code": "8",
+    "name": "Malayalam"
+  },
+  {
+    "sheet": "language",
+    "code": "9",
+    "name": "Tamil"
+  },
+  {
+    "sheet": "language",
+    "code": "10",
+    "name": "Telugu"
+  },
+  {
+    "sheet": "language",
+    "code": "11",
+    "name": "Punjabi"
+  },
+  {
+    "sheet": "language",
+    "code": "12",
+    "name": "Bengali"
+  },
+  {
+    "sheet": "language",
+    "code": "13",
+    "name": "French"
+  },
+  {
+    "sheet": "language",
+    "code": "14",
+    "name": "German"
+  },
+  {
+    "sheet": "language",
+    "code": "20",
+    "name": "Russian"
+  },
+  {
+    "sheet": "language",
+    "code": "21",
+    "name": "Japanese"
+  },
+  {
+    "sheet": "language",
+    "code": "87",
+    "name": "Avesta Pahalavi"
+  },
+  {
+    "sheet": "Compulsory",
+    "code": "1",
+    "name": "English"
+  },
+  {
+    "sheet": "Compulsory",
+    "code": "30",
+    "name": "Health & Physical Education"
+  },
+  {
+    "sheet": "Compulsory",
+    "code": "31",
+    "name": "Env.Edu. & water security."
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "16",
+    "name": "Ardhamagadhi"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "22",
+    "name": "English Literature"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "23",
+    "name": "Marathi Literature"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "24",
+    "name": "Hindi Applied"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "25",
+    "name": "Spanish"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "26",
+    "name": "Chinese"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "27",
+    "name": "Maharashtri Prakrut"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "32",
+    "name": "General Knowledge"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "33",
+    "name": "Sanskrit"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "35",
+    "name": "Pali"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "36",
+    "name": "Arabic"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "37",
+    "name": "Persian"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "38",
+    "name": "History"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "39",
+    "name": "Geography"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "40",
+    "name": "Mathematics & Statistics (For Arts and Science)"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "41",
+    "name": "Geology"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "42",
+    "name": "Political Science"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "43",
+    "name": "Child Development"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "44",
+    "name": "Textiles"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "45",
+    "name": "Sociology"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "46",
+    "name": "Philosophy"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "47",
+    "name": "Logic"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "48",
+    "name": "Psychology"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "49",
+    "name": "Economics"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "50",
+    "name": "Book Keeping & Accountancy"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "51",
+    "name": "Organization of Comm. & Mgmt."
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "52",
+    "name": "Secretarial Practice"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "53",
+    "name": "Co-operation"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "54",
+    "name": "Physics"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "55",
+    "name": "Chemistry"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "56",
+    "name": "Biology"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "57",
+    "name": "Drawing"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "58",
+    "name": "Design & Colour"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "59",
+    "name": "Pictorial Composition"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "60",
+    "name": "History of Arts & Apprec."
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "61",
+    "name": "Home Management"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "62",
+    "name": "Food Science and Technology"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "65",
+    "name": "Hist. & Dev. of Indian Music"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "66",
+    "name": "Vocal Light Music"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "67",
+    "name": "Vocal Classical Music"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "68",
+    "name": "Instrumental Music"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "69",
+    "name": "Percussion"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "73",
+    "name": "European Music"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "75",
+    "name": "Agriculture Science & Tech."
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "76",
+    "name": "Animal Science & Tech."
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "77",
+    "name": "Defence Studies"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "78",
+    "name": "Education"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "88",
+    "name": "Maths & Stat. (Commerce)"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "90",
+    "name": "General Foundation Course"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "91",
+    "name": "Dancing Theory"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "97",
+    "name": "Information Technology (Sci)"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "98",
+    "name": "Information Technology (Art)"
+  },
+  {
+    "sheet": "Optional Subjects",
+    "code": "99",
+    "name": "Information Technology (Com)"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "A1",
+    "name": "Electrical Maintenance"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "A2",
+    "name": "Mechanical Maintenance"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "A3",
+    "name": "Scooter & Motorcycle Serv."
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "A4",
+    "name": "General Civil Engineering"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "A5",
+    "name": "Banking"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "A7",
+    "name": "Office Management"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "A8",
+    "name": "Marketing and Salesmanship"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "A9",
+    "name": "Small Industries and Self-emp."
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "B2",
+    "name": "Animal Science and Dairying"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "B4",
+    "name": "Crop Science"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "B5",
+    "name": "Horticulture"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "B9",
+    "name": "Fish Processing Technology"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "C1",
+    "name": "Fresh Water Fish Culture"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "C2",
+    "name": "Electronics"
+  },
+  {
+    "sheet": "Bifocal Subjects",
+    "code": "D9",
+    "name": "Computer Science"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "EA/EB/EC",
+    "name": "Electronics Technology"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "FA/FB/FC",
+    "name": "Electrical Technology"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "GA/GB/GC",
+    "name": "Automobile Technology"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "HA/HB/HC",
+    "name": "Construction Technology"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "IA/IB/IC",
+    "name": "Mechanical Technology"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "JA/JB/JC",
+    "name": "Computer Technology"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "KA/KB/KC",
+    "name": "Horticulture"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "LA/LB/LC",
+    "name": "Crop Science"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "MA/MB/MC",
+    "name": "Animal Husbandry And Dairy"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "NA/NB/NC",
+    "name": "Fisheries Technology"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "OA/OB/OC",
+    "name": "Medical Laboratory Tech."
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "PA/PB/PC",
+    "name": "Radiology Technician"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "QA/QB/QC",
+    "name": "Child Old Age & Hlt. Care"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "RA/RB/RC",
+    "name": "Ophthalmic Technician"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "SA/SB/SC",
+    "name": "Food Products Technology"
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "TA/TB/TC",
+    "name": "Tourism And Hospitality Man."
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "UA/UB/UC",
+    "name": "Accounting And Off. Mangmnt."
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "VA/VB/VC",
+    "name": "Marketing And Retail Managementt."
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "WA/WB/WC",
+    "name": "Logistics Supply Management."
+  },
+  {
+    "sheet": "Vocational Subjects",
+    "code": "XA/XB/XC",
+    "name": "Banking Fin. Serv and Insur."
+  }
+]

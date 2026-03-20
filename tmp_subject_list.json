@@ -1,0 +1,79 @@
+{
+  "sheets": [
+    " language",
+    "Compulsory ",
+    "Optional Subjects ",
+    "Bifocal Subjects",
+    "Vocational Subjects"
+  ],
+  "data": [
+    {
+      "Subject Code": 1,
+      "Subject Name": "English"
+    },
+    {
+      "Subject Code": 2,
+      "Subject Name": "Marathi"
+    },
+    {
+      "Subject Code": 3,
+      "Subject Name": "Gujarati"
+    },
+    {
+      "Subject Code": 4,
+      "Subject Name": "Hindi"
+    },
+    {
+      "Subject Code": 5,
+      "Subject Name": "Urdu"
+    },
+    {
+      "Subject Code": 6,
+      "Subject Name": "Kannada"
+    },
+    {
+      "Subject Code": 7,
+      "Subject Name": "Sindhi"
+    },
+    {
+      "Subject Code": 8,
+      "Subject Name": "Malayalam"
+    },
+    {
+      "Subject Code": 9,
+      "Subject Name": "Tamil"
+    },
+    {
+      "Subject Code": 10,
+      "Subject Name": "Telugu"
+    },
+    {
+      "Subject Code": 11,
+      "Subject Name": "Punjabi"
+    },
+    {
+      "Subject Code": 12,
+      "Subject Name": "Bengali"
+    },
+    {
+      "Subject Code": 13,
+      "Subject Name": "French"
+    },
+    {
+      "Subject Code": 14,
+      "Subject Name": "German"
+    },
+    {
+      "Subject Code": 20,
+      "Subject Name": "Russian"
+    },
+    {
+      "Subject Code": 21,
+      "Subject Name": "Japanese"
+    },
+    {
+      "Subject Code": 87,
+      "Subject Name": "Avesta Pahalavi"
+    }
+  ]
+}
