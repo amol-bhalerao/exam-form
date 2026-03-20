@@ -1,0 +1,54 @@
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+:root {
+  color-scheme: light;
+  --bg: #f4f6ff;
+  --panel: #ffffff;
+  --border: #dbeafe;
+  --text: #111827;
+  --muted: #6b7280;
+  --brand: #1d4ed8;
+  --brand-2: #2563eb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  height: 100%;
+  font-family: Inter, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: radial-gradient(circle at 10% 0%, #e0efff, #f9fafc 40%, #eef2ff 100%);
+  color: var(--text);
+}
+
+mat-card {
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+
+mat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12);
+}
+
+.mat-form-field {
+  width: 100%;
+}
+
+button.mat-flat-button, button.mat-stroked-button { text-transform: none; }
+
+.ag-theme-alpine {
+  border-radius: 10px;
+  border: 1px solid #c7d2fe;
+  background: #fff;
+}
+
+@media (max-width: 900px) {
+  .mat-card { border-radius: 10px; }
+}
+
