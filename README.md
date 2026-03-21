@@ -29,8 +29,16 @@ CORS_ORIGIN="http://localhost:4200"
 
 3) Install dependencies:
 
+For backend only:
 ```bash
-npm run install:all
+cd backend
+npm install
+```
+
+For full setup (backend + frontend):
+```bash
+cd backend && npm install
+cd ../frontend && npm install
 ```
 
 4) Run migrations + seed:
@@ -41,23 +49,45 @@ npm run db:migrate
 npm run db:seed
 ```
 
-5) Start dev servers:
+5) Start dev server:
 
-Windows:
-
+Backend only:
 ```bash
-npm run dev:win
-```
-
-Other shells:
-
-```bash
+cd backend
 npm run dev
 ```
 
-- Frontend: `http://localhost:4200`
-- Backend: `http://localhost:3000`
-- Swagger: `http://localhost:3000/api/docs`
+- Backend API: `http://localhost:3000`
+- Swagger Docs: `http://localhost:3000/api/docs`
+
+(Note: To run frontend locally, navigate to `frontend/` folder and run `ng serve`)
+
+## Hostinger Deployment
+
+This is a monorepo. To deploy on Hostinger:
+
+1. **Clone the repo and navigate to backend:**
+   ```bash
+   git clone https://github.com/amol-bhalerao/exam-form.git
+   cd exam-form/backend
+   ```
+
+2. **Or use Hostinger Git Importer:**
+   - Select the repo
+   - Specify root directory as: `backend` (the backend subfolder)
+   - Set Start command to: `npm start`
+
+3. **Environment Variables:**
+   Set these in Hostinger environment/config:
+   - `DATABASE_URL`: MySQL connection string
+   - `JWT_ACCESS_SECRET`: Secure random string
+   - `JWT_REFRESH_SECRET`: Secure random string
+   - `CORS_ORIGIN`: Your frontend URL
+
+4. **Deployment will automatically:**
+   - Run `npm install` in backend folder
+   - Build TypeScript to dist/
+   - Start server with `node dist/server.js`
 
 ## Seeded demo credentials
 
