@@ -16,6 +16,7 @@ import { StudentFormPrintComponent } from './pages/student/student-form-print/st
 import { SuperInstitutesComponent } from './pages/super/super-institutes/super-institutes.component';
 import { SuperInstituteUsersComponent } from './pages/super/super-institute-users/super-institute-users.component';
 import { SuperMastersComponent } from './pages/super/super-masters/super-masters.component';
+import { SuperUsersComponent } from './pages/super/super-users/super-users.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { BoardApplicationsComponent } from './pages/board/board-applications/board-applications.component';
 import { BoardSubjectsComponent } from './pages/board/board-subjects/board-subjects.component';
@@ -40,6 +41,7 @@ export const routes: Routes = [
       // SUPER ADMIN
       { path: 'super/institutes', component: SuperInstitutesComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
       { path: 'super/institute-users', component: SuperInstituteUsersComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
+      { path: 'super/users', component: SuperUsersComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
       { path: 'super/masters', component: SuperMastersComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
       { path: 'profile', component: ProfileComponent },
 

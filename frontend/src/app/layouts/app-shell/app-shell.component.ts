@@ -16,7 +16,7 @@ import { API_BASE_URL } from '../../core/api';
   imports: [RouterOutlet, RouterLink, MatToolbarModule, MatSidenavModule, MatListModule, MatIconModule, MatButtonModule],
   template: `
     <mat-sidenav-container class="container">
-      <mat-sidenav [mode]="isMobile() ? 'over' : 'side'" [opened]="opened()" class="sidenav" (closedStart)="opened.set(false)">
+      <mat-sidenav [mode]="isMobile() ? 'over' : 'side'" [opened]="isMobile() ? opened() : true" class="sidenav" (closedStart)="opened.set(false)">
         <div class="logo">HSC Exam Forms</div>
 
         <mat-nav-list>
@@ -25,6 +25,7 @@ import { API_BASE_URL } from '../../core/api';
           @if (role() === 'SUPER_ADMIN') {
             <a mat-list-item routerLink="/super/institutes" routerLinkActive="mat-list-item-active"><mat-icon>school</mat-icon><span>Institutes</span></a>
             <a mat-list-item routerLink="/super/institute-users" routerLinkActive="mat-list-item-active"><mat-icon>person</mat-icon><span>Institute Users</span></a>
+            <a mat-list-item routerLink="/super/users" routerLinkActive="mat-list-item-active"><mat-icon>admin_panel_settings</mat-icon><span>Board Users</span></a>
             <a mat-list-item routerLink="/super/masters" routerLinkActive="mat-list-item-active"><mat-icon>settings</mat-icon><span>Master Data</span></a>
           }
 
@@ -159,7 +160,7 @@ import { API_BASE_URL } from '../../core/api';
 })
 export class AppShellComponent {
   readonly opened = signal(true);
-  readonly isMobile = signal(window.matchMedia('(max-width: 960px)').matches);
+  readonly isMobile = signal(false); // Temporarily disable mobile detection
 
   readonly role = computed(() => this.auth.user()?.role ?? null);
   readonly username = computed(() => this.auth.user()?.username ?? '');
@@ -177,8 +178,8 @@ export class AppShellComponent {
     private readonly router: Router,
     private readonly http: HttpClient
   ) {
-    this.syncMobile();
-    window.addEventListener('resize', () => this.syncMobile());
+    // this.syncMobile(); // Temporarily disabled
+    // window.addEventListener('resize', () => this.syncMobile());
     this.loadProfile();
   }
 
@@ -195,11 +196,11 @@ export class AppShellComponent {
     });
   }
 
-  private syncMobile() {
-    const mobile = window.matchMedia('(max-width: 960px)').matches;
-    this.isMobile.set(mobile);
-    if (mobile) this.opened.set(false);
-  }
+  // private syncMobile() {
+  //   const mobile = window.matchMedia('(max-width: 960px)').matches;
+  //   this.isMobile.set(mobile);
+  //   if (!mobile) this.opened.set(true);
+  // }
 
   toggle() {
     this.opened.set(!this.opened());
