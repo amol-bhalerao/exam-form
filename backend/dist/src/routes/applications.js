@@ -388,7 +388,7 @@ applicationsRouter.post('/:id/institute/decision', requireAuth, requireRole(['IN
     return res.json({ application: updated });
 });
 // Board: list visible applications (INSTITUTE_VERIFIED and above)
-applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD']), async (req, res) => {
+applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
     const q = z
         .object({
         status: z.enum(['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD']).optional(),
