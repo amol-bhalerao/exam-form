@@ -2,9 +2,9 @@
 const getApiBaseUrl = (): string => {
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   
-  // Production (Hostinger)
-  if (hostname.includes('exam.hisofttechnology.com') || hostname.includes('hsc-exam-form.hisofttechnology.com')) {
-    return 'https://exam.hisofttechnology.com/api';
+  // Production (Hostinger - same domain for both frontend and backend)
+  if (hostname.includes('hsc-exam-form.hisofttechnology.com')) {
+    return 'https://hsc-exam-form.hisofttechnology.com/api';
   }
   
   // Local development
