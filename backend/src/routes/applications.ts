@@ -426,13 +426,13 @@ applicationsRouter.post('/:id/institute/decision', requireAuth, requireRole(['IN
 });
 
 // Board: list visible applications (INSTITUTE_VERIFIED and above)
-applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD']), async (req, res) => {
+applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
   const q = z
     .object({
       status: z.enum(['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD']).optional(),
       search: z.string().optional(),
       page: z.coerce.number().int().min(1).optional(),
-      limit: z.coerce.number().int().min(5).max(100).optional()
+      limit: z.coerce.number().int().min(5).max(500).optional()
     })
     .parse(req.query);
 
