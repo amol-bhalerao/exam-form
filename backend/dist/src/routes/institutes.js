@@ -602,7 +602,8 @@ institutesRouter.put('/me', requireAuth, requireRole(['INSTITUTE']), async (req,
         contactPerson: z.string().min(2).optional(),
         contactEmail: z.string().email().optional(),
         contactMobile: z.string().min(8).optional(),
-        acceptingApplications: z.boolean().optional()
+        acceptingApplications: z.boolean().optional(),
+        examApplicationLimit: z.number().int().min(1).optional()
     })
         .parse(req.body);
     const updated = await prisma.institute.update({
@@ -616,7 +617,8 @@ institutesRouter.put('/me', requireAuth, requireRole(['INSTITUTE']), async (req,
             contactPerson: body.contactPerson,
             contactEmail: body.contactEmail,
             contactMobile: body.contactMobile,
-            acceptingApplications: body.acceptingApplications ?? undefined
+            acceptingApplications: body.acceptingApplications ?? undefined,
+            examApplicationLimit: body.examApplicationLimit ?? undefined
         }
     });
     return res.json({ institute: updated });
@@ -897,17 +899,15 @@ institutesRouter.put('/me/teachers/:id', requireAuth, requireRole(['INSTITUTE'])
     });
     return res.json({ teacher: updated });
 });
-// Institute: delete teacher
-institutesRouter.delete('/me/teachers/:id', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
-    const instituteId = req.auth.instituteId;
-    const teacherId = z.coerce.number().int().positive().parse(req.params.id);
-    if (!instituteId)
-        return res.status(400).json({ error: 'INSTITUTE_REQUIRED' });
-    const teacher = await prisma.teacher.findFirst({ where: { id: teacherId, instituteId } });
-    if (!teacher)
-        return res.status(404).json({ error: 'NOT_FOUND' });
-    await prisma.teacher.delete({ where: { id: teacherId } });
-    return res.json({ ok: true });
+// Institute: fetch teacher history by Aadhar/governmentId
+institutesRouter.get('/me/teachers/history', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
+    const q = z.object({ governmentId: z.string().min(10).max(20) }).parse(req.query);
+    const teachers = await prisma.teacher.findMany({
+        where: { governmentId: q.governmentId },
+        include: { institute: true },
+        orderBy: { createdAt: 'desc' }
+    });
+    return res.json({ teachers });
 });
 // Institute: set teacher active/inactive
 institutesRouter.patch('/me/teachers/:id/status', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
