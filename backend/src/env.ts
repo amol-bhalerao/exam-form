@@ -16,7 +16,7 @@ const envSchema = z.object({
   JWT_REFRESH_SECRET: z.string().min(6),
   ACCESS_TOKEN_TTL: z.string().default('15m'),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
-  CORS_ORIGIN: z.string().min(1).default(process.env.NODE_ENV === 'production' ? 'https://exam.hisofttechnology.com' : 'http://localhost:4200'),
+  CORS_ORIGIN: z.string().min(1).default(process.env.NODE_ENV === 'production' ? 'https://hsc-exam-form.hisofttechnology.com' : 'http://localhost:4200'),
   NODE_ENV: z.string().optional()
 });
 
