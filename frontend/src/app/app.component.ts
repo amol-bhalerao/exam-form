@@ -10,4 +10,5 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
+  title = 'exam-form';
 }

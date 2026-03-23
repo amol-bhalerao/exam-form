@@ -37,28 +37,12 @@ type User = {
           <div class="p">Manage board users and super administrators.</div>
         </div>
         <div class="grow"></div>
+        <button mat-flat-button color="primary" (click)="showCreateUser.set(true)">Add New User</button>
         <mat-form-field appearance="outline" class="w260">
           <mat-label>Search</mat-label>
           <input matInput [(ngModel)]="search" (input)="load()" />
         </mat-form-field>
       </div>
-    </mat-card>
-
-    <mat-card class="card">
-      <div class="h">Create New User</div>
-      <div class="form-grid">
-        <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="createForm.username" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Password</mat-label><input matInput type="password" [(ngModel)]="createForm.password" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" [(ngModel)]="createForm.email" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="createForm.mobile" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Role</mat-label><mat-select [(ngModel)]="createForm.roleName"><mat-option value="BOARD">Board User</mat-option><mat-option value="SUPER_ADMIN">Super Admin</mat-option></mat-select></mat-form-field>
-      </div>
-      <div class="card-actions">
-        <button mat-flat-button color="primary" (click)="createUser()">Create User</button>
-        <button mat-stroked-button (click)="resetCreateForm()">Reset</button>
-      </div>
-      <div class="msg error" *ngIf="createError">{{ createError }}</div>
-      <div class="msg success" *ngIf="createSuccess">{{ createSuccess }}</div>
     </mat-card>
 
     <mat-card class="card">
@@ -117,6 +101,28 @@ type User = {
           <span style="color:#065f46;">{{ resetPasswordSuccess }}</span>
           <span style="color:#b91c1c;">{{ resetPasswordError }}</span>
         </div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" *ngIf="showCreateUser()">
+      <div class="modal" style="max-width: 500px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-weight:700;">Create New User</div>
+          <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showCreateUser.set(false); resetCreateForm()">&times;</button>
+        </div>
+        <div class="form-grid">
+          <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="createForm.username" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Password</mat-label><input matInput type="password" [(ngModel)]="createForm.password" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" [(ngModel)]="createForm.email" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="createForm.mobile" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Role</mat-label><mat-select [(ngModel)]="createForm.roleName"><mat-option value="BOARD">Board User</mat-option><mat-option value="SUPER_ADMIN">Super Admin</mat-option></mat-select></mat-form-field>
+        </div>
+        <div class="card-actions">
+          <button mat-flat-button color="primary" (click)="createUser()">Create User</button>
+          <button mat-stroked-button (click)="resetCreateForm()">Reset</button>
+        </div>
+        <div class="msg error" *ngIf="createError">{{ createError }}</div>
+        <div class="msg success" *ngIf="createSuccess">{{ createSuccess }}</div>
       </div>
     </div>
   `,
@@ -200,6 +206,7 @@ export class SuperUsersComponent implements OnInit {
   selectedUser: User | null = null;
   showEditUserModal = false;
   showResetPasswordModal = false;
+  showCreateUser = signal(false);
   newPassword = '';
 
   readonly columnDefs: ColDef[] = [
@@ -264,6 +271,9 @@ export class SuperUsersComponent implements OnInit {
         this.createSuccess = 'User created successfully';
         this.resetCreateForm();
         this.load();
+        setTimeout(() => {
+          this.showCreateUser.set(false);
+        }, 1500);
       },
       error: (err) => {
         this.createError = err.error?.error || 'Failed to create user';

@@ -1,5 +1,6 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,10 +11,19 @@ import { MatIconModule } from '@angular/material/icon';
 import { AgGridModule } from 'ag-grid-angular';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import type { ColDef } from 'ag-grid-community';
+import * as XLSX from 'xlsx';
 
 import { API_BASE_URL } from '../../../core/api';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+type Exam = {
+  id: number;
+  name: string;
+  session: string;
+  academicYear: string;
+  _count: { applications: number };
+};
 
 type Row = {
   id: number;
@@ -28,7 +38,7 @@ type Row = {
 @Component({
   selector: 'app-board-applications',
   standalone: true,
-  imports: [FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, AgGridModule],
+  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, AgGridModule],
   template: `
     <mat-card class="card">
       <div class="row">
@@ -37,31 +47,61 @@ type Row = {
           <div class="p">Only institute-verified forms are visible here.</div>
         </div>
       </div>
-      <div class="row">
-        <mat-form-field appearance="outline" class="w260"><mat-label>Search</mat-label><input matInput [(ngModel)]="search" (input)="load()" /></mat-form-field>
-        <mat-form-field appearance="outline" class="w160"><mat-label>Status</mat-label><mat-select [(ngModel)]="status" (selectionChange)="load()"><mat-option value="">All</mat-option><mat-option value="INSTITUTE_VERIFIED">Institute Verified</mat-option><mat-option value="BOARD_APPROVED">Board Approved</mat-option><mat-option value="REJECTED_BY_BOARD">Rejected</mat-option></mat-select></mat-form-field>
-        <div class="grow"></div>
-        <button mat-flat-button color="primary" (click)="exportCsv()">Export CSV</button>
-        <button mat-stroked-button color="primary" (click)="printList()">Print</button>
+    </mat-card>
+
+    <!-- Exam Selection -->
+    <mat-card class="card" *ngIf="!selectedExam">
+      <div class="h">Select Exam</div>
+      <div class="p">Choose an exam to view applications</div>
+      <div class="exam-grid">
+        <mat-card class="exam-card" *ngFor="let exam of exams()" (click)="selectExam(exam)">
+          <div class="exam-name">{{ exam.name }}</div>
+          <div class="exam-details">{{ exam.session }} {{ exam.academicYear }}</div>
+          <div class="exam-count">{{ exam._count.applications }} applications</div>
+        </mat-card>
       </div>
     </mat-card>
 
-    <mat-card class="card">
-      <div class="ag-theme-alpine" style="height: 360px; width: 100%; margin-top: 6px;">
-        <ag-grid-angular
-          style="width:100%; height:100%;"
-          [rowData]="rows()"
-          [columnDefs]="columnDefs"
-          [defaultColDef]="defaultColDef"
-          (rowClicked)="selectRow($event)"
-        ></ag-grid-angular>
-      </div>
-      <div style="margin-top: 10px; display:flex; gap: 8px; align-items:center;">
-        <button mat-flat-button color="primary" (click)="decide(selectedRow?.id, 'APPROVE')" [disabled]="!selectedRow || selectedRow.status !== 'INSTITUTE_VERIFIED'">Approve Selected</button>
-        <button mat-stroked-button color="warn" (click)="decide(selectedRow?.id, 'REJECT')" [disabled]="!selectedRow || selectedRow.status !== 'INSTITUTE_VERIFIED'">Reject Selected</button>
-        <span style="margin-left:auto;">Page {{ page }} <button mat-stroked-button (click)="prevPage()" [disabled]="page <= 1">Prev</button><button mat-stroked-button (click)="nextPage()">Next</button></span>
-      </div>
-    </mat-card>
+    <!-- Applications List -->
+    <ng-container *ngIf="selectedExam">
+      <mat-card class="card">
+        <div class="row">
+          <div>
+            <div class="h">Applications for {{ selectedExam.name || 'Unknown Exam' }} {{ selectedExam.session || 'Unknown Session' }} {{ selectedExam.academicYear || 'Unknown Academic Year' }}</div>
+            <div class="p">Showing {{ totalApplications }} applications</div>
+          </div>
+          <div class="grow"></div>
+          <button mat-stroked-button (click)="clearExamSelection()">Change Exam</button>
+        </div>
+        <div class="row">
+          <mat-form-field appearance="outline" class="w260"><mat-label>Search</mat-label><input matInput [(ngModel)]="search" (input)="load()" /></mat-form-field>
+          <mat-form-field appearance="outline" class="w160"><mat-label>Status</mat-label><mat-select [(ngModel)]="status" (selectionChange)="load()"><mat-option value="">All</mat-option><mat-option value="INSTITUTE_VERIFIED">Institute Verified</mat-option><mat-option value="BOARD_APPROVED">Board Approved</mat-option><mat-option value="REJECTED_BY_BOARD">Rejected</mat-option></mat-select></mat-form-field>
+          <div class="grow"></div>
+          <button mat-flat-button color="primary" (click)="exportExcel()">Export Excel</button>
+          <button mat-stroked-button color="primary" (click)="printList()">Print</button>
+        </div>
+      </mat-card>
+
+      <mat-card class="card">
+        <div class="ag-theme-alpine" style="height: 360px; width: 100%; margin-top: 6px;">
+          <ag-grid-angular
+            style="width:100%; height:100%;"
+            [rowData]="rows()"
+            [columnDefs]="columnDefs"
+            [defaultColDef]="defaultColDef"
+            (rowClicked)="selectRow($event)"
+          ></ag-grid-angular>
+        </div>
+        <div style="margin-top: 10px; display:flex; gap: 8px; align-items:center;">
+          <button mat-flat-button color="primary" (click)="decide(selectedRow?.id, 'APPROVE')" [disabled]="!selectedRow || selectedRow.status !== 'INSTITUTE_VERIFIED'">Approve Selected</button>
+          <button mat-stroked-button color="warn" (click)="decide(selectedRow?.id, 'REJECT')" [disabled]="!selectedRow || selectedRow.status !== 'INSTITUTE_VERIFIED'">Reject Selected</button>
+          <span style="margin-left:auto;">Page {{ page }} of {{ totalPages }} ({{ totalApplications }} total) 
+            <button mat-stroked-button (click)="prevPage()" [disabled]="page <= 1">Prev</button>
+            <button mat-stroked-button (click)="nextPage()" [disabled]="page >= totalPages">Next</button>
+          </span>
+        </div>
+      </mat-card>
+    </ng-container>
   `,
   styles: [
     `
@@ -84,6 +124,36 @@ type Row = {
       .p {
         color: #6b7280;
         margin-top: 4px;
+      }
+      .exam-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+      }
+      .exam-card {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        padding: 16px;
+      }
+      .exam-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transform: translateY(-2px);
+      }
+      .exam-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 4px;
+      }
+      .exam-details {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+      }
+      .exam-count {
+        color: #059669;
+        font-weight: 500;
+        font-size: 0.9rem;
       }
       .table {
         width: 100%;
@@ -110,7 +180,11 @@ type Row = {
 })
 export class BoardApplicationsComponent implements OnInit {
   readonly rows = signal<Row[]>([]);
+  readonly exams = signal<Exam[]>([]);
   selectedRow: Row | null = null;
+  selectedExam: Exam | null = null;
+  totalApplications = 0;
+  totalPages = 1;
   readonly columnDefs: ColDef[] = [
     { field: 'applicationNo', headerName: 'App No', flex: 1 },
     { field: 'student.lastName', headerName: 'Student', flex: 1, valueGetter: (p) => `${p.data.student.lastName || ''}, ${p.data.student.firstName || ''}` },
@@ -127,16 +201,47 @@ export class BoardApplicationsComponent implements OnInit {
   constructor(private readonly http: HttpClient) {}
 
   ngOnInit() {
+    this.loadExams();
+  }
+
+  loadExams() {
+    this.http.get<{ exams: Exam[] }>(`${API_BASE_URL}/applications/board/exams`).subscribe((r) => {
+      this.exams.set(r.exams);
+    });
+  }
+
+  selectExam(exam: Exam) {
+    this.selectedExam = exam;
+    this.page = 1;
+    this.search = '';
+    this.status = '';
     this.load();
   }
 
+  clearExamSelection() {
+    this.selectedExam = null;
+    this.rows.set([]);
+    this.selectedRow = null;
+    this.totalApplications = 0;
+    this.totalPages = 1;
+    this.page = 1;
+  }
+
   load() {
+    if (!this.selectedExam) return;
+
     const p = new URLSearchParams();
+    p.set('examId', `${this.selectedExam.id}`);
     if (this.search) p.set('search', this.search);
     if (this.status) p.set('status', this.status);
     p.set('page', `${this.page}`);
-    p.set('limit', '15');
-    this.http.get<{ applications: Row[] }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe((r) => this.rows.set(r.applications));
+    p.set('limit', '25');
+
+    this.http.get<{ applications: Row[]; metadata: { total: number; page: number; limit: number } }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe((r) => {
+      this.rows.set(r.applications);
+      this.totalApplications = r.metadata.total;
+      this.totalPages = Math.ceil(r.metadata.total / r.metadata.limit);
+    });
   }
 
   selectRow(event: any) {
@@ -148,28 +253,41 @@ export class BoardApplicationsComponent implements OnInit {
     this.http.post(`${API_BASE_URL}/applications/${id}/board/decision`, { action }).subscribe(() => this.load());
   }
 
-  exportCsv() {
-    const rows = this.rows().map((r) => ({
-      ApplicationNo: r.applicationNo,
-      Student: `${r.student.lastName || ''}, ${r.student.firstName || ''}`,
-      Institute: r.institute.name,
-      Exam: `${r.exam.name} ${r.exam.session} ${r.exam.academicYear}`,
-      Status: r.status,
-      UpdatedAt: new Date(r.updatedAt).toLocaleString()
-    }));
-    const csv = [Object.keys(rows[0] || {}).join(','), ...rows.map((r) => Object.values(r).map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = `applications-${Date.now()}.csv`;
-    link.click();
-    URL.revokeObjectURL(link.href);
+  exportExcel() {
+    if (!this.selectedExam) return;
+    if (!this.selectedExam) return;
+
+    // Export all applications for the selected exam
+    const p = new URLSearchParams();
+    p.set('examId', `${this.selectedExam.id}`);
+    if (this.status) p.set('status', this.status);
+    p.set('limit', '10000'); // Export up to 10k records
+
+    this.http.get<{ applications: Row[] }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe((r) => {
+      const applications = r.applications;
+      const data = applications.map((r) => ({
+        'Application No': r.applicationNo,
+        'Student Name': `${r.student.lastName || ''}, ${r.student.firstName || ''}`.trim(),
+        'Institute': r.institute.name,
+        'Exam': `${r.exam.name} ${r.exam.session} ${r.exam.academicYear}`,
+        'Status': r.status,
+        'Updated At': new Date(r.updatedAt).toLocaleString()
+      }));
+
+      // Create Excel file
+      const worksheet = XLSX.utils.json_to_sheet(data);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Applications');
+      XLSX.writeFile(workbook, `applications-${this.selectedExam!.name}-${Date.now()}.xlsx`);
+    });
   }
 
   printList() {
-    const header = `<h2>Applications</h2><p>Search:${this.search || 'All'} Status:${this.status || 'All'}</p>`;
-    const rowsHtml = this.rows().map((r) => `<tr><td>${r.applicationNo}</td><td>${r.student.lastName || ''}, ${r.student.firstName || ''}</td><td>${r.institute.name}</td><td>${r.exam.name} ${r.exam.session} ${r.exam.academicYear}</td><td>${r.status}</td></tr>`).join('');
-    const content = `<html><head><title>Applications</title><style>table{width:100%;border-collapse:collapse;}th,td{border:1px solid #666;padding:5px;text-align:left;}</style></head><body>${header}<table><thead><tr><th>App No</th><th>Student</th><th>Institute</th><th>Exam</th><th>Status</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+    if (!this.selectedExam) return;
+
+    const header = `<h2>Applications for ${this.selectedExam.name} ${this.selectedExam.session} ${this.selectedExam.academicYear}</h2><p>Status: ${this.status || 'All'} | Search: ${this.search || 'All'} | Total: ${this.totalApplications}</p>`;
+    const rowsHtml = this.rows().map((r) => `<tr><td>${r.applicationNo}</td><td>${r.student.lastName || ''}, ${r.student.firstName || ''}</td><td>${r.institute.name}</td><td>${r.exam.name} ${r.exam.session} ${r.exam.academicYear}</td><td>${r.status}</td><td>${new Date(r.updatedAt).toLocaleString()}</td></tr>`).join('');
+    const content = `<html><head><title>Applications - ${this.selectedExam.name}</title><style>table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border:1px solid #666;padding:4px;text-align:left;}th{background:#f5f5f5;font-weight:bold;}</style></head><body>${header}<table><thead><tr><th>App No</th><th>Student</th><th>Institute</th><th>Exam</th><th>Status</th><th>Updated</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
     const w = window.open('', '_blank');
     if (!w) return;
     w.document.write(content);

@@ -429,6 +429,7 @@ applicationsRouter.post('/:id/institute/decision', requireAuth, requireRole(['IN
 applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
   const q = z
     .object({
+      examId: z.coerce.number().int().positive(),
       status: z.enum(['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD']).optional(),
       search: z.string().optional(),
       page: z.coerce.number().int().min(1).optional(),
@@ -440,6 +441,7 @@ applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_
   const limit = q.limit ?? 25;
 
   const where: any = {
+    examId: q.examId,
     status: q.status ?? { in: ['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'] }
   };
   if (q.search) {
@@ -461,6 +463,33 @@ applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_
   });
 
   return res.json({ applications: apps, metadata: { page, limit, total } });
+});
+
+// Board: get exams that have applications
+applicationsRouter.get('/board/exams', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
+  const exams = await prisma.exam.findMany({
+    where: {
+      applications: {
+        some: {
+          status: { in: ['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'] }
+        }
+      }
+    },
+    include: {
+      _count: {
+        select: {
+          applications: {
+            where: {
+              status: { in: ['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'] }
+            }
+          }
+        }
+      }
+    },
+    orderBy: { name: 'asc' }
+  });
+
+  return res.json({ exams });
 });
 
 // Board: approve/reject

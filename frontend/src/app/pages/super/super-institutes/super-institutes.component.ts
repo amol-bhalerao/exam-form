@@ -45,32 +45,12 @@ type Institute = {
           <div class="p">Manage institutes - create new ones and approve pending registrations.</div>
         </div>
         <div class="grow"></div>
+        <button mat-flat-button color="primary" (click)="showCreateInstitute.set(true)">Add New Institute</button>
         <mat-form-field appearance="outline" class="w260">
           <mat-label>Search</mat-label>
           <input matInput [(ngModel)]="search" (input)="load()" />
         </mat-form-field>
       </div>
-    </mat-card>
-
-    <mat-card class="card">
-      <div class="h">Create New Institute</div>
-      <div class="form-grid">
-        <mat-form-field appearance="outline"><mat-label>Institute Name</mat-label><input matInput [(ngModel)]="createForm.name" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Institute Code</mat-label><input matInput [(ngModel)]="createForm.code" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Address</mat-label><input matInput [(ngModel)]="createForm.address" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Contact Person</mat-label><input matInput [(ngModel)]="createForm.contactPerson" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Contact Email</mat-label><input matInput type="email" [(ngModel)]="createForm.contactEmail" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Contact Mobile</mat-label><input matInput [(ngModel)]="createForm.contactMobile" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="createForm.username" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Password</mat-label><input matInput type="password" [(ngModel)]="createForm.password" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="createForm.status"><mat-option value="PENDING">Pending</mat-option><mat-option value="APPROVED">Approved</mat-option></mat-select></mat-form-field>
-      </div>
-      <div class="card-actions">
-        <button mat-flat-button color="primary" (click)="createInstitute()">Create Institute</button>
-        <button mat-stroked-button (click)="resetCreateForm()">Reset</button>
-      </div>
-      <div class="msg error" *ngIf="createError">{{ createError }}</div>
-      <div class="msg success" *ngIf="createSuccess">{{ createSuccess }}</div>
     </mat-card>
 
     <mat-card class="card">
@@ -117,6 +97,32 @@ type Institute = {
         <div style="margin-bottom:8px;"><strong>Accepting Applications:</strong> {{ viewingInstitute.acceptingApplications ? 'Yes' : 'No' }}</div>
         <div style="margin-bottom:8px;"><strong>Created At:</strong> {{ viewingInstitute.createdAt }}</div>
         <div style="text-align:right;"><button mat-flat-button color="primary" (click)="closeView()">Close</button></div>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" *ngIf="showCreateInstitute()">
+      <div class="modal" style="max-width: 700px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <div style="font-weight:700;">Create New Institute</div>
+          <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showCreateInstitute.set(false); resetCreateForm()">&times;</button>
+        </div>
+        <div class="form-grid">
+          <mat-form-field appearance="outline"><mat-label>Institute Name</mat-label><input matInput [(ngModel)]="createForm.name" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Institute Code</mat-label><input matInput [(ngModel)]="createForm.code" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Address</mat-label><input matInput [(ngModel)]="createForm.address" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Contact Person</mat-label><input matInput [(ngModel)]="createForm.contactPerson" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Contact Email</mat-label><input matInput type="email" [(ngModel)]="createForm.contactEmail" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Contact Mobile</mat-label><input matInput [(ngModel)]="createForm.contactMobile" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="createForm.username" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Password</mat-label><input matInput type="password" [(ngModel)]="createForm.password" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="createForm.status"><mat-option value="PENDING">Pending</mat-option><mat-option value="APPROVED">Approved</mat-option></mat-select></mat-form-field>
+        </div>
+        <div class="card-actions">
+          <button mat-flat-button color="primary" (click)="createInstitute()">Create Institute</button>
+          <button mat-stroked-button (click)="resetCreateForm()">Reset</button>
+        </div>
+        <div class="msg error" *ngIf="createError">{{ createError }}</div>
+        <div class="msg success" *ngIf="createSuccess">{{ createSuccess }}</div>
       </div>
     </div>
 
@@ -252,6 +258,7 @@ export class SuperInstitutesComponent implements OnInit {
   createSuccess = '';
   inviteLink = '';
   showEditInstitute = signal(false);
+  showCreateInstitute = signal(false);
   editInstituteForm = {
     id: 0,
     name: '',
@@ -298,6 +305,9 @@ export class SuperInstitutesComponent implements OnInit {
         this.createSuccess = 'Institute created successfully';
         this.resetCreateForm();
         this.load();
+        setTimeout(() => {
+          this.showCreateInstitute.set(false);
+        }, 1500);
       },
       error: (e) => {
         this.createError = e?.error?.error || 'Failed to create institute';
