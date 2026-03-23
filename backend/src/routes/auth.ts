@@ -145,3 +145,50 @@ authRouter.put('/me/password', requireAuth, async (req, res) => {
   return res.json({ ok: true });
 });
 
+authRouter.post('/register', async (req, res) => {
+  const body = z
+    .object({
+      firstName: z.string().min(1),
+      lastName: z.string().min(1),
+      email: z.string().email(),
+      password: z.string().min(8)
+    })
+    .parse(req.body);
+
+  // Check if user already exists
+  const existingUser = await prisma.user.findFirst({
+    where: { OR: [{ username: body.email }, { email: body.email }] }
+  });
+
+  if (existingUser) {
+    return res.status(409).json({ error: 'USER_ALREADY_EXISTS' });
+  }
+
+  // Get STUDENT role
+  const studentRole = await prisma.role.findUnique({ where: { name: 'STUDENT' } });
+  if (!studentRole) {
+    return res.status(500).json({ error: 'ROLE_NOT_FOUND' });
+  }
+
+  // Hash password
+  const passwordHash = await bcrypt.hash(body.password, 10);
+
+  // Create user
+  const user = await prisma.user.create({
+    data: {
+      username: body.email,
+      email: body.email,
+      passwordHash,
+      roleId: studentRole.id,
+      status: 'ACTIVE',
+      firstName: body.firstName,
+      lastName: body.lastName
+    }
+  });
+
+  return res.status(201).json({
+    message: 'Account created successfully',
+    userId: user.id
+  });
+});
+

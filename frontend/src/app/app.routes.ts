@@ -24,14 +24,17 @@ import { BoardTeachersComponent } from './pages/board/board-teachers/board-teach
 import { BoardStreamsComponent } from './pages/board/board-streams/board-streams.component';
 import { InstituteApplicationsComponent } from './pages/institute/institute-applications/institute-applications.component';
 import { BoardExamsComponent } from './pages/board/board-exams/board-exams.component';
+import { LandingComponent } from './pages/landing/landing.component';
+import { BoardNewsComponent } from './pages/board/board-news/board-news.component';
 
 export const routes: Routes = [
+  { path: '', component: LandingComponent },
   { path: 'login', component: LoginComponent },
   { path: 'institute/register', component: InstituteRegisterComponent },
   { path: 'institute/activate', component: InstituteActivateComponent },
 
   {
-    path: '',
+    path: 'app',
     canActivate: [authGuard],
     component: AppShellComponent,
     children: [
@@ -48,6 +51,7 @@ export const routes: Routes = [
       // BOARD
       { path: 'board/exams', component: BoardExamsComponent, canActivate: [roleGuard(['BOARD'])] },
       { path: 'board/applications', component: BoardApplicationsComponent, canActivate: [roleGuard(['BOARD'])] },
+      { path: 'board/news', component: BoardNewsComponent, canActivate: [roleGuard(['BOARD'])] },
       { path: 'board/teachers', component: BoardTeachersComponent, canActivate: [roleGuard(['BOARD'])] },
       { path: 'board/subjects', component: BoardSubjectsComponent, canActivate: [roleGuard(['BOARD'])] },
       { path: 'board/streams', component: BoardStreamsComponent, canActivate: [roleGuard(['BOARD'])] },
