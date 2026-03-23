@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -94,6 +94,7 @@ model User {
   refreshTokens RefreshToken[]
 
   examsCreated Exam[] @relation("ExamCreatedBy")
+  newsCreated News[] @relation("NewsCreatedBy")
   studentProfile Student?
 
   auditLogs AuditLog[]
@@ -483,5 +484,32 @@ model StreamSubject {
   @@unique([streamId, subjectId])
   @@index([streamId])
   @@map("stream_subjects")
+}
+
+model News {
+  id        Int      @id @default(autoincrement())
+  title     String   @db.VarChar(255)
+  content   String   @db.Text
+  type      String   @db.VarChar(50) // news, notification, event
+  isActive  Boolean  @default(true)
+  createdByUserId Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy User @relation("NewsCreatedBy", fields: [createdByUserId], references: [id])
+
+  @@index([isActive])
+  @@index([createdAt])
+  @@map("news")
+}
+
+model Statistic {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique @db.VarChar(100)
+  value     Int      @default(0)
+  description String? @db.VarChar(255)
+  updatedAt DateTime @updatedAt
+
+  @@map("statistics")
 }
 
