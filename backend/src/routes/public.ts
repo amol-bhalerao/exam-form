@@ -6,7 +6,7 @@ export const publicRouter = Router();
 // Get public news/events/notifications
 publicRouter.get('/news', async (req, res) => {
   try {
-    const news = await prisma.news.findMany({
+    const news = await prisma.news?.findMany({
       where: {
         isActive: true,
         type: { not: 'internal' }
