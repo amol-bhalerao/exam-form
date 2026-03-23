@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'https://exam.hisofttechnology.com/api'
+  apiBaseUrl: 'https://hsc-exam-form.hisofttechnology.com/api'
 };
