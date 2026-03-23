@@ -180,9 +180,7 @@ authRouter.post('/register', async (req, res) => {
       email: body.email,
       passwordHash,
       roleId: studentRole.id,
-      status: 'ACTIVE',
-      firstName: body.firstName,
-      lastName: body.lastName
+      status: 'ACTIVE'
     }
   });
 

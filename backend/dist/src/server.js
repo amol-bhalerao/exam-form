@@ -12,6 +12,8 @@ import { examsRouter } from './routes/exams.js';
 import { applicationsRouter } from './routes/applications.js';
 import { mastersRouter } from './routes/masters.js';
 import { usersRouter } from './routes/users.js';
+import { publicRouter } from './routes/public.js';
+import { newsRouter } from './routes/news.js';
 import { swaggerSpec } from './swagger.js';
 const app = express();
 app.use(helmet());
@@ -30,6 +32,8 @@ app.use('/api/exams', examsRouter);
 app.use('/api/applications', applicationsRouter);
 app.use('/api/masters', mastersRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/public', publicRouter);
+app.use('/api/news', newsRouter);
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 const port = 3000;
 app.listen(port, () => {
