@@ -6,30 +6,26 @@ export const publicRouter = Router();
 // Get public news/events/notifications
 publicRouter.get('/news', async (req, res) => {
   try {
-    // Sample news data - in production, this would come from a database
-    const news = [
-      {
-        id: 1,
-        title: 'HSC Examination 2024 Schedule Released',
-        content: 'The Higher Secondary Certificate examination schedule for 2024 has been released. Students are advised to check the official website for detailed information.',
-        createdAt: new Date().toISOString(),
-        type: 'news'
+    const news = await prisma.news.findMany({
+      where: {
+        isActive: true,
+        type: { not: 'internal' }
       },
-      {
-        id: 2,
-        title: 'Important Notice: Document Verification',
-        content: 'All students must complete document verification process before the application deadline. Incomplete applications will not be accepted.',
-        createdAt: new Date().toISOString(),
-        type: 'notification'
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        type: true,
+        createdAt: true,
+        createdBy: {
+          select: { id: true }
+        }
       },
-      {
-        id: 3,
-        title: 'Board Meeting - January 15, 2024',
-        content: 'Board meeting scheduled for January 15, 2024, to discuss examination policies and procedures.',
-        createdAt: new Date().toISOString(),
-        type: 'event'
-      }
-    ];
+      orderBy: {
+        createdAt: 'desc'
+      },
+      take: 10
+    });
 
     res.json({ news });
   } catch (error) {
@@ -41,39 +37,33 @@ publicRouter.get('/news', async (req, res) => {
 // Get upcoming exams
 publicRouter.get('/exams', async (req, res) => {
   try {
-    // Return sample exam data for landing page
-    const exams = [
-      {
-        id: 1,
-        name: 'HSC Science 2024',
-        stream: { name: 'Science' },
-        session: '2024',
-        academicYear: '2023-2024',
-        applicationDeadline: new Date('2024-02-15').toISOString(),
-        examDate: new Date('2024-03-15').toISOString(),
-        _count: { applications: 450 }
+    const now = new Date();
+    
+    const exams = await prisma.exam.findMany({
+      where: {
+        applicationClose: {
+          gte: now // Only show exams that are still accepting applications
+        }
       },
-      {
-        id: 2,
-        name: 'HSC Commerce 2024',
-        stream: { name: 'Commerce' },
-        session: '2024',
-        academicYear: '2023-2024',
-        applicationDeadline: new Date('2024-02-20').toISOString(),
-        examDate: new Date('2024-03-20').toISOString(),
-        _count: { applications: 380 }
+      select: {
+        id: true,
+        name: true,
+        academicYear: true,
+        session: true,
+        applicationOpen: true,
+        applicationClose: true,
+        stream: {
+          select: { name: true }
+        },
+        _count: {
+          select: { applications: true }
+        }
       },
-      {
-        id: 3,
-        name: 'HSC Arts 2024',
-        stream: { name: 'Arts' },
-        session: '2024',
-        academicYear: '2023-2024',
-        applicationDeadline: new Date('2024-02-25').toISOString(),
-        examDate: new Date('2024-03-25').toISOString(),
-        _count: { applications: 420 }
-      }
-    ];
+      orderBy: {
+        applicationClose: 'asc'
+      },
+      take: 10
+    });
 
     res.json({ exams });
   } catch (error) {
@@ -85,11 +75,20 @@ publicRouter.get('/exams', async (req, res) => {
 // Get public statistics
 publicRouter.get('/stats', async (req, res) => {
   try {
-    // Return sample statistics for landing page
+    const [totalExams, totalApplications, totalInstitutes] = await Promise.all([
+      prisma.exam.count(),
+      prisma.examApplication.count(),
+      prisma.institute.count({
+        where: {
+          status: 'APPROVED'
+        }
+      })
+    ]);
+
     res.json({
-      totalExams: 25,
-      totalApplications: 1250,
-      totalInstitutes: 150
+      totalExams,
+      totalApplications,
+      totalInstitutes
     });
   } catch (error) {
     console.error('Error fetching stats:', error);
