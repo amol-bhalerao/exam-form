@@ -616,11 +616,18 @@ export class LandingComponent implements OnInit {
     this.loginLoading.set(true);
     this.http.post(`${API_BASE_URL}/auth/login`, this.loginData).subscribe({
       next: (response: any) => {
-        localStorage.setItem('token', response.token);
-        this.router.navigate(['/dashboard']);
+        // Store authentication tokens
+        const auth = {
+          accessToken: response.accessToken,
+          refreshToken: response.refreshToken,
+          user: response.user
+        };
+        localStorage.setItem('hsc_auth', JSON.stringify(auth));
+        this.router.navigate(['/app/dashboard']);
+        this.showSuccess('Login successful!');
       },
       error: (error) => {
-        this.showError(error.error?.message || 'Login failed');
+        this.showError(error.error?.error || error.error?.message || 'Login failed');
         this.loginLoading.set(false);
       }
     });
