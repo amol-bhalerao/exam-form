@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "node node_modules/typescript/bin/tsc -p tsconfig.json",
-    "start": "node server.js",
+    "clean": "rm -r dist node_modules package-lock.json 2>/dev/null; exit 0",
+    "clean:dist": "rm -r dist 2>/dev/null; exit 0",
+    "start": "node dist/server.js",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:seed": "prisma db seed",
