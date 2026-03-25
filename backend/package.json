@@ -5,13 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "prebuild": "node -e \"const fs = require('fs'); if(fs.existsSync('dist')) { const rmSync = (dir) => { fs.readdirSync(dir).forEach(file => { const path = require('path').join(dir, file); if(fs.statSync(path).isDirectory()) rmSync(path); else fs.unlinkSync(path); }); fs.rmdirSync(dir); }; rmSync('dist'); }\"",
     "build": "node node_modules/typescript/bin/tsc -p tsconfig.json",
-    "clean": "rm -r dist node_modules package-lock.json 2>/dev/null; exit 0",
-    "clean:dist": "rm -r dist 2>/dev/null; exit 0",
+    "clean": "node -e \"const fs = require('fs'); const path = require('path'); ['dist', 'node_modules'].forEach(dir => { if(fs.existsSync(dir)) { const rmSync = (p) => { fs.readdirSync(p).forEach(file => { const fp = path.join(p, file); if(fs.statSync(fp).isDirectory()) rmSync(fp); else fs.unlinkSync(fp); }); fs.rmdirSync(p); }; rmSync(dir); } }); if(fs.existsSync('package-lock.json')) fs.unlinkSync('package-lock.json');\"",
+    "clean:dist": "node -e \"const fs = require('fs'); if(fs.existsSync('dist')) { const rmSync = (dir) => { fs.readdirSync(dir).forEach(file => { const p = require('path').join(dir, file); if(fs.statSync(p).isDirectory()) rmSync(p); else fs.unlinkSync(p); }); fs.rmdirSync(dir); }; rmSync('dist'); }\"",
     "start": "node dist/server.js",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:seed": "prisma db seed",
+    "db:seed": "prisma db seed", 
     "lint": "eslint ."
   },
   "prisma": {
