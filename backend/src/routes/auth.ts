@@ -8,48 +8,52 @@ import { env } from '../env.js';
 
 export const authRouter = Router();
 
-authRouter.post('/login', async (req, res) => {
-  const body = z
-    .object({
-      username: z.string().min(1),
-      password: z.string().min(1)
-    })
-    .parse(req.body);
+authRouter.post('/login', async (req, res, next) => {
+  try {
+    const body = z
+      .object({
+        username: z.string().min(1),
+        password: z.string().min(1)
+      })
+      .parse(req.body);
 
-  const user = await prisma.user.findUnique({
-    where: { username: body.username },
-    include: { role: true, institute: true }
-  });
+    const user = await prisma.user.findUnique({
+      where: { username: body.username },
+      include: { role: true, institute: true }
+    });
 
-  if (!user || user.status !== 'ACTIVE') return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
-  if (user.role.name === 'INSTITUTE' && user.institute?.status !== 'APPROVED') return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
-  const ok = await bcrypt.compare(body.password, user.passwordHash);
-  if (!ok) return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
+    if (!user || user.status !== 'ACTIVE') return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
+    if (user.role.name === 'INSTITUTE' && user.institute?.status !== 'APPROVED') return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
+    const ok = await bcrypt.compare(body.password, user.passwordHash);
+    if (!ok) return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
 
-  const authUser = {
-    userId: user.id,
-    role: user.role.name as any,
-    instituteId: user.instituteId ?? null,
-    username: user.username
-  };
-
-  const accessToken = signAccessToken(authUser);
-  const refreshToken = signRefreshToken(authUser);
-
-  await prisma.refreshToken.create({
-    data: {
+    const authUser = {
       userId: user.id,
-      tokenHash: await hashToken(refreshToken),
-      expiresAt: new Date(Date.now() + env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000)
-    }
-  });
+      role: user.role.name as any,
+      instituteId: user.instituteId ?? null,
+      username: user.username
+    };
 
-  // For local dev: allow JS to read refresh token. In production prefer httpOnly cookies.
-  return res.json({
-    accessToken,
-    refreshToken,
-    user: { ...authUser }
-  });
+    const accessToken = signAccessToken(authUser);
+    const refreshToken = signRefreshToken(authUser);
+
+    await prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        tokenHash: await hashToken(refreshToken),
+        expiresAt: new Date(Date.now() + env.REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    // For local dev: allow JS to read refresh token. In production prefer httpOnly cookies.
+    return res.json({
+      accessToken,
+      refreshToken,
+      user: { ...authUser }
+    });
+  } catch (error) {
+    next(error);
+  }
 });
 
 authRouter.post('/refresh', async (req, res) => {

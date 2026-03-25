@@ -35,8 +35,22 @@ app.use('/api/users', usersRouter);
 app.use('/api/public', publicRouter);
 app.use('/api/news', newsRouter);
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Global error handler - must be last middleware
+app.use((err, _req, res, _next) => {
+    // eslint-disable-next-line no-console
+    console.error('Error:', err.message || err);
+    // Return JSON error response instead of HTML
+    res.status(err.status || 500).json({
+        error: err.message || 'Internal Server Error',
+        ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
+    });
+});
 const port = 3000;
 app.listen(port, () => {
     // eslint-disable-next-line no-console
     console.log(`API listening on http://localhost:${port}`);
+    // eslint-disable-next-line no-console
+    console.log(`Environment: ${env.NODE_ENV || 'development'}`);
+    // eslint-disable-next-line no-console
+    console.log(`Database: ${env.DATABASE_URL.split('@')[1] || 'unknown'}`);
 });
