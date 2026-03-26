@@ -49,6 +49,23 @@ type Row = {
       </div>
     </mat-card>
 
+    @if (error()) {
+      <mat-card class="card error-card">
+        <div class="error-message">
+          <mat-icon>error_outline</mat-icon>
+          <div>
+            <strong>Error:</strong> {{ error() }}
+          </div>
+        </div>
+      </mat-card>
+    }
+
+    @if (loading()) {
+      <mat-card class="card">
+        <div class="loading-text">Loading...</div>
+      </mat-card>
+    }
+
     <!-- Exam Selection -->
     <mat-card class="card" *ngIf="!selectedExam">
       <div class="h">Select Exam</div>
@@ -175,12 +192,34 @@ type Row = {
         gap: 10px;
         align-items: center;
       }
+      .error-card {
+        background-color: #fee;
+        border: 1px solid #fcc;
+      }
+      .error-message {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        color: #c33;
+      }
+      .error-message mat-icon {
+        color: #c33;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .loading-text {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+      }
     `
   ]
 })
 export class BoardApplicationsComponent implements OnInit {
   readonly rows = signal<Row[]>([]);
   readonly exams = signal<Exam[]>([]);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
   selectedRow: Row | null = null;
   selectedExam: Exam | null = null;
   totalApplications = 0;
@@ -205,8 +244,19 @@ export class BoardApplicationsComponent implements OnInit {
   }
 
   loadExams() {
-    this.http.get<{ exams: Exam[] }>(`${API_BASE_URL}/applications/board/exams`).subscribe((r) => {
-      this.exams.set(r.exams);
+    this.loading.set(true);
+    this.error.set(null);
+    this.http.get<{ exams: Exam[] }>(`${API_BASE_URL}/applications/board/exams`).subscribe({
+      next: (r) => {
+        this.exams.set(r.exams || []);
+        this.loading.set(false);
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to load exams';
+        console.error('Failed to load exams:', errorMsg);
+        this.error.set(errorMsg);
+        this.loading.set(false);
+      }
     });
   }
 
@@ -230,6 +280,8 @@ export class BoardApplicationsComponent implements OnInit {
   load() {
     if (!this.selectedExam) return;
 
+    this.loading.set(true);
+    this.error.set(null);
     const p = new URLSearchParams();
     p.set('examId', `${this.selectedExam.id}`);
     if (this.search) p.set('search', this.search);
@@ -237,10 +289,19 @@ export class BoardApplicationsComponent implements OnInit {
     p.set('page', `${this.page}`);
     p.set('limit', '25');
 
-    this.http.get<{ applications: Row[]; metadata: { total: number; page: number; limit: number } }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe((r) => {
-      this.rows.set(r.applications);
-      this.totalApplications = r.metadata.total;
-      this.totalPages = Math.ceil(r.metadata.total / r.metadata.limit);
+    this.http.get<{ applications: Row[]; metadata: { total: number; page: number; limit: number } }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe({
+      next: (r) => {
+        this.rows.set(r.applications || []);
+        this.totalApplications = r.metadata.total;
+        this.totalPages = Math.ceil(r.metadata.total / r.metadata.limit);
+        this.loading.set(false);
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to load applications';
+        console.error('Failed to load applications:', errorMsg);
+        this.error.set(errorMsg);
+        this.loading.set(false);
+      }
     });
   }
 
@@ -250,35 +311,60 @@ export class BoardApplicationsComponent implements OnInit {
 
   decide(id: number | undefined, action: 'APPROVE' | 'REJECT') {
     if (!id) return;
-    this.http.post(`${API_BASE_URL}/applications/${id}/board/decision`, { action }).subscribe(() => this.load());
+    this.loading.set(true);
+    this.error.set(null);
+    this.http.post(`${API_BASE_URL}/applications/${id}/board/decision`, { action }).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.error.set(null);
+        this.load();
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to process decision';
+        console.error('Failed to process decision:', errorMsg);
+        this.error.set(errorMsg);
+        this.loading.set(false);
+      }
+    });
   }
 
   exportExcel() {
     if (!this.selectedExam) return;
-    if (!this.selectedExam) return;
-
+    
+    this.loading.set(true);
+    this.error.set(null);
+    
     // Export all applications for the selected exam
     const p = new URLSearchParams();
     p.set('examId', `${this.selectedExam.id}`);
     if (this.status) p.set('status', this.status);
     p.set('limit', '10000'); // Export up to 10k records
 
-    this.http.get<{ applications: Row[] }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe((r) => {
-      const applications = r.applications;
-      const data = applications.map((r) => ({
-        'Application No': r.applicationNo,
-        'Student Name': `${r.student.lastName || ''}, ${r.student.firstName || ''}`.trim(),
-        'Institute': r.institute.name,
-        'Exam': `${r.exam.name} ${r.exam.session} ${r.exam.academicYear}`,
-        'Status': r.status,
-        'Updated At': new Date(r.updatedAt).toLocaleString()
-      }));
+    this.http.get<{ applications: Row[] }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe({
+      next: (r) => {
+        const applications = r.applications || [];
+        const data = applications.map((r) => ({
+          'Application No': r.applicationNo,
+          'Student Name': `${r.student.lastName || ''}, ${r.student.firstName || ''}`.trim(),
+          'Institute': r.institute.name,
+          'Exam': `${r.exam.name} ${r.exam.session} ${r.exam.academicYear}`,
+          'Status': r.status,
+          'Updated At': new Date(r.updatedAt).toLocaleString()
+        }));
 
-      // Create Excel file
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Applications');
-      XLSX.writeFile(workbook, `applications-${this.selectedExam!.name}-${Date.now()}.xlsx`);
+        // Create Excel file
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Applications');
+        XLSX.writeFile(workbook, `applications-${this.selectedExam!.name}-${Date.now()}.xlsx`);
+        this.loading.set(false);
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to export applications';
+        console.error('Failed to export applications:', errorMsg);
+        this.error.set(errorMsg);
+        this.loading.set(false);
+      }
     });
   }
 

@@ -4,19 +4,15 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
-    "prebuild": "node -e \"const fs = require('fs'); if(fs.existsSync('dist')) { const rmSync = (dir) => { fs.readdirSync(dir).forEach(file => { const path = require('path').join(dir, file); if(fs.statSync(path).isDirectory()) rmSync(path); else fs.unlinkSync(path); }); fs.rmdirSync(dir); }; rmSync('dist'); }\"",
-    "build": "node node_modules/typescript/bin/tsc -p tsconfig.json",
-    "clean": "node -e \"const fs = require('fs'); const path = require('path'); ['dist', 'node_modules'].forEach(dir => { if(fs.existsSync(dir)) { const rmSync = (p) => { fs.readdirSync(p).forEach(file => { const fp = path.join(p, file); if(fs.statSync(fp).isDirectory()) rmSync(fp); else fs.unlinkSync(fp); }); fs.rmdirSync(p); }; rmSync(dir); } }); if(fs.existsSync('package-lock.json')) fs.unlinkSync('package-lock.json');\"",
-    "clean:dist": "node -e \"const fs = require('fs'); if(fs.existsSync('dist')) { const rmSync = (dir) => { fs.readdirSync(dir).forEach(file => { const p = require('path').join(dir, file); if(fs.statSync(p).isDirectory()) rmSync(p); else fs.unlinkSync(p); }); fs.rmdirSync(dir); }; rmSync('dist'); }\"",
-    "start": "node dist/server.js",
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:seed": "prisma db seed", 
-    "lint": "eslint ."
+    "db:seed": "node prisma/seed.js",
+    "lint": "eslint src/**/*.js"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^6.16.0",
@@ -29,24 +25,33 @@
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
     "bcryptjs": "^3.0.2",
+    "compression": "^1.8.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.0.1",
+    "google-auth-library": "^9.15.1",
     "helmet": "^8.1.0",
+    "joi": "^18.1.1",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
+    "pino": "^10.3.1",
+    "pino-http": "^11.0.0",
+    "pino-pretty": "^13.1.3",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.1.8"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^2.1.9",
     "eslint": "^9.34.0",
     "eslint-config-prettier": "^10.1.8",
     "prettier": "^3.6.2",
     "prisma": "^6.16.0",
     "tsx": "^4.20.5",
-    "typescript": "^5.9.2"
+    "typescript": "^5.9.2",
+    "vitest": "^2.1.9"
   }
 }

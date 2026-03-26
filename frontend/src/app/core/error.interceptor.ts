@@ -10,9 +10,12 @@ export const errorInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, n
   return next(req).pipe(
     catchError((err) => {
       if (err instanceof HttpErrorResponse && err.status === 401) {
-        localStorage.removeItem('hsc_auth');
-        router.navigateByUrl('/login');
-        snack.open('Session expired. Please login again.', 'Close', { duration: 4000 });
+        // Don't show session expired message for token verification requests
+        if (!req.url.includes('/api/auth/verify')) {
+          localStorage.removeItem('hsc_auth');
+          router.navigateByUrl('/');
+          snack.open('Session expired. Please login again.', 'Close', { duration: 4000 });
+        }
         return throwError(() => err);
       }
       if (err instanceof HttpErrorResponse && err.error?.error) {

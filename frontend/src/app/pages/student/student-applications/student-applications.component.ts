@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -38,7 +38,7 @@ type Application = { id: number; applicationNo: string; status: string; candidat
         <div class="grow"></div>
         <mat-form-field appearance="outline" class="w240">
           <mat-label>Exam</mat-label>
-          <mat-select [(value)]="selectedExamId">
+          <mat-select [value]="selectedExamId()" (selectionChange)="selectedExamId.set($event.value)">
             @for (e of exams(); track e.id) {
               <mat-option [value]="e.id" [disabled]="!isExamOpen(e)">
                 {{ e.name }} ({{ e.session }} {{ e.academicYear }})
@@ -53,16 +53,32 @@ type Application = { id: number; applicationNo: string; status: string; candidat
       </div>
     </mat-card>
 
+    @if (error()) {
+      <mat-card class="card error-card">
+        <div class="error-message">
+          <strong>Error:</strong> {{ error() }}
+        </div>
+      </mat-card>
+    }
+
     <mat-card class="card">
-      <div class="ag-theme-alpine" style="width:100%; height:340px; margin-top: 10px;">
-        <ag-grid-angular
-          [rowData]="applications()"
-          [columnDefs]="columnDefs"
-          [defaultColDef]="defaultColDef"
-          [rowSelection]="{ mode: 'singleRow' }"
-          (rowClicked)="onRowClicked($event.data)"
-        ></ag-grid-angular>
-      </div>
+      @if (loading()) {
+        <div class="loading">Loading applications...</div>
+      } @else if (applications().length === 0) {
+        <div class="empty-state">
+          <p>No applications yet. Create a new one to get started!</p>
+        </div>
+      } @else {
+        <div class="ag-theme-alpine" style="width:100%; height:340px; margin-top: 10px;">
+          <ag-grid-angular
+            [rowData]="applications()"
+            [columnDefs]="columnDefs"
+            [defaultColDef]="defaultColDef"
+            [rowSelection]="{ mode: 'singleRow' }"
+            (rowClicked)="onRowClicked($event.data)"
+          ></ag-grid-angular>
+        </div>
+      }
     </mat-card>
   `,
   styles: [
@@ -70,6 +86,23 @@ type Application = { id: number; applicationNo: string; status: string; candidat
       .card {
         margin-bottom: 14px;
         padding: 16px;
+      }
+      .error-card {
+        background-color: #fee;
+        border: 1px solid #fcc;
+      }
+      .error-message {
+        color: #c33;
+      }
+      .loading {
+        padding: 20px;
+        text-align: center;
+        color: #666;
+      }
+      .empty-state {
+        padding: 40px 20px;
+        text-align: center;
+        color: #999;
       }
       .row {
         display: flex;
@@ -106,6 +139,8 @@ export class StudentApplicationsComponent implements OnInit {
   readonly exams = signal<Exam[]>([]);
   readonly creating = signal(false);
   readonly selectedExamId = signal<number | null>(null);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
   selectedApplication: Application | null = null;
 
   readonly columnDefs: ColDef[] = [
@@ -116,14 +151,28 @@ export class StudentApplicationsComponent implements OnInit {
   ];
   readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true, minWidth: 120 };
 
-  constructor(private readonly http: HttpClient, private readonly router: Router) {}
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+
+  constructor() {}
 
   ngOnInit() {
     this.reload();
-    this.http.get<{ exams: Exam[] }>(`${API_BASE_URL}/exams`).subscribe((r) => {
-      this.exams.set(r.exams || []);
-      const active = r.exams.filter((e) => this.isExamOpen(e));
-      if (!active.length) this.selectedExamId.set(null);
+    this.loadExams();
+  }
+
+  private loadExams() {
+    // FIX: Added error handling and type safety
+    this.http.get<{ exams: Exam[] }>(`${API_BASE_URL}/exams`).subscribe({
+      next: (r: any) => {
+        this.exams.set(r.exams || []);
+        const active = r.exams?.filter((e: any) => this.isExamOpen(e)) || [];
+        if (!active.length) this.selectedExamId.set(null);
+      },
+      error: (err: any) => {
+        console.error('Failed to load exams:', err?.error?.message || err?.message);
+        this.error.set('Failed to load exams. Please try again.');
+      }
     });
   }
 
@@ -133,7 +182,24 @@ export class StudentApplicationsComponent implements OnInit {
   }
 
   reload() {
-    this.http.get<{ applications: Application[] }>(`${API_BASE_URL}/applications/my`).subscribe((r) => this.applications.set(r.applications));
+    // FIX: Added loading state, error handling, and proper type casting
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.http.get<{ applications: Application[] }>(`${API_BASE_URL}/applications/my`).subscribe({
+      next: (r: any) => {
+        this.applications.set(r.applications || []);
+        this.loading.set(false);
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to load applications';
+        console.error('Failed to load applications:', errorMsg);
+        this.error.set(errorMsg);
+        this.loading.set(false);
+        // Show empty state on error instead of breaking
+        this.applications.set([]);
+      }
+    });
   }
 
   onRowClicked(row: Application | undefined) {
@@ -145,18 +211,26 @@ export class StudentApplicationsComponent implements OnInit {
     if (!examId) return;
     const exam = this.exams().find((e) => e.id === examId);
     if (!exam || !this.isExamOpen(exam)) {
-      window.alert('Cannot apply: selected exam is closed or invalid.');
+      this.error.set('Cannot apply: selected exam is closed or invalid.');
       return;
     }
     this.creating.set(true);
+    this.error.set(null);
+
+    // FIX: Added error handling and proper response typing
     this.http
       .post<{ application: Application }>(`${API_BASE_URL}/applications`, { examId, candidateType: 'REGULAR' })
       .subscribe({
-        next: (r) => {
+        next: (r: any) => {
           this.creating.set(false);
-          this.router.navigate(['/student/applications', r.application.id]);
+          this.router.navigate(['/app/student/applications', r.application.id]);
         },
-        error: () => this.creating.set(false)
+        error: (err: any) => {
+          const errorMsg = err?.error?.error || err?.error?.message || 'Failed to create application';
+          console.error('Failed to create application:', errorMsg);
+          this.error.set(errorMsg);
+          this.creating.set(false);
+        }
       });
   }
 }

@@ -13,3 +13,9 @@ export type LoginResponse = {
   user: AuthUser;
 };
 
+export type GoogleLoginResponse = {
+  accessToken: string;
+  refreshToken: string;
+  user: AuthUser;
+};
+

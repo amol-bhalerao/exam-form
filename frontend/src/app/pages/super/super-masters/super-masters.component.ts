@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { NgIf, NgFor } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -122,6 +122,7 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
 export class SuperMastersComponent implements OnInit {
   readonly streams = signal<StreamRow[]>([]);
   readonly subjects = signal<SubjectRow[]>([]);
+  private readonly http = inject(HttpClient);
 
   streamEdit: Partial<StreamRow> = { id: 0, name: '' };
   streamSearch = '';
@@ -150,7 +151,7 @@ export class SuperMastersComponent implements OnInit {
 
   readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true, minWidth: 120, flex: 1 };
 
-  constructor(private readonly http: HttpClient) {}
+  constructor() {}
 
   ngOnInit() {
     this.loadStreams();
@@ -160,14 +161,14 @@ export class SuperMastersComponent implements OnInit {
   loadStreams() {
     const params = this.streamSearch ? `?search=${encodeURIComponent(this.streamSearch)}` : '';
     this.http.get<{ streams: StreamRow[] }>(`${API_BASE_URL}/masters/streams${params}`).subscribe({
-      next: (r) => { this.streams.set(r.streams); },
+      next: (r: { streams: StreamRow[]; }) => { this.streams.set(r.streams); },
       error: () => { this.streamError = 'Unable to load streams'; }
     });
   }
 
   loadSubjects() {
     this.http.get<{ subjects: SubjectRow[] }>(`${API_BASE_URL}/masters/subjects`).subscribe({
-      next: (r) => { this.subjects.set(r.subjects); },
+      next: (r: { subjects: SubjectRow[]; }) => { this.subjects.set(r.subjects); },
       error: () => { this.subjectError = 'Unable to load subjects'; }
     });
   }
@@ -184,12 +185,12 @@ export class SuperMastersComponent implements OnInit {
     if (this.streamEdit.id) {
       this.http.put(`${API_BASE_URL}/masters/streams/${this.streamEdit.id}`, payload).subscribe({
         next: () => { this.streamSuccess = 'Updated stream'; this.resetStream(); this.loadStreams(); },
-        error: (e) => { this.streamError = e?.error?.error || 'Update failed'; }
+        error: (e: { error: { error: string; }; }) => { this.streamError = e?.error?.error || 'Update failed'; }
       });
     } else {
       this.http.post(`${API_BASE_URL}/masters/streams`, payload).subscribe({
         next: () => { this.streamSuccess = 'Added stream'; this.resetStream(); this.loadStreams(); },
-        error: (e) => { this.streamError = e?.error?.error || 'Create failed'; }
+        error: (e: { error: { error: string; }; }) => { this.streamError = e?.error?.error || 'Create failed'; }
       });
     }
   }
@@ -206,12 +207,12 @@ export class SuperMastersComponent implements OnInit {
     if (this.subjectEdit.id) {
       this.http.put(`${API_BASE_URL}/masters/subjects/${this.subjectEdit.id}`, payload).subscribe({
         next: () => { this.subjectSuccess = 'Updated subject'; this.resetSubject(); this.loadSubjects(); },
-        error: (e) => { this.subjectError = e?.error?.error || 'Update failed'; }
+        error: (e: { error: { error: string; }; }) => { this.subjectError = e?.error?.error || 'Update failed'; }
       });
     } else {
       this.http.post(`${API_BASE_URL}/masters/subjects`, payload).subscribe({
         next: () => { this.subjectSuccess = 'Added subject'; this.resetSubject(); this.loadSubjects(); },
-        error: (e) => { this.subjectError = e?.error?.error || 'Create failed'; }
+        error: (e: { error: { error: string; }; }) => { this.subjectError = e?.error?.error || 'Create failed'; }
       });
     }
   }
@@ -229,7 +230,7 @@ export class SuperMastersComponent implements OnInit {
       if (!confirm('Delete stream?')) return;
       this.http.delete(`${API_BASE_URL}/masters/streams/${row.id}`).subscribe({
         next: () => { this.streamSuccess = 'Deleted stream'; this.loadStreams(); },
-        error: (e) => { this.streamError = e?.error?.error || 'Delete failed'; }
+        error: (e: { error: { error: string; }; }) => { this.streamError = e?.error?.error || 'Delete failed'; }
       });
     }
   }
@@ -247,7 +248,7 @@ export class SuperMastersComponent implements OnInit {
       if (!confirm('Delete subject?')) return;
       this.http.delete(`${API_BASE_URL}/masters/subjects/${row.id}`).subscribe({
         next: () => { this.subjectSuccess = 'Deleted subject'; this.loadSubjects(); },
-        error: (e) => { this.subjectError = e?.error?.error || 'Delete failed'; }
+        error: (e: { error: { error: string; }; }) => { this.subjectError = e?.error?.error || 'Delete failed'; }
       });
     }
   }

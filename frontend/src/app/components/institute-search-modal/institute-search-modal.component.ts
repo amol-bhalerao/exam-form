@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -15,7 +15,8 @@ import { API_BASE_URL } from '../../core/api';
   standalone: true,
   imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, MatDividerModule],
   template: `
-    <div *ngIf="visible" class="picker-overlay">
+  @if (visible) {
+    <div class="picker-overlay">
       <mat-card class="picker-card">
         <div class="header-row">
           <div>
@@ -61,6 +62,7 @@ import { API_BASE_URL } from '../../core/api';
         </div>
       </mat-card>
     </div>
+  }
   `,
   styles: [`
     .picker-overlay {
@@ -103,7 +105,7 @@ export class InstituteSearchModalComponent {
   readonly error = signal<string | null>(null);
   readonly results = signal<any[]>([]);
 
-  constructor(private readonly http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   onClose() {
     this.visibleChange.emit(false);

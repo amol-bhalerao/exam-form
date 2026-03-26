@@ -87,6 +87,8 @@ model User {
   email        String?    @db.VarChar(150)
   mobile       String?    @db.VarChar(15)
   status       UserStatus @default(PENDING)
+  googleId     String?    @unique @db.VarChar(200)
+  authProvider String?    @db.VarChar(20)
   createdAt    DateTime   @default(now())
 
   role      Role      @relation(fields: [roleId], references: [id])

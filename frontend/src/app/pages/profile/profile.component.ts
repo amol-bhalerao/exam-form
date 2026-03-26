@@ -11,7 +11,7 @@ import { API_BASE_URL } from '../../core/api';
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [NgIf, FormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule],
+  imports: [FormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule],
   template: `
     <mat-card>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
@@ -21,10 +21,14 @@ import { API_BASE_URL } from '../../core/api';
         </div>
       </div>
 
-      <div *ngIf="loading()" style="color:#2563eb;margin-bottom:10px;">Loading profile...</div>
-      <div *ngIf="error()" style="color:#b91c1c;margin-bottom:10px;">{{ error() }}</div>
+      @if (loading()) {
+        <div style="color:#2563eb;margin-bottom:10px;">Loading profile...</div>
+      }
+      @if (error()) {
+        <div style="color:#b91c1c;margin-bottom:10px;">{{ error() }}</div>
+      }
 
-      <div *ngIf="!loading()">
+      @if (!loading()) {
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="username" /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" [(ngModel)]="email" /></mat-form-field>
@@ -34,10 +38,14 @@ import { API_BASE_URL } from '../../core/api';
 
         <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
           <button mat-flat-button color="primary" (click)="save()">Save Profile</button>
-          <span *ngIf="success()" style="color:#065f46;">{{ success() }}</span>
-          <span *ngIf="saveError()" style="color:#b91c1c;">{{ saveError() }}</span>
+          @if (success()) {
+            <span style="color:#065f46;">{{ success() }}</span>
+          }
+          @if (saveError()) {
+            <span style="color:#b91c1c;">{{ saveError() }}</span>
+          }
         </div>
-      </div>
+      }
     </mat-card>
   `
 })

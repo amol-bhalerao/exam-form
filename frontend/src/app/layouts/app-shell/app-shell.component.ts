@@ -15,39 +15,45 @@ import { API_BASE_URL } from '../../core/api';
   standalone: true,
   imports: [RouterOutlet, RouterLink, MatToolbarModule, MatSidenavModule, MatListModule, MatIconModule, MatButtonModule],
   template: `
-    <mat-sidenav-container class="container">
-      <mat-sidenav [mode]="isMobile() ? 'over' : 'side'" [opened]="isMobile() ? opened() : true" class="sidenav" (closedStart)="opened.set(false)">
+    <mat-sidenav-container class="container" autosize>
+      <mat-sidenav 
+        #sidenav
+        [mode]="isMobile() ? 'over' : 'side'" 
+        [opened]="opened()" 
+        class="sidenav" 
+        (closedStart)="opened.set(false)">
         <div class="logo">HSC Exam Forms</div>
 
         <mat-nav-list>
-          <a mat-list-item routerLink="/dashboard" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>dashboard</mat-icon><span>Dashboard</span></a>
+          <a mat-list-item routerLink="/app/dashboard" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>dashboard</mat-icon><span>Dashboard</span></a>
 
           @if (role() === 'SUPER_ADMIN') {
-            <a mat-list-item routerLink="/super/institutes" routerLinkActive="mat-list-item-active"><mat-icon>school</mat-icon><span>Institutes</span></a>
-            <a mat-list-item routerLink="/super/institute-users" routerLinkActive="mat-list-item-active"><mat-icon>person</mat-icon><span>Institute Users</span></a>
-            <a mat-list-item routerLink="/super/users" routerLinkActive="mat-list-item-active"><mat-icon>admin_panel_settings</mat-icon><span>Board Users</span></a>
-            <a mat-list-item routerLink="/super/masters" routerLinkActive="mat-list-item-active"><mat-icon>settings</mat-icon><span>Master Data</span></a>
+            <a mat-list-item routerLink="/app/super/institutes" routerLinkActive="mat-list-item-active"><mat-icon>school</mat-icon><span>Institutes</span></a>
+            <a mat-list-item routerLink="/app/super/institute-users" routerLinkActive="mat-list-item-active"><mat-icon>person</mat-icon><span>Institute Users</span></a>
+            <a mat-list-item routerLink="/app/super/users" routerLinkActive="mat-list-item-active"><mat-icon>admin_panel_settings</mat-icon><span>Board Users</span></a>
+            <a mat-list-item routerLink="/app/super/masters" routerLinkActive="mat-list-item-active"><mat-icon>settings</mat-icon><span>Master Data</span></a>
           }
 
           @if (role() === 'BOARD') {
-            <a mat-list-item routerLink="/board/exams" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>calendar_month</mat-icon><span>Exams</span></a>
-            <a mat-list-item routerLink="/board/applications" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>assignment</mat-icon><span>Applications</span></a>
-            <a mat-list-item routerLink="/board/teachers" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>people</mat-icon><span>Teachers</span></a>
-            <a mat-list-item routerLink="/board/subjects" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>subject</mat-icon><span>Subjects</span></a>
-            <a mat-list-item routerLink="/board/streams" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>account_tree</mat-icon><span>Streams</span></a>
+            <a mat-list-item routerLink="/app/board/exams" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>calendar_month</mat-icon><span>Exams</span></a>
+            <a mat-list-item routerLink="/app/board/applications" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>assignment</mat-icon><span>Applications</span></a>
+            <a mat-list-item routerLink="/app/board/news" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>newspaper</mat-icon><span>News</span></a>
+            <a mat-list-item routerLink="/app/board/teachers" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>people</mat-icon><span>Teachers</span></a>
+            <a mat-list-item routerLink="/app/board/subjects" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>subject</mat-icon><span>Subjects</span></a>
+            <a mat-list-item routerLink="/app/board/streams" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>account_tree</mat-icon><span>Streams</span></a>
           }
 
           @if (role() === 'INSTITUTE') {
-            <a mat-list-item routerLink="/institute/applications" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>fact_check</mat-icon><span>Student Applications</span></a>
-            <a mat-list-item routerLink="/institute/settings" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>corporate_fare</mat-icon><span>Institute Details</span></a>
-            <a mat-list-item routerLink="/institute/teachers" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>people</mat-icon><span>Teachers</span></a>
-            <a mat-list-item routerLink="/institute/stream-subjects" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>view_list</mat-icon><span>Stream Subjects</span></a>
+            <a mat-list-item routerLink="/app/institute/applications" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>fact_check</mat-icon><span>Student Applications</span></a>
+            <a mat-list-item routerLink="/app/institute/settings" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>corporate_fare</mat-icon><span>Institute Details</span></a>
+            <a mat-list-item routerLink="/app/institute/teachers" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>people</mat-icon><span>Teachers</span></a>
+            <a mat-list-item routerLink="/app/institute/stream-subjects" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>view_list</mat-icon><span>Stream Subjects</span></a>
           }
 
           @if (role() === 'STUDENT') {
-            <a mat-list-item routerLink="/student/applications" routerLinkActive="mat-list-item-active"><mat-icon>assignment_ind</mat-icon><span>My Applications</span></a>
+            <a mat-list-item routerLink="/app/student/profile" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>person</mat-icon><span>My Profile (Basic Details)</span></a>
+            <a mat-list-item routerLink="/app/student/applications" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>assignment_ind</mat-icon><span>My Applications</span></a>
           }
-<a mat-list-item routerLink="/profile" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>person</mat-icon><span>My Profile</span></a>
         </mat-nav-list>
       </mat-sidenav>
 
@@ -58,7 +64,7 @@ import { API_BASE_URL } from '../../core/api';
           <span class="spacer"></span>
           <div class="who">
             <div class="u">{{ username() }}</div>
-            <div class="r">{{ role() }}</div>
+            <!-- <div class="r">{{ role() }}</div> -->
           </div>
           <button mat-icon-button (click)="logout()" aria-label="Logout"><mat-icon>logout</mat-icon></button>
         </mat-toolbar>
@@ -69,98 +75,238 @@ import { API_BASE_URL } from '../../core/api';
   `,
   styles: [
     `
+      :host {
+        --sidebar-bg: #334264;
+        --sidebar-hover: #1e293b;
+        --sidebar-active: #2563eb;
+        --sidebar-text: #f1f5f9;
+        --sidebar-accent: #60a5fa;
+        --card-radius: 12px;
+        --card-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+        --transition: all 0.2s ease;
+      }
+
       .container {
         height: 100vh;
-        background: #f3f4ff;
+        background: linear-gradient(135deg, #f0f4f8 0%, #f8fafc 100%);
+        display: flex;
       }
+
+      mat-sidenav-container {
+        height: 100%;
+      }
+
+      mat-sidenav-content {
+        display: flex;
+        flex-direction: column;
+        width: 100% !important;
+        height: 100% !important;
+      }
+
       .sidenav {
         width: 260px;
-        border-right: 0;
-        // background: linear-gradient(180deg, #111827 0%, #1f2937 100%);
-        // color: #e2e8f0;
+        background: var(--sidebar-bg);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        overflow-y: auto;
       }
+
       .logo {
-        padding: 18px 16px;
+        padding: 20px 16px;
         font-weight: 800;
-        letter-spacing: 0.2px;
-        font-size: 1.05rem;
-        // color: #f3f4ff;
-      }
-      .mat-nav-list {
-        padding-top: 0;
-      }
-      .mat-list-item {
-        border-radius: 8px;
-        margin: 4px 8px;
-        color: #e2e8f0;
-        padding: 8px 10px;
-      }
-      .mat-list-item .mat-list-item-content {
-        color: #e2e8f0;
-      }
-      .mat-list-item:hover {
-        background: rgba(255, 255, 255, 0.12);
-        color: #fff;
-      }
-      .mat-list-item.mat-list-item-active {
-        background: #2563eb;
-        color: #fff;
-      }
-      .mat-list-item.mat-list-item-active mat-icon {
-        color: #fff;
-      }
-      .mat-list-item mat-icon {
-        margin-right: 10px;
-        width: 24px;
-        text-align: center;
-        color: #dbeafe;
-      }
-      .mat-list-item span {
-        line-height: 1.2;
-        color: #f8fafc;
-      }
-      .toolbar {
-        position: sticky;
-        top: 0;
-        z-index: 10;
-        background: linear-gradient(90deg, #1f2937 0%, #111827 70%, #0f172a 100%);
-        color: #fff;
+        letter-spacing: 0.5px;
+        font-size: 1.1rem;
+        color: #60a5fa;
         display: flex;
         align-items: center;
         gap: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        animation: slideInLeft 0.4s ease;
       }
+
+      .mat-nav-list {
+        padding-top: 12px;
+        padding-bottom: 20px;
+      }
+
+      .mat-list-item {
+        border-radius: 10px;
+        margin: 6px 10px;
+        padding: 10px 12px !important;
+        transition: var(--transition);
+        color: #e2e8f0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .mat-list-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 3px;
+        background: var(--sidebar-active);
+        transform: scaleY(0);
+        transform-origin: top;
+        transition: transform 0.3s ease;
+      }
+
+      .mat-list-item:hover {
+        background: var(--sidebar-hover);
+        color: #ffffff;
+        transform: translateX(2px);
+      }
+
+      .mat-list-item.mat-list-item-active {
+        background: rgba(37, 99, 235, 0.15);
+        color: #60a5fa;
+        font-weight: 600;
+      }
+
+      .mat-list-item.mat-list-item-active::before {
+        transform: scaleY(1);
+      }
+
+      .mat-list-item mat-icon {
+        margin-right: 12px;
+        width: 20px;
+        height: 20px;
+        color: inherit;
+        transition: var(--transition);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .mat-list-item:hover mat-icon {
+        color: var(--sidebar-accent);
+        transform: scale(1.1);
+      }
+
+      .mat-list-item span {
+        font-size: 0.9rem;
+        font-weight: 500;
+        letter-spacing: 0.2px;
+      }
+
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 0 16px;
+        height: 64px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        flex-shrink: 0;
+      }
+
+      .toolbar button {
+        color: #60a5fa;
+        transition: var(--transition);
+      }
+
+      .toolbar button:hover {
+        color: #93c5fd;
+      }
+
       .center-title {
         margin-left: 12px;
         font-weight: 700;
-        letter-spacing: 0.2px;
+        letter-spacing: 0.3px;
         font-size: 0.95rem;
+        color: #e2e8f0;
+        flex-shrink: 0;
       }
-      .toolbar button {
-        color: #fff;
-      }
+
       .content {
-        padding: 20px;
-        min-height: calc(100vh - 64px);
-        background: #f3f4ff;
+        padding: 24px;
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        background: linear-gradient(180deg, #f8fafc 0%, #eef2f5 100%);
+        width: 100%;
+        max-width: 100%;
       }
-      .spacer { flex: 1; }
+
+      .spacer {
+        flex: 1;
+      }
+
       .who {
         text-align: right;
-        margin-right: 8px;
-        line-height: 1.1;
-        color: #f3f4ff;
+        padding: 6px 12px;
+        background: rgba(96, 165, 250, 0.1);
+        border-radius: 8px;
+        border: 1px solid rgba(96, 165, 250, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
       }
-      .u { font-size: 13px; font-weight: 600; }
-      .r { font-size: 11px; opacity: 0.9; color: #dbeafe; }
+
+      .u {
+        font-size: 13px;
+        font-weight: 600;
+        color: #e2e8f0;
+      }
+
+      .r {
+        font-size: 11px;
+        opacity: 0.75;
+        color: #93c5fd;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      /* Animations */
+      @keyframes slideInLeft {
+        from {
+          opacity: 0;
+          transform: translateX(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      /* Scrollbar */
+      .sidenav::-webkit-scrollbar {
+        width: 6px;
+      }
+      .sidenav::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+      }
+      .sidenav::-webkit-scrollbar-thumb {
+        background: rgba(96, 165, 250, 0.4);
+        border-radius: 3px;
+      }
+      .sidenav::-webkit-scrollbar-thumb:hover {
+        background: rgba(96, 165, 250, 0.6);
+      }
+
+      /* Mobile */
       @media (max-width: 960px) {
         .sidenav { width: 280px; }
+        .content { padding: 16px; }
+      }
+
+      @media (max-width: 600px) {
+        .sidenav { width: 100%; }
+        .center-title { display: none; }
+        .who { font-size: 12px; }
       }
     `
   ]
 })
 export class AppShellComponent {
   readonly opened = signal(true);
-  readonly isMobile = signal(false); // Temporarily disable mobile detection
+  readonly isMobile = signal(window.innerWidth <= 960); // Detect mobile on init
 
   readonly role = computed(() => this.auth.user()?.role ?? null);
   readonly username = computed(() => this.auth.user()?.username ?? '');
@@ -178,9 +324,15 @@ export class AppShellComponent {
     private readonly router: Router,
     private readonly http: HttpClient
   ) {
-    // this.syncMobile(); // Temporarily disabled
-    // window.addEventListener('resize', () => this.syncMobile());
+    this.syncMobile(); // Enable responsive detection
+    window.addEventListener('resize', () => this.syncMobile());
     this.loadProfile();
+  }
+
+  private syncMobile() {
+    const mobile = window.matchMedia('(max-width: 960px)').matches;
+    this.isMobile.set(mobile);
+    if (!mobile) this.opened.set(true);
   }
 
   private loadProfile() {
@@ -195,12 +347,6 @@ export class AppShellComponent {
       }
     });
   }
-
-  // private syncMobile() {
-  //   const mobile = window.matchMedia('(max-width: 960px)').matches;
-  //   this.isMobile.set(mobile);
-  //   if (!mobile) this.opened.set(true);
-  // }
 
   toggle() {
     this.opened.set(!this.opened());

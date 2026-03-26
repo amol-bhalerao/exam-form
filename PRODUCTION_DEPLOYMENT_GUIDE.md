@@ -65,6 +65,11 @@ git pull origin main
 # 7. Install/update dependencies
 npm install
 
+# 7b. Generate Prisma engines for Linux platform (CRITICAL!)
+# This MUST run on the production server (not locally)
+# It generates the correct Query Engine binary for Debian/Linux
+npx prisma generate
+
 # 8. Build TypeScript
 npm run build
 
@@ -483,6 +488,95 @@ mysql -u u441114691_exam -p -h 127.0.0.1 u441114691_exam -e "SELECT 1;"
 # Clear PM2
 pm2 flush
 pm2 delete all
+```
+
+---
+
+## Critical Issue: Prisma Query Engine Not Found
+
+### Symptoms
+```
+"error": "Prisma Client could not locate the Query Engine for runtime \"debian-openssl-1.0.x\""
+```
+
+This happens when:
+- Code is built on Windows locally (with Windows binaries)
+- Deployed to Linux/Debian server without regenerating binaries
+- Or npm modules were not properly installed on the server
+
+### Solution (Immediate)
+
+```bash
+# SSH to server
+ssh username@your-domain
+
+# Navigate to backend
+cd ~/nodejs/backend
+
+# Reinstall and regenerate for Linux
+npm install
+npx prisma generate
+
+# Rebuild if needed
+npm run build
+
+# Restart backend
+pkill node
+sleep 2
+nohup node dist/src/server.js > server.log 2>&1 &
+
+# Verify it works
+curl http://localhost:3000/api/health
+```
+
+### Why This Happens
+
+Prisma uses platform-specific Query Engine binaries:
+- **Windows**: `libquery_engine-windows.dll`
+- **Linux/Debian**: `libquery_engine-debian-openssl-1.0.x.so.node`
+
+If you:
+1. Build on Windows (TypeScript → JavaScript)
+2. Deploy to Linux without running `prisma generate`
+- Prisma can't find the Linux binary and fails
+
+### Prevention
+
+**Always run these steps on the production server after deploying:**
+
+```bash
+# Step 1: Install dependencies
+npm install
+
+# Step 2: Generate Prisma engines for the server's OS (CRITICAL!)
+npx prisma generate
+
+# Step 3: Build TypeScript
+npm run build
+
+# Step 4: Start the app
+npm start
+```
+
+### Updated Deploy Script
+
+Update your `deploy.sh` to include `prisma generate`:
+
+```bash
+#!/bin/bash
+pkill -f "node dist/src/server.js"
+sleep 2
+git pull origin main
+npm install
+npx prisma generate    # ← ADD THIS LINE
+npm run build
+export NODE_ENV=production
+export DATABASE_URL="mysql://u441114691_exam:Exam%401234567890@127.0.0.1:3306/u441114691_exam"
+export CORS_ORIGIN="https://hsc-exam-form.hisofftechnology.com"
+nohup node dist/src/server.js > server.log 2>&1 &
+sleep 2
+curl http://localhost:3000/api/health
+echo "Deploy complete!"
 ```
 
 ---

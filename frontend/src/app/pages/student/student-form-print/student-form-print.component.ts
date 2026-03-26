@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -385,15 +385,14 @@ import { API_BASE_URL } from '../../../core/api';
 })
 export class StudentFormPrintComponent implements OnInit {
   readonly application = signal<any | null>(null);
+  private readonly route = inject(ActivatedRoute);
+  private readonly http = inject(HttpClient);
 
-  constructor(
-    private readonly route: ActivatedRoute,
-    private readonly http: HttpClient
-  ) {}
+  constructor() {}
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.http.get<{ application: any }>(`${API_BASE_URL}/applications/${id}`).subscribe((r) => this.application.set(r.application));
+    this.http.get<{ application: any }>(`${API_BASE_URL}/applications/${id}`).subscribe((r: any) => this.application.set(r.application));
   }
 
   a() {

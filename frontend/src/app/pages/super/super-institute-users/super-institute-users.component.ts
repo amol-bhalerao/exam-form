@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -163,7 +163,7 @@ export class SuperInstituteUsersComponent implements OnInit {
   editMsg = signal<string | null>(null);
   editError = signal<string | null>(null);
 
-  constructor(private readonly http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   ngOnInit() {
     this.load();
@@ -178,11 +178,11 @@ export class SuperInstituteUsersComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     this.http.get<{ users: InstituteUser[] }>(`${API_BASE_URL}/institutes/users/all`).subscribe({
-      next: (res) => {
+      next: (res: { users: InstituteUser[] }) => {
         this.users.set(res.users || []);
         this.loading.set(false);
       },
-      error: (e) => {
+      error: (e: any) => {
         this.error.set(e?.error?.error || 'Could not load users');
         this.loading.set(false);
       }
@@ -192,14 +192,14 @@ export class SuperInstituteUsersComponent implements OnInit {
   approve(id: number) {
     this.http.patch(`${API_BASE_URL}/institutes/users/${id}/status`, { status: 'ACTIVE' }).subscribe({
       next: () => this.load(),
-      error: (e) => (this.error.set(e?.error?.error || 'Approval failed'))
+      error: (e: any) => (this.error.set(e?.error?.error || 'Approval failed'))
     });
   }
 
   setStatus(user: InstituteUser, status: 'ACTIVE' | 'PENDING' | 'DISABLED') {
     this.http.patch(`${API_BASE_URL}/institutes/users/${user.id}/status`, { status }).subscribe({
       next: () => this.load(),
-      error: (e) => (this.error.set(e?.error?.error || 'Failed to update status'))
+      error: (e: any) => (this.error.set(e?.error?.error || 'Failed to update status'))
     });
   }
 
@@ -223,7 +223,7 @@ export class SuperInstituteUsersComponent implements OnInit {
         this.load();
         this.editingUser = null;
       },
-      error: (e) => {
+      error: (e: any) => {
         this.editError.set(e?.error?.error || 'Failed to update user');
       }
     });
@@ -243,11 +243,11 @@ export class SuperInstituteUsersComponent implements OnInit {
     }
     const payload: any = { instituteId: this.inviteInstituteId };
     this.http.post<{ activationLink: string }>(`${API_BASE_URL}/institutes/users/invite`, payload).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.inviteLink = `${window.location.origin}${res.activationLink}`;
         this.load();
       },
-      error: (e) => {
+      error: (e: any) => {
         this.inviteError.set(e?.error?.error || 'Failed to create invite');
       }
     });

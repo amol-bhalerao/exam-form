@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -28,7 +28,7 @@ type User = {
 @Component({
   selector: 'app-super-users',
   standalone: true,
-  imports: [FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, AgGridModule, NgIf],
+  imports: [FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, AgGridModule],
   template: `
     <mat-card class="card">
       <div class="row">
@@ -57,74 +57,86 @@ type User = {
           (cellClicked)="onGridCellClicked($event)"
         ></ag-grid-angular>
       </div>
-      <div *ngIf="selectedUser" class="selected-row">
-        <span><strong>Selected:</strong> {{ selectedUser.username }} ({{ selectedUser.role.name }}) - {{ selectedUser.status }}</span>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <button mat-stroked-button color="accent" (click)="openEditUser()">Edit User</button>
-          <button mat-stroked-button color="warn" (click)="openResetPassword()">Reset Password</button>
-          <button mat-flat-button color="primary" (click)="toggleUserStatus()">{{ selectedUser.status === 'ACTIVE' ? 'Disable' : 'Enable' }} User</button>
+      @if (selectedUser) {
+        <div class="selected-row">
+          <span><strong>Selected:</strong> {{ selectedUser.username }} ({{ selectedUser.role.name }}) - {{ selectedUser.status }}</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button mat-stroked-button color="accent" (click)="openEditUser()">Edit User</button>
+            <button mat-stroked-button color="warn" (click)="openResetPassword()">Reset Password</button>
+            <button mat-flat-button color="primary" (click)="toggleUserStatus()">{{ selectedUser.status === 'ACTIVE' ? 'Disable' : 'Enable' }} User</button>
+          </div>
         </div>
-      </div>
+      }
     </mat-card>
 
-    <div class="modal-backdrop" *ngIf="showEditUserModal">
-      <div class="modal" style="max-width: 500px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div style="font-weight:700;">Edit User</div>
-          <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showEditUserModal = false">&times;</button>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr;gap:10px;">
-          <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="editUserForm.username" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" [(ngModel)]="editUserForm.email" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="editUserForm.mobile" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Role</mat-label><mat-select [(ngModel)]="editUserForm.roleName"><mat-option value="BOARD">Board User</mat-option><mat-option value="SUPER_ADMIN">Super Admin</mat-option></mat-select></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="editUserForm.status"><mat-option value="ACTIVE">Active</mat-option><mat-option value="PENDING">Pending</mat-option><mat-option value="DISABLED">Disabled</mat-option></mat-select></mat-form-field>
-        </div>
-        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
-          <button mat-flat-button color="primary" (click)="saveEditedUser()">Save</button>
-          <span style="color:#065f46;">{{ editUserSuccess }}</span>
-          <span style="color:#b91c1c;">{{ editUserError }}</span>
+    @if (showEditUserModal) {
+      <div class="modal-backdrop">
+        <div class="modal" style="max-width: 500px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-weight:700;">Edit User</div>
+            <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showEditUserModal = false">&times;</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr;gap:10px;">
+            <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="editUserForm.username" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" [(ngModel)]="editUserForm.email" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="editUserForm.mobile" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Role</mat-label><mat-select [(ngModel)]="editUserForm.roleName"><mat-option value="BOARD">Board User</mat-option><mat-option value="SUPER_ADMIN">Super Admin</mat-option></mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="editUserForm.status"><mat-option value="ACTIVE">Active</mat-option><mat-option value="PENDING">Pending</mat-option><mat-option value="DISABLED">Disabled</mat-option></mat-select></mat-form-field>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+            <button mat-flat-button color="primary" (click)="saveEditedUser()">Save</button>
+            <span style="color:#065f46;">{{ editUserSuccess }}</span>
+            <span style="color:#b91c1c;">{{ editUserError }}</span>
+          </div>
         </div>
       </div>
-    </div>
+    }
 
-    <div class="modal-backdrop" *ngIf="showResetPasswordModal">
-      <div class="modal" style="max-width: 400px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div style="font-weight:700;">Reset Password</div>
-          <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showResetPasswordModal = false">&times;</button>
-        </div>
-        <div style="margin-bottom:10px;">Reset password for user: <strong>{{ selectedUser?.username }}</strong></div>
-        <mat-form-field appearance="outline" style="width:100%;"><mat-label>New Password</mat-label><input matInput type="password" [(ngModel)]="newPassword" /></mat-form-field>
-        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
-          <button mat-flat-button color="primary" (click)="resetPassword()">Reset Password</button>
-          <span style="color:#065f46;">{{ resetPasswordSuccess }}</span>
-          <span style="color:#b91c1c;">{{ resetPasswordError }}</span>
+    @if (showResetPasswordModal) {
+      <div class="modal-backdrop">
+        <div class="modal" style="max-width: 400px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-weight:700;">Reset Password</div>
+            <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showResetPasswordModal = false">&times;</button>
+          </div>
+          <div style="margin-bottom:10px;">Reset password for user: <strong>{{ selectedUser?.username }}</strong></div>
+          <mat-form-field appearance="outline" style="width:100%;"><mat-label>New Password</mat-label><input matInput type="password" [(ngModel)]="newPassword" /></mat-form-field>
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+            <button mat-flat-button color="primary" (click)="resetPassword()">Reset Password</button>
+            <span style="color:#065f46;">{{ resetPasswordSuccess }}</span>
+            <span style="color:#b91c1c;">{{ resetPasswordError }}</span>
+          </div>
         </div>
       </div>
-    </div>
+    }
 
-    <div class="modal-backdrop" *ngIf="showCreateUser()">
-      <div class="modal" style="max-width: 500px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div style="font-weight:700;">Create New User</div>
-          <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showCreateUser.set(false); resetCreateForm()">&times;</button>
+    @if (showCreateUser()) {
+      <div class="modal-backdrop">
+        <div class="modal" style="max-width: 500px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-weight:700;">Create New User</div>
+            <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showCreateUser.set(false); resetCreateForm()">&times;</button>
+          </div>
+          <div class="form-grid">
+            <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="createForm.username" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Password</mat-label><input matInput type="password" [(ngModel)]="createForm.password" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" [(ngModel)]="createForm.email" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="createForm.mobile" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Role</mat-label><mat-select [(ngModel)]="createForm.roleName"><mat-option value="BOARD">Board User</mat-option><mat-option value="SUPER_ADMIN">Super Admin</mat-option></mat-select></mat-form-field>
+          </div>
+          <div class="card-actions">
+            <button mat-flat-button color="primary" (click)="createUser()">Create User</button>
+            <button mat-stroked-button (click)="resetCreateForm()">Reset</button>
+          </div>
+          @if (createError) {
+            <div class="msg error">{{ createError }}</div>
+          }
+          @if (createSuccess) {
+            <div class="msg success">{{ createSuccess }}</div>
+          }
         </div>
-        <div class="form-grid">
-          <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="createForm.username" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Password</mat-label><input matInput type="password" [(ngModel)]="createForm.password" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" [(ngModel)]="createForm.email" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="createForm.mobile" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Role</mat-label><mat-select [(ngModel)]="createForm.roleName"><mat-option value="BOARD">Board User</mat-option><mat-option value="SUPER_ADMIN">Super Admin</mat-option></mat-select></mat-form-field>
-        </div>
-        <div class="card-actions">
-          <button mat-flat-button color="primary" (click)="createUser()">Create User</button>
-          <button mat-stroked-button (click)="resetCreateForm()">Reset</button>
-        </div>
-        <div class="msg error" *ngIf="createError">{{ createError }}</div>
-        <div class="msg success" *ngIf="createSuccess">{{ createSuccess }}</div>
       </div>
-    </div>
+    }
   `,
   styles: [
     `
@@ -202,6 +214,7 @@ type User = {
   ]
 })
 export class SuperUsersComponent implements OnInit {
+  private readonly http = inject(HttpClient);
   readonly users = signal<User[]>([]);
   selectedUser: User | null = null;
   showEditUserModal = false;
@@ -245,15 +258,13 @@ export class SuperUsersComponent implements OnInit {
   resetPasswordError = '';
   resetPasswordSuccess = '';
 
-  constructor(private readonly http: HttpClient) {}
-
   ngOnInit() {
     this.load();
   }
 
   load() {
     const params = this.search ? `?search=${encodeURIComponent(this.search)}` : '';
-    this.http.get<{ users: User[] }>(`${API_BASE_URL}/users${params}`).subscribe((r) => this.users.set(r.users));
+    this.http.get<{ users: User[] }>(`${API_BASE_URL}/users${params}`).subscribe((r: { users: User[]; }) => this.users.set(r.users));
   }
 
   createUser() {
@@ -275,7 +286,7 @@ export class SuperUsersComponent implements OnInit {
           this.showCreateUser.set(false);
         }, 1500);
       },
-      error: (err) => {
+      error: (err: { error: { error: string; }; }) => {
         this.createError = err.error?.error || 'Failed to create user';
       }
     });
@@ -326,7 +337,7 @@ export class SuperUsersComponent implements OnInit {
           this.showEditUserModal = false;
         }, 1500);
       },
-      error: (err) => {
+      error: (err: { error: { error: string; }; }) => {
         this.editUserError = err.error?.error || 'Failed to update user';
       }
     });
@@ -356,7 +367,7 @@ export class SuperUsersComponent implements OnInit {
           this.showResetPasswordModal = false;
         }, 1500);
       },
-      error: (err) => {
+      error: (err: { error: { error: string; }; }) => {
         this.resetPasswordError = err.error?.error || 'Failed to reset password';
       }
     });
@@ -370,7 +381,7 @@ export class SuperUsersComponent implements OnInit {
       next: () => {
         this.load();
       },
-      error: (err) => {
+      error: (err: any) => {
         console.error('Failed to update user status', err);
       }
     });
