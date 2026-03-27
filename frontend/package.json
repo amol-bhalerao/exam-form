@@ -4,7 +4,8 @@
   "scripts": {
     "ng": "npx ng",
     "start": "npx ng serve --host 0.0.0.0 --port 4200",
-    "build": "npx ng build",
+    "build": "npx ng build && npm run postbuild",
+    "postbuild": "node -e \"require('fs').copyFileSync('src/assets/.htaccess', 'dist/exam-form/browser/.htaccess')\"",
     "watch": "npx ng build --watch --configuration development",
     "test": "npx ng test"
   },
