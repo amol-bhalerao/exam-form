@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
+    "prebuild": "node scripts/setup-prisma-perms.js",
     "build": "npx prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
