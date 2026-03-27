@@ -6,7 +6,7 @@ export const environment = {
   // ═════════════════════════════════════════════════════════════════════════
   
   apiUrl: 'https://hsc-exam-form.hisofttechnology.com/api',
-  apiBaseUrl: 'https://hsc-exam-form.hisofttechnology.com',
+  apiBaseUrl: 'https://hsc-exam-form.hisofttechnology.com/api',
   apiTimeout: 30000, // 30 seconds
 
   // ═════════════════════════════════════════════════════════════════════════
