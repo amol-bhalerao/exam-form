@@ -2,11 +2,11 @@ export const environment = {
   production: true,
 
   // ═════════════════════════════════════════════════════════════════════════
-  // PRODUCTION API Configuration - Update with actual domain
+  // PRODUCTION API Configuration
   // ═════════════════════════════════════════════════════════════════════════
   
-  apiUrl: 'https://your-production-domain.com/api',
-  apiBaseUrl: 'https://your-production-domain.com',
+  apiUrl: 'https://hsc-exam-form.hisofttechnology.com/api',
+  apiBaseUrl: 'https://hsc-exam-form.hisofttechnology.com',
   apiTimeout: 30000, // 30 seconds
 
   // ═════════════════════════════════════════════════════════════════════════
