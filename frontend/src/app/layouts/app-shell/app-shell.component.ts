@@ -28,32 +28,77 @@ import { API_BASE_URL } from '../../core/api';
           <a mat-list-item routerLink="/app/dashboard" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>dashboard</mat-icon><span>Dashboard</span></a>
 
           @if (role() === 'SUPER_ADMIN') {
+            <!-- Core Management -->
+            <mat-list-item class="menu-label">System Management</mat-list-item>
             <a mat-list-item routerLink="/app/super/institutes" routerLinkActive="mat-list-item-active"><mat-icon>school</mat-icon><span>Institutes</span></a>
             <a mat-list-item routerLink="/app/super/institute-users" routerLinkActive="mat-list-item-active"><mat-icon>person</mat-icon><span>Institute Users</span></a>
             <a mat-list-item routerLink="/app/super/users" routerLinkActive="mat-list-item-active"><mat-icon>admin_panel_settings</mat-icon><span>Board Users</span></a>
             <a mat-list-item routerLink="/app/super/masters" routerLinkActive="mat-list-item-active"><mat-icon>settings</mat-icon><span>Master Data</span></a>
+
+            <!-- Analytics -->
+            <mat-list-item class="menu-label">Advanced</mat-list-item>
+            <a mat-list-item routerLink="/app/super/reports" routerLinkActive="mat-list-item-active"><mat-icon>bar_chart</mat-icon><span>System Reports</span></a>
+            <a mat-list-item routerLink="/app/super/audit-logs" routerLinkActive="mat-list-item-active"><mat-icon>history</mat-icon><span>Audit Logs</span></a>
+            <a mat-list-item routerLink="/app/super/health" routerLinkActive="mat-list-item-active"><mat-icon>health_and_safety</mat-icon><span>System Health</span></a>
           }
 
           @if (role() === 'BOARD') {
+            <!-- Core Board Functions -->
+            <mat-list-item class="menu-label">Content Management</mat-list-item>
             <a mat-list-item routerLink="/app/board/exams" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>calendar_month</mat-icon><span>Exams</span></a>
             <a mat-list-item routerLink="/app/board/applications" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>assignment</mat-icon><span>Applications</span></a>
             <a mat-list-item routerLink="/app/board/news" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>newspaper</mat-icon><span>News</span></a>
+
+            <!-- Academic -->
+            <mat-list-item class="menu-label">Academic</mat-list-item>
             <a mat-list-item routerLink="/app/board/teachers" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>people</mat-icon><span>Teachers</span></a>
             <a mat-list-item routerLink="/app/board/subjects" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>subject</mat-icon><span>Subjects</span></a>
             <a mat-list-item routerLink="/app/board/streams" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>account_tree</mat-icon><span>Streams</span></a>
+
+            <!-- Analytics -->
+            <mat-list-item class="menu-label">Analytics</mat-list-item>
+            <a mat-list-item routerLink="/app/board/reports" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>analytics</mat-icon><span>Reports</span></a>
+            <a mat-list-item routerLink="/app/board/statistics" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>assessment</mat-icon><span>Statistics</span></a>
           }
 
           @if (role() === 'INSTITUTE') {
+            <!-- Student Management -->
+            <mat-list-item class="menu-label">Student Management</mat-list-item>
             <a mat-list-item routerLink="/app/institute/applications" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>fact_check</mat-icon><span>Student Applications</span></a>
+            <a mat-list-item routerLink="/app/institute/students" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>group</mat-icon><span>All Students</span></a>
+
+            <!-- Institute Management -->
+            <mat-list-item class="menu-label">Administration</mat-list-item>
             <a mat-list-item routerLink="/app/institute/settings" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>corporate_fare</mat-icon><span>Institute Details</span></a>
-            <a mat-list-item routerLink="/app/institute/teachers" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>people</mat-icon><span>Teachers</span></a>
+            <a mat-list-item routerLink="/app/institute/teachers" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>people</mat-icon><span>Teachers & Staff</span></a>
             <a mat-list-item routerLink="/app/institute/stream-subjects" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>view_list</mat-icon><span>Stream Subjects</span></a>
+
+            <!-- Reports -->
+            <mat-list-item class="menu-label">Insights</mat-list-item>
+            <a mat-list-item routerLink="/app/institute/reports" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>bar_chart</mat-icon><span>Institute Reports</span></a>
           }
 
           @if (role() === 'STUDENT') {
-            <a mat-list-item routerLink="/app/student/profile" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>person</mat-icon><span>My Profile (Basic Details)</span></a>
+            <!-- Academics -->
+            <mat-list-item class="menu-label">My Studies</mat-list-item>
+            <a mat-list-item routerLink="/app/student/profile" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>person</mat-icon><span>My Profile</span></a>
             <a mat-list-item routerLink="/app/student/applications" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>assignment_ind</mat-icon><span>My Applications</span></a>
+            <a mat-list-item routerLink="/app/student/exam-schedule" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>calendar_today</mat-icon><span>Exam Schedule</span></a>
+
+            <!-- Payment & Fees -->
+            <mat-list-item class="menu-label">Payment</mat-list-item>
+            <a mat-list-item routerLink="/app/student/fees" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>credit_card</mat-icon><span>Fees & Payments</span></a>
+            <a mat-list-item routerLink="/app/student/payment-history" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>history</mat-icon><span>Payment History</span></a>
+
+            <!-- Help Resources -->
+            <mat-list-item class="menu-label">Resources</mat-list-item>
+            <a mat-list-item routerLink="/app/student/notifications" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>notifications</mat-icon><span>Notifications</span></a>
+            <a mat-list-item routerLink="/app/student/help" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>help</mat-icon><span>Help & Support</span></a>
           }
+
+          <!-- Common items for all roles -->
+          <mat-list-item class="menu-divider"></mat-list-item>
+          <a mat-list-item routerLink="/app/profile" routerLinkActive="mat-list-item-active" (click)="closeOnMobile()"><mat-icon>account_circle</mat-icon><span>Account Settings</span></a>
         </mat-nav-list>
       </mat-sidenav>
 
@@ -188,6 +233,30 @@ import { API_BASE_URL } from '../../core/api';
         font-size: 0.9rem;
         font-weight: 500;
         letter-spacing: 0.2px;
+      }
+
+      /* Menu section labels */
+      .menu-label {
+        padding: 12px 16px 6px 16px !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        letter-spacing: 1px !important;
+        text-transform: uppercase !important;
+        color: #93c5fd !important;
+        opacity: 0.7;
+        cursor: default !important;
+        margin: 12px 0 6px 0 !important;
+        pointer-events: none;
+      }
+
+      /* Menu divider -->
+      .menu-divider {
+        height: 1px !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        margin: 12px 10px !important;
+        padding: 0 !important;
+        cursor: default !important;
+        pointer-events: none;
       }
 
       .toolbar {
