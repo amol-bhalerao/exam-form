@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "build": "npm run build:backend && npm run build:frontend",
-    "build:backend": "cd backend && npm install && npm run build",
-    "build:frontend": "cd frontend && npm install --legacy-peer-deps && npm run build",
+    "build:backend": "cd backend && npm cache clean --force && npm install && npm run build",
+    "build:frontend": "cd frontend && npm cache clean --force && npm install --legacy-peer-deps && npm run build",
     "start": "cd backend && npm start",
     "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install --legacy-peer-deps && cd .."
   },
