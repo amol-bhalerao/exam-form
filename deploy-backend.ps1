@@ -31,11 +31,12 @@ Write-Host "  • .env (if exists)" -ForegroundColor Gray
 Write-Host ""
 
 Write-Host "Uploading files..." -ForegroundColor Cyan
-Write-Host "(Enter your Hostinger SSH password when prompted)" -ForegroundColor Yellow
+Write-Host "(Using SSH key authentication)" -ForegroundColor Yellow
 Write-Host ""
 
-# Step 3: Upload using SCP
-& scp -P $sshPort -r "$backendPath" "$sshUser@$sshHost`:$remotePath/"
+# Step 3: Upload using SCP with SSH key
+$sshKeyPath = "$env:USERPROFILE\.ssh\hostinger"
+& scp -i $sshKeyPath -P $sshPort -r "$backendPath" "$sshUser@$sshHost`:$remotePath/"
 
 if ($LASTEXITCODE -eq 0) {
   Write-Host ""
