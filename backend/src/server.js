@@ -47,7 +47,8 @@ app.use(
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:']
       }
     },
-    crossOriginEmbedderPolicy: false // needed for Google Sign-In
+    crossOriginEmbedderPolicy: false, // needed for Google Sign-In
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' } // Allow Google OAuth popup
   })
 );
 
