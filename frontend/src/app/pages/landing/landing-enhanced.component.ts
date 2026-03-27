@@ -108,7 +108,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
         @if (!(exams$ | async)) {
         <div class="loading-exams">
           <mat-spinner diameter="40"></mat-spinner>
-          <p>{{ selectedLanguage() === 'mr' ? 'परीक्षा लोड हो रही हैं...' : 'Loading exams...' }}</p>
+          <p>{{ selectedLanguage() === 'mr' ? 'परीक्षा लोड होत आहेत...' : 'Loading exams...' }}</p>
         </div>
         }
       </div>
