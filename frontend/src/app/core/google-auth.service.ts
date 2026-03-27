@@ -17,7 +17,7 @@ export class GoogleAuthService {
   private googleInitialized = false;  // Guard against multiple initializations
 
   // Development/Test mode - set to true to use test button while Google config is pending
-  private devMode = true;
+  private devMode = false;
 
   constructor() {
     this.loadGoogleScript();
