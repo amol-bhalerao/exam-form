@@ -20,6 +20,7 @@ import { publicRouter } from './routes/public.js';
 import { newsRouter } from './routes/news.js';
 import { paymentsRouter } from './routes/payments.js';
 import { studentsRouter } from './routes/students.js';
+import { adminRouter } from './routes/admin.js';
 import { swaggerSpec } from './swagger.js';
 
 const isProd = env.NODE_ENV === 'production';
@@ -105,6 +106,7 @@ app.use('/api/students', studentsRouter);
 app.use('/api/public', publicRouter);
 app.use('/api/news', newsRouter);
 app.use('/api/payments', paymentLimiter, paymentsRouter);
+app.use('/api/admin', adminRouter);
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // ── Global error handler (must be last) ─────────────────────────────────

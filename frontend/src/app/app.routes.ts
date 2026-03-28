@@ -31,9 +31,13 @@ import { BoardStreamsComponent } from './pages/board/board-streams/board-streams
 import { InstituteApplicationsComponent } from './pages/institute/institute-applications/institute-applications.component';
 import { BoardExamsComponent } from './pages/board/board-exams/board-exams.component';
 import { BoardNewsComponent } from './pages/board/board-news/board-news.component';
+import { AdminStatusDashboardComponent } from './components/admin-status-dashboard/admin-status-dashboard.component';
 
 export const routes: Routes = [
   { path: '', component: LandingEnhancedComponent },
+  
+  // Admin Status Dashboard (Debug Tool)
+  { path: 'admin/status', component: AdminStatusDashboardComponent },
   
   // Unified login route for all user types
   { path: 'auth', component: UserTypeLoginComponent },
