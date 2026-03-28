@@ -36,6 +36,9 @@ console.log(`🔨 Detected deployment: ${deployment}`);
 
 try {
   if (deployment === 'backend') {
+    console.log('📦 Installing backend dependencies...');
+    execSync('cd backend && npm install --production=false', { stdio: 'inherit' });
+    
     console.log('📦 Building backend (Prisma generate)...');
     execSync('cd backend && npm run build', { stdio: 'inherit' });
     console.log('✅ Backend build complete');
