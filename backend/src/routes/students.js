@@ -14,15 +14,15 @@ studentsRouter.get('/me', requireAuth, async (req, res) => {
     const student = await prisma.student.findUnique({
       where: { userId },
       include: {
-        freshSubjects: true,
-        backlogSubjects: true,
         institute: {
           select: {
             id: true,
             name: true,
             code: true
           }
-        }
+        },
+        applications: true,
+        previousExams: true
       }
     });
 
