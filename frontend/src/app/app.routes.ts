@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-import { authGuard, formGuard, studentGuard } from './core/auth.guard';
+import { authGuard, formGuard, studentGuard, profileGuard } from './core/auth.guard';
 import { roleGuard } from './core/role.guard';
 import { LoginComponent } from './pages/login/login.component';
 import { GoogleLoginComponent } from './pages/login/google-login.component';
@@ -92,10 +92,10 @@ export const routes: Routes = [
       { path: 'institute/teachers', component: InstituteAddTeacherComponent, canActivate: [roleGuard(['INSTITUTE'])] },
       { path: 'institute/stream-subjects', component: InstituteStreamSubjectsComponent, canActivate: [roleGuard(['INSTITUTE'])] },
 
-      // STUDENT - Require Google authentication for exam forms
+      // STUDENT - Require Google authentication + complete profile (institute + stream)
       { path: 'student/profile', component: StudentProfileComponent, canActivate: [roleGuard(['STUDENT'])] },
-      { path: 'student/applications', component: StudentApplicationsComponent, canActivate: [roleGuard(['STUDENT']), formGuard] },
-      { path: 'student/applications/:id', component: StudentApplicationEditComponent, canActivate: [roleGuard(['STUDENT']), formGuard] },
+      { path: 'student/applications', component: StudentApplicationsComponent, canActivate: [roleGuard(['STUDENT']), profileGuard] },
+      { path: 'student/applications/:id', component: StudentApplicationEditComponent, canActivate: [roleGuard(['STUDENT']), profileGuard] },
       { path: 'student/forms/:id/print', component: StudentFormPrintComponent, canActivate: [roleGuard(['STUDENT', 'INSTITUTE', 'BOARD', 'SUPER_ADMIN'])] }
     ]
   },

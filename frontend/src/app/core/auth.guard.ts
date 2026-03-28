@@ -1,6 +1,7 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
 import { AuthService } from './auth.service';
+import { StudentProfileService } from './student-profile.service';
 
 export const authGuard: CanActivateFn = (route, state) => {
   const auth = inject(AuthService);
@@ -14,10 +15,11 @@ export const authGuard: CanActivateFn = (route, state) => {
   return router.parseUrl('/login');
 };
 
-// Guard for forms - requires authentication
-export const formGuard: CanActivateFn = (route, state) => {
+// Guard for forms - requires authentication + complete profile
+export const formGuard: CanActivateFn = async (route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
+  const profileService = inject(StudentProfileService);
   
   const isLoggedIn = auth.isLoggedIn();
   if (!isLoggedIn) {
@@ -27,7 +29,74 @@ export const formGuard: CanActivateFn = (route, state) => {
     return false;
   }
   
-  return true;
+  // Check if student has completed profile (institute + stream selected)
+  try {
+    // Load profile to check if it exists
+    await profileService.loadProfile();
+    const profile = profileService.profile$();
+    
+    // If no profile, redirect to institute selection
+    if (!profile) {
+      router.navigate(['/student/select-institute']);
+      return false;
+    }
+    
+    return true;
+  } catch (error: any) {
+    // If we get a STUDENT_PROFILE_MISSING error, redirect to institute selection
+    if (error?.error?.error === 'STUDENT_PROFILE_MISSING' || error?.status === 404) {
+      router.navigate(['/student/select-institute']);
+      return false;
+    }
+    
+    // For other errors, allow access (could be network issue)
+    return true;
+  }
+};
+
+// Profile completion guard - requires authenticated student with complete profile
+export const profileGuard: CanActivateFn = async (route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const profileService = inject(StudentProfileService);
+  
+  const isLoggedIn = auth.isLoggedIn();
+  const user = auth.user();
+  
+  if (!isLoggedIn) {
+    router.navigate(['/login']);
+    return false;
+  }
+  
+  if (user?.role !== 'STUDENT') {
+    router.navigate(['/unauthorized']);
+    return false;
+  }
+  
+  // Check if student profile exists and is complete
+  try {
+    await profileService.loadProfile();
+    const profile = profileService.profile$();
+    
+    if (!profile) {
+      router.navigate(['/student/select-institute']);
+      return false;
+    }
+    
+    return true;
+  } catch (error: any) {
+    // Log for debugging
+    console.warn('Profile guard error:', error);
+    
+    if (error?.error?.error === 'STUDENT_PROFILE_MISSING' || error?.status === 404) {
+      // Profile missing - must select institute first
+      router.navigate(['/student/select-institute']);
+      return false;
+    }
+    
+    // For other errors, allow access to not block user experience
+    return true;
+  }
 };
 
 // Student-only guard

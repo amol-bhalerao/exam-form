@@ -58,35 +58,40 @@ export class StudentProfileService {
 
   constructor() {
     // Load profile on service init
-    this.loadProfile();
+    this.loadProfile().catch(err => {
+      console.error('Failed to load profile during service init:', err);
+    });
   }
 
   /**
    * Load student profile from backend
    * If profile is missing, returns specific error for redirect
+   * Returns an observable for use in guards
    */
   loadProfile() {
     this.isLoading.set(true);
     this.error.set(null);
 
-    this.http.get<{ student: StudentProfile }>(`${API_BASE_URL}/students/me`).subscribe({
-      next: (response: any) => {
-        const profile = response.student;
-        this.studentProfile.set(profile);
-        this.isLoading.set(false);
-      },
-      error: (err: any) => {
-        // Check if profile is missing - this happens before institute selection
-        const errorCode = err?.error?.error;
-        const errorMsg = err?.error?.message || err?.error?.error || 'Failed to load profile. Please try again.';
-        
-        console.error('Failed to load student profile:', err);
-        this.error.set(errorMsg);
-        this.isLoading.set(false);
-        
-        // Don't set profile to null if it's a permission error (401, 403)
-        // Let the component handle the redirect
-      }
+    return new Promise((resolve, reject) => {
+      this.http.get<{ student: StudentProfile }>(`${API_BASE_URL}/students/me`).subscribe({
+        next: (response: any) => {
+          const profile = response.student;
+          this.studentProfile.set(profile);
+          this.isLoading.set(false);
+          resolve(profile);
+        },
+        error: (err: any) => {
+          const errorCode = err?.error?.error;
+          const errorMsg = err?.error?.message || err?.error?.error || 'Failed to load profile. Please try again.';
+          
+          console.error('Failed to load student profile:', err);
+          this.error.set(errorMsg);
+          this.isLoading.set(false);
+          
+          // Reject with error for guards to handle
+          reject(err);
+        }
+      });
     });
   }
 
