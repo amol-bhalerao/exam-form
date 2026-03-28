@@ -72,9 +72,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
           <mat-card-content>
             <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
               <mat-form-field class="full-width">
-                <mat-label>{{ i18n.t('email') }}</mat-label>
-                <mat-icon matPrefix>email</mat-icon>
-                <input matInput formControlName="email" type="email" required />
+                <mat-label>{{ i18n.t('username') }}</mat-label>
+                <mat-icon matPrefix>person</mat-icon>
+                <input matInput formControlName="username" required />
               </mat-form-field>
 
               <mat-form-field class="full-width">
@@ -331,8 +331,8 @@ export class InstituteLoginComponent {
 
   constructor() {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8)]]
+      username: ['', [Validators.required, Validators.minLength(3)]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
@@ -346,8 +346,8 @@ export class InstituteLoginComponent {
     this.isLoading = true;
 
     this.http
-      .post<any>(`${API_BASE_URL}/api/auth/login`, {
-        username: this.loginForm.value.email,
+      .post<any>(`${API_BASE_URL}/auth/login`, {
+        username: this.loginForm.value.username,
         password: this.loginForm.value.password
       })
       .subscribe({
@@ -355,7 +355,7 @@ export class InstituteLoginComponent {
           localStorage.setItem('accessToken', response.accessToken);
           localStorage.setItem('user', JSON.stringify(response.user));
           this.snackBar.open(this.i18n.t('loginSuccess'), '', { duration: 3000 });
-          this.router.navigate(['/institute/dashboard']);
+          this.router.navigate(['/app/dashboard']);
         },
         error: (err) => {
           this.isLoading = false;

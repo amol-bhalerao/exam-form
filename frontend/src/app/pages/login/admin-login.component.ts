@@ -87,13 +87,6 @@ import { API_BASE_URL } from '../../core/api';
                 </button>
               </mat-form-field>
 
-              <!-- Security Code / OTP -->
-              <mat-form-field class="full-width">
-                <mat-label>{{ i18n.t('securityCode') }}</mat-label>
-                <mat-icon matPrefix>verified_user</mat-icon>
-                <input matInput formControlName="securityCode" placeholder="6-digit code" required />
-              </mat-form-field>
-
               <button
                 mat-raised-button
                 color="accent"
@@ -386,9 +379,8 @@ export class AdminLoginComponent {
 
   constructor() {
     this.loginForm = this.fb.group({
-      username: ['', [Validators.required, Validators.minLength(4)]],
-      password: ['', [Validators.required, Validators.minLength(10)]],
-      securityCode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]]
+      username: ['', [Validators.required, Validators.minLength(3)]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
 
@@ -402,13 +394,15 @@ export class AdminLoginComponent {
     this.isLoading = true;
 
     this.http
-      .post<any>(`${API_BASE_URL}/api/auth/login`, {
+      .post<any>(`${API_BASE_URL}/auth/login`, {
         username: this.loginForm.value.username,
         password: this.loginForm.value.password
       })
       .subscribe({
         next: (response) => {
-          if (response.user?.role !== 'ADMIN') {
+          // Allow BOARD and SUPER_ADMIN roles - not just ADMIN
+          const allowedRoles = ['BOARD', 'SUPER_ADMIN'];
+          if (!allowedRoles.includes(response.user?.role)) {
             this.isLoading = false;
             this.snackBar.open(this.i18n.t('notAuthorized'), '', { duration: 3000 });
             return;
@@ -417,7 +411,7 @@ export class AdminLoginComponent {
           localStorage.setItem('accessToken', response.accessToken);
           localStorage.setItem('user', JSON.stringify(response.user));
           this.snackBar.open(this.i18n.t('loginSuccess'), '', { duration: 3000 });
-          this.router.navigate(['/admin/dashboard']);
+          this.router.navigate(['/app/dashboard']);
         },
         error: (err) => {
           this.isLoading = false;
