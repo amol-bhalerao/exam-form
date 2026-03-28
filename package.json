@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "HSC Exam Form System - Backend API + Angular Frontend",
   "private": true,
+  "type": "module",
   "scripts": {
     "build": "node scripts/smart-build.js",
     "build:backend": "cd backend && node -e \"require('fs').rmSync('node_modules', {recursive: true, force: true})\" && npm cache clean --force && npm install --production=false && npm run build",
