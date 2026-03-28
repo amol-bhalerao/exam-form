@@ -39,7 +39,7 @@ const envSchema = z.object({
   EXAM_FEE_PAISE: z.coerce.number().int().positive().default(50000), // ₹500
 
   // URLs (used for redirects and webhook base URL)
-  BACKEND_URL: z.string().default(isProd ? 'https://hsc-exam-form.hisofttechnology.com' : 'http://localhost:3000'),
+  BACKEND_URL: z.string().default(isProd ? 'https://hsc-api.hisofttechnology.com' : 'http://localhost:3000'),
   FRONTEND_URL: z.string().default(isProd ? 'https://hsc-exam-form.hisofttechnology.com' : 'http://localhost:4200'),
 
   // Security – AES-256 key for encrypting sensitive fields (Aadhaar etc)
