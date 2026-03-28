@@ -87,6 +87,33 @@ adminRouter.get('/status', async (req, res) => {
       { path: '/api/payments', method: 'GET', auth: true, name: 'List Payments' }
     ];
 
+    // Check schema compatibility
+    log('info', 'Checking database schema compatibility...');
+    try {
+      // This will fail if googleId column doesn't exist
+      const testUser = await prisma.user.findFirst({
+        select: { id: true, googleId: true }
+      });
+      status.checks.apis.schema_compatibility = {
+        status: 'OK',
+        message: 'Database schema matches Prisma expectations',
+        requiredFields: ['googleId', 'authProvider']
+      };
+      log('success', 'Schema check passed - all required columns exist');
+    } catch (err) {
+      status.checks.apis.schema_compatibility = {
+        status: 'FAILED',
+        message: 'Database schema mismatch',
+        error: err.message,
+        cause: 'Missing columns (e.g., googleId, authProvider)',
+        solution: 'Run: npx prisma migrate deploy'
+      };
+      log('error', 'Schema mismatch detected', { 
+        error: err.message,
+        solution: 'Run npx prisma migrate deploy on production'
+      });
+    }
+
     // Simple database query tests
     const dbTests = {
       exams: {

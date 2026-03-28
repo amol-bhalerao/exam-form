@@ -36,8 +36,8 @@ import { AdminStatusDashboardComponent } from './components/admin-status-dashboa
 export const routes: Routes = [
   { path: '', component: LandingEnhancedComponent },
   
-  // Admin Status Dashboard (Debug Tool)
-  { path: 'admin/status', component: AdminStatusDashboardComponent },
+  // Admin Status Dashboard (MUST come before catch-all)
+  { path: 'admin/status', component: AdminStatusDashboardComponent, data: { title: 'API Status Dashboard' } },
   
   // Unified login route for all user types
   { path: 'auth', component: UserTypeLoginComponent },
