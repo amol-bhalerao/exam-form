@@ -4,7 +4,7 @@
   "description": "HSC Exam Form System - Backend API + Angular Frontend",
   "private": true,
   "scripts": {
-    "build": "npm run build:frontend:local",
+    "build": "node scripts/smart-build.js",
     "build:backend": "cd backend && node -e \"require('fs').rmSync('node_modules', {recursive: true, force: true})\" && npm cache clean --force && npm install --production=false && npm run build",
     "build:frontend:local": "cd frontend && node -e \"require('fs').rmSync('node_modules', {recursive: true, force: true})\" && npm cache clean --force && npm install --legacy-peer-deps --production=false && npm run build",
     "build:all": "npm run build:frontend:local && npm run build:backend",
