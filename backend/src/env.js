@@ -1,12 +1,18 @@
 import { z } from 'zod';
 import { config } from 'dotenv';
+import fs from 'fs';
 
-// Load environment-specific .env file
-if (process.env.NODE_ENV === 'production') {
-  config({ path: '.env' });
-} else {
-  config({ path: '.env.development' });
+// Load environment-specific .env file only if it exists (for local development)
+// In production (Hostinger), environment variables are set in cPanel
+const isDev = process.env.NODE_ENV !== 'production';
+
+if (isDev) {
+  const envPath = process.env.NODE_ENV === 'development' ? '.env.development' : '.env';
+  if (fs.existsSync(envPath)) {
+    config({ path: envPath });
+  }
 }
+// In production, variables are already loaded from process.env (set via Hostinger cPanel)
 
 const isProd = process.env.NODE_ENV === 'production';
 
