@@ -72,7 +72,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
           <mat-card-content>
             <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
               <mat-form-field class="full-width">
-                <mat-label>{{ i18n.t('username') }}</mat-label>
+                <mat-label>Username</mat-label>
                 <mat-icon matPrefix>person</mat-icon>
                 <input matInput formControlName="username" required />
               </mat-form-field>

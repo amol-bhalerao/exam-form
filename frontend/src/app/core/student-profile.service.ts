@@ -63,7 +63,7 @@ export class StudentProfileService {
 
   /**
    * Load student profile from backend
-   * Uses modern RxJS patterns with proper error handling
+   * If profile is missing, returns specific error for redirect
    */
   loadProfile() {
     this.isLoading.set(true);
@@ -76,10 +76,16 @@ export class StudentProfileService {
         this.isLoading.set(false);
       },
       error: (err: any) => {
-        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to load profile. Please try again.';
+        // Check if profile is missing - this happens before institute selection
+        const errorCode = err?.error?.error;
+        const errorMsg = err?.error?.message || err?.error?.error || 'Failed to load profile. Please try again.';
+        
         console.error('Failed to load student profile:', err);
         this.error.set(errorMsg);
         this.isLoading.set(false);
+        
+        // Don't set profile to null if it's a permission error (401, 403)
+        // Let the component handle the redirect
       }
     });
   }

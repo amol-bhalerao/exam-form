@@ -1,5 +1,6 @@
 import { Component, OnInit, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -593,6 +594,7 @@ export class StudentProfileComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly snackBar = inject(MatSnackBar);
   private readonly dialog = inject(MatDialog);
+  private readonly router = inject(Router);
 
   // Signals converted to Observables
   readonly profile$ = toObservable(this.profileService.profile$);
@@ -642,6 +644,16 @@ export class StudentProfileComponent implements OnInit {
   }
 
   ngOnInit() {
+    // Subscribe to error and redirect if profile is missing
+    this.error$.subscribe((error: string | null) => {
+      if (error && error.includes('STUDENT_PROFILE_MISSING')) {
+        // Profile not created yet - redirect to institute selection
+        this.snackBar.open('⚠️ Please complete your profile first by selecting your institute and stream.', 'OK', { duration: 5000 });
+        this.router.navigate(['/student/select-institute']);
+        return;
+      }
+    });
+
     // Subscribe to profile changes and update forms
     this.profile$.subscribe((profile: StudentProfile | null) => {
       if (profile) {

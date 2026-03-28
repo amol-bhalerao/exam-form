@@ -8,11 +8,11 @@ export const studentsRouter = Router();
 // Get current student profile
 studentsRouter.get('/me', requireAuth, async (req, res) => {
   try {
-    const studentId = req.user?.id;
-    if (!studentId) return res.status(401).json({ error: 'UNAUTHORIZED' });
+    const userId = req.auth?.userId;
+    if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
 
     const student = await prisma.student.findUnique({
-      where: { userId: studentId },
+      where: { userId },
       include: {
         freshSubjects: true,
         backlogSubjects: true,
@@ -26,7 +26,10 @@ studentsRouter.get('/me', requireAuth, async (req, res) => {
       }
     });
 
-    if (!student) return res.status(404).json({ error: 'STUDENT_PROFILE_NOT_FOUND' });
+    if (!student) {
+      // Student profile not yet created - return 404 with specific error
+      return res.status(404).json({ error: 'STUDENT_PROFILE_MISSING', message: 'Please complete your profile first' });
+    }
 
     return res.json({ student });
   } catch (err) {
@@ -47,7 +50,7 @@ studentsRouter.patch('/:id', requireAuth, async (req, res) => {
     });
     
     if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND' });
-    if (student.userId !== req.user?.id) return res.status(403).json({ error: 'FORBIDDEN' });
+    if (student.userId !== req.auth?.userId) return res.status(403).json({ error: 'FORBIDDEN' });
 
     const body = z.object({
       firstName: z.string().min(1).optional(),
@@ -126,7 +129,7 @@ studentsRouter.patch('/:id', requireAuth, async (req, res) => {
 // POST: Student selects institute and stream right after Google login
 studentsRouter.post('/select-institute', requireAuth, async (req, res) => {
   try {
-    const userId = req.user?.id;
+    const userId = req.auth?.userId;
     if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
 
     const body = z.object({
