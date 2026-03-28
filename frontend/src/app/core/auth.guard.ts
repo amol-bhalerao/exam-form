@@ -55,6 +55,7 @@ export const formGuard: CanActivateFn = async (route, state) => {
 };
 
 // Profile completion guard - requires authenticated student with complete profile
+// Non-student roles bypass profile check
 export const profileGuard: CanActivateFn = async (route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -68,21 +69,24 @@ export const profileGuard: CanActivateFn = async (route, state) => {
     return false;
   }
   
-  if (user?.role !== 'STUDENT') {
-    router.navigate(['/unauthorized']);
-    return false;
+  // Non-student roles don't need profile check
+  if (user?.role && user.role !== 'STUDENT') {
+    return true;
   }
   
+  // For STUDENT role, enforce profile completion
   // Check if student profile exists and is complete
   try {
     await profileService.loadProfile();
     const profile = profileService.profile$();
     
     if (!profile) {
+      console.warn('Profile guard: No profile found. Redirecting to institute selection.');
       router.navigate(['/student/select-institute']);
       return false;
     }
     
+    console.log('Profile guard: Profile found. Allowing access.');
     return true;
   } catch (error: any) {
     // Log for debugging
@@ -90,11 +94,13 @@ export const profileGuard: CanActivateFn = async (route, state) => {
     
     if (error?.error?.error === 'STUDENT_PROFILE_MISSING' || error?.status === 404) {
       // Profile missing - must select institute first
+      console.warn('Profile guard: Profile missing (404). Redirecting to institute selection.');
       router.navigate(['/student/select-institute']);
       return false;
     }
     
     // For other errors, allow access to not block user experience
+    console.warn('Profile guard: Error loading profile, allowing access');
     return true;
   }
 };

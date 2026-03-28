@@ -69,7 +69,7 @@ export const routes: Routes = [
     component: AppShellComponent,
     children: [
       { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
-      { path: 'dashboard', component: DashboardComponent },
+      { path: 'dashboard', component: DashboardComponent, canActivate: [profileGuard] },
 
       // SUPER ADMIN
       { path: 'super/institutes', component: SuperInstitutesComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
