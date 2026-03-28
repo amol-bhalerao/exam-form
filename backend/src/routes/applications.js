@@ -58,58 +58,83 @@ async function getApplicationScoped(applicationId, auth) {
 
 // Student: list my applications
 applicationsRouter.get('/my', requireAuth, requireRole(['STUDENT']), async (req, res) => {
-  const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
-  if (!student) return res.status(404).json({ error: 'STUDENT_PROFILE_MISSING' });
+  try {
+    let student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
+    
+    // If profile doesn't exist yet, it means student hasn't selected institute yet
+    if (!student) {
+      // Return helpful error directing them to complete profile
+      return res.status(412).json({ 
+        error: 'PROFILE_INCOMPLETE',
+        message: 'Please complete your profile by selecting your institute and stream first.',
+        redirectUrl: '/student/select-institute'
+      });
+    }
 
-  const apps = await prisma.examApplication.findMany({
-    where: { studentId: student.id },
-    include: { exam: true },
-    orderBy: { updatedAt: 'desc' },
-    take: 50
-  });
+    const apps = await prisma.examApplication.findMany({
+      where: { studentId: student.id },
+      include: { exam: true },
+      orderBy: { updatedAt: 'desc' },
+      take: 50
+    });
 
-  return res.json({ applications: apps });
+    return res.json({ applications: apps });
+  } catch (err) {
+    console.error('Get applications error:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
 });
 
 // Student: create application for an exam
 applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, res) => {
-  const body = z
-    .object({
-      examId: z.number().int().positive(),
-      candidateType: z.enum(['REGULAR', 'REPEATER', 'ATKT', 'BACKLOG', 'IMPROVEMENT', 'PRIVATE'])
-    })
-    .parse(req.body);
+  try {
+    const body = z
+      .object({
+        examId: z.number().int().positive(),
+        candidateType: z.enum(['REGULAR', 'REPEATER', 'ATKT', 'BACKLOG', 'IMPROVEMENT', 'PRIVATE'])
+      })
+      .parse(req.body);
 
-  const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
-  if (!student) return res.status(404).json({ error: 'STUDENT_PROFILE_MISSING' });
+    const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
+    if (!student) {
+      return res.status(412).json({ 
+        error: 'PROFILE_INCOMPLETE',
+        message: 'Please complete your profile by selecting your institute and stream first.',
+        redirectUrl: '/student/select-institute'
+      });
+    }
 
-  const exam = await prisma.exam.findUnique({ where: { id: body.examId } });
-  if (!exam) return res.status(404).json({ error: 'EXAM_NOT_FOUND' });
+    const exam = await prisma.exam.findUnique({ where: { id: body.examId } });
+    if (!exam) return res.status(404).json({ error: 'EXAM_NOT_FOUND' });
 
-  const institute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
-  if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
-  if (institute.status !== 'APPROVED') return res.status(403).json({ error: 'INSTITUTE_NOT_APPROVED' });
-  if (!institute.acceptingApplications) return res.status(403).json({ error: 'INSTITUTE_NOT_ACCEPTING_APPLICATIONS' });
+    const institute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
+    if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
+    if (institute.status !== 'APPROVED') return res.status(403).json({ error: 'INSTITUTE_NOT_APPROVED' });
+    if (!institute.acceptingApplications) return res.status(403).json({ error: 'INSTITUTE_NOT_ACCEPTING_APPLICATIONS' });
 
-  const app = await prisma.examApplication.create({
-    data: {
-      instituteId: student.instituteId,
-      studentId: student.id,
-      examId: exam.id,
-      applicationNo: `APP-${Date.now()}`,
-      candidateType: body.candidateType,
+    const app = await prisma.examApplication.create({
+      data: {
+        instituteId: student.instituteId,
+        studentId: student.id,
+        examId: exam.id,
+        applicationNo: `APP-${Date.now()}`,
+        candidateType: body.candidateType,
       status: 'DRAFT'
     }
   });
 
-  await addStatusHistory({
-    applicationId: app.id,
-    actorUserId: req.auth.userId,
-    fromStatus: null,
-    toStatus: 'DRAFT'
-  });
+    await addStatusHistory({
+      applicationId: app.id,
+      actorUserId: req.auth.userId,
+      fromStatus: null,
+      toStatus: 'DRAFT'
+    });
 
-  return res.json({ application: app });
+    return res.json({ application: app });
+  } catch (err) {
+    console.error('Create application error:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
 });
 
 // Get application (scoped by role/tenant)
@@ -122,14 +147,21 @@ applicationsRouter.get('/:id', requireAuth, async (req, res) => {
 
 // Student: update DRAFT application fields + subject selections
 applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req, res) => {
-  const applicationId = z.coerce.number().int().positive().parse(req.params.id);
+  try {
+    const applicationId = z.coerce.number().int().positive().parse(req.params.id);
 
-  const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
-  if (!student) return res.status(404).json({ error: 'STUDENT_PROFILE_MISSING' });
+    const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
+    if (!student) {
+      return res.status(412).json({ 
+        error: 'PROFILE_INCOMPLETE',
+        message: 'Please complete your profile by selecting your institute and stream first.',
+        redirectUrl: '/student/select-institute'
+      });
+    }
 
-  const app = await prisma.examApplication.findFirst({ where: { id: applicationId, studentId: student.id } });
-  if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
-  if (app.status !== 'DRAFT') return res.status(400).json({ error: 'NOT_EDITABLE' });
+    const app = await prisma.examApplication.findFirst({ where: { id: applicationId, studentId: student.id } });
+    if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
+    if (app.status !== 'DRAFT') return res.status(400).json({ error: 'NOT_EDITABLE' });
 
   const body = z
     .object({
@@ -300,13 +332,24 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
   });
 
   return res.json({ application: updated });
+  } catch (err) {
+    console.error('Update application error:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
 });
 
 // Student: submit (DRAFT -> SUBMITTED)
 applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), async (req, res) => {
-  const applicationId = z.coerce.number().int().positive().parse(req.params.id);
-  const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
-  if (!student) return res.status(404).json({ error: 'STUDENT_PROFILE_MISSING' });
+  try {
+    const applicationId = z.coerce.number().int().positive().parse(req.params.id);
+    const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
+    if (!student) {
+      return res.status(412).json({ 
+        error: 'PROFILE_INCOMPLETE',
+        message: 'Please complete your profile by selecting your institute and stream first.',
+        redirectUrl: '/student/select-institute'
+      });
+    }
 
   const app = await prisma.examApplication.findFirst({ where: { id: applicationId, studentId: student.id } });
   if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
@@ -329,6 +372,10 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
   });
 
   return res.json({ application: updated });
+  } catch (err) {
+    console.error('Submit application error:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
 });
 
 // Institute: list applications for my institute (filter + search)
