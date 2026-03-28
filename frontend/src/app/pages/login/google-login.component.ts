@@ -545,7 +545,7 @@ export class GoogleLoginComponent implements OnInit {
   loading = signal(false);
   errorMessage = signal<string | null>(null);
   selectedLanguage = this.i18n.getLanguage();
-  private returnUrl = '/app/dashboard';
+  private returnUrl = '/student/select-institute';  // Redirect to institute selection instead of dashboard
 
   ngOnInit() {
     // Check if already logged in

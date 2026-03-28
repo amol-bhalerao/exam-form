@@ -7,6 +7,34 @@ import { requireAuth, requireRole } from '../auth/middleware.js';
 
 export const institutesRouter = Router();
 
+// Public: approved institutes list (with district, city for filtering)
+institutesRouter.get('/', async (req, res) => {
+  try {
+    const institutes = await prisma.institute.findMany({
+      where: { status: 'APPROVED' },
+      orderBy: [{ district: 'asc' }, { name: 'asc' }],
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        district: true,
+        city: true,
+        collegeNo: true,
+        udiseNo: true,
+        address: true,
+        contactPerson: true,
+        contactEmail: true,
+        contactMobile: true,
+        status: true
+      }
+    });
+    return res.json({ institutes });
+  } catch (err) {
+    console.error('Error fetching institutes:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
 // Public: institute admin user registration for existing institute
 institutesRouter.post('/register', async (req, res) => {
   const body = z

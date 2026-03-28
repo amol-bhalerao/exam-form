@@ -123,3 +123,54 @@ studentsRouter.patch('/:id', requireAuth, async (req, res) => {
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
 });
+// POST: Student selects institute right after Google login
+studentsRouter.post('/select-institute', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+    const body = z.object({
+      instituteId: z.coerce.number().int().positive()
+    }).parse(req.body);
+
+    // Verify institute exists
+    const institute = await prisma.institute.findUnique({
+      where: { id: body.instituteId }
+    });
+    if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
+
+    // Get the student profile for this user
+    let student = await prisma.student.findUnique({
+      where: { userId }
+    });
+
+    if (!student) {
+      // First time - student profile doesn't exist yet, create it
+      student = await prisma.student.create({
+        data: {
+          userId,
+          instituteId: body.instituteId,
+          firstName: '',
+          lastName: ''
+        }
+      });
+    } else {
+      // Update existing student with institute
+      student = await prisma.student.update({
+        where: { userId },
+        data: {
+          instituteId: body.instituteId
+        }
+      });
+    }
+
+    return res.json({
+      ok: true,
+      message: 'Institute selected successfully',
+      student
+    });
+  } catch (err) {
+    console.error('Select institute error:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
