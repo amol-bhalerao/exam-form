@@ -39,15 +39,22 @@ export const routes: Routes = [
   // Admin Status Dashboard (MUST come before catch-all)
   { path: 'admin/status', component: AdminStatusDashboardComponent, data: { title: 'API Status Dashboard' } },
   
-  // Unified login route for all user types
-  { path: 'auth', component: UserTypeLoginComponent },
+  // Student Login (Google OAuth)
+  { path: 'auth', component: GoogleLoginComponent, data: { title: 'Student Login' } },
+  
+  // Separate login routes for different user types
+  { path: 'student-login', component: GoogleLoginComponent, data: { title: 'Student Login' } },
+  { path: 'google-login', component: GoogleLoginComponent, data: { title: 'Student Login' } },
+  
+  // Admin & Board Portal Login
+  { path: 'admin-login', component: AdminLoginComponent, data: { title: 'Admin & Board Login' } },
+  { path: 'board-login', component: AdminLoginComponent, data: { title: 'Board Portal Login' } },
+  
+  // Institute Portal Login
+  { path: 'institute-login', component: InstituteLoginComponent, data: { title: 'Institute Portal Login' } },
   
   // Legacy routes (kept for backward compatibility)
-  { path: 'login', redirectTo: 'auth', pathMatch: 'full' },
-  { path: 'student-login', component: GoogleLoginComponent },
-  { path: 'google-login', component: GoogleLoginComponent },
-  { path: 'institute-login', redirectTo: 'auth', pathMatch: 'full' },
-  { path: 'admin-login', redirectTo: 'auth', pathMatch: 'full' },
+  { path: 'login', redirectTo: 'student-login', pathMatch: 'full' },
   
   { path: 'institute/register', component: InstituteRegisterComponent },
   { path: 'institute/activate', component: InstituteActivateComponent },
