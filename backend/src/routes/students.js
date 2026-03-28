@@ -123,14 +123,15 @@ studentsRouter.patch('/:id', requireAuth, async (req, res) => {
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
 });
-// POST: Student selects institute right after Google login
+// POST: Student selects institute and stream right after Google login
 studentsRouter.post('/select-institute', requireAuth, async (req, res) => {
   try {
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
 
     const body = z.object({
-      instituteId: z.coerce.number().int().positive()
+      instituteId: z.coerce.number().int().positive(),
+      streamCode: z.string().min(1).max(10) // e.g., 'Science', 'Arts', 'Commerce'
     }).parse(req.body);
 
     // Verify institute exists
@@ -150,24 +151,30 @@ studentsRouter.post('/select-institute', requireAuth, async (req, res) => {
         data: {
           userId,
           instituteId: body.instituteId,
+          streamCode: body.streamCode,
           firstName: '',
           lastName: ''
         }
       });
     } else {
-      // Update existing student with institute
-      student = await prisma.student.update({
-        where: { userId },
-        data: {
-          instituteId: body.instituteId
-        }
+      // Once a student profile exists, prevent changing institute and stream
+      return res.status(409).json({ 
+        error: 'INSTITUTE_ALREADY_SELECTED',
+        message: 'Institute and Stream cannot be changed after initial selection. Please contact support if you need to change.'
       });
     }
 
     return res.json({
       ok: true,
-      message: 'Institute selected successfully',
-      student
+      message: 'Institute and Stream selected successfully',
+      student: {
+        id: student.id,
+        userId: student.userId,
+        instituteId: student.instituteId,
+        streamCode: student.streamCode,
+        firstName: student.firstName,
+        lastName: student.lastName
+      }
     });
   } catch (err) {
     console.error('Select institute error:', err);

@@ -11,9 +11,10 @@ import { MatSelect } from '@angular/material/select';
 import { MatOption } from '@angular/material/core';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { API_BASE_URL } from '../../core/api';
-import { AuthService } from '../../core/auth.service';
-import { I18nService } from '../../core/i18n.service';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { API_BASE_URL } from '../../../core/api';
+import { AuthService } from '../../../core/auth.service';
+import { I18nService } from '../../../core/i18n.service';
 
 interface Institute {
   id: number;
@@ -21,6 +22,11 @@ interface Institute {
   district: string;
   city: string;
   code: string;
+}
+
+interface Stream {
+  id: number;
+  name: string;
 }
 
 @Component({
@@ -41,22 +47,42 @@ interface Institute {
     MatOption,
     MatProgressSpinner,
     MatError,
-    MatHint
+    MatHint,
+    MatDialogModule
   ],
   template: `
     <div class="institute-select-container">
       <mat-card class="institute-card">
         <mat-card-header>
-          <h1>{{ i18n.t('selectInstitute') }}</h1>
-          <p class="subtitle">{{ i18n.t('instituteSelectionRequired') }}</p>
+          <h1>Select Your Institute & Stream</h1>
+          <p class="subtitle">⚠️ This selection cannot be changed later</p>
         </mat-card-header>
+
+        <!-- ⚠️ IMPORTANT WARNING - ENGLISH -->
+        <div class="warning-banner warning-english">
+          <mat-icon>warning</mat-icon>
+          <div>
+            <strong>⚠️ IMPORTANT NOTICE</strong>
+            <p>The Institute and Stream you select here <strong>CANNOT be changed later</strong>. This information will be used to fill your exam forms. Please select carefully.</p>
+          </div>
+        </div>
+
+        <!-- ⚠️ महत्वाचे सूचना - MARATHI -->
+        <div class="warning-banner warning-marathi">
+          <mat-icon>warning</mat-icon>
+          <div>
+            <strong>⚠️ महत्वाचे सूचना</strong>
+            <p>येथे आपण निवडलेले संस्था आणि प्रवाह <strong>नंतर बदलले जाऊ शकत नाही</strong>. हे माहिती आपल्या परीक्षा फॉर्म भरण्यासाठी वापरली जाईल. कृपया काळजीसह निवड करा.</p>
+          </div>
+        </div>
 
         <mat-card-content>
           <form (ngSubmit)="onSubmit()">
-            <!-- Search Input -->
-            <div class="search-section">
+            <!-- Institute Selection -->
+            <div class="select-section">
+              <h2>Step One: Select Your Institute</h2>
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>{{ i18n.t('searchInstitute') }}</mat-label>
+                <mat-label>Search Institute</mat-label>
                 <mat-icon matPrefix>business</mat-icon>
                 <input 
                   type="text" 
@@ -64,18 +90,15 @@ interface Institute {
                   [(ngModel)]="searchText" 
                   name="search"
                   (keyup)="filterInstitutes()"
-                  placeholder="Type institute name or code..."
+                  placeholder="Search by name or code..."
                 />
               </mat-form-field>
-            </div>
 
-            <!-- Institute Dropdown -->
-            <div class="select-section">
               <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ i18n.t('institute') }}</mat-label>
                 <mat-icon matPrefix>school</mat-icon>
-                <mat-select [(ngModel)]="selectedInstituteId" name="institute" required>
-                  <mat-select-trigger>
+                <mat-select [(ngModel)]="selectedInstituteId" name="institute" required (selectionChange)="onInstituteSelected()">
+                  <mat-select-trigger *ngIf="selectedInstituteId">
                     {{ getInstituteLabel(selectedInstituteId) }}
                   </mat-select-trigger>
                   <mat-optgroup *ngFor="let group of groupedInstitutes" [label]="group.district">
@@ -90,24 +113,52 @@ interface Institute {
                     </mat-option>
                   </mat-optgroup>
                 </mat-select>
-                <mat-hint *ngIf="!selectedInstituteId">
-                  {{ i18n.t('selectYourInstitute') }}
-                </mat-hint>
                 <mat-error *ngIf="!selectedInstituteId">
                   {{ i18n.t('instituteRequired') }}
                 </mat-error>
               </mat-form-field>
+
+              <!-- Selected Institute Details -->
+              <div class="institute-details" *ngIf="selectedInstitute">
+                <div class="detail-card">
+                  <mat-icon>check_circle</mat-icon>
+                  <div class="detail-content">
+                    <h3>{{ selectedInstitute.name }}</h3>
+                    <p>{{ selectedInstitute.district }}, {{ selectedInstitute.city }}</p>
+                    <p class="code">Code: {{ selectedInstitute.code }}</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <!-- Selected Institute Details -->
-            <div class="institute-details" *ngIf="selectedInstitute">
-              <div class="detail-card">
-                <mat-icon>check_circle</mat-icon>
-                <div class="detail-content">
-                  <h3>{{ selectedInstitute.name }}</h3>
-                  <p>{{ selectedInstitute.district }}, {{ selectedInstitute.city }}</p>
-                  <p class="code">Code: {{ selectedInstitute.code }}</p>
-                </div>
+            <!-- Stream Selection -->
+            <div class="select-section" *ngIf="selectedInstituteId">
+              <h2>Step Two: Select Your Stream</h2>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Stream</mat-label>
+                <mat-icon matPrefix>layers</mat-icon>
+                <mat-select [(ngModel)]="selectedStream" name="stream" required>
+                  <mat-select-trigger *ngIf="selectedStream">
+                    {{ selectedStream }}
+                  </mat-select-trigger>
+                  <mat-option *ngFor="let stream of streams" [value]="stream.name">
+                    {{ stream.name }}
+                  </mat-option>
+                </mat-select>
+                <mat-hint>
+                  Your stream will determine which subjects you can take
+                </mat-hint>
+                <mat-error *ngIf="!selectedStream">
+                  Stream is required
+                </mat-error>
+              </mat-form-field>
+
+              <div class="stream-info" *ngIf="selectedStream">
+                <mat-icon>info</mat-icon>
+                <p>
+                  <strong>Selected Stream: {{ selectedStream }}</strong><br>
+                  This stream will be used to determine eligible subjects for your exam application.
+                </p>
               </div>
             </div>
 
@@ -117,28 +168,43 @@ interface Institute {
               <p>{{ i18n.t('noInstitutesFound') }}</p>
             </div>
 
+            <!-- Final Confirmation Before Submit -->
+            <div class="confirmation-section" *ngIf="selectedInstituteId && selectedStream">
+              <div class="confirmation-box">
+                <mat-icon>check_box</mat-icon>
+                <div>
+                  <h3>Confirm Your Selection</h3>
+                  <p><strong>Institute:</strong> {{ getInstituteLabel(selectedInstituteId) }}</p>
+                  <p><strong>Stream:</strong> {{ selectedStream }}</p>
+                  <p class="confirmation-text">
+                    ✓ I understand that my Institute and Stream selection <strong>cannot be changed</strong> after submitting this form.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <!-- Submit Button -->
             <div class="button-section">
               <button 
                 mat-raised-button 
                 color="primary" 
                 type="submit"
-                [disabled]="!selectedInstituteId || isLoading"
-                class="full-width"
+                [disabled]="!selectedInstituteId || !selectedStream || isLoading"
+                class="full-width submit-btn"
               >
                 <mat-icon *ngIf="!isLoading">arrow_forward</mat-icon>
                 <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
                 <span *ngIf="!isLoading">{{ i18n.t('continue') }}</span>
-                <span *ngIf="isLoading">{{ i18n.t('processing') }}...</span>
+                <span *ngIf="isLoading">{{ i18n.t('loading') }}...</span>
               </button>
 
               <button 
                 mat-stroked-button 
                 type="button"
                 (click)="onLogout()"
-                class="full-width"
+                class="full-width logout-btn"
               >
-                <mat-icon>logout</mat-icon>
+                <mat-icon></mat-icon>
                 {{ i18n.t('logout') }}
               </button>
             </div>
@@ -147,16 +213,16 @@ interface Institute {
 
         <mat-card-footer class="info-footer">
           <div class="info-message">
-            <mat-icon>info</mat-icon>
-            <p>Your data is secure. We only use Google authentication to verify your identity.</p>
+            <mat-icon>security</mat-icon>
+            <p>Your data is secure. We only use Google authentication to verify your identity. Once you select your Institute and Stream, they will be linked to your profile permanently.</p>
           </div>
         </mat-card-footer>
       </mat-card>
 
       <!-- Loading Overlay -->
-      <div class="loading-overlay" *ngIf="isLoadingInstitutes">
+      <div class="loading-overlay" *ngIf="isLoadingInstitutes || isLoadingStreams">
         <mat-spinner diameter="50"></mat-spinner>
-        <p>Loading institutes...</p>
+        <p>Loading data...</p>
       </div>
     </div>
   `,
@@ -173,7 +239,7 @@ interface Institute {
 
     .institute-card {
       width: 100%;
-      max-width: 600px;
+      max-width: 700px;
       border-radius: 12px;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
       animation: slideIn 0.6s ease-out;
@@ -192,12 +258,12 @@ interface Institute {
 
     mat-card-header {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1rem;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       padding: 2rem 1rem;
       border-radius: 12px 12px 0 0;
-      margin: -16px -16px 2rem -16px;
+      margin: -16px -16px 1rem -16px;
     }
 
     mat-card-header h1 {
@@ -210,15 +276,71 @@ interface Institute {
       margin: 0;
       font-size: 0.95rem;
       opacity: 0.9;
+      color: #fff;
+    }
+
+    /* WARNING BANNERS - BILINGUAL */
+    .warning-banner {
+      display: flex;
+      gap: 1rem;
+      padding: 1.5rem;
+      margin: 0 -16px 1.5rem -16px;
+      padding-left: 16px;
+      padding-right: 16px;
+      border-left: 5px solid #ff6b6b;
+      background: #fff5f5;
+    }
+
+    .warning-banner mat-icon {
+      color: #ff0000;
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      margin-top: 0.25rem;
+    }
+
+    .warning-banner strong {
+      display: block;
+      color: #ff0000;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .warning-banner p {
+      margin: 0;
+      color: #333;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .warning-english {
+      border-left-color: #ff6b6b;
+      background: #fff5f5;
+    }
+
+    .warning-marathi {
+      border-left-color: #ff9900;
+      background: #fff9f0;
+      margin-bottom: 0;
     }
 
     mat-card-content {
       padding: 2rem;
     }
 
-    .search-section,
     .select-section {
-      margin-bottom: 2rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .select-section h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 1rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     .full-width {
@@ -227,7 +349,7 @@ interface Institute {
 
     mat-form-field {
       display: block;
-      margin-bottom: 0;
+      margin-bottom: 1.5rem;
     }
 
     .institute-option {
@@ -251,9 +373,9 @@ interface Institute {
     }
 
     .institute-details {
-      margin: 2rem 0;
+      margin: 1.5rem 0 2rem 0;
       padding: 1.5rem;
-      background: #f9f9f9;
+      background: #f0f7ff;
       border-radius: 8px;
       border-left: 4px solid #667eea;
     }
@@ -290,6 +412,28 @@ interface Institute {
       color: #667eea;
     }
 
+    .stream-info {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      background: #e8f5e9;
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+
+    .stream-info mat-icon {
+      color: #2e7d32;
+      flex-shrink: 0;
+      margin-top: 0.25rem;
+    }
+
+    .stream-info p {
+      margin: 0;
+      color: #1b5e20;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
     .no-results {
       text-align: center;
       padding: 2rem;
@@ -304,11 +448,66 @@ interface Institute {
       margin-bottom: 1rem;
     }
 
+    .confirmation-section {
+      margin: 2rem 0;
+    }
+
+    .confirmation-box {
+      display: flex;
+      gap: 1rem;
+      padding: 1.5rem;
+      background: #f0f7ff;
+      border: 2px solid #667eea;
+      border-radius: 8px;
+    }
+
+    .confirmation-box mat-icon {
+      color: #667eea;
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+      margin-top: 0.25rem;
+    }
+
+    .confirmation-box h3 {
+      margin: 0 0 1rem 0;
+      color: #333;
+      font-size: 1.1rem;
+    }
+
+    .confirmation-box p {
+      margin: 0.5rem 0;
+      color: #555;
+      font-size: 0.95rem;
+    }
+
+    .confirmation-text {
+      margin-top: 1rem !important;
+      padding-top: 1rem;
+      border-top: 1px solid #ddd;
+      color: #1b5e20 !important;
+      font-weight: 500;
+    }
+
     .button-section {
       display: flex;
       flex-direction: column;
       gap: 1rem;
       margin-top: 2rem;
+    }
+
+    .submit-btn,
+    .logout-btn {
+      height: 48px;
+      font-size: 1rem;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
     }
 
     .button-section button {
@@ -347,6 +546,7 @@ interface Institute {
 
     .info-message p {
       margin: 0;
+      line-height: 1.5;
     }
 
     .loading-overlay {
@@ -381,6 +581,17 @@ interface Institute {
       mat-card-content {
         padding: 1.5rem;
       }
+
+      .warning-banner {
+        margin-left: -12px;
+        margin-right: -12px;
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      .select-section h2 {
+        font-size: 1rem;
+      }
     }
   `]
 })
@@ -394,11 +605,14 @@ export class InstituteSelectComponent implements OnInit {
   institutes: Institute[] = [];
   filteredInstitutes: Institute[] = [];
   groupedInstitutes: Array<{ district: string; institutes: Institute[] }> = [];
+  streams: Stream[] = [];
   
   searchText = '';
   selectedInstituteId: number | null = null;
+  selectedStream: string | null = null;
   isLoading = false;
   isLoadingInstitutes = true;
+  isLoadingStreams = true;
 
   ngOnInit() {
     // Check if user is authenticated
@@ -407,8 +621,9 @@ export class InstituteSelectComponent implements OnInit {
       return;
     }
 
-    // Load list of institutes
+    // Load list of institutes and streams
     this.loadInstitutes();
+    this.loadStreams();
   }
 
   loadInstitutes() {
@@ -425,6 +640,22 @@ export class InstituteSelectComponent implements OnInit {
           console.error('Failed to load institutes:', err);
           this.snackBar.open('Failed to load institutes. Please try again.', 'Close', { duration: 5000 });
           this.isLoadingInstitutes = false;
+        }
+      });
+  }
+
+  loadStreams() {
+    this.isLoadingStreams = true;
+    this.http.get<{ streams: Stream[] }>(`${API_BASE_URL}/masters/streams`)
+      .subscribe({
+        next: (response) => {
+          this.streams = response.streams || [];
+          this.isLoadingStreams = false;
+        },
+        error: (err) => {
+          console.error('Failed to load streams:', err);
+          this.snackBar.open('Failed to load streams. Please try again.', 'Close', { duration: 5000 });
+          this.isLoadingStreams = false;
         }
       });
   }
@@ -461,6 +692,11 @@ export class InstituteSelectComponent implements OnInit {
       .sort((a, b) => a.district.localeCompare(b.district));
   }
 
+  onInstituteSelected() {
+    // Reset stream when institute changes
+    this.selectedStream = null;
+  }
+
   get selectedInstitute(): Institute | undefined {
     return this.institutes.find(i => i.id === this.selectedInstituteId);
   }
@@ -477,20 +713,38 @@ export class InstituteSelectComponent implements OnInit {
       return;
     }
 
+    if (!this.selectedStream) {
+      this.snackBar.open('Please select a stream', 'Close', { duration: 3000 });
+      return;
+    }
+
     this.isLoading = true;
 
-    // Save institute selection to backend
+    // Save institute and stream selection to backend
     this.http.post(`${API_BASE_URL}/students/select-institute`, {
-      instituteId: this.selectedInstituteId
+      instituteId: this.selectedInstituteId,
+      streamCode: this.selectedStream
     }).subscribe({
       next: () => {
-        this.snackBar.open('Institute selected successfully!', 'Close', { duration: 2000 });
-        this.router.navigate(['/app/dashboard']);
+        this.snackBar.open('✓ Institute and Stream selected successfully! Redirecting to dashboard...', 'Close', { duration: 3000 });
+        setTimeout(() => {
+          this.router.navigate(['/app/dashboard']);
+        }, 1000);
       },
       error: (err) => {
-        console.error('Failed to save institute selection:', err);
+        console.error('Failed to save selection:', err);
         this.isLoading = false;
-        this.snackBar.open('Failed to save selection. Please try again.', 'Close', { duration: 5000 });
+        
+        // Check for specific error messages
+        if (err.error?.error === 'INSTITUTE_ALREADY_SELECTED') {
+          this.snackBar.open(
+            '⚠️ Institute and Stream cannot be changed after initial selection. Please contact support.',
+            'Close',
+            { duration: 8000}
+          );
+        } else {
+          this.snackBar.open('Failed to save selection. Please try again.', 'Close', { duration: 5000 });
+        }
       }
     });
   }
