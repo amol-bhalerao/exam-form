@@ -545,17 +545,17 @@ export class GoogleLoginComponent implements OnInit {
   loading = signal(false);
   errorMessage = signal<string | null>(null);
   selectedLanguage = this.i18n.getLanguage();
-  private returnUrl = '/student/select-institute';  // Redirect to institute selection instead of dashboard
+  private returnUrl = '';
 
   ngOnInit() {
     // Check if already logged in
     if (this.googleAuth.isLoggedIn()) {
-      this.router.navigate([this.returnUrl]);
+      this.navigateToAppropriateLocation();
       return;
     }
 
-    // Get return URL from route parameters or default to dashboard
-    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/app/dashboard';
+    // Get return URL from route parameters
+    this.returnUrl = this.route.snapshot.queryParams['returnUrl'] || '';
 
     // Initialize Google Sign-In button - ensure it's only done once
     setTimeout(() => {
@@ -571,13 +571,30 @@ export class GoogleLoginComponent implements OnInit {
       'google-signin-button',
       (token: string) => {
         this.loading.set(false);
-        this.router.navigate([this.returnUrl]);
+        this.navigateToAppropriateLocation();
       },
       () => {
         this.loading.set(false);
         this.errorMessage.set('Failed to authenticate. Please try again.');
       }
     );
+  }
+
+  /**
+   * Navigate to the appropriate location based on user role and explicit return URL
+   * - If returnUrl in query params, use that
+   * - Otherwise navigate to /app/dashboard and let route guards handle role-based redirects
+   */
+  private navigateToAppropriateLocation() {
+    if (this.returnUrl) {
+      this.router.navigate([this.returnUrl]);
+      return;
+    }
+
+    // Default to dashboard - route guards (profileGuard) will handle redirects based on role
+    // BOARD/INSTITUTE/SUPER_ADMIN users will access dashboard directly
+    // STUDENT users will be redirected to /student/select-institute if no profile
+    this.router.navigate(['/app/dashboard']);
   }
 
   changeLanguage() {

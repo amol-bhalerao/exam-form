@@ -3,18 +3,19 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { MatCard, MatCardContent, MatCardFooter, MatCardHeader } from '@angular/material/card';
+import { MatCard } from '@angular/material/card';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
-import { MatFormField, MatLabel, MatError, MatHint } from '@angular/material/form-field';
+import { MatFormField, MatLabel, MatHint } from '@angular/material/form-field';
 import { MatSelect } from '@angular/material/select';
 import { MatOption } from '@angular/material/core';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { API_BASE_URL } from '../../../core/api';
 import { AuthService } from '../../../core/auth.service';
 import { I18nService } from '../../../core/i18n.service';
+import { trigger, transition, style, animate } from '@angular/animations';
+import { MatInput } from '@angular/material/input';
 
 interface Institute {
   id: number;
@@ -35,10 +36,6 @@ interface Stream {
   imports: [
     CommonModule,
     FormsModule,
-    MatCard,
-    MatCardHeader,
-    MatCardContent,
-    MatCardFooter,
     MatButton,
     MatIcon,
     MatFormField,
@@ -46,209 +43,267 @@ interface Stream {
     MatSelect,
     MatOption,
     MatProgressSpinner,
-    MatError,
     MatHint,
-    MatDialogModule
+    MatInput
+  ],
+  animations: [
+    trigger('slideIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ])
+    ])
   ],
   template: `
     <div class="institute-select-container">
-      <mat-card class="institute-card">
-        <mat-card-header>
-          <h1>Select Your Institute & Stream</h1>
-          <p class="subtitle">⚠️ This selection cannot be changed later</p>
-        </mat-card-header>
+      <!-- Header Section -->
+      <div class="header-section">
+        <div class="header-content">
+          <h1>Complete Your Profile</h1>
+          <p class="tagline">Select your institute and stream to get started</p>
+        </div>
+      </div>
 
-        <!-- ⚠️ IMPORTANT WARNING - ENGLISH -->
-        <div class="warning-banner warning-english">
-          <mat-icon>warning</mat-icon>
-          <div>
-            <strong>⚠️ IMPORTANT NOTICE</strong>
-            <p>The Institute and Stream you select here <strong>CANNOT be changed later</strong>. This information will be used to fill your exam forms. Please select carefully.</p>
+      <!-- Main Content -->
+      <div class="main-content">
+        <!-- Progress Indicator -->
+        <div class="progress-section">
+          <div class="progress-step" [class.active]="true" [class.completed]="selectedInstituteId">
+            <div class="step-number">1</div>
+            <div class="step-label">Institute</div>
+          </div>
+          <div class="progress-line" [class.active]="selectedInstituteId && selectedStream"></div>
+          <div class="progress-step" [class.active]="selectedInstituteId" [class.completed]="selectedStream">
+            <div class="step-number">2</div>
+            <div class="step-label">Stream</div>
           </div>
         </div>
 
-        <!-- ⚠️ महत्वाचे सूचना - MARATHI -->
-        <div class="warning-banner warning-marathi">
-          <mat-icon>warning</mat-icon>
-          <div>
-            <strong>⚠️ महत्वाचे सूचना</strong>
-            <p>येथे आपण निवडलेले संस्था आणि प्रवाह <strong>नंतर बदलले जाऊ शकत नाही</strong>. हे माहिती आपल्या परीक्षा फॉर्म भरण्यासाठी वापरली जाईल. कृपया काळजीसह निवड करा.</p>
+        <!-- Warning Banner -->
+        <div class="warning-section">
+          <div class="warning-box">
+            <mat-icon>warning_amber</mat-icon>
+            <div class="warning-content">
+              <h3>⚠️ Important Notice</h3>
+              <p>Your Institute and Stream selection <strong>cannot be changed</strong> after submission. Please select carefully.</p>
+              <p class="marathi">आपली संस्था आणि प्रवाह निवड सबमिट केल्यानंतर बदलली जाऊ शकत नाही.</p>
+            </div>
           </div>
         </div>
 
-        <mat-card-content>
-          <form (ngSubmit)="onSubmit()">
-            <!-- Institute Selection -->
-            <div class="select-section">
-              <h2>Step One: Select Your Institute</h2>
-              <mat-form-field appearance="outline" class="full-width">
+        <form (ngSubmit)="onSubmit()" class="selection-form">
+          <!-- Institute Selection Card -->
+          <div class="form-section">
+            <div class="section-header">
+              <div class="section-badge">1</div>
+              <div>
+                <h2>Select Your Institute</h2>
+                <p>Search and choose your educational institution</p>
+              </div>
+            </div>
+
+            <!-- Search Input -->
+            <div class="search-wrapper">
+              <mat-form-field appearance="outline" class="search-field">
                 <mat-label>Search Institute</mat-label>
-                <mat-icon matPrefix>business</mat-icon>
+                <mat-icon matPrefix>search</mat-icon>
                 <input 
                   type="text" 
                   matInput 
                   [(ngModel)]="searchText" 
                   name="search"
                   (keyup)="filterInstitutes()"
-                  placeholder="Search by name or code..."
+                  placeholder="Type institute name or code..."
+                  class="search-input"
                 />
               </mat-form-field>
+            </div>
 
+            <!-- Institute Dropdown -->
+            <div class="select-wrapper">
               <mat-form-field appearance="outline" class="full-width">
-                <mat-label>{{ i18n.t('institute') }}</mat-label>
-                <mat-icon matPrefix>school</mat-icon>
-                <mat-select [(ngModel)]="selectedInstituteId" name="institute" required (selectionChange)="onInstituteSelected()">
-                  <mat-select-trigger *ngIf="selectedInstituteId">
-                    {{ getInstituteLabel(selectedInstituteId) }}
-                  </mat-select-trigger>
-                  <mat-optgroup *ngFor="let group of groupedInstitutes" [label]="group.district">
+                <mat-label>Choose Institute</mat-label>
+                <mat-icon matPrefix>business</mat-icon>
+                <mat-select 
+                  [(ngModel)]="selectedInstituteId" 
+                  name="institute" 
+                  required 
+                  (selectionChange)="onInstituteSelected()"
+                  class="institute-select"
+                >
+                  <mat-optgroup *ngFor="let group of groupedInstitutes" [label]="group.district" class="district-group">
                     <mat-option 
                       *ngFor="let institute of group.institutes" 
                       [value]="institute.id"
+                      class="institute-option-item"
                     >
-                      <div class="institute-option">
-                        <strong>{{ institute.name }}</strong>
-                        <span class="code">{{ institute.code }}</span>
+                      <div class="option-content">
+                        <span class="option-name">{{ institute.name }}</span>
+                        <span class="option-code">{{ institute.code }}</span>
                       </div>
                     </mat-option>
                   </mat-optgroup>
                 </mat-select>
-                <mat-error *ngIf="!selectedInstituteId">
-                  {{ i18n.t('instituteRequired') }}
-                </mat-error>
               </mat-form-field>
+            </div>
 
-              <!-- Selected Institute Details -->
-              <div class="institute-details" *ngIf="selectedInstitute">
-                <div class="detail-card">
-                  <mat-icon>check_circle</mat-icon>
-                  <div class="detail-content">
-                    <h3>{{ selectedInstitute.name }}</h3>
-                    <p>{{ selectedInstitute.district }}, {{ selectedInstitute.city }}</p>
-                    <p class="code">Code: {{ selectedInstitute.code }}</p>
+            <!-- Selected Institute Card -->
+            <div class="selected-card" *ngIf="selectedInstitute" [@slideIn]>
+              <div class="card-header">
+                <mat-icon class="success-icon">school</mat-icon>
+                <h3>{{ selectedInstitute.name }}</h3>
+              </div>
+              <div class="card-body">
+                <div class="info-row">
+                  <span class="label">Institute Code:</span>
+                  <span class="value code-badge">{{ selectedInstitute.code }}</span>
+                </div>
+                <div class="info-row">
+                  <span class="label">Location:</span>
+                  <span class="value">{{ selectedInstitute.district }}, {{ selectedInstitute.city }}</span>
+                </div>
+              </div>
+              <div class="card-footer">
+                <mat-icon>check_circle</mat-icon>
+                <span>Institute selected</span>
+              </div>
+            </div>
+
+            <!-- No Results -->
+            <div class="no-results" *ngIf="searchText && filteredInstitutes.length === 0">
+              <mat-icon>search_off</mat-icon>
+              <p>No institutes found for "<strong>{{ searchText }}</strong>"</p>
+            </div>
+          </div>
+
+          <!-- Stream Selection Card -->
+          <div class="form-section" *ngIf="selectedInstituteId" [@slideIn]>
+            <div class="section-header">
+              <div class="section-badge stream-badge">2</div>
+              <div>
+                <h2>Select Your Stream</h2>
+                <p>Choose the academic stream for your studies</p>
+              </div>
+            </div>
+
+            <!-- Stream Dropdown -->
+            <div class="select-wrapper">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Choose Stream</mat-label>
+                <mat-icon matPrefix>layers</mat-icon>
+                <mat-select 
+                  [(ngModel)]="selectedStream" 
+                  name="stream" 
+                  required
+                  class="stream-select"
+                >
+                  <mat-option *ngFor="let stream of streams" [value]="stream.name">
+                    <div class="stream-option">{{ stream.name }}</div>
+                  </mat-option>
+                </mat-select>
+                <mat-hint>Determines which subjects are available for you</mat-hint>
+              </mat-form-field>
+            </div>
+
+            <!-- Selected Stream Card -->
+            <div class="selected-card stream-card" *ngIf="selectedStream" [@slideIn]>
+              <div class="card-header">
+                <mat-icon class="info-icon">layers</mat-icon>
+                <h3>{{ selectedStream }}</h3>
+              </div>
+              <div class="card-body">
+                <p>This selection determines which subjects and exams are available for you.</p>
+              </div>
+              <div class="card-footer">
+                <mat-icon>check_circle</mat-icon>
+                <span>Stream selected</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Confirmation Section -->
+          <div class="confirmation-section" *ngIf="selectedInstituteId && selectedStream" [@slideIn]>
+            <div class="summary-box">
+              <h3>Summary of Your Selection</h3>
+              <div class="summary-content">
+                <div class="summary-item">
+                  <mat-icon>school</mat-icon>
+                  <div>
+                    <span class="summary-label">Institute:</span>
+                    <span class="summary-value">{{ getInstituteLabel(selectedInstituteId) }}</span>
+                  </div>
+                </div>
+                <div class="summary-item">
+                  <mat-icon>layers</mat-icon>
+                  <div>
+                    <span class="summary-label">Stream:</span>
+                    <span class="summary-value">{{ selectedStream }}</span>
                   </div>
                 </div>
               </div>
-            </div>
-
-            <!-- Stream Selection -->
-            <div class="select-section" *ngIf="selectedInstituteId">
-              <h2>Step Two: Select Your Stream</h2>
-              <mat-form-field appearance="outline" class="full-width">
-                <mat-label>Stream</mat-label>
-                <mat-icon matPrefix>layers</mat-icon>
-                <mat-select [(ngModel)]="selectedStream" name="stream" required>
-                  <mat-select-trigger *ngIf="selectedStream">
-                    {{ selectedStream }}
-                  </mat-select-trigger>
-                  <mat-option *ngFor="let stream of streams" [value]="stream.name">
-                    {{ stream.name }}
-                  </mat-option>
-                </mat-select>
-                <mat-hint>
-                  Your stream will determine which subjects you can take
-                </mat-hint>
-                <mat-error *ngIf="!selectedStream">
-                  Stream is required
-                </mat-error>
-              </mat-form-field>
-
-              <div class="stream-info" *ngIf="selectedStream">
+              <div class="confirmation-notice">
                 <mat-icon>info</mat-icon>
-                <p>
-                  <strong>Selected Stream: {{ selectedStream }}</strong><br>
-                  This stream will be used to determine eligible subjects for your exam application.
-                </p>
+                <p>These details will be permanently linked to your profile.</p>
               </div>
             </div>
-
-            <!-- No Results Message -->
-            <div class="no-results" *ngIf="searchText && filteredInstitutes.length === 0">
-              <mat-icon>search_off</mat-icon>
-              <p>{{ i18n.t('noInstitutesFound') }}</p>
-            </div>
-
-            <!-- Final Confirmation Before Submit -->
-            <div class="confirmation-section" *ngIf="selectedInstituteId && selectedStream">
-              <div class="confirmation-box">
-                <mat-icon>check_box</mat-icon>
-                <div>
-                  <h3>Confirm Your Selection</h3>
-                  <p><strong>Institute:</strong> {{ getInstituteLabel(selectedInstituteId) }}</p>
-                  <p><strong>Stream:</strong> {{ selectedStream }}</p>
-                  <p class="confirmation-text">
-                    ✓ I understand that my Institute and Stream selection <strong>cannot be changed</strong> after submitting this form.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="button-section">
-              <button 
-                mat-raised-button 
-                color="primary" 
-                type="submit"
-                [disabled]="!selectedInstituteId || !selectedStream || isLoading"
-                class="full-width submit-btn"
-              >
-                <mat-icon *ngIf="!isLoading">arrow_forward</mat-icon>
-                <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
-                <span *ngIf="!isLoading">{{ i18n.t('continue') }}</span>
-                <span *ngIf="isLoading">{{ i18n.t('loading') }}...</span>
-              </button>
-
-              <button 
-                mat-stroked-button 
-                type="button"
-                (click)="onLogout()"
-                class="full-width logout-btn"
-              >
-                <mat-icon></mat-icon>
-                {{ i18n.t('logout') }}
-              </button>
-            </div>
-          </form>
-        </mat-card-content>
-
-        <mat-card-footer class="info-footer">
-          <div class="info-message">
-            <mat-icon>security</mat-icon>
-            <p>Your data is secure. We only use Google authentication to verify your identity. Once you select your Institute and Stream, they will be linked to your profile permanently.</p>
           </div>
-        </mat-card-footer>
-      </mat-card>
+
+          <!-- Action Buttons -->
+          <div class="button-section">
+            <button 
+              mat-raised-button 
+              color="primary" 
+              type="submit"
+              [disabled]="!selectedInstituteId || !selectedStream || isLoading"
+              class="submit-btn"
+            >
+              <mat-icon *ngIf="!isLoading">check_circle</mat-icon>
+              <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+              <span *ngIf="!isLoading">Confirm & Continue</span>
+              <span *ngIf="isLoading">Saving...</span>
+            </button>
+            <button 
+              mat-stroked-button 
+              type="button"
+              (click)="onLogout()"
+              class="logout-btn"
+            >
+              <mat-icon>logout</mat-icon>
+              Logout
+            </button>
+          </div>
+        </form>
+      </div>
 
       <!-- Loading Overlay -->
       <div class="loading-overlay" *ngIf="isLoadingInstitutes || isLoadingStreams">
-        <mat-spinner diameter="50"></mat-spinner>
-        <p>Loading data...</p>
+        <div class="spinner-wrapper">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Loading data...</p>
+        </div>
       </div>
     </div>
   `,
   styles: [`
     .institute-select-container {
       min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 20px;
+      padding: 2rem 1rem;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    .institute-card {
-      width: 100%;
-      max-width: 700px;
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-      animation: slideIn 0.6s ease-out;
+    /* Header Section */
+    .header-section {
+      text-align: center;
+      color: white;
+      margin-bottom: 3rem;
+      animation: slideDown 0.6s ease-out;
     }
 
-    @keyframes slideIn {
+    @keyframes slideDown {
       from {
         opacity: 0;
-        transform: translateY(20px);
+        transform: translateY(-30px);
       }
       to {
         opacity: 1;
@@ -256,184 +311,308 @@ interface Stream {
       }
     }
 
-    mat-card-header {
-      text-align: center;
-      margin-bottom: 1rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-      padding: 2rem 1rem;
-      border-radius: 12px 12px 0 0;
-      margin: -16px -16px 1rem -16px;
-    }
-
-    mat-card-header h1 {
-      margin: 0 0 0.5rem 0;
-      font-size: 1.8rem;
+    .header-content h1 {
+      font-size: 2.5rem;
       font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.5px;
     }
 
-    mat-card-header .subtitle {
+    .header-content .tagline {
+      font-size: 1.1rem;
+      opacity: 0.95;
       margin: 0;
-      font-size: 0.95rem;
-      opacity: 0.9;
-      color: #fff;
+      font-weight: 300;
     }
 
-    /* WARNING BANNERS - BILINGUAL */
-    .warning-banner {
+    /* Main Content */
+    .main-content {
+      max-width: 700px;
+      margin: 0 auto;
+      animation: slideUp 0.6s ease-out 0.1s both;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Progress Indicator */
+    .progress-section {
       display: flex;
+      align-items: center;
+      justify-content: center;
       gap: 1rem;
+      margin-bottom: 2rem;
       padding: 1.5rem;
-      margin: 0 -16px 1.5rem -16px;
-      padding-left: 16px;
-      padding-right: 16px;
-      border-left: 5px solid #ff6b6b;
-      background: #fff5f5;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
     }
 
-    .warning-banner mat-icon {
-      color: #ff0000;
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-      flex-shrink: 0;
-      margin-top: 0.25rem;
-    }
-
-    .warning-banner strong {
-      display: block;
-      color: #ff0000;
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .warning-banner p {
-      margin: 0;
-      color: #333;
-      line-height: 1.5;
-      font-size: 0.95rem;
-    }
-
-    .warning-english {
-      border-left-color: #ff6b6b;
-      background: #fff5f5;
-    }
-
-    .warning-marathi {
-      border-left-color: #ff9900;
-      background: #fff9f0;
-      margin-bottom: 0;
-    }
-
-    mat-card-content {
-      padding: 2rem;
-    }
-
-    .select-section {
-      margin-bottom: 2.5rem;
-    }
-
-    .select-section h2 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #333;
-      margin: 0 0 1rem 0;
+    .progress-step {
       display: flex;
+      flex-direction: column;
       align-items: center;
       gap: 0.5rem;
     }
 
-    .full-width {
-      width: 100%;
-    }
-
-    mat-form-field {
-      display: block;
-      margin-bottom: 1.5rem;
-    }
-
-    .institute-option {
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
       display: flex;
       align-items: center;
-      gap: 1rem;
-      padding: 0.5rem 0;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
     }
 
-    .institute-option strong {
-      flex: 1;
+    .progress-step.active .step-number {
+      background: rgba(255, 255, 255, 0.6);
+      box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.2);
     }
 
-    .institute-option .code {
+    .progress-step.completed .step-number {
+      background: #4caf50;
+      color: white;
+    }
+
+    .step-label {
       font-size: 0.85rem;
-      color: #666;
-      background: #f5f5f5;
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      color: rgba(255, 255, 255, 0.8);
       font-weight: 500;
     }
 
-    .institute-details {
-      margin: 1.5rem 0 2rem 0;
-      padding: 1.5rem;
-      background: #f0f7ff;
-      border-radius: 8px;
-      border-left: 4px solid #667eea;
+    .progress-line {
+      width: 30px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.2);
+      transition: background 0.3s ease;
     }
 
-    .detail-card {
+    .progress-line.active {
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Warning Section */
+    .warning-section {
+      margin-bottom: 2rem;
+    }
+
+    .warning-box {
       display: flex;
-      align-items: flex-start;
-      gap: 1rem;
+      gap: 1.5rem;
+      padding: 1.5rem;
+      background: white;
+      border-radius: 12px;
+      border-left: 5px solid #ff9800;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    .detail-card mat-icon {
-      color: #4caf50;
+    .warning-box mat-icon {
+      color: #ff9800;
       font-size: 28px;
       width: 28px;
       height: 28px;
       flex-shrink: 0;
-      margin-top: 0.25rem;
+      margin-top: 0.2rem;
     }
 
-    .detail-content h3 {
+    .warning-content h3 {
       margin: 0 0 0.5rem 0;
-      font-size: 1.2rem;
+      color: #ff6f00;
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+
+    .warning-content p {
+      margin: 0.5rem 0;
       color: #333;
-    }
-
-    .detail-content p {
-      margin: 0.25rem 0;
-      color: #666;
-      font-size: 0.95rem;
-    }
-
-    .detail-content .code {
-      font-weight: 500;
-      color: #667eea;
-    }
-
-    .stream-info {
-      display: flex;
-      gap: 1rem;
-      padding: 1rem;
-      background: #e8f5e9;
-      border-radius: 8px;
-      margin-top: 1rem;
-    }
-
-    .stream-info mat-icon {
-      color: #2e7d32;
-      flex-shrink: 0;
-      margin-top: 0.25rem;
-    }
-
-    .stream-info p {
-      margin: 0;
-      color: #1b5e20;
       font-size: 0.95rem;
       line-height: 1.5;
     }
 
+    .warning-content .marathi {
+      font-size: 0.9rem;
+      color: #666;
+      font-style: italic;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #eee;
+    }
+
+    /* Form Sections */
+    .form-section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-header {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+      align-items: flex-start;
+    }
+
+    .section-badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .section-badge.stream-badge {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    }
+
+    .section-header h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #333;
+      margin: 0 0 0.3rem 0;
+    }
+
+    .section-header p {
+      margin: 0;
+      color: #666;
+      font-size: 0.95rem;
+    }
+
+    /* Search Wrapper */
+    .search-wrapper {
+      margin-bottom: 1.5rem;
+    }
+
+    .search-field {
+      width: 100%;
+    }
+
+    /* Select Wrapper */
+    .select-wrapper {
+      margin-bottom: 1.5rem;
+    }
+
+    mat-form-field {
+      width: 100%;
+      display: block;
+    }
+
+    /* Selected Card */
+    .selected-card {
+      margin-top: 1.5rem;
+      border: 2px solid #667eea;
+      border-radius: 12px;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    }
+
+    .selected-card.stream-card {
+      border-color: #4caf50;
+      background: linear-gradient(135deg, rgba(76, 175, 80, 0.05) 0%, rgba(69, 160, 73, 0.05) 100%);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .selected-card.stream-card .card-header {
+      background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+    }
+
+    .card-header mat-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+    }
+
+    .card-header h3 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .card-body {
+      padding: 1.5rem;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .info-row:last-child {
+      border-bottom: none;
+    }
+
+    .info-row .label {
+      color: #666;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    .info-row .value {
+      color: #333;
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .code-badge {
+      background: #f0f0f0;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: #667eea;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1rem 1.5rem;
+      background: rgba(0, 0, 0, 0.02);
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      color: #4caf50;
+      font-weight: 500;
+      font-size: 0.95rem;
+    }
+
+    .card-footer mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    /* No Results */
     .no-results {
       text-align: center;
       padding: 2rem;
@@ -448,48 +627,84 @@ interface Stream {
       margin-bottom: 1rem;
     }
 
-    .confirmation-section {
-      margin: 2rem 0;
+    .no-results p {
+      margin: 0;
+      font-size: 1rem;
     }
 
-    .confirmation-box {
+    /* Confirmation Section */
+    .confirmation-section {
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-box h3 {
+      margin: 0 0 1.5rem 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .summary-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 2px solid #eee;
+    }
+
+    .summary-item {
       display: flex;
       gap: 1rem;
-      padding: 1.5rem;
-      background: #f0f7ff;
-      border: 2px solid #667eea;
-      border-radius: 8px;
+      align-items: flex-start;
     }
 
-    .confirmation-box mat-icon {
+    .summary-item mat-icon {
       color: #667eea;
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
       flex-shrink: 0;
-      margin-top: 0.25rem;
+      margin-top: 0.2rem;
     }
 
-    .confirmation-box h3 {
-      margin: 0 0 1rem 0;
-      color: #333;
-      font-size: 1.1rem;
-    }
-
-    .confirmation-box p {
-      margin: 0.5rem 0;
-      color: #555;
-      font-size: 0.95rem;
-    }
-
-    .confirmation-text {
-      margin-top: 1rem !important;
-      padding-top: 1rem;
-      border-top: 1px solid #ddd;
-      color: #1b5e20 !important;
+    .summary-label {
+      display: block;
+      color: #666;
+      font-size: 0.9rem;
       font-weight: 500;
+      margin-bottom: 0.3rem;
     }
 
+    .summary-value {
+      display: block;
+      color: #333;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .confirmation-notice {
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      background: #e8f5e9;
+      border-radius: 8px;
+      color: #1b5e20;
+    }
+
+    .confirmation-notice mat-icon {
+      color: #2e7d32;
+      flex-shrink: 0;
+    }
+
+    .confirmation-notice p {
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    /* Button Section */
     .button-section {
       display: flex;
       flex-direction: column;
@@ -501,96 +716,301 @@ interface Stream {
     .logout-btn {
       height: 48px;
       font-size: 1rem;
-      font-weight: 500;
+      font-weight: 600;
       border-radius: 8px;
       transition: all 0.3s ease;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .submit-btn:hover:not(:disabled) {
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+      transform: translateY(-2px);
     }
 
     .submit-btn:disabled {
       opacity: 0.5;
+      cursor: not-allowed;
     }
 
-    .button-section button {
-      height: 48px;
-      font-size: 1rem;
-      font-weight: 500;
-      border-radius: 8px;
-      transition: all 0.3s ease;
+    .logout-btn {
+      border: 2px solid #ddd;
+      color: #333;
     }
 
-    .button-section button:disabled {
-      opacity: 0.5;
-    }
-
-    .info-footer {
-      background: #f5f5f5;
-      border-top: 1px solid #e0e0e0;
-      padding: 1.5rem;
-      border-radius: 0 0 12px 12px;
-      margin: 2rem -16px -16px -16px;
-    }
-
-    .info-message {
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-      color: #666;
-      font-size: 0.9rem;
-    }
-
-    .info-message mat-icon {
+    .logout-btn:hover:not(:disabled) {
+      border-color: #667eea;
       color: #667eea;
-      flex-shrink: 0;
-      margin-top: 0.25rem;
+      background: rgba(102, 126, 234, 0.05);
     }
 
-    .info-message p {
-      margin: 0;
-      line-height: 1.5;
+    mat-spinner {
+      display: inline-block;
+      margin-right: 0.75rem;
     }
 
+    /* Loading Overlay */
     .loading-overlay {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+      background: rgba(0, 0, 0, 0.6);
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 1rem;
-      color: white;
       z-index: 1000;
+      backdrop-filter: blur(2px);
     }
 
-    @media (max-width: 600px) {
-      .institute-select-container {
-        padding: 10px;
+    .spinner-wrapper {
+      text-align: center;
+      color: white;
+    }
+
+    .spinner-wrapper mat-spinner {
+      margin: 0 auto 1rem;
+    }
+
+    .spinner-wrapper p {
+      font-size: 1rem;
+      margin: 0;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .header-content h1 {
+        font-size: 1.8rem;
       }
 
-      mat-card-header {
-        padding: 1.5rem 1rem;
+      .header-content .tagline {
+        font-size: 1rem;
       }
 
-      mat-card-header h1 {
-        font-size: 1.5rem;
+      .progress-section {
+        gap: 0.5rem;
+        padding: 1rem;
       }
 
-      mat-card-content {
+      .step-number {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
+
+      .progress-line {
+        width: 20px;
+      }
+
+      .form-section {
         padding: 1.5rem;
       }
 
-      .warning-banner {
-        margin-left: -12px;
-        margin-right: -12px;
-        padding-left: 12px;
-        padding-right: 12px;
+      .section-header {
+        gap: 1rem;
       }
 
-      .select-section h2 {
+      .section-badge {
+        width: 40px;
+        height: 40px;
+        font-size: 1.1rem;
+      }
+
+      .section-header h2 {
+        font-size: 1.2rem;
+      }
+
+      .card-header {
+        padding: 1rem;
+      }
+
+      .card-body {
+        padding: 1rem;
+      }
+
+      .confirmation-section {
+        padding: 1.5rem;
+      }
+
+      .submit-btn,
+      .logout-btn {
+        height: 44px;
+        font-size: 0.95rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .institute-select-container {
+        padding: 1rem 0.75rem;
+      }
+
+      .header-content h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.3rem;
+      }
+
+      .header-content {
+        margin-bottom: 2rem;
+      }
+
+      .header-content .tagline {
+        font-size: 0.95rem;
+      }
+
+      .progress-section {
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .progress-line {
+        width: 2px;
+        height: 30px;
+      }
+
+      .warning-box {
+        gap: 1rem;
+        padding: 1.2rem;
+      }
+
+      .warning-box mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .warning-content h3 {
         font-size: 1rem;
+      }
+
+      .warning-content p {
+        font-size: 0.9rem;
+      }
+
+      .form-section {
+        padding: 1.2rem;
+        margin-bottom: 1rem;
+      }
+
+      .section-header {
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .section-badge {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
+
+      .section-header h2 {
+        font-size: 1.1rem;
+        margin-bottom: 0.2rem;
+      }
+
+      .section-header p {
+        font-size: 0.9rem;
+      }
+
+      .card-header {
+        padding: 0.8rem;
+        gap: 0.75rem;
+      }
+
+      .card-header h3 {
+        font-size: 1.05rem;
+      }
+
+      .card-body {
+        padding: 0.8rem;
+      }
+
+      .info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+        padding: 0.6rem 0;
+      }
+
+      .card-footer {
+        padding: 0.75rem 0.8rem;
+        font-size: 0.9rem;
+      }
+
+      .confirmation-section {
+        padding: 1.2rem;
+      }
+
+      .summary-box h3 {
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+      }
+
+      .confirmation-notice {
+        padding: 0.75rem;
+      }
+
+      .conclusion-notice p {
+        font-size: 0.9rem;
+      }
+
+      .submit-btn,
+      .logout-btn {
+        height: 40px;
+        font-size: 0.9rem;
+      }
+
+      .button-section {
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+      }
+
+      .option-content {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .option-name {
+        display: block;
+        font-weight: 500;
+      }
+
+      .option-code {
+        display: block;
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 0.2rem;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .header-content h1 {
+        font-size: 1.3rem;
+      }
+
+      .form-section {
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+      }
+
+      .section-header {
+        gap: 0.5rem;
+      }
+
+      .section-header h2 {
+        font-size: 1rem;
+      }
+
+      .submit-btn,
+      .logout-btn {
+        height: 38px;
+        font-size: 0.85rem;
       }
     }
   `]

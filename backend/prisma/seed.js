@@ -23,6 +23,8 @@ async function main() {
         where: { code: 'INST001' },
         update: { status: 'APPROVED' },
         create: {
+            collegeNo: 'COLL001',
+            udiseNo: 'UDISE001',
             name: 'Demo Junior College 1',
             code: 'INST001',
             address: 'Demo Address, Maharashtra',
@@ -36,6 +38,8 @@ async function main() {
         where: { code: 'INST002' },
         update: { status: 'PENDING' },
         create: {
+            collegeNo: 'COLL002',
+            udiseNo: 'UDISE002',
             name: 'Demo Junior College 2 (Pending)',
             code: 'INST002',
             status: 'PENDING'

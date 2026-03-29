@@ -2,19 +2,16 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-
-
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { HttpClient } from '@angular/common/http';
-import { I18nService } from '../../core/i18n.service';
-import { BrandingService } from '../../core/branding.service';
-import { API_BASE_URL } from '../../core/api';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { AuthService } from '../../core/auth.service';
+import { I18nService } from '../../core/i18n.service';
+import { BrandingService } from '../../core/branding.service';
 
 @Component({
   selector: 'app-institute-login',
@@ -321,7 +318,7 @@ export class InstituteLoginComponent {
   readonly i18n = inject(I18nService);
   readonly branding = inject(BrandingService);
   private readonly fb = inject(FormBuilder);
-  private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly snackBar = inject(MatSnackBar);
 
@@ -345,15 +342,10 @@ export class InstituteLoginComponent {
 
     this.isLoading = true;
 
-    this.http
-      .post<any>(`${API_BASE_URL}/auth/login`, {
-        username: this.loginForm.value.username,
-        password: this.loginForm.value.password
-      })
+    this.authService
+      .login(this.loginForm.value.username, this.loginForm.value.password)
       .subscribe({
         next: (response) => {
-          localStorage.setItem('accessToken', response.accessToken);
-          localStorage.setItem('user', JSON.stringify(response.user));
           this.snackBar.open(this.i18n.t('loginSuccess'), '', { duration: 3000 });
           this.router.navigate(['/app/dashboard']);
         },

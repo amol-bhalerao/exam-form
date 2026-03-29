@@ -13,41 +13,122 @@ import { I18nService } from '../../core/i18n.service';
   template: `
     <div class="user-type-container">
       <div class="header">
-        <h1>{{ i18n.t('selectUserType') }}</h1>
-        <p class="subtitle">{{ i18n.t('chooseYourRoleToLogin') }}</p>
+        <h1>{{ i18n.t('selectUserType') || 'Select Login Type' }}</h1>
+        <p class="subtitle">{{ i18n.t('chooseYourRoleToLogin') || 'Choose your role to login' }}</p>
       </div>
 
       <div class="login-cards">
-        <!-- Student Login Card ONLY - Reserved for Students -->
+        <!-- Student Login Card -->
         <div class="login-card student-card">
           <div class="card-icon">
             <mat-icon class="large-icon">school</mat-icon>
           </div>
-          <h2>{{ i18n.t('student') }}</h2>
-          <p class="description">{{ i18n.t('studentLoginDescription') }}</p>
+          <h2>Student</h2>
+          <p class="description">Fill exam form and apply for exams</p>
           <div class="features">
             <div class="feature">
               <mat-icon>check_circle</mat-icon>
-              <span>{{ i18n.t('fillExamForm') }}</span>
+              <span>Fill exam form</span>
             </div>
             <div class="feature">
               <mat-icon>check_circle</mat-icon>
-              <span>{{ i18n.t('autoFillProfile') }}</span>
+              <span>Google Sign-In</span>
             </div>
             <div class="feature">
               <mat-icon>check_circle</mat-icon>
-              <span>{{ i18n.t('googleSignIn') }}</span>
+              <span>Quick registration</span>
             </div>
           </div>
           <button mat-raised-button color="primary" class="full-width" (click)="navigateTo('/google-login')">
             <mat-icon>login</mat-icon>
-            {{ i18n.t('studentLogin') }}
+            Student Login
+          </button>
+        </div>
+
+        <!-- Board Login Card -->
+        <div class="login-card board-card">
+          <div class="card-icon">
+            <mat-icon class="large-icon">admin_panel_settings</mat-icon>
+          </div>
+          <h2>Board</h2>
+          <p class="description">Manage exams and student applications</p>
+          <div class="features">
+            <div class="feature">
+              <mat-icon>check_circle</mat-icon>
+              <span>Create exams</span>
+            </div>
+            <div class="feature">
+              <mat-icon>check_circle</mat-icon>
+              <span>View applications</span>
+            </div>
+            <div class="feature">
+              <mat-icon>check_circle</mat-icon>
+              <span>Analytics reports</span>
+            </div>
+          </div>
+          <button mat-raised-button color="warn" class="full-width" (click)="navigateTo('/board-login')">
+            <mat-icon>login</mat-icon>
+            Board Login
+          </button>
+        </div>
+
+        <!-- Institute Login Card -->
+        <div class="login-card institute-card">
+          <div class="card-icon">
+            <mat-icon class="large-icon">apartment</mat-icon>
+          </div>
+          <h2>Institute</h2>
+          <p class="description">Manage institute and applications</p>
+          <div class="features">
+            <div class="feature">
+              <mat-icon>check_circle</mat-icon>
+              <span>View applications</span>
+            </div>
+            <div class="feature">
+              <mat-icon>check_circle</mat-icon>
+              <span>Manage streams</span>
+            </div>
+            <div class="feature">
+              <mat-icon>check_circle</mat-icon>
+              <span>Add teachers</span>
+            </div>
+          </div>
+          <button mat-raised-button color="accent" class="full-width" (click)="navigateTo('/institute-login')">
+            <mat-icon>login</mat-icon>
+            Institute Login
+          </button>
+        </div>
+
+        <!-- Super Admin Login Card -->
+        <div class="login-card admin-card">
+          <div class="card-icon">
+            <mat-icon class="large-icon">verified_admin</mat-icon>
+          </div>
+          <h2>Super Admin</h2>
+          <p class="description">System administration and configuration</p>
+          <div class="features">
+            <div class="feature">
+              <mat-icon>check_circle</mat-icon>
+              <span>Manage institutes</span>
+            </div>
+            <div class="feature">
+              <mat-icon>check_circle</mat-icon>
+              <span>User management</span>
+            </div>
+            <div class="feature">
+              <mat-icon>check_circle</mat-icon>
+              <span>System settings</span>
+            </div>
+          </div>
+          <button mat-raised-button color="warn" class="full-width" (click)="navigateTo('/admin-login')">
+            <mat-icon>login</mat-icon>
+            Admin Login
           </button>
         </div>
       </div>
 
       <div class="footer-info">
-        <p>{{ i18n.t('firstTimeUser') }} <a href="/register">{{ i18n.t('signUpHere') }}</a></p>
+        <p>First time user? <a href="/register">Sign up here</a></p>
       </div>
     </div>
   `,
@@ -83,9 +164,9 @@ import { I18nService } from '../../core/i18n.service';
 
     .login-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 2rem;
-      max-width: 1200px;
+      max-width: 1400px;
       width: 100%;
       margin-bottom: 2rem;
     }
@@ -123,12 +204,16 @@ import { I18nService } from '../../core/i18n.service';
       background: linear-gradient(90deg, #4caf50 0%, #45a049 100%);
     }
 
+    .board-card::before {
+      background: linear-gradient(90deg, #ff9800 0%, #f57c00 100%);
+    }
+
     .institute-card::before {
       background: linear-gradient(90deg, #2196f3 0%, #1976d2 100%);
     }
 
     .admin-card::before {
-      background: linear-gradient(90deg, #ff9800 0%, #f57c00 100%);
+      background: linear-gradient(90deg, #9c27b0 0%, #7b1fa2 100%);
     }
 
     .card-icon {
@@ -146,18 +231,23 @@ import { I18nService } from '../../core/i18n.service';
       color: #4caf50;
     }
 
+    .board-card .large-icon {
+      color: #ff9800;
+    }
+
     .institute-card .large-icon {
       color: #2196f3;
     }
 
     .admin-card .large-icon {
-      color: #ff9800;
+      color: #9c27b0;
     }
 
     .login-card h2 {
       font-size: 1.5rem;
       margin: 0 0 0.5rem 0;
       color: #333;
+      font-weight: 600;
     }
 
     .login-card .description {
@@ -188,15 +278,19 @@ import { I18nService } from '../../core/i18n.service';
       color: #4caf50;
     }
 
+    .board-card .feature mat-icon {
+      color: #ff9800;
+    }
+
     .institute-card .feature mat-icon {
       color: #2196f3;
     }
 
     .admin-card .feature mat-icon {
-      color: #ff9800;
+      color: #9c27b0;
     }
 
-    .full-width {
+    button.full-width {
       width: 100%;
       margin-top: auto;
       padding: 0.8rem;
@@ -204,7 +298,7 @@ import { I18nService } from '../../core/i18n.service';
       font-weight: 600;
     }
 
-    .full-width mat-icon {
+    button.full-width mat-icon {
       margin-right: 0.5rem;
     }
 
@@ -224,6 +318,12 @@ import { I18nService } from '../../core/i18n.service';
 
     .footer-info a:hover {
       opacity: 0.8;
+    }
+
+    @media (max-width: 1024px) {
+      .login-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
     }
 
     @media (max-width: 768px) {
@@ -287,3 +387,4 @@ export class UserTypeLoginComponent {
     this.router.navigate([route]);
   }
 }
+

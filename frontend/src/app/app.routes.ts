@@ -46,6 +46,7 @@ export const routes: Routes = [
   // Institute Selection (after Google login)
   { path: 'student/select-institute', component: InstituteSelectComponent, canActivate: [authGuard], data: { title: 'Select Institute' } },
   
+  
   // Separate login routes for different user types
   { path: 'student-login', component: GoogleLoginComponent, data: { title: 'Student Login' } },
   { path: 'google-login', component: GoogleLoginComponent, data: { title: 'Student Login' } },
@@ -57,8 +58,8 @@ export const routes: Routes = [
   // Institute Portal Login
   { path: 'institute-login', component: InstituteLoginComponent, data: { title: 'Institute Portal Login' } },
   
-  // Legacy routes (kept for backward compatibility)
-  { path: 'login', redirectTo: 'student-login', pathMatch: 'full' },
+  // Root login - User Type Selection (shows options for all login types)
+  { path: 'login', component: UserTypeLoginComponent, data: { title: 'Login' } },
   
   { path: 'institute/register', component: InstituteRegisterComponent },
   { path: 'institute/activate', component: InstituteActivateComponent },

@@ -9,10 +9,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { HttpClient } from '@angular/common/http';
+import { AuthService } from '../../core/auth.service';
 import { I18nService } from '../../core/i18n.service';
 import { BrandingService } from '../../core/branding.service';
-import { API_BASE_URL } from '../../core/api';
 
 @Component({
   selector: 'app-admin-login',
@@ -367,9 +366,9 @@ import { API_BASE_URL } from '../../core/api';
 })
 export class AdminLoginComponent {
   readonly i18n: I18nService = inject(I18nService);
-  readonly branding: BrandingService  = inject(BrandingService);
+  readonly branding: BrandingService = inject(BrandingService);
   private readonly fb: FormBuilder = inject(FormBuilder);
-  private readonly http: HttpClient = inject(HttpClient);
+  private readonly authService: AuthService = inject(AuthService);
   private readonly router: Router = inject(Router);
   private readonly snackBar: MatSnackBar = inject(MatSnackBar);
 
@@ -393,11 +392,8 @@ export class AdminLoginComponent {
 
     this.isLoading = true;
 
-    this.http
-      .post<any>(`${API_BASE_URL}/auth/login`, {
-        username: this.loginForm.value.username,
-        password: this.loginForm.value.password
-      })
+    this.authService
+      .login(this.loginForm.value.username, this.loginForm.value.password)
       .subscribe({
         next: (response) => {
           // Allow BOARD and SUPER_ADMIN roles - not just ADMIN
@@ -408,8 +404,6 @@ export class AdminLoginComponent {
             return;
           }
 
-          localStorage.setItem('accessToken', response.accessToken);
-          localStorage.setItem('user', JSON.stringify(response.user));
           this.snackBar.open(this.i18n.t('loginSuccess'), '', { duration: 3000 });
           this.router.navigate(['/app/dashboard']);
         },
