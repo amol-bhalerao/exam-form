@@ -170,7 +170,7 @@ import { PincodeService, PostalLocation } from '../../core/pincode.service';
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Date of Birth (DD/MM/YYYY)</mat-label>
+                    <mat-label>Date of Birth (DD/MM/YYYY) *</mat-label>
                     <mat-icon matPrefix>cake</mat-icon>
                     <input matInput formControlName="dateOfBirth" [matDatepicker]="picker" placeholder="e.g., 07/04/2009" />
                     <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
@@ -179,26 +179,25 @@ import { PincodeService, PostalLocation } from '../../core/pincode.service';
                   </mat-form-field>
                 </div>
 
-                <div class="form-grid-3">
+                <div class="form-grid-2">
+                  <mat-form-field class="form-field">
+                    <mat-label>Gender *</mat-label>
+                    <mat-icon matPrefix>wc</mat-icon>
+                    <mat-select formControlName="gender" required>
+                      <mat-option value="">- Select Gender -</mat-option>
+                      <mat-option value="Male">Male</mat-option>
+                      <mat-option value="Female">Female</mat-option>
+                      <mat-option value="Other">Other</mat-option>
+                      <mat-option value="Prefer Not to Say">Prefer Not to Say</mat-option>
+                    </mat-select>
+                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'gender') }}</mat-error>
+                  </mat-form-field>
+
                   <mat-form-field class="form-field">
                     <mat-label>Aadhar Number</mat-label>
                     <mat-icon matPrefix>badge</mat-icon>
                     <input matInput formControlName="aadharNumber" placeholder="e.g., 287047290812" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'aadharNumber') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>Mobile Number *</mat-label>
-                    <mat-icon matPrefix>phone</mat-icon>
-                    <input matInput formControlName="mobile" placeholder="e.g., 8767287820" required />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'mobile') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>Email *</mat-label>
-                    <mat-icon matPrefix>email</mat-icon>
-                    <input matInput formControlName="email" type="email" required />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'email') }}</mat-error>
                   </mat-form-field>
                 </div>
               </div>
@@ -1080,7 +1079,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   // Profile completion tracking
   profileCompletionPercentage = 0;
   profileCompletionCount = 0;
-  totalProfileFields = 10; // firstName, lastName, dob, gender, aadhaar, address, pinCode, mobile, sscYear, xithYear
+  totalProfileFields = 11; // firstName, lastName, dob, gender, aadhaar, address, pinCode, mobile, email, sscYear, xithYear
 
   // Pincode lookup properties
   pincodeOptions: PostalLocation[] = [];
@@ -1125,6 +1124,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       
       // Date of Birth - valid date, not future, age >= 14
       dateOfBirth: ['', this.dateOfBirthValidator.bind(this)],
+      
+      // Gender - required
+      gender: ['', Validators.required],
       
       // Aadhar - 12 digits
       aadharNumber: ['', [
@@ -1194,7 +1196,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
     // PREVIOUS EXAM FORM
     this.previousExamForm = this.fb.group({
-      sscSeatNo: [''],
+      sscSeatNo: ['', [Validators.pattern(/^[A-Z0-9]*$/)]],
       sscMonth: [''],
       sscYear: ['', [
         Validators.pattern(/^\d{4}$|^$/)
@@ -1205,7 +1207,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         Validators.min(0),
         Validators.max(100)
       ]],
-      xithSeatNo: [''],
+      xithSeatNo: ['', [Validators.pattern(/^[a-zA-Z0-9]*$/)]],
       xithMonth: [''],
       xithYear: ['', [
         Validators.pattern(/^\d{4}$|^$/)
@@ -1280,8 +1282,25 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   private setupNameFieldTransformers() {
     const nameFields = ['lastName', 'firstName', 'middleName', 'motherName'];
+    const seatFields = ['sscSeatNo', 'xithSeatNo'];
+    
+    // Uppercase transformers for name fields
     nameFields.forEach(fieldName => {
       const control = this.personalDetailsForm.get(fieldName);
+      if (control) {
+        control.valueChanges.pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(value => {
+          if (value && value !== value.toUpperCase()) {
+            control.setValue(value.toUpperCase(), { emitEvent: false });
+          }
+        });
+      }
+    });
+
+    // Uppercase transformers for seat numbers
+    seatFields.forEach(fieldName => {
+      const control = this.previousExamForm.get(fieldName);
       if (control) {
         control.valueChanges.pipe(
           takeUntil(this.destroy$)
@@ -1451,11 +1470,36 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   savePersonalDetails() {
     if (this.personalDetailsForm.valid) {
       this.savingPersonal = true;
-      this.profileService.updatePersonalDetails(this.personalDetailsForm.value);
+      const formData = this.personalDetailsForm.value;
+      
+      // Ensure all values are properly formatted before sending
+      const cleanedData = {
+        ...formData,
+        // Ensure capitalization
+        firstName: formData.firstName?.toUpperCase() || '',
+        lastName: formData.lastName?.toUpperCase() || '',
+        middleName: formData.middleName?.toUpperCase() || '',
+        motherName: formData.motherName?.toUpperCase() || '',
+        // Ensure optional fields aren't undefined
+        gender: formData.gender || null,
+        email: formData.email || '',
+        mobile: formData.mobile || ''
+      };
+      
+      this.profileService.updatePersonalDetails(cleanedData);
+      
       setTimeout(() => {
         this.savingPersonal = false;
+        // Recalculate progress after save
+        if (this.profile) {
+          this.calculateProfileCompletion(this.profile);
+        }
         this.snackBar.open('✓ Personal details saved', '', { duration: 3000 });
+        // Reload profile to ensure all data is current
+        this.loadProfile();
       }, 1500);
+    } else {
+      this.snackBar.open('❌ Please fix all errors before saving', '', { duration: 3000 });
     }
   }
 
