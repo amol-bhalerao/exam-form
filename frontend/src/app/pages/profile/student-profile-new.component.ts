@@ -911,10 +911,10 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     this.error = null;
 
     this.profileService.loadProfile()
-      .then((profile: StudentProfile) => {
+      .then((profile: StudentProfile|any) => {
         this.profile = profile;
-        this.freshSubjects = (profile.subjects || []).filter(s => !s.isBacklog);
-        this.backlogSubjects = (profile.subjects || []).filter(s => s.isBacklog);
+        this.freshSubjects = (profile.subjects || []).filter((s: any) => !s.isBacklog);
+        this.backlogSubjects = (profile.subjects || []).filter((s: any) => s.isBacklog);
         
         this.personalForm.patchValue(profile);
         this.collegeForm.patchValue(profile);

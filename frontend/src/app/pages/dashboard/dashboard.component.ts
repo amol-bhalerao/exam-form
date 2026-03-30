@@ -46,12 +46,12 @@ interface StatCard {
         <div class="welcome-left">
           <div class="avatar">{{ initials() }}</div>
           <div>
-            <h1 class="welcome-title">Welcome back, {{ (user()?.username ?? 'User').split('_')[0] | titlecase }}!</h1>
+            <h1 class="welcome-title">Welcome back, {{ (user()?.username ?? 'User') | titlecase }}!</h1>
             <p class="welcome-sub">{{ roleLabel() }} • {{ today() }}</p>
           </div>
         </div>
         <div class="welcome-actions">
-          <a mat-stroked-button routerLink="/app/profile" class="profile-btn">
+          <a mat-stroked-button routerLink="/app/student/profile" class="profile-btn">
             <mat-icon>person</mat-icon> My Profile
           </a>
         </div>

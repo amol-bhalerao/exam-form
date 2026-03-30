@@ -327,9 +327,10 @@ authRouter.post('/google', async (req, res) => {
 
   if (!user) {
     // First Google login – create student account
+    // Use email as username for Google SSO accounts
     user = await prisma.user.create({
       data: {
-        username: `google_${googleId}`,
+        username: email,
         email,
         passwordHash: '', // No password for SSO accounts
         roleId: studentRole.id,

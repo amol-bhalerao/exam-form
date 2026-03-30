@@ -144,14 +144,63 @@ type Subject = { id: number; code: string; name: string; category?: string };
 
                 <div class="step-actions">
                   <button mat-button matStepperNext>
-                    Next: Personal Details
+                    Next: Select Exam
                     <mat-icon>arrow_forward</mat-icon>
                   </button>
                 </div>
               </div>
             </mat-step>
 
-            <!-- Step 2: Exam Type Selection -->
+            <!-- Step 2: Exam Selection -->
+            <mat-step [editable]="isEditable()">
+              <ng-template matStepLabel>
+                <span class="step-label">
+                  <mat-icon>assignment</mat-icon>
+                  Exam
+                </span>
+              </ng-template>
+
+              <div class="step-content">
+                <h3 class="step-title">Select Exam</h3>
+                <p class="step-desc">Choose which exam you want to apply for.</p>
+
+                <form [formGroup]="form" class="form-grid">
+                  @if (exams().length > 0) {
+                    <mat-form-field appearance="outline" class="w100">
+                      <mat-label>Exam</mat-label>
+                      <mat-select formControlName="examId" required>
+                        <mat-option value="">-- Select Exam --</mat-option>
+                        @for (exam of exams(); track exam.id) {
+                          <mat-option [value]="exam.id">
+                            {{ exam.name }} ({{ exam.examType }})
+                          </mat-option>
+                        }
+                      </mat-select>
+                    </mat-form-field>
+                  } @else {
+                    <mat-card class="info-card">
+                      <mat-icon class="info-icon">info</mat-icon>
+                      <div>
+                        <strong>No Exams Available</strong>
+                        <p>There are currently no exams available for registration. Please check back later.</p>
+                      </div>
+                    </mat-card>
+                  }
+                </form>
+
+                <div class="step-actions">
+                  <button mat-button matStepperPrevious>
+                    <mat-icon>arrow_back</mat-icon> Back
+                  </button>
+                  <button mat-button matStepperNext [disabled]="!form.get('examId')?.value">
+                    Next: Exam Type
+                    <mat-icon>arrow_forward</mat-icon>
+                  </button>
+                </div>
+              </div>
+            </mat-step>
+
+            <!-- Step 3: Exam Type Selection -->
             <mat-step [editable]="isEditable()">
               <ng-template matStepLabel>
                 <span class="step-label">
@@ -205,7 +254,7 @@ type Subject = { id: number; code: string; name: string; category?: string };
               </div>
             </mat-step>
 
-            <!-- Step 3: Personal Details -->
+            <!-- Step 4: Personal Details -->
             <mat-step [stepControl]="personFormGroup()" [editable]="isEditable()">
               <ng-template matStepLabel>
                 <span class="step-label">
@@ -217,6 +266,13 @@ type Subject = { id: number; code: string; name: string; category?: string };
               <div class="step-content">
                 <h3 class="step-title">Candidate Details (3–13)</h3>
                 <p class="step-desc">Enter your personal information as per HSC records.</p>
+
+                <mat-card class="info-card">
+                  <mat-icon class="info-icon">info</mat-icon>
+                  <div>
+                    <strong>Save Progress:</strong> You can save your personal information as you fill it. Fill at least First Name and Last Name to proceed to next step.
+                  </div>
+                </mat-card>
 
                 <form [formGroup]="personFormGroup()" class="form-grid">
                   <mat-form-field appearance="outline" class="w100">
@@ -271,7 +327,7 @@ type Subject = { id: number; code: string; name: string; category?: string };
                   <button mat-button matStepperPrevious>
                     <mat-icon>arrow_back</mat-icon> Back
                   </button>
-                  <button mat-button matStepperNext [disabled]="personFormGroup().invalid">
+                  <button mat-button matStepperNext [disabled]="!personFormGroup().get('firstName')?.value?.trim() || !personFormGroup().get('lastName')?.value?.trim()">
                     Next: Academic Details
                     <mat-icon>arrow_forward</mat-icon>
                   </button>
@@ -423,6 +479,10 @@ type Subject = { id: number; code: string; name: string; category?: string };
 
                 <div class="review-section">
                   <h4 class="review-heading">Exam Information</h4>
+                  <div class="review-item">
+                    <span class="review-label">Exam:</span>
+                    <strong>{{ getExamName(form.get('examId')?.value) }}</strong>
+                  </div>
                   <div class="review-item">
                     <span class="review-label">Exam Type:</span>
                     <span class="badge" [class.badge-fresh]="examType() === 'fresh'" [class.badge-backlog]="examType() === 'backlog'">
@@ -1003,24 +1063,46 @@ export class StudentApplicationEditComponent implements OnInit {
   readonly saving = signal(false);
   readonly submitting = signal(false);
   readonly masterSubjects = signal<Subject[]>([]);
+  readonly exams = signal<any[]>([]);
   readonly showInstitutePicker = signal(false);
   readonly selectedInstitute = signal<any | null>(null);
   readonly lastSaved = signal<string | null>(null);
   readonly examType = signal<'fresh' | 'backlog'>('fresh');
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly personalInfoComplete = signal(false);
 
   form!: FormGroup;
 
   private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
 
-  constructor() {}
+  constructor() {
+    // Initialize form immediately to avoid binding errors
+    this.form = this.createDefaultFormGroup();
+  }
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.loading.set(true);
     this.error.set(null);
+
+    // Load exams list
+    this.http.get<{ exams: any[] }>(`${API_BASE_URL}/exams`).subscribe({
+      next: (r: any) => {
+        // Deduplicate exams by ID
+        const examsArray = (r.exams || []) as any[];
+        const examsMap = new Map<number, any>();
+        examsArray.forEach((exam: any) => {
+          examsMap.set(exam.id, exam);
+        });
+        const uniqueExams: any[] = Array.from(examsMap.values());
+        this.exams.set(uniqueExams);
+      },
+      error: (err: any) => {
+        console.error('Failed to load exams:', err?.error?.message || err?.message);
+      }
+    });
 
     // FIX: Added error handling and loading state for subjects
     this.http.get<{ subjects: Subject[] }>(`${API_BASE_URL}/masters/subjects`).subscribe({
@@ -1133,6 +1215,54 @@ export class StudentApplicationEditComponent implements OnInit {
     return this.masterSubjects().find((s: any) => s.id === subjectId)?.name || 'Unknown';
   }
 
+  getExamName(examId: number | null): string {
+    if (!examId) return 'Not Selected';
+    return this.exams().find((e: any) => e.id === examId)?.name || 'Unknown';
+  }
+
+  private createDefaultFormGroup(): FormGroup {
+    return new FormGroup({
+      examId: new FormControl<number | null>(null, [Validators.required]),
+      examType: new FormControl('fresh', [Validators.required]),
+      indexNo: new FormControl(''),
+      udiseNo: new FormControl(''),
+      studentSaralId: new FormControl(''),
+      applSrNo: new FormControl(''),
+      centreNo: new FormControl(''),
+
+      personGroup: new FormGroup({
+        lastName: new FormControl('', [Validators.required]),
+        firstName: new FormControl('', [Validators.required]),
+        middleName: new FormControl(''),
+        motherName: new FormControl(''),
+        address: new FormControl(''),
+        pinCode: new FormControl(''),
+        mobile: new FormControl(''),
+        dob: new FormControl<Date | null>(null),
+        aadhaar: new FormControl(''),
+        gender: new FormControl('')
+      }),
+
+      academicGroup: new FormGroup({
+        streamCode: new FormControl(''),
+        minorityReligionCode: new FormControl(''),
+        categoryCode: new FormControl(''),
+        divyangCode: new FormControl(''),
+        mediumCode: new FormControl('')
+      }),
+
+      subjects: new FormArray<FormGroup>([])
+    });
+  }
+
+  private checkPersonalInfoComplete(): boolean {
+    const personGroup = this.form.get('personGroup') as FormGroup;
+    if (!personGroup) return false;
+    const firstName = personGroup.get('firstName')?.value?.trim();
+    const lastName = personGroup.get('lastName')?.value?.trim();
+    return !!firstName && !!lastName;
+  }
+
   getSubjectFormGroup(index: number) {
     return this.subjects().at(index) as FormGroup;
   }
@@ -1148,6 +1278,7 @@ export class StudentApplicationEditComponent implements OnInit {
 
     const raw: any = this.form.getRawValue();
     const payload = {
+      examId: raw.examId || undefined,
       indexNo: raw.indexNo || undefined,
       udiseNo: raw.udiseNo || undefined,
       studentSaralId: raw.studentSaralId || undefined,
@@ -1181,7 +1312,7 @@ export class StudentApplicationEditComponent implements OnInit {
         this.form.markAsPristine();
       },
       error: (err: any) => {
-        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to save application';
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to save application. Your changes may be lost. Please try again.';
         console.error('Failed to save application:', errorMsg);
         this.error.set(errorMsg);
         this.saving.set(false);
@@ -1228,36 +1359,36 @@ export class StudentApplicationEditComponent implements OnInit {
 
     this.examType.set(a.examType ?? 'fresh');
 
-    this.form = new FormGroup({
-      examType: new FormControl(a.examType ?? 'fresh', [Validators.required]),
-      indexNo: new FormControl(a.indexNo ?? ''),
-      udiseNo: new FormControl(a.udiseNo ?? ''),
-      studentSaralId: new FormControl(a.studentSaralId ?? ''),
-      applSrNo: new FormControl(a.applSrNo ?? ''),
-      centreNo: new FormControl(a.centreNo ?? ''),
+    // Patch existing form instead of recreating it
+    this.form.patchValue({
+      examId: a.exam?.id ?? a.examId ?? null,
+      examType: a.examType ?? 'fresh',
+      indexNo: a.indexNo ?? '',
+      udiseNo: a.udiseNo ?? '',
+      studentSaralId: a.studentSaralId ?? '',
+      applSrNo: a.applSrNo ?? '',
+      centreNo: a.centreNo ?? '',
 
-      personGroup: new FormGroup({
-        lastName: new FormControl(student.lastName ?? '', [Validators.required]),
-        firstName: new FormControl(student.firstName ?? '', [Validators.required]),
-        middleName: new FormControl(student.middleName ?? ''),
-        motherName: new FormControl(student.motherName ?? ''),
-        address: new FormControl(student.address ?? ''),
-        pinCode: new FormControl(student.pinCode ?? ''),
-        mobile: new FormControl(student.mobile ?? ''),
-        dob: new FormControl<Date | null>(student.dob ? new Date(student.dob) : null),
-        aadhaar: new FormControl(student.aadhaar ?? ''),
-        gender: new FormControl(student.gender ?? '')
-      }),
+      personGroup: {
+        lastName: student.lastName ?? '',
+        firstName: student.firstName ?? '',
+        middleName: student.middleName ?? '',
+        motherName: student.motherName ?? '',
+        address: student.address ?? '',
+        pinCode: student.pinCode ?? '',
+        mobile: student.mobile ?? '',
+        dob: student.dob ? new Date(student.dob) : null,
+        aadhaar: student.aadhaar ?? '',
+        gender: student.gender ?? ''
+      },
 
-      academicGroup: new FormGroup({
-        streamCode: new FormControl(student.streamCode ?? ''),
-        minorityReligionCode: new FormControl(student.minorityReligionCode ?? ''),
-        categoryCode: new FormControl(student.categoryCode ?? ''),
-        divyangCode: new FormControl(student.divyangCode ?? ''),
-        mediumCode: new FormControl(student.mediumCode ?? '')
-      }),
-
-      subjects: new FormArray<FormGroup>([])
+      academicGroup: {
+        streamCode: student.streamCode ?? '',
+        minorityReligionCode: student.minorityReligionCode ?? '',
+        categoryCode: student.categoryCode ?? '',
+        divyangCode: student.divyangCode ?? '',
+        mediumCode: student.mediumCode ?? ''
+      }
     });
 
     this.selectedInstitute.set(a.institute ?? null);
@@ -1283,36 +1414,35 @@ export class StudentApplicationEditComponent implements OnInit {
     // Initialize empty form for new application
     this.examType.set('fresh');
     
-    this.form = new FormGroup({
-      examType: new FormControl('fresh', [Validators.required]),
-      indexNo: new FormControl(''),
-      udiseNo: new FormControl(''),
-      studentSaralId: new FormControl(''),
-      applSrNo: new FormControl(''),
-      centreNo: new FormControl(''),
+    // Patch existing form instead of recreating it
+    this.form.patchValue({
+      examType: 'fresh',
+      indexNo: '',
+      udiseNo: '',
+      studentSaralId: '',
+      applSrNo: '',
+      centreNo: '',
 
-      personGroup: new FormGroup({
-        lastName: new FormControl(student?.lastName ?? '', [Validators.required]),
-        firstName: new FormControl(student?.firstName ?? '', [Validators.required]),
-        middleName: new FormControl(student?.middleName ?? ''),
-        motherName: new FormControl(student?.motherName ?? ''),
-        address: new FormControl(student?.address ?? ''),
-        pinCode: new FormControl(student?.pinCode ?? ''),
-        mobile: new FormControl(student?.mobile ?? ''),
-        dob: new FormControl<Date | null>(student?.dob ? new Date(student.dob) : null),
-        aadhaar: new FormControl(student?.aadhaar ?? ''),
-        gender: new FormControl(student?.gender ?? '')
-      }),
+      personGroup: {
+        lastName: student?.lastName ?? '',
+        firstName: student?.firstName ?? '',
+        middleName: student?.middleName ?? '',
+        motherName: student?.motherName ?? '',
+        address: student?.address ?? '',
+        pinCode: student?.pinCode ?? '',
+        mobile: student?.mobile ?? '',
+        dob: student?.dob ? new Date(student.dob) : null,
+        aadhaar: student?.aadhaar ?? '',
+        gender: student?.gender ?? ''
+      },
 
-      academicGroup: new FormGroup({
-        streamCode: new FormControl(student?.streamCode ?? ''),
-        minorityReligionCode: new FormControl(student?.minorityReligionCode ?? ''),
-        categoryCode: new FormControl(student?.categoryCode ?? ''),
-        divyangCode: new FormControl(student?.divyangCode ?? ''),
-        mediumCode: new FormControl(student?.mediumCode ?? '')
-      }),
-
-      subjects: new FormArray<FormGroup>([])
+      academicGroup: {
+        streamCode: student?.streamCode ?? '',
+        minorityReligionCode: student?.minorityReligionCode ?? '',
+        categoryCode: student?.categoryCode ?? '',
+        divyangCode: student?.divyangCode ?? '',
+        mediumCode: student?.mediumCode ?? ''
+      }
     });
 
     this.selectedInstitute.set(null);

@@ -266,9 +266,11 @@ import { API_BASE_URL } from '../../core/api';
         background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%);
         color: #fff;
         display: flex;
+        flex-direction: row;
         align-items: center;
-        gap: 12px;
-        padding: 0 16px;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 24px;
         height: 64px;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -278,10 +280,14 @@ import { API_BASE_URL } from '../../core/api';
       .toolbar button {
         color: #60a5fa;
         transition: var(--transition);
+        padding: 8px;
+        margin: 0 4px;
       }
 
       .toolbar button:hover {
         color: #93c5fd;
+        background: rgba(96, 165, 250, 0.1);
+        border-radius: 6px;
       }
 
       .center-title {
@@ -308,14 +314,16 @@ import { API_BASE_URL } from '../../core/api';
       }
 
       .who {
-        text-align: right;
-        padding: 6px 12px;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 16px;
+        padding: 8px 12px;
         background: rgba(96, 165, 250, 0.1);
         border-radius: 8px;
         border: 1px solid rgba(96, 165, 250, 0.2);
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
+        min-width: 250px;
       }
 
       .u {

@@ -12,6 +12,19 @@ meRouter.get('/', requireAuth, async (req, res) => {
     include: { role: true, institute: true }
   });
   if (!user) return res.status(404).json({ error: 'NOT_FOUND' });
+
+  // Get student profile if STUDENT role
+  let student = null;
+  if (user.role.name === 'STUDENT') {
+    student = await prisma.student.findUnique({
+      where: { userId: userId },
+      include: { 
+        institute: true,
+        previousExams: true
+      }
+    });
+  }
+
   return res.json({
     user: {
       userId: user.id,
@@ -22,7 +35,28 @@ meRouter.get('/', requireAuth, async (req, res) => {
       mobile: user.mobile,
       status: user.status,
       institute: user.institute ? { id: user.institute.id, name: user.institute.name, status: user.institute.status } : null
-    }
+    },
+    student: student ? {
+      id: student.id,
+      userId: student.userId,
+      instituteId: student.instituteId,
+      firstName: student.firstName,
+      middleName: student.middleName,
+      lastName: student.lastName,
+      motherName: student.motherName,
+      dob: student.dob,
+      gender: student.gender,
+      aadhaar: student.aadhaar,
+      address: student.address,
+      pinCode: student.pinCode,
+      mobile: student.mobile,
+      streamCode: student.streamCode,
+      minorityReligionCode: student.minorityReligionCode,
+      categoryCode: student.categoryCode,
+      divyangCode: student.divyangCode,
+      mediumCode: student.mediumCode,
+      previousExams: student.previousExams
+    } : null
   });
 });
 

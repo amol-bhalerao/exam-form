@@ -20,6 +20,7 @@ import { StudentApplicationsComponent } from './pages/student/student-applicatio
 import { StudentApplicationEditComponent } from './pages/student/student-application-edit/student-application-edit.component';
 import { StudentFormPrintComponent } from './pages/student/student-form-print/student-form-print.component';
 import { StudentProfileComponent } from './pages/profile/student-profile.component';
+import { StudentExamScheduleComponent } from './pages/student/student-exam-schedule/student-exam-schedule.component';
 import { SuperInstitutesComponent } from './pages/super/super-institutes/super-institutes.component';
 import { SuperInstituteUsersComponent } from './pages/super/super-institute-users/super-institute-users.component';
 import { SuperMastersComponent } from './pages/super/super-masters/super-masters.component';
@@ -97,6 +98,7 @@ export const routes: Routes = [
       { path: 'student/profile', component: StudentProfileComponent, canActivate: [roleGuard(['STUDENT'])] },
       { path: 'student/applications', component: StudentApplicationsComponent, canActivate: [roleGuard(['STUDENT']), profileGuard] },
       { path: 'student/applications/:id', component: StudentApplicationEditComponent, canActivate: [roleGuard(['STUDENT']), profileGuard] },
+      { path: 'student/exam-schedule', component: StudentExamScheduleComponent, canActivate: [roleGuard(['STUDENT'])] },
       { path: 'student/forms/:id/print', component: StudentFormPrintComponent, canActivate: [roleGuard(['STUDENT', 'INSTITUTE', 'BOARD', 'SUPER_ADMIN'])] }
     ]
   },

@@ -6,11 +6,13 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AgGridModule } from 'ag-grid-angular';
 import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import type { ColDef } from 'ag-grid-community';
 
 import { API_BASE_URL } from '../../../core/api';
+import { StudentProfileService } from '../../../core/student-profile.service';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -26,6 +28,7 @@ type Application = { id: number; applicationNo: string; status: string; candidat
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
+    MatSnackBarModule,
     AgGridModule
   ],
   template: `
@@ -153,6 +156,8 @@ export class StudentApplicationsComponent implements OnInit {
 
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly profileService = inject(StudentProfileService);
+  private readonly snackBar = inject(MatSnackBar);
 
   constructor() {}
 
@@ -162,11 +167,18 @@ export class StudentApplicationsComponent implements OnInit {
   }
 
   private loadExams() {
-    // FIX: Added error handling and type safety
+    // FIX: Added error handling, type safety and deduplication
     this.http.get<{ exams: Exam[] }>(`${API_BASE_URL}/exams`).subscribe({
       next: (r: any) => {
-        this.exams.set(r.exams || []);
-        const active = r.exams?.filter((e: any) => this.isExamOpen(e)) || [];
+        // Deduplicate exams by ID to prevent duplicates in dropdown
+        const examsArray = (r.exams || []) as Exam[];
+        const examsMap = new Map<number, Exam>();
+        examsArray.forEach((exam: Exam) => {
+          examsMap.set(exam.id, exam);
+        });
+        const uniqueExams: Exam[] = Array.from(examsMap.values());
+        this.exams.set(uniqueExams);
+        const active = uniqueExams.filter((e: Exam) => this.isExamOpen(e)) || [];
         if (!active.length) this.selectedExamId.set(null);
       },
       error: (err: any) => {
@@ -209,11 +221,27 @@ export class StudentApplicationsComponent implements OnInit {
   create() {
     const examId = this.selectedExamId();
     if (!examId) return;
+    
     const exam = this.exams().find((e) => e.id === examId);
     if (!exam || !this.isExamOpen(exam)) {
       this.error.set('Cannot apply: selected exam is closed or invalid.');
       return;
     }
+
+    // Check if student profile is complete before allowing application creation
+    const profileCompletion = this.getProfileCompletion();
+    if (profileCompletion < 100) {
+      this.snackBar.open(
+        `⚠️ Please complete your profile (${profileCompletion}% done) before creating an exam application`,
+        'Go to Profile',
+        { duration: 5000 }
+      ).onAction().subscribe(() => {
+        this.router.navigate(['/app/student/profile']);
+      });
+      this.error.set('Please complete your student profile before creating an exam application.');
+      return;
+    }
+
     this.creating.set(true);
     this.error.set(null);
 
@@ -232,6 +260,38 @@ export class StudentApplicationsComponent implements OnInit {
           this.creating.set(false);
         }
       });
+  }
+
+  /**
+   * Calculate profile completion percentage
+   */
+  private getProfileCompletion(): number {
+    const profile = this.profileService.profile$();
+    if (!profile) return 0;
+
+    const requiredFields = [
+      'firstName',
+      'lastName',
+      'dob',
+      'gender',
+      'aadhaar',
+      'address',
+      'pinCode',
+      'mobile'
+    ];
+
+    let completedCount = 0;
+    requiredFields.forEach(field => {
+      const value = (profile as any)[field];
+      if (value && value !== null && value !== '') {
+        completedCount++;
+      }
+    });
+
+    // Check if at least one previous exam is added
+    // (This is not a strict requirement for app creation, just for progress tracking)
+
+    return Math.round((completedCount / requiredFields.length) * 100);
   }
 }
 

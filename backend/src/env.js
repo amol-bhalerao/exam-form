@@ -27,8 +27,8 @@ const envSchema = z.object({
   // JWT
   JWT_ACCESS_SECRET: z.string().min(6),
   JWT_REFRESH_SECRET: z.string().min(6),
-  ACCESS_TOKEN_TTL: z.string().default('15m'),
-  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
+  ACCESS_TOKEN_TTL: z.string().default('60m'),
+  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
 
   // CORS / Origins
   CORS_ORIGIN: z.string().min(1).default(

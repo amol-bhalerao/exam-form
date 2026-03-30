@@ -46,7 +46,7 @@ publicRouter.get('/exams', async (req, res) => {
   try {
     const now = new Date();
     
-    const exams = await prisma.exam.findMany({
+    const rawExams = await prisma.exam.findMany({
       where: {
         applicationClose: {
           gte: now // Only show exams that are still accepting applications
@@ -71,6 +71,20 @@ publicRouter.get('/exams', async (req, res) => {
       },
       take: 10
     });
+
+    // Map to frontend-expected format
+    const exams = rawExams.map(exam => ({
+      id: exam.id,
+      name: exam.name,
+      class: exam.academicYear || 'HSC',
+      stream: exam.stream?.name || 'General',
+      board: 'Maharashtra Board',
+      startDate: exam.applicationOpen,
+      endDate: exam.applicationClose,
+      applicationDeadline: exam.applicationClose,
+      status: 'ACTIVE',
+      totalApplications: exam._count.applications
+    }));
 
     res.json({ exams });
   } catch (error) {

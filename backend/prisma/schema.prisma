@@ -322,6 +322,7 @@ model PreviousExam {
   seatNo    String? @db.VarChar(50)
   month     String? @db.VarChar(10)
   year      Int?
+  percentage String? @db.VarChar(10) // Store as string to handle decimal values
   boardOrCollegeName String? @db.VarChar(200)
 
   student Student @relation(fields: [studentId], references: [id])

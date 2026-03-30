@@ -76,9 +76,18 @@ export class StudentProfileService {
       this.http.get<{ student: StudentProfile }>(`${API_BASE_URL}/students/me`).subscribe({
         next: (response: any) => {
           const profile = response.student;
-          this.studentProfile.set(profile);
-          this.isLoading.set(false);
-          resolve(profile);
+          
+          if (!profile || !profile.id) {
+            // Profile is missing or incomplete
+            this.isLoading.set(false);
+            const err = new Error('STUDENT_PROFILE_MISSING');
+            reject(err);
+          } else {
+            // Profile exists - use it
+            this.studentProfile.set(profile);
+            this.isLoading.set(false);
+            resolve(profile);
+          }
         },
         error: (err: any) => {
           const errorCode = err?.error?.error;
@@ -96,6 +105,53 @@ export class StudentProfileService {
   }
 
   /**
+   * Transform frontend field names to backend field names
+   * Frontend: dateOfBirth, aadharNumber, addressLineOne, etc.
+   * Backend: dob, aadhaar, address, pinCode, etc.
+   */
+  private transformProfileToBackendFormat(data: any): any {
+    const transformed: any = {};
+    
+    // Map frontend field names to backend field names
+    const fieldMap: { [key: string]: string | null } = {
+      'firstName': 'firstName',
+      'lastName': 'lastName',
+      'middleName': 'middleName',
+      'motherName': 'motherName',
+      'dateOfBirth': 'dob',
+      'gender': 'gender',
+      'aadharNumber': 'aadhaar',
+      'addressLineOne': 'address',
+      'addressLineTwo': null,
+      'addressLineThree': null,
+      'pincode': 'pinCode',
+      'district': null,
+      'taluka': null,
+      'revenueCircle': null,
+      'village': null,
+      'mobile': 'mobile',
+      'email': null,
+      'streamCode': 'streamCode',
+      'categoryCode': 'categoryCode',
+      'minorityReligionCode': 'minorityReligionCode',
+      'divyangCode': 'divyangCode',
+      'mediumCode': 'mediumCode'
+    };
+    
+    for (const [key, value] of Object.entries(data)) {
+      const backendKey = fieldMap[key];
+      if (backendKey) {
+        // Skip null values - let backend use existing values
+        if (value !== null && value !== undefined && value !== '') {
+          transformed[backendKey] = value;
+        }
+      }
+    }
+    
+    return transformed;
+  }
+
+  /**
    * Save or update complete student profile
    * Uses modern RxJS patterns with proper error handling
    */
@@ -109,7 +165,10 @@ export class StudentProfileService {
     this.isLoading.set(true);
     this.error.set(null);
 
-    this.http.patch<{ ok: boolean; student: StudentProfile }>(`${API_BASE_URL}/students/${current.userId}`, profile).subscribe({
+    // Transform field names to match backend schema
+    const transformedData = this.transformProfileToBackendFormat(profile);
+
+    this.http.patch<{ ok: boolean; student: StudentProfile }>(`${API_BASE_URL}/students/me`, transformedData).subscribe({
       next: (response: any) => {
         const updatedProfile = response.student;
         this.studentProfile.set(updatedProfile);
@@ -158,6 +217,50 @@ export class StudentProfileService {
       subjects: current.subjects
     };
     this.saveProfile(updated);
+  }
+
+  /**
+   * Update previous exam details
+   * Calls dedicated PATCH /students/me/previous-exams endpoint
+   */
+  updatePreviousExams(examData: any) {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    this.http.patch<{ ok: boolean; previousExams: any[] }>(`${API_BASE_URL}/students/me/previous-exams`, examData).subscribe({
+      next: (response: any) => {
+        console.log('Previous exams saved:', response);
+        this.isLoading.set(false);
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to save previous exams. Please try again.';
+        console.error('Failed to save previous exams:', err);
+        this.error.set(errorMsg);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  /**
+   * Update bank details
+   * Calls dedicated PATCH /students/me/bank-details endpoint
+   */
+  updateBankDetails(bankData: any) {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    this.http.patch<{ ok: boolean; bankDetails: any }>(`${API_BASE_URL}/students/me/bank-details`, bankData).subscribe({
+      next: (response: any) => {
+        console.log('Bank details saved:', response);
+        this.isLoading.set(false);
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to save bank details. Please try again.';
+        console.error('Failed to save bank details:', err);
+        this.error.set(errorMsg);
+        this.isLoading.set(false);
+      }
+    });
   }
 
   /**
