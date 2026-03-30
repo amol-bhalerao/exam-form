@@ -126,3 +126,62 @@ export const studentGuard: CanActivateFn = (route, state) => {
   return true;
 };
 
+// Application guard - allows exam form access at 70% profile completion
+// Requires: authentication + student role + profile exists + 70% profile completion
+export const applicationGuard: CanActivateFn = async (route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const profileService = inject(StudentProfileService);
+  
+  const isLoggedIn = auth.isLoggedIn();
+  const user = auth.user();
+  
+  if (!isLoggedIn) {
+    router.navigate(['/login']);
+    return false;
+  }
+  
+  // Non-student roles don't need guard
+  if (user?.role && user.role !== 'STUDENT') {
+    return true;
+  }
+  
+  // For STUDENT role, ensure profile exists and is at least 70% complete
+  try {
+    await profileService.loadProfile();
+    const profile = profileService.profile$();
+    const completionPercentage = profileService.completionPercentage$();
+    
+    if (!profile) {
+      console.warn('Application guard: No profile found. Redirecting to institute selection.');
+      router.navigate(['/student/select-institute']);
+      return false;
+    }
+    
+    if (completionPercentage < 70) {
+      console.warn(`Application guard: Profile only ${completionPercentage}% complete. Minimum 70% required. Redirecting to profile.`);
+      router.navigate(['/app/student/profile'], {
+        queryParams: { returnUrl: state.url }
+      });
+      return false;
+    }
+    
+    console.log(`Application guard: Profile ${completionPercentage}% complete. Access allowed.`);
+    return true;
+  } catch (error: any) {
+    // Log for debugging
+    console.warn('Application guard error:', error);
+    
+    if (error?.error?.error === 'STUDENT_PROFILE_MISSING' || error?.status === 404) {
+      // Profile missing - must select institute first
+      console.warn('Application guard: Profile missing (404). Redirecting to institute selection.');
+      router.navigate(['/student/select-institute']);
+      return false;
+    }
+    
+    // For other errors, deny access to be safe
+    console.warn('Application guard: Error loading profile, denying access');
+    router.navigate(['/app/student/profile']);
+    return false;
+  }
+};

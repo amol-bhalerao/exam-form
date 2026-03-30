@@ -17,6 +17,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { API_BASE_URL } from '../../../core/api';
+import { StudentProfileService } from '../../../core/student-profile.service';
 import { Subject as RxSubject, interval } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
 
@@ -69,6 +70,22 @@ type SubjectInfo = { id: number; code: string; name: string; category?: string }
             </div>
           </div>
         </mat-card>
+
+        <!-- Profile Completion Warning -->
+        @if (showProfileWarning()) {
+          <mat-card class="warning-banner">
+            <div class="warning-content">
+              <mat-icon class="warning-icon">warning_amber</mat-icon>
+              <div class="warning-text">
+                <h3>⚠️ Incomplete Profile</h3>
+                <p>Your profile is {{ profileCompletionPercentage() }}% complete. We recommend completing your profile (100%) before submitting your application.</p>
+                <button mat-stroked-button (click)="router.navigate(['/app/student/profile'])">
+                  <mat-icon>edit</mat-icon> Complete Profile
+                </button>
+              </div>
+            </div>
+          </mat-card>
+        }
 
         <!-- Auto-save Progress -->
         @if (autoSaveProgress() > 0 && autoSaveProgress() < 100) {
@@ -678,6 +695,59 @@ type SubjectInfo = { id: number; code: string; name: string; category?: string }
         grid-template-columns: 1fr;
       }
     }
+
+    .warning-banner {
+      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      border: 1px solid #fcd34d;
+      border-left: 4px solid #f59e0b;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .warning-content {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+
+    .warning-icon {
+      color: #f59e0b;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .warning-text {
+      flex: 1;
+    }
+
+    .warning-text h3 {
+      margin: 0 0 8px 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #92400e;
+    }
+
+    .warning-text p {
+      margin: 0 0 12px 0;
+      font-size: 0.9rem;
+      color: #b45309;
+      line-height: 1.4;
+    }
+
+    .warning-text button {
+      font-size: 0.85rem;
+      padding: 6px 12px;
+      background: white;
+      border: 1px solid #fcd34d;
+      color: #92400e;
+    }
+
+    .warning-text button:hover {
+      background: #fffbeb;
+    }
   `]
 })
 export class StudentApplicationEditComponent implements OnInit, OnDestroy {
@@ -691,6 +761,8 @@ export class StudentApplicationEditComponent implements OnInit, OnDestroy {
   saveMessage = signal('');
   lastSaved = signal<Date | null>(null);
   availableSubjects = signal<SubjectInfo[]>([]);
+  profileCompletionPercentage = signal(0);
+  showProfileWarning = signal(false);
 
   private destroy$ = new RxSubject<void>();
   private autoSaveTimer$ = new RxSubject<void>();
@@ -698,10 +770,24 @@ export class StudentApplicationEditComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private http: HttpClient,
-    private router: Router
+    private router: Router,
+    private profileService: StudentProfileService
   ) {}
 
   ngOnInit() {
+    // Load profile and check completion percentage
+    this.profileService.loadProfile().then(profile => {
+      const completionPercentage = this.profileService.completionPercentage$();
+      this.profileCompletionPercentage.set(completionPercentage);
+      this.showProfileWarning.set(completionPercentage < 100 && completionPercentage >= 70);
+      
+      if (completionPercentage < 100) {
+        console.warn(`⚠️ Profile only ${completionPercentage}% complete. Consider completing your profile before submitting.`);
+      }
+    }).catch(err => {
+      console.error('Failed to load profile:', err);
+    });
+
     this.route.params.pipe(takeUntil(this.destroy$)).subscribe(params => {
       this.applicationId.set(params['id']);
       this.loadApplication();

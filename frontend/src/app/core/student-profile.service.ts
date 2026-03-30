@@ -51,16 +51,72 @@ export class StudentProfileService {
   private studentProfile = signal<StudentProfile | null>(null);
   private isLoading = signal(false);
   private error = signal<string | null>(null);
+  private profileCompletionPercentage = signal<number>(0);
 
   readonly profile$ = this.studentProfile.asReadonly();
   readonly isLoading$ = this.isLoading.asReadonly();
   readonly error$ = this.error.asReadonly();
+  readonly completionPercentage$ = this.profileCompletionPercentage.asReadonly();
 
   constructor() {
     // Load profile on service init
     this.loadProfile().catch(err => {
       console.error('Failed to load profile during service init:', err);
     });
+  }
+
+  /**
+   * Calculate profile completion percentage based on filled fields
+   * Required fields: firstName, lastName, dob, gender, aadhaar, address, pinCode, mobile, email, sscYear, xithYear (11 total)
+   */
+  private calculateCompletionPercentage(profile: any): number {
+    const requiredFields = [
+      'firstName',
+      'lastName',
+      'dob',
+      'gender',
+      'aadhaar',
+      'address',
+      'pinCode',
+      'mobile',
+      'email'
+    ];
+
+    let completedCount = 0;
+
+    // Check required fields
+    requiredFields.forEach(field => {
+      const value = profile[field];
+      if (value && value !== null && value !== '') {
+        completedCount++;
+      }
+    });
+
+    // Check previous exams (at least two years)
+    const previousExams = profile.previousExams || [];
+    const hasSSCYear = previousExams.some((e: any) => e.examType === 'SSC' && e.year);
+    const hasXIIYear = previousExams.some((e: any) => e.examType === 'XII' && e.year);
+    
+    if (hasSSCYear) completedCount++;
+    if (hasXIIYear) completedCount++;
+
+    const TOTAL_FIELDS = 11;
+    const percentage = Math.round((completedCount / TOTAL_FIELDS) * 100);
+    return percentage;
+  }
+
+  /**
+   * Check if profile completion is at least the specified percentage
+   */
+  isProfileCompletionAt(percentage: number): boolean {
+    return this.profileCompletionPercentage() >= percentage;
+  }
+
+  /**
+   * Check if profile is fully complete (100%)
+   */
+  isProfileComplete(): boolean {
+    return this.profileCompletionPercentage() === 100;
   }
 
   /**
@@ -85,6 +141,9 @@ export class StudentProfileService {
           } else {
             // Profile exists - use it
             this.studentProfile.set(profile);
+            // Calculate completion percentage
+            const completionPercentage = this.calculateCompletionPercentage(profile);
+            this.profileCompletionPercentage.set(completionPercentage);
             this.isLoading.set(false);
             resolve(profile);
           }
@@ -172,6 +231,9 @@ export class StudentProfileService {
       next: (response: any) => {
         const updatedProfile = response.student;
         this.studentProfile.set(updatedProfile);
+        // Recalculate completion percentage after save
+        const completionPercentage = this.calculateCompletionPercentage(updatedProfile);
+        this.profileCompletionPercentage.set(completionPercentage);
         this.isLoading.set(false);
       },
       error: (err: any) => {
