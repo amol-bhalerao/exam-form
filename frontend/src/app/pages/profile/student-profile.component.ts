@@ -1123,19 +1123,23 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       ]],
       
       // Date of Birth - valid date, not future, age >= 14
-      dateOfBirth: ['', this.dateOfBirthValidator.bind(this)],
+      dateOfBirth: ['', [Validators.required, this.dateOfBirthValidator.bind(this)]],
       
       // Gender - required
       gender: ['', Validators.required],
       
-      // Aadhar - 12 digits
+      // Aadhar - exactly 12 digits
       aadharNumber: ['', [
+        Validators.minLength(12),
+        Validators.maxLength(12),
         Validators.pattern(/^\d{12}$|^$/)
       ]],
       
-      // Mobile - 10 digits, starts with 6-9
+      // Mobile - exactly 10 digits, starts with 6-9
       mobile: ['', [
         Validators.required,
+        Validators.minLength(10),
+        Validators.maxLength(10),
         Validators.pattern(/^[6-9]\d{9}$/)
       ]],
       
@@ -1161,9 +1165,11 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         Validators.maxLength(100)
       ]],
       
-      // Pincode - 6 digits
+      // Pincode - exactly 6 digits
       pincode: ['', [
         Validators.required,
+        Validators.minLength(6),
+        Validators.maxLength(6),
         Validators.pattern(/^\d{6}$/)
       ]],
       
@@ -1196,24 +1202,40 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
     // PREVIOUS EXAM FORM
     this.previousExamForm = this.fb.group({
-      sscSeatNo: ['', [Validators.pattern(/^[A-Z0-9]*$/)]],
+      sscSeatNo: ['', [
+        Validators.maxLength(10),
+        Validators.pattern(/^[A-Z0-9]*$/)
+      ]],
       sscMonth: [''],
       sscYear: ['', [
+        Validators.minLength(4),
+        Validators.maxLength(4),
         Validators.pattern(/^\d{4}$|^$/)
       ]],
       sscBoard: [''],
       sscPercentage: ['', [
+        Validators.minLength(1),
+        Validators.maxLength(5),
         Validators.pattern(/^\d+(\.\d{1,2})?$|^$/),
         Validators.min(0),
         Validators.max(100)
       ]],
-      xithSeatNo: ['', [Validators.pattern(/^[a-zA-Z0-9]*$/)]],
+      xithSeatNo: ['', [
+        Validators.maxLength(10),
+        Validators.pattern(/^[a-zA-Z0-9]*$/)
+      ]],
       xithMonth: [''],
       xithYear: ['', [
+        Validators.minLength(4),
+        Validators.maxLength(4),
         Validators.pattern(/^\d{4}$|^$/)
       ]],
-      xithCollege: [''],
+      xithCollege: ['', [
+        Validators.maxLength(100)
+      ]],
       xithPercentage: ['', [
+        Validators.minLength(1),
+        Validators.maxLength(5),
         Validators.pattern(/^\d+(\.\d{1,2})?$|^$/),
         Validators.min(0),
         Validators.max(100)
@@ -1222,10 +1244,24 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
     // BANK DETAILS FORM
     this.bankDetailsForm = this.fb.group({
-      accountHolder: ['', [Validators.required]],
+      accountHolder: ['', [
+        Validators.required,
+        Validators.minLength(3),
+        Validators.maxLength(100)
+      ]],
       accountHolderRelation: ['', [Validators.required]],
-      ifscCode: ['', [Validators.required]],
-      accountNumber: ['', [Validators.required]]
+      ifscCode: ['', [
+        Validators.required,
+        Validators.minLength(11),
+        Validators.maxLength(11),
+        Validators.pattern(/^[A-Z]{4}0[A-Z0-9]{6}$/)
+      ]],
+      accountNumber: ['', [
+        Validators.required,
+        Validators.minLength(8),
+        Validators.maxLength(18),
+        Validators.pattern(/^\d{8,18}$/)
+      ]]
     });
   }
 

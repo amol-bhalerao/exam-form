@@ -1,6 +1,7 @@
 import { Injectable, signal, effect, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { API_BASE_URL } from './api';
+import { AuthService } from './auth.service';
 
 export interface SubjectMarks {
   subjectId: number;
@@ -48,6 +49,7 @@ export interface StudentProfile {
 })
 export class StudentProfileService {
   private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
   private studentProfile = signal<StudentProfile | null>(null);
   private isLoading = signal(false);
   private error = signal<string | null>(null);
@@ -59,10 +61,13 @@ export class StudentProfileService {
   readonly completionPercentage$ = this.profileCompletionPercentage.asReadonly();
 
   constructor() {
-    // Load profile on service init
-    this.loadProfile().catch(err => {
-      console.error('Failed to load profile during service init:', err);
-    });
+    // Load profile on service init only if user is a STUDENT
+    const currentUser = this.authService.user();
+    if (currentUser?.role === 'STUDENT') {
+      this.loadProfile().catch(err => {
+        console.error('Failed to load profile during service init:', err);
+      });
+    }
   }
 
   /**
@@ -123,8 +128,15 @@ export class StudentProfileService {
    * Load student profile from backend
    * If profile is missing, returns specific error for redirect
    * Returns an observable for use in guards
+   * Only works for STUDENT role - returns error for other roles
    */
   loadProfile() {
+    // Check if user is a student - if not, return error
+    const currentUser = this.authService.user();
+    if (!currentUser || currentUser.role !== 'STUDENT') {
+      return Promise.reject(new Error('USER_NOT_STUDENT'));
+    }
+
     this.isLoading.set(true);
     this.error.set(null);
 

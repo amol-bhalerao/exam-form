@@ -35,6 +35,79 @@ institutesRouter.get('/', async (req, res) => {
   }
 });
 
+// Super admin: create new institute
+institutesRouter.post('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+  try {
+    const body = z
+      .object({
+        name: z.string().min(3).max(200),
+        code: z.string().min(2).max(50).optional(),
+        collegeNo: z.string().min(1).max(20),
+        udiseNo: z.string().min(1).max(20),
+        address: z.string().max(500).optional(),
+        district: z.string().max(100).optional(),
+        taluka: z.string().max(100).optional(),
+        city: z.string().max(100).optional(),
+        pincode: z.string().max(10).optional(),
+        contactPerson: z.string().max(100).optional(),
+        contactEmail: z.string().email().optional(),
+        contactMobile: z.string().max(15).optional(),
+        status: z.enum(['APPROVED', 'PENDING']).optional(),
+        acceptingApplications: z.boolean().optional(),
+        examApplicationLimit: z.number().int().positive().optional()
+      })
+      .parse(req.body);
+
+    // Check if institute with same code already exists
+    if (body.code) {
+      const existing = await prisma.institute.findUnique({ where: { code: body.code } });
+      if (existing) {
+        return res.status(409).json({ error: 'INSTITUTE_CODE_ALREADY_EXISTS', message: 'An institute with this code already exists' });
+      }
+    }
+
+    // Create new institute
+    const institute = await prisma.institute.create({
+      data: {
+        name: body.name,
+        code: body.code || `INST-${Date.now()}`,
+        collegeNo: body.collegeNo,
+        udiseNo: body.udiseNo,
+        address: body.address,
+        district: body.district,
+        taluka: body.taluka,
+        city: body.city,
+        pincode: body.pincode,
+        contactPerson: body.contactPerson,
+        contactEmail: body.contactEmail,
+        contactMobile: body.contactMobile,
+        status: body.status || 'PENDING',
+        acceptingApplications: body.acceptingApplications ?? true,
+        examApplicationLimit: body.examApplicationLimit || 100
+      }
+    });
+
+    return res.status(201).json({
+      ok: true,
+      institute: {
+        id: institute.id,
+        name: institute.name,
+        code: institute.code,
+        collegeNo: institute.collegeNo,
+        udiseNo: institute.udiseNo,
+        status: institute.status,
+        createdAt: institute.createdAt
+      }
+    });
+  } catch (err) {
+    console.error('Error creating institute:', err);
+    if (err.name === 'ZodError') {
+      return res.status(422).json({ error: 'VALIDATION_ERROR', details: err.errors });
+    }
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
 // Public: institute admin user registration for existing institute
 institutesRouter.post('/register', async (req, res) => {
   const body = z
