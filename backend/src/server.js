@@ -21,6 +21,7 @@ import { newsRouter } from './routes/news.js';
 import { paymentsRouter } from './routes/payments.js';
 import { studentsRouter } from './routes/students.js';
 import { adminRouter } from './routes/admin.js';
+import { migrationRouter } from './routes/migrations.js';
 import pincodesRouter from './routes/pincodes.js';
 import { swaggerSpec } from './swagger.js';
 
@@ -75,16 +76,32 @@ app.use(
 app.use(compression());
 
 // ── Structured logging (pino-http) ─────────────────────────────────────
-const httpLogger = pinoHttp({
-  level: isProd ? 'info' : 'debug',
-  transport: isProd ? undefined : { target: 'pino-pretty', options: { colorize: true } },
-  // Don't log health checks (noisy)
-  autoLogging: { ignore: (req) => req.url === '/api/health' }
-});
-app.use(httpLogger);
+// const httpLogger = pinoHttp({
+//   level: isProd ? 'info' : 'debug',
+//   transport: isProd ? undefined : { target: 'pino-pretty', options: { colorize: true } },
+//   // Don't log health checks (noisy)
+//   autoLogging: { ignore: (req) => req.url === '/api/health' }
+// });
+// app.use(httpLogger);
 
 // ── Body parsing ────────────────────────────────────────────────────────
 app.use(express.json({ limit: '2mb' }));
+
+// ── Handle body parsing errors ──────────────────────────────────────────
+app.use((err, _req, res, next) => {
+  if (err instanceof SyntaxError && 'body' in err) {
+    return res.status(400).json({ error: 'INVALID_JSON', message: err.message });
+  }
+  next(err);
+});
+
+// Body parser error handler
+app.use((err, _req, res, next) => {
+  if (err instanceof SyntaxError && 'body' in err) {
+    return res.status(400).json({ error: 'INVALID_JSON', message: 'Invalid JSON in request body' });
+  }
+  next(err);
+});
 
 // ── Global API rate limit ───────────────────────────────────────────────
 app.use('/api', apiLimiter);
@@ -108,6 +125,7 @@ app.use('/api/public', publicRouter);
 app.use('/api/news', newsRouter);
 app.use('/api/payments', paymentLimiter, paymentsRouter);
 app.use('/api/admin', adminRouter);
+app.use('/api/migrations', migrationRouter);
 app.use('/api/pincodes', pincodesRouter);
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
@@ -118,7 +136,8 @@ app.use((err, _req, res, _next) => {
 
   // Zod validation errors → 422
   if (err?.name === 'ZodError') {
-    return res.status(422).json({ error: 'VALIDATION_ERROR', issues: err.errors });
+    const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+    return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
   }
 
   if (!isProd) console.error('[error]', err);

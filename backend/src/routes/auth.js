@@ -149,8 +149,16 @@ authRouter.post('/logout', async (req, res) => {
   return res.json({ ok: true });
 });
 
+/**
+ * Verify access token without logging token verification checks
+ * Used by frontend to silently verify session validity
+ */
+authRouter.post('/verify', requireAuth, (req, res) => {
+  return res.json({ ok: true, user: req.auth });
+});
+
 authRouter.put('/me', requireAuth, async (req, res) => {
-  const body = z.object({ email: z.string().email().optional(), mobile: z.string().min(8).optional() }).parse(req.body);
+  const body = z.object({ email: z.string().email().optional(), mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional() }).parse(req.body);
   const user = await prisma.user.findUnique({ where: { id: req.auth.userId } });
   if (!user) return res.status(404).json({ error: 'NOT_FOUND' });
   const updated = await prisma.user.update({ where: { id: user.id }, data: { email: body.email ?? user.email, mobile: body.mobile ?? user.mobile } });

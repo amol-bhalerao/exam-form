@@ -52,12 +52,23 @@ mastersRouter.post('/subjects', requireAuth, requireRole(['SUPER_ADMIN', 'BOARD'
   const body = z
     .object({
       name: z.string().min(2),
-      code: z.string().min(1),
+      code: z.string().min(1).regex(/^[A-Z0-9]+$/, 'Subject code must contain only capital letters and numbers, no spaces'),
       category: z.enum(subjectCategories)
     })
     .parse(req.body);
 
-  const subject = await prisma.subject.create({ data: { name: body.name, code: body.code, category: body.category } });
+  // Enforce uppercase
+  const subjectCode = body.code.toUpperCase();
+
+  // Check if code already exists
+  const existing = await prisma.subject.findFirst({
+    where: { code: subjectCode }
+  });
+  if (existing) {
+    return res.status(409).json({ error: 'CODE_EXISTS', message: 'Subject code already exists' });
+  }
+
+  const subject = await prisma.subject.create({ data: { name: body.name, code: subjectCode, category: body.category } });
   return res.json({ subject });
 });
 
@@ -66,7 +77,7 @@ mastersRouter.put('/subjects/:id', requireAuth, requireRole(['SUPER_ADMIN', 'BOA
   const body = z
     .object({
       name: z.string().min(2).optional(),
-      code: z.string().min(1).optional(),
+      code: z.string().min(1).regex(/^[A-Z0-9]+$/, 'Subject code must contain only capital letters and numbers, no spaces').optional(),
       category: z.enum(subjectCategories).optional()
     })
     .parse(req.body);
@@ -74,13 +85,25 @@ mastersRouter.put('/subjects/:id', requireAuth, requireRole(['SUPER_ADMIN', 'BOA
   const subject = await prisma.subject.findUnique({ where: { id: subjectId } });
   if (!subject) return res.status(404).json({ error: 'NOT_FOUND' });
 
+  const updateData = {
+    name: body.name ?? subject.name,
+    code: body.code ? body.code.toUpperCase() : subject.code,
+    category: body.category ?? subject.category
+  };
+
+  // Check if new code already exists (and it's different from current code)
+  if (body.code && updateData.code !== subject.code) {
+    const existing = await prisma.subject.findFirst({
+      where: { code: updateData.code, NOT: { id: subjectId } }
+    });
+    if (existing) {
+      return res.status(409).json({ error: 'CODE_EXISTS', message: 'Subject code already exists' });
+    }
+  }
+
   const updated = await prisma.subject.update({
     where: { id: subjectId },
-    data: {
-      name: body.name ?? subject.name,
-      code: body.code ?? subject.code,
-      category: body.category ?? subject.category
-    }
+    data: updateData
   });
 
   return res.json({ subject: updated });

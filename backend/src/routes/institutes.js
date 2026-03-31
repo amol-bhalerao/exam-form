@@ -7,6 +7,35 @@ import { requireAuth, requireRole } from '../auth/middleware.js';
 
 export const institutesRouter = Router();
 
+// Super admin: get all institutes (all statuses) - MUST come before the generic GET /
+institutesRouter.get('/all', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+  try {
+    const institutes = await prisma.institute.findMany({
+      orderBy: [{ district: 'asc' }, { name: 'asc' }],
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        collegeNo: true,
+        udiseNo: true,
+        district: true,
+        city: true,
+        address: true,
+        contactPerson: true,
+        contactEmail: true,
+        contactMobile: true,
+        status: true,
+        acceptingApplications: true,
+        createdAt: true
+      }
+    });
+    return res.json({ institutes });
+  } catch (err) {
+    console.error('Error fetching all institutes:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
 // Public: approved institutes list (with district, city for filtering)
 institutesRouter.get('/', async (req, res) => {
   try {
@@ -42,8 +71,8 @@ institutesRouter.post('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req
       .object({
         name: z.string().min(3).max(200),
         code: z.string().min(2).max(50).optional(),
-        collegeNo: z.string().min(1).max(20),
-        udiseNo: z.string().min(1).max(20),
+        collegeNo: z.string().min(1).max(20).optional(),
+        udiseNo: z.string().min(1).max(20).optional(),
         address: z.string().max(500).optional(),
         district: z.string().max(100).optional(),
         taluka: z.string().max(100).optional(),
@@ -51,16 +80,21 @@ institutesRouter.post('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req
         pincode: z.string().max(10).optional(),
         contactPerson: z.string().max(100).optional(),
         contactEmail: z.string().email().optional(),
-        contactMobile: z.string().max(15).optional(),
+        contactMobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
+        username: z.string().min(3).optional(),
+        password: z.string().min(8).optional(),
         status: z.enum(['APPROVED', 'PENDING']).optional(),
         acceptingApplications: z.boolean().optional(),
         examApplicationLimit: z.number().int().positive().optional()
       })
       .parse(req.body);
 
+    // Validate institute code - enforce uppercase
+    const instituteCode = body.code ? String(body.code).toUpperCase() : `INST-${Date.now()}`;
+
     // Check if institute with same code already exists
     if (body.code) {
-      const existing = await prisma.institute.findUnique({ where: { code: body.code } });
+      const existing = await prisma.institute.findUnique({ where: { code: instituteCode } });
       if (existing) {
         return res.status(409).json({ error: 'INSTITUTE_CODE_ALREADY_EXISTS', message: 'An institute with this code already exists' });
       }
@@ -70,9 +104,9 @@ institutesRouter.post('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req
     const institute = await prisma.institute.create({
       data: {
         name: body.name,
-        code: body.code || `INST-${Date.now()}`,
-        collegeNo: body.collegeNo,
-        udiseNo: body.udiseNo,
+        code: instituteCode,
+        collegeNo: body.collegeNo || 'TBD',
+        udiseNo: body.udiseNo || 'TBD',
         address: body.address,
         district: body.district,
         taluka: body.taluka,
@@ -87,6 +121,32 @@ institutesRouter.post('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req
       }
     });
 
+    // Create institute admin user if credentials provided
+    let adminUser = null;
+    if (body.username && body.password) {
+      const existingUser = await prisma.user.findUnique({ where: { username: body.username } });
+      if (existingUser) {
+        return res.status(409).json({ error: 'USERNAME_TAKEN', message: 'Username already exists' });
+      }
+
+      const instituteRole = await prisma.role.findUnique({ where: { name: 'INSTITUTE' } });
+      if (!instituteRole) {
+        return res.status(500).json({ error: 'ROLE_MISSING', message: 'INSTITUTE role not found' });
+      }
+
+      adminUser = await prisma.user.create({
+        data: {
+          username: body.username,
+          passwordHash: await bcrypt.hash(body.password, 10),
+          roleId: instituteRole.id,
+          instituteId: institute.id,
+          status: 'ACTIVE',
+          email: body.contactEmail,
+          mobile: body.contactMobile
+        }
+      });
+    }
+
     return res.status(201).json({
       ok: true,
       institute: {
@@ -97,12 +157,18 @@ institutesRouter.post('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req
         udiseNo: institute.udiseNo,
         status: institute.status,
         createdAt: institute.createdAt
-      }
+      },
+      adminUser: adminUser ? {
+        id: adminUser.id,
+        username: adminUser.username,
+        email: adminUser.email
+      } : null
     });
   } catch (err) {
-    console.error('Error creating institute:', err);
     if (err.name === 'ZodError') {
-      return res.status(422).json({ error: 'VALIDATION_ERROR', details: err.errors });
+      // Zod validation errors
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
     }
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
@@ -118,7 +184,7 @@ institutesRouter.post('/register', async (req, res) => {
       address: z.string().optional(),
       contactPerson: z.string().optional(),
       contactEmail: z.string().email().optional(),
-      contactMobile: z.string().min(8).optional(),
+      contactMobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
       consentLetter: z.string().optional(),
       letterOfConsent: z.string().optional()
     })
@@ -169,7 +235,7 @@ institutesRouter.post('/users/invite', requireAuth, requireRole(['SUPER_ADMIN'])
     instituteId: z.number().int().positive(),
     username: z.string().min(3).optional(),
     email: z.string().email().optional(),
-    mobile: z.string().min(8).optional()
+    mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional()
   }).parse(req.body);
 
   const institute = await prisma.institute.findUnique({ where: { id: body.instituteId } });
@@ -210,7 +276,7 @@ institutesRouter.post('/users/create', requireAuth, requireRole(['SUPER_ADMIN'])
       username: z.string().min(3),
       password: z.string().min(8),
       email: z.string().email().optional(),
-      mobile: z.string().min(8).optional()
+      mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional()
     })
     .parse(req.body);
 
@@ -402,7 +468,7 @@ institutesRouter.patch('/users/:id', requireAuth, requireRole(['SUPER_ADMIN']), 
       username: z.string().min(3).optional(),
       password: z.string().min(8).optional(),
       email: z.string().email().optional(),
-      mobile: z.string().min(8).optional(),
+      mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
       status: z.enum(['ACTIVE', 'PENDING', 'DISABLED']).optional()
     })
     .parse(req.body);
@@ -433,3 +499,595 @@ institutesRouter.patch('/users/:id/status', requireAuth, requireRole(['SUPER_ADM
   const updated = await prisma.user.update({ where: { id: userId }, data: { status: body.status } });
   return res.json({ user: updated });
 });
+
+// Board: list teachers across institutes (for board dashboards)
+institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), async (req, res) => {
+  try {
+    const q = z
+      .object({
+        search: z.string().optional(),
+        active: z.string().optional(),
+        institute: z.string().optional(),
+        page: z.coerce.number().int().min(1).optional(),
+        limit: z.coerce.number().int().min(1).max(200).optional()
+      })
+      .parse(req.query);
+
+    const where = {};
+    if (q.search) {
+      where.OR = [
+        { fullName: { contains: q.search } },
+        { designation: { contains: q.search } },
+        { subjectSpecialization: { contains: q.search } },
+        { email: { contains: q.search } },
+        { mobile: { contains: q.search } }
+      ];
+    }
+    if (q.active !== undefined) {
+      where.active = q.active === 'true';
+    }
+    if (q.institute) {
+      where.institute = {
+        OR: [
+          { name: { contains: q.institute } },
+          { code: { contains: q.institute } }
+        ]
+      };
+    }
+
+    const page = q.page ?? 1;
+    const limit = q.limit ?? 20;
+    const total = await prisma.teacher.count({ where });
+    const teachers = await prisma.teacher.findMany({
+      where,
+      include: {
+        institute: {
+          select: { id: true, name: true, code: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+
+    const activeCount = await prisma.teacher.count({ where: { ...where, active: true } });
+    const inactiveCount = await prisma.teacher.count({ where: { ...where, active: false } });
+
+    return res.json({
+      teachers,
+      metadata: {
+        page,
+        limit,
+        total,
+        activeCount,
+        inactiveCount
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching board teachers:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Board: toggle teacher active status
+institutesRouter.patch('/board/teachers/:id', requireAuth, requireRole(['BOARD']), async (req, res) => {
+  try {
+    const teacherId = z.coerce.number().int().positive().parse(req.params.id);
+    const body = z.object({ active: z.boolean() }).parse(req.body);
+
+    const teacher = await prisma.teacher.findUnique({ where: { id: teacherId } });
+    if (!teacher) return res.status(404).json({ error: 'TEACHER_NOT_FOUND' });
+
+    const updated = await prisma.teacher.update({
+      where: { id: teacherId },
+      data: { active: body.active }
+    });
+
+    return res.json({ teacher: updated });
+  } catch (err) {
+    console.error('Error updating teacher:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Super admin & Institute: Search institutes
+institutesRouter.get('/search', requireAuth, async (req, res) => {
+  try {
+    const q = z.object({
+      query: z.string().optional().default('')
+    }).parse(req.query);
+
+    const searchTerm = q.query.toLowerCase();
+    const institutes = await prisma.institute.findMany({
+      where: {
+        OR: [
+          { name: { contains: searchTerm, mode: 'insensitive' } },
+          { code: { contains: searchTerm, mode: 'insensitive' } },
+          { district: { contains: searchTerm, mode: 'insensitive' } },
+          { city: { contains: searchTerm, mode: 'insensitive' } }
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        district: true,
+        city: true,
+        status: true
+      },
+      take: 20
+    });
+
+    return res.json({ institutes });
+  } catch (err) {
+    console.error('Error searching institutes:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Institute admin: Get teachers for current institute
+institutesRouter.get('/me/teachers', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      include: { institute: true }
+    });
+
+    if (!user || !user.institute) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
+    }
+
+    const teachers = await prisma.teacher.findMany({
+      where: { instituteId: user.institute.id },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        institute: {
+          select: { id: true, name: true, code: true }
+        }
+      }
+    });
+
+    return res.json({ teachers });
+  } catch (err) {
+    console.error('Error fetching teachers:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Institute admin: Add teacher for current institute
+institutesRouter.post('/me/teachers', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
+  try {
+    const body = z.object({
+      fullName: z.string().min(2).max(100),
+      designation: z.string().max(100).optional(),
+      subjectSpecialization: z.string().max(100).optional(),
+      qualification: z.string().max(100).optional(),
+      dob: z.string().optional(), // YYYY-MM-DD
+      appointmentDate: z.string().optional(),
+      gender: z.enum(['Male', 'Female', 'Other']).optional(),
+      governmentId: z.string().min(1).max(50),
+      casteCategory: z.string().max(50).optional(),
+      serviceStartDate: z.string().optional(),
+      leavingNote: z.string().optional(),
+      certificates: z.string().optional(),
+      certifications: z.string().optional(),
+      teacherType: z.enum(['Government', 'Contract', 'Adhoc', 'Temporary']).optional(),
+      email: z.string().email().optional(),
+      mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
+      active: z.boolean().optional().default(true)
+    }).parse(req.body);
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      include: { institute: true }
+    });
+
+    if (!user || !user.institute) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
+    }
+
+    // Check if government ID already exists for this institute
+    const existingTeacher = await prisma.teacher.findFirst({
+      where: {
+        governmentId: body.governmentId,
+        instituteId: user.institute.id
+      }
+    });
+
+    if (existingTeacher) {
+      return res.status(409).json({
+        error: 'DUPLICATE_GOVERNMENT_ID',
+        message: 'Teacher with this government ID already exists in this institute',
+        existingTeacher: {
+          id: existingTeacher.id,
+          fullName: existingTeacher.fullName
+        }
+      });
+    }
+
+    const teacher = await prisma.teacher.create({
+      data: {
+        fullName: body.fullName,
+        designation: body.designation,
+        subjectSpecialization: body.subjectSpecialization,
+        qualification: body.qualification,
+        dob: body.dob ? new Date(body.dob) : null,
+        appointmentDate: body.appointmentDate ? new Date(body.appointmentDate) : null,
+        gender: body.gender,
+        governmentId: body.governmentId,
+        casteCategory: body.casteCategory,
+        serviceStartDate: body.serviceStartDate ? new Date(body.serviceStartDate) : null,
+        leavingNote: body.leavingNote,
+        certificates: body.certificates,
+        certifications: body.certifications,
+        teacherType: body.teacherType,
+        email: body.email,
+        mobile: body.mobile,
+        active: body.active,
+        instituteId: user.institute.id
+      },
+      include: {
+        institute: {
+          select: { id: true, name: true, code: true }
+        }
+      }
+    });
+
+    return res.status(201).json({ ok: true, teacher });
+  } catch (err) {
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    console.error('Error adding teacher:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Institute admin: Check teacher history by government ID
+institutesRouter.get('/me/teachers/history', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
+  try {
+    const q = z.object({
+      governmentId: z.string().min(1)
+    }).parse(req.query);
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      include: { institute: true }
+    });
+
+    if (!user || !user.institute) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
+    }
+
+    // Find all instances of this government ID in the current institute
+    const teachers = await prisma.teacher.findMany({
+      where: {
+        governmentId: q.governmentId,
+        instituteId: user.institute.id
+      },
+      include: {
+        institute: {
+          select: { id: true, name: true, code: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return res.json({
+      governmentId: q.governmentId,
+      count: teachers.length,
+      teachers
+    });
+  } catch (err) {
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    console.error('Error fetching teacher history:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Institute admin: Get all available streams and subjects for the institute
+institutesRouter.get('/me/stream-subjects', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      include: { institute: true }
+    });
+
+    if (!user || !user.institute) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
+    }
+
+    // Get all streams
+    const allStreams = await prisma.stream.findMany({
+      orderBy: { name: 'asc' },
+      include: {
+        streamSubjects: {
+          include: { subject: true },
+          orderBy: { subject: { name: 'asc' } }
+        }
+      }
+    });
+
+    // Get institute's current stream-subject mappings
+    const instituteStreamSubjects = await prisma.instituteStreamSubject.findMany({
+      where: { instituteId: user.institute.id },
+      include: {
+        stream: true,
+        subject: true
+      }
+    });
+
+    // Build the response structure
+    const streams = allStreams.map(stream => ({
+      id: stream.id,
+      name: stream.name,
+      isSelected: instituteStreamSubjects.some(iss => iss.streamId === stream.id),
+      subjects: stream.streamSubjects.map(ss => ({
+        id: ss.subject.id,
+        name: ss.subject.name,
+        code: ss.subject.code,
+        category: ss.subject.category,
+        isSelected: instituteStreamSubjects.some(
+          iss => iss.streamId === stream.id && iss.subjectId === ss.subject.id
+        )
+      }))
+    }));
+
+    return res.json({ 
+      ok: true, 
+      instituteId: user.institute.id,
+      streams 
+    });
+  } catch (err) {
+    console.error('Error fetching stream-subjects:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Institute admin: Update stream-subject mappings for the institute
+institutesRouter.post('/me/stream-subjects', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
+  try {
+    const body = z
+      .object({
+        streamSubjects: z.array(
+          z.object({
+            streamId: z.coerce.number().int().positive(),
+            subjectIds: z.array(z.coerce.number().int().positive())
+          })
+        )
+      })
+      .parse(req.body);
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      include: { institute: true }
+    });
+
+    if (!user || !user.institute) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
+    }
+
+    const instituteId = user.institute.id;
+
+    // Validate that all streams and subjects exist
+    const streamIds = body.streamSubjects.map(ss => ss.streamId);
+    const allSubjectIds = [
+      ...new Set(body.streamSubjects.flatMap(ss => ss.subjectIds))
+    ];
+
+    const streamCount = await prisma.stream.count({
+      where: { id: { in: streamIds } }
+    });
+    if (streamCount !== streamIds.length) {
+      return res.status(400).json({ error: 'INVALID_STREAM', message: 'One or more streams do not exist' });
+    }
+
+    const subjectCount = await prisma.subject.count({
+      where: { id: { in: allSubjectIds } }
+    });
+    if (subjectCount !== allSubjectIds.length) {
+      return res.status(400).json({ error: 'INVALID_SUBJECT', message: 'One or more subjects do not exist' });
+    }
+
+    // Delete all existing mappings for this institute
+    await prisma.instituteStreamSubject.deleteMany({
+      where: { instituteId }
+    });
+
+    // Create new mappings
+    const mappings = [];
+    for (const streamSubject of body.streamSubjects) {
+      for (const subjectId of streamSubject.subjectIds) {
+        mappings.push({
+          instituteId,
+          streamId: streamSubject.streamId,
+          subjectId
+        });
+      }
+    }
+
+    const created = await prisma.instituteStreamSubject.createMany({
+      data: mappings
+    });
+
+    return res.status(201).json({
+      ok: true,
+      message: `Created ${created.count} stream-subject mappings`,
+      count: created.count
+    });
+  } catch (err) {
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    console.error('Error updating stream-subjects:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Institute admin: Get profile completion status
+institutesRouter.get('/me/status', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      include: { institute: true }
+    });
+
+    if (!user || !user.institute) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
+    }
+
+    const institute = user.institute;
+
+    // Check if all required fields are filled
+    const isProfileComplete = !![
+      institute.address,
+      institute.district,
+      institute.city,
+      institute.contactPerson,
+      institute.contactEmail,
+      institute.contactMobile
+    ].every(v => v && String(v).trim().length > 0);
+
+    return res.json({
+      ok: true,
+      profileComplete: isProfileComplete,
+      institute: {
+        id: institute.id,
+        name: institute.name,
+        code: institute.code,
+        collegeNo: institute.collegeNo,
+        udiseNo: institute.udiseNo,
+        status: institute.status
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching institute status:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Institute admin: Get current institute details
+institutesRouter.get('/me', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      include: { institute: true }
+    });
+
+    if (!user || !user.institute) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
+    }
+
+    const institute = user.institute;
+
+    return res.json({
+      ok: true,
+      institute: {
+        id: institute.id,
+        name: institute.name,
+        code: institute.code,
+        collegeNo: institute.collegeNo,
+        udiseNo: institute.udiseNo,
+        address: institute.address,
+        district: institute.district,
+        taluka: institute.taluka,
+        city: institute.city,
+        pincode: institute.pincode,
+        contactPerson: institute.contactPerson,
+        contactEmail: institute.contactEmail,
+        contactMobile: institute.contactMobile,
+        status: institute.status,
+        acceptingApplications: institute.acceptingApplications,
+        examApplicationLimit: institute.examApplicationLimit,
+        createdAt: institute.createdAt
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching institute details:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Institute admin: Update institute details
+institutesRouter.patch('/me', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
+  try {
+    const body = z
+      .object({
+        name: z.string().min(3).max(200).optional(),
+        address: z.string().max(500).optional(),
+        district: z.string().max(100).optional(),
+        taluka: z.string().max(100).optional(),
+        city: z.string().max(100).optional(),
+        pincode: z.string().max(10).optional(),
+        contactPerson: z.string().max(100).optional(),
+        contactEmail: z.string().email().optional(),
+        contactMobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
+        acceptingApplications: z.boolean().optional(),
+        examApplicationLimit: z.number().int().positive().optional()
+      })
+      .parse(req.body);
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.auth.userId },
+      include: { institute: true }
+    });
+
+    if (!user || !user.institute) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
+    }
+
+    const updateData = {};
+    if (body.name !== undefined) updateData.name = body.name;
+    if (body.address !== undefined) updateData.address = body.address;
+    if (body.district !== undefined) updateData.district = body.district;
+    if (body.taluka !== undefined) updateData.taluka = body.taluka;
+    if (body.city !== undefined) updateData.city = body.city;
+    if (body.pincode !== undefined) updateData.pincode = body.pincode;
+    if (body.contactPerson !== undefined) updateData.contactPerson = body.contactPerson;
+    if (body.contactEmail !== undefined) updateData.contactEmail = body.contactEmail;
+    if (body.contactMobile !== undefined) updateData.contactMobile = body.contactMobile;
+    if (body.acceptingApplications !== undefined) updateData.acceptingApplications = body.acceptingApplications;
+    if (body.examApplicationLimit !== undefined) updateData.examApplicationLimit = body.examApplicationLimit;
+
+    const updated = await prisma.institute.update({
+      where: { id: user.institute.id },
+      data: updateData
+    });
+
+    return res.json({
+      ok: true,
+      institute: {
+        id: updated.id,
+        name: updated.name,
+        code: updated.code,
+        collegeNo: updated.collegeNo,
+        udiseNo: updated.udiseNo,
+        address: updated.address,
+        district: updated.district,
+        taluka: updated.taluka,
+        city: updated.city,
+        pincode: updated.pincode,
+        contactPerson: updated.contactPerson,
+        contactEmail: updated.contactEmail,
+        contactMobile: updated.contactMobile,
+        status: updated.status,
+        acceptingApplications: updated.acceptingApplications,
+        examApplicationLimit: updated.examApplicationLimit,
+        createdAt: updated.createdAt
+      }
+    });
+  } catch (err) {
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    console.error('Error updating institute details:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+

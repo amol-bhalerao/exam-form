@@ -1,101 +1,136 @@
 import { Router } from 'express';
 import { z } from 'zod';
+import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
 
 export const newsRouter = Router();
 
-// In-memory storage for news items
-let newsItems = [
-  {
-    id: 1,
-    title: 'HSC Examination 2024 Schedule Released',
-    content: 'The Higher Secondary Certificate examination schedule for 2024 has been released. Students are advised to check the official website for detailed information.',
-    type: 'news',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 2,
-    title: 'Important Notice: Document Verification',
-    content: 'All students must complete document verification process before the application deadline. Incomplete applications will not be accepted.',
-    type: 'notification',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  },
-  {
-    id: 3,
-    title: 'Board Meeting - January 15, 2024',
-    content: 'Board meeting scheduled for January 15, 2024, to discuss examination policies and procedures.',
-    type: 'event',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+// Get all news items (for board admin)
+newsRouter.get('/', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
+  try {
+    const news = await prisma.news.findMany({
+      include: {
+        createdBy: { select: { id: true, username: true } }
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json({ news });
+  } catch (error) {
+    console.error('Error fetching news:', error);
+    res.status(500).json({ error: 'Failed to fetch news' });
   }
-];
-
-// Get all news items (for admin)
-newsRouter.get('/', requireAuth, requireRole(['BOARD']), (req, res) => {
-  res.json({ news: newsItems });
 });
 
 // Get public news items (for landing page)
-newsRouter.get('/public', (req, res) => {
-  // Return only active news items
-  const publicNews = newsItems
-    .filter(item => item.type !== 'internal')
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 10);
-
-  res.json({ news: publicNews });
+newsRouter.get('/public', async (req, res) => {
+  try {
+    const publicNews = await prisma.news.findMany({
+      where: {
+        isActive: true,
+        type: { not: 'internal' }
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        type: true,
+        createdAt: true,
+        createdBy: { select: { id: true, username: true } }
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10
+    });
+    res.json({ news: publicNews });
+  } catch (error) {
+    console.error('Error fetching public news:', error);
+    res.status(500).json({ error: 'Failed to fetch news', details: error.message });
+  }
 });
 
 // Create news item
-newsRouter.post('/', requireAuth, requireRole(['BOARD']), (req, res) => {
-  const body = z
-    .object({
-      title: z.string().min(1),
-      content: z.string().min(1),
-      type: z.enum(['news', 'event', 'notification'])
-    })
-    .parse(req.body);
+newsRouter.post('/', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
+  try {
+    const body = z
+      .object({
+        title: z.string().min(1).max(255),
+        content: z.string().min(1),
+        type: z.enum(['news', 'event', 'notification']),
+        isActive: z.boolean().optional()
+      })
+      .parse(req.body);
 
-  const newItem = {
-    id: Math.max(...newsItems.map(item => item.id), 0) + 1,
-    title: body.title,
-    content: body.content,
-    type: body.type,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
+    const news = await prisma.news.create({
+      data: {
+        title: body.title,
+        content: body.content,
+        type: body.type,
+        isActive: body.isActive ?? true,
+        createdByUserId: req.auth.userId
+      },
+      include: {
+        createdBy: { select: { id: true, username: true } }
+      }
+    });
 
-  newsItems.push(newItem);
-  res.status(201).json(newItem);
+    res.status(201).json(news);
+  } catch (error) {
+    console.error('Error creating news:', error);
+    res.status(500).json({ error: 'Failed to create news' });
+  }
 });
 
 // Update news item
-newsRouter.put('/:id', requireAuth, requireRole(['BOARD']), (req, res) => {
-  const id = parseInt(req.params.id?.toString() || '');
-  const body = z
-    .object({
-      title: z.string().min(1),
-      content: z.string().min(1),
-      type: z.enum(['news', 'event', 'notification'])
-    })
-    .parse(req.body);
+newsRouter.put('/:id', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
+  try {
+    const newsId = z.coerce.number().int().positive().parse(req.params.id);
+    const body = z
+      .object({
+        title: z.string().min(1).max(255).optional(),
+        content: z.string().min(1).optional(),
+        type: z.enum(['news', 'event', 'notification']).optional(),
+        isActive: z.boolean().optional()
+      })
+      .parse(req.body);
 
-  const index = newsItems.findIndex(item => item.id === id);
-  if (index === -1) {
-    return res.status(404).json({ error: 'News item not found' });
+    const news = await prisma.news.findUnique({ where: { id: newsId } });
+    if (!news) {
+      return res.status(404).json({ error: 'News item not found' });
+    }
+
+    const updated = await prisma.news.update({
+      where: { id: newsId },
+      data: {
+        title: body.title ?? news.title,
+        content: body.content ?? news.content,
+        type: body.type ?? news.type,
+        isActive: body.isActive ?? news.isActive
+      },
+      include: {
+        createdBy: { select: { id: true, username: true } }
+      }
+    });
+
+    res.json(updated);
+  } catch (error) {
+    console.error('Error updating news:', error);
+    res.status(500).json({ error: 'Failed to update news' });
   }
+});
 
-  newsItems[index] = {
-    ...newsItems[index],
-    title: body.title,
-    content: body.content,
-    type: body.type,
-    updatedAt: new Date().toISOString()
-  };
-
-  res.json(newsItems[index]);
+// Delete news item
+newsRouter.delete('/:id', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
+  try {
+    const newsId = z.coerce.number().int().positive().parse(req.params.id);
+    const news = await prisma.news.findUnique({ where: { id: newsId } });
+    if (!news) {
+      return res.status(404).json({ error: 'News item not found' });
+    }
+    await prisma.news.delete({ where: { id: newsId } });
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Error deleting news:', error);
+    res.status(500).json({ error: 'Failed to delete news' });
+  }
 });
 
 // Delete news item

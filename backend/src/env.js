@@ -21,7 +21,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1).default(
     isProd
       ? 'mysql://u441114691_exam:Exam%401234567890@127.0.0.1:3306/u441114691_exam'
-      : 'mysql://root:@localhost:3306/hsc_exam_dev'
+      : 'mysql://root:@localhost:3306/hsc_exam_local'
   ),
 
   // JWT

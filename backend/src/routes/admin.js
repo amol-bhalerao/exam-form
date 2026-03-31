@@ -240,3 +240,153 @@ adminRouter.get('/config', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+/**
+ * GET /api/admin/audit-logs
+ * Fetch audit logs for super admin dashboard
+ */
+adminRouter.get('/audit-logs', async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit || '100'), 1000);
+    const page = parseInt(req.query.page || '1');
+    const skip = (page - 1) * limit;
+
+    const [logs, total] = await Promise.all([
+      prisma.auditLog.findMany({
+        include: {
+          actorUser: {
+            select: { id: true, username: true, email: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.auditLog.count()
+    ]);
+
+    return res.json({
+      logs,
+      metadata: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching audit logs:', error);
+    return res.status(500).json({ error: 'Failed to fetch audit logs', message: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/reports
+ * Fetch system reports (statistics, summaries, etc.)
+ */
+adminRouter.get('/reports', async (req, res) => {
+  try {
+    const [
+      totalUsers,
+      totalInstitutes,
+      totalExams,
+      totalExamApplications,
+      activeUsers,
+      approvedInstitutes,
+      pendingApplications,
+      recentAuditLogs
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.institute.count(),
+      prisma.exam.count(),
+      prisma.examApplication.count(),
+      prisma.user.count({ where: { status: 'ACTIVE' } }),
+      prisma.institute.count({ where: { status: 'APPROVED' } }),
+      prisma.examApplication.count({ where: { status: 'SUBMITTED' } }),
+      prisma.auditLog.findMany({
+        take: 50,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          actorUser: { select: { id: true, username: true } }
+        }
+      })
+    ]);
+
+    // Get application status distribution
+    const applicationStatusDist = await prisma.examApplication.groupBy({
+      by: ['status'],
+      _count: { id: true }
+    });
+
+    // Get institute status distribution
+    const instituteStatusDist = await prisma.institute.groupBy({
+      by: ['status'],
+      _count: { id: true }
+    });
+
+    return res.json({
+      summary: {
+        totalUsers,
+        activeUsers,
+        inactiveUsers: totalUsers - activeUsers,
+        totalInstitutes,
+        approvedInstitutes,
+        pendingInstitutes: totalInstitutes - approvedInstitutes,
+        totalExams,
+        totalExamApplications,
+        pendingApplications
+      },
+      distributions: {
+        applicationsByStatus: applicationStatusDist,
+        institutesByStatus: instituteStatusDist
+      },
+      recentActivity: recentAuditLogs.slice(0, 10),
+      generatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error generating reports:', error);
+    return res.status(500).json({ error: 'Failed to generate reports', message: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/statistics
+ * Get detailed statistics for board dashboard
+ */
+adminRouter.get('/statistics', async (req, res) => {
+  try {
+    const [
+      totalApplications,
+      approvedApplications,
+      rejectedApplications,
+      pendingReview,
+      totalStudents,
+      totalTeachers
+    ] = await Promise.all([
+      prisma.examApplication.count(),
+      prisma.examApplication.count({ where: { status: 'BOARD_APPROVED' } }),
+      prisma.examApplication.count({ where: { status: { in: ['REJECTED_BY_BOARD', 'REJECTED_BY_INSTITUTE'] } } }),
+      prisma.examApplication.count({ where: { status: { in: ['SUBMITTED', 'INSTITUTE_VERIFIED'] } } }),
+      prisma.student.count(),
+      prisma.teacher.count()
+    ]);
+
+    return res.json({
+      applications: {
+        total: totalApplications,
+        approved: approvedApplications,
+        rejected: rejectedApplications,
+        pendingReview,
+        approvalRate: totalApplications > 0 ? Math.round((approvedApplications / totalApplications) * 100) : 0
+      },
+      people: {
+        totalStudents,
+        totalTeachers
+      },
+      generatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching statistics:', error);
+    return res.status(500).json({ error: 'Failed to fetch statistics', message: error.message });
+  }
+});

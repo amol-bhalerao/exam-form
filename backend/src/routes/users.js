@@ -35,7 +35,7 @@ usersRouter.post('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res
     username: z.string().min(3),
     password: z.string().min(6),
     email: z.string().email().optional(),
-    mobile: z.string().optional(),
+    mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
     roleName: z.enum(['BOARD', 'SUPER_ADMIN'])
   }).parse(req.body);
 
@@ -71,7 +71,7 @@ usersRouter.put('/:id', requireAuth, requireRole(['SUPER_ADMIN']), async (req, r
   const body = z.object({
     username: z.string().min(3).optional(),
     email: z.string().email().optional(),
-    mobile: z.string().optional(),
+    mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
     status: z.enum(['ACTIVE', 'PENDING', 'DISABLED']).optional(),
     roleName: z.enum(['BOARD', 'SUPER_ADMIN']).optional()
   }).parse(req.body);
@@ -137,4 +137,56 @@ usersRouter.delete('/:id', requireAuth, requireRole(['SUPER_ADMIN']), async (req
 
   await prisma.user.delete({ where: { id: userId } });
   return res.json({ ok: true });
+});
+
+// Get board users only
+usersRouter.get('/board', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+  const query = z.object({ search: z.string().optional() }).parse(req.query);
+  const where = {
+    role: { name: 'BOARD' },
+    ...(query.search ? {
+      OR: [
+        { username: { contains: query.search } },
+        { email: { contains: query.search } },
+        { mobile: { contains: query.search } }
+      ]
+    } : {})
+  };
+
+  const users = await prisma.user.findMany({
+    where,
+    include: {
+      role: true
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return res.json({ users });
+});
+
+// Get institute users only
+usersRouter.get('/institute', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+  const query = z.object({ search: z.string().optional() }).parse(req.query);
+  const where = {
+    role: { name: 'INSTITUTE' },
+    ...(query.search ? {
+      OR: [
+        { username: { contains: query.search } },
+        { email: { contains: query.search } },
+        { mobile: { contains: query.search } },
+        { institute: { name: { contains: query.search } } }
+      ]
+    } : {})
+  };
+
+  const users = await prisma.user.findMany({
+    where,
+    include: {
+      role: true,
+      institute: { select: { id: true, name: true, code: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
+  return res.json({ users });
 });

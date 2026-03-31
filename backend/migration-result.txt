@@ -1,5 +1,0 @@
-mysql -u root << EOF
-USE hsc_exam_local;
-ALTER TABLE previous_exams ADD COLUMN IF NOT EXISTS percentage VARCHAR(10) NULL;
-SELECT 'Percentage column: SUCCESS' as status;
-EOF

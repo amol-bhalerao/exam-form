@@ -247,11 +247,14 @@ export class SuperInstitutesComponent implements OnInit {
   selectedInstitute: Institute | null = null;
   viewingInstitute: Institute | null = null;
   readonly columnDefs: ColDef[] = [
-    { field: 'name', headerName: 'Name', flex: 1, sortable: true, filter: true },
-    { field: 'code', headerName: 'Code', flex: 1, sortable: true, filter: true, valueGetter: (params: any) => params.data.code || '—' },
-    { field: 'status', headerName: 'Status', flex: 1, sortable: true, filter: true },
-    { headerName: 'Actions', field: 'actions', flex: 1, minWidth: 140, cellRenderer: (params: any) => {
-        return `<div style="display:flex;flex-wrap:wrap;gap:4px;"><button data-action=view style="border:none;background:#dbeafe;color:#1d4ed8;padding:3px 8px;border-radius:4px;">View</button></div>`;
+    { field: 'name', headerName: 'Name', flex: 1.5, sortable: true, filter: true, minWidth: 200 },
+    { field: 'collegeNo', headerName: 'College No', flex: 1, sortable: true, filter: true, minWidth: 120, valueGetter: (params: any) => params.data.collegeNo || '—' },
+    { field: 'udiseNo', headerName: 'UDISE No', flex: 1, sortable: true, filter: true, minWidth: 120, valueGetter: (params: any) => params.data.udiseNo || '—' },
+    { field: 'city', headerName: 'City', flex: 1, sortable: true, filter: true, minWidth: 120, valueGetter: (params: any) => params.data.city || '—' },
+    { field: 'contactMobile', headerName: 'Mobile', flex: 1, sortable: true, filter: true, minWidth: 130, valueGetter: (params: any) => params.data.contactMobile || '—' },
+    { field: 'contactEmail', headerName: 'Email', flex: 1.2, sortable: true, filter: true, minWidth: 180, valueGetter: (params: any) => params.data.contactEmail || '—' },
+    { headerName: 'Actions', field: 'actions', flex: 0.8, minWidth: 90, cellRenderer: (params: any) => {
+        return `<div style="display:flex;flex-wrap:wrap;gap:4px;"><button data-action=view style="border:none;background:#dbeafe;color:#1d4ed8;padding:3px 8px;border-radius:4px;font-size:12px;">View</button></div>`;
       } }
   ];
   readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true, minWidth: 120, flex: 1 };
@@ -300,8 +303,17 @@ export class SuperInstitutesComponent implements OnInit {
   }
 
   load() {
-    const params = this.search ? `?search=${encodeURIComponent(this.search)}` : '';
-    this.http.get<{ institutes: Institute[] }>(`${API_BASE_URL}/institutes${params}`).subscribe((r) => this.institutes.set(r.institutes));
+    // For super admin, get ALL institutes (including PENDING)
+    this.http.get<{ institutes: Institute[] }>(`${API_BASE_URL}/institutes/all`).subscribe({
+      next: (r) => this.institutes.set(r.institutes),
+      error: (err) => {
+        console.error('Error loading institutes:', err);
+        // Fallback to regular endpoint if /all is not available
+        this.http.get<{ institutes: Institute[] }>(`${API_BASE_URL}/institutes`).subscribe(
+          (r) => this.institutes.set(r.institutes)
+        );
+      }
+    });
   }
 
   createInstitute() {

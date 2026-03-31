@@ -29,11 +29,13 @@
   --danger: #dc2626;
   --info: #0ea5e9;
 
-  /* Sidebar */
-  --sidebar-bg: #4f618a;
-  --sidebar-text: #e2e8f0;
-  --sidebar-active: #2563eb;
-  --sidebar-hover: rgba(255,255,255,0.08);
+  /* Sidebar - UPDATED FOR NEW PURPLE THEME */
+  --sidebar-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  --sidebar-text: #f8fafc;
+  --sidebar-text-secondary: #cbd5e1;
+  --sidebar-active: #6366f1;
+  --sidebar-hover: rgba(99, 102, 241, 0.15);
+  --sidebar-accent: #a5b4fc;
 
   /* Shadows */
   --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
@@ -77,10 +79,15 @@ body.dark-mode {
   --text: #f1f5f9;
   --text-secondary: #cbd5e1;
   --muted: #cbd5e1;
-  --sidebar-bg: #394861;
-  --sidebar-text: #f1f5f9;
-  --sidebar-active: #60a5fa;
-  --sidebar-hover: rgba(255,255,255,0.1);
+  
+  /* Sidebar - UPDATED FOR NEW PURPLE THEME */
+  --sidebar-bg: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+  --sidebar-text: #f8fafc;
+  --sidebar-text-secondary: #cbd5e1;
+  --sidebar-active: #818cf8;
+  --sidebar-hover: rgba(99, 102, 241, 0.25);
+  --sidebar-accent: #c7d2fe;
+  
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
@@ -533,5 +540,57 @@ button.mat-flat-button, button.mat-stroked-button { text-transform: none; }
 
 @media (max-width: 900px) {
   .mat-card { border-radius: 10px; }
+}
+
+/* ── SIDEBAR & SIDENAV OVERRIDES ──────────────────────────────── */
+/* Fix mat-sidenav-content layout and spacing */
+mat-sidenav-content {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  margin-left: 0 !important;
+  padding: 0 !important;
+}
+
+/* Fix mat-sidenav container layout */
+mat-sidenav-container {
+  height: 100%;
+  width: 100%;
+}
+
+/* Override Material Design mat-list-item styles for sidebar compatibility */
+mat-sidenav .mat-mdc-list-item,
+mat-sidenav .mat-list-item {
+  /* Allow component-specific styles to take precedence */
+  background: transparent !important;
+  color: inherit !important;
+  
+  &.active {
+    background: var(--sidebar-hover) !important;
+    color: var(--sidebar-accent) !important;
+  }
+  
+  &:hover {
+    background: var(--sidebar-hover) !important;
+    color: var(--sidebar-text) !important;
+  }
+}
+
+/* Ensure mat-icon in sidebar maintains proper colors */
+mat-sidenav .mat-icon {
+  color: inherit !important;
+}
+
+/* Override Material primary color theme for dark sidebar */
+mat-sidenav {
+  // background: var(--sidebar-bg) !important;
+  color: var(--sidebar-text) !important;
+  
+  .mat-mdc-list-item.mdc-list-item--selected {
+    background-color: var(--sidebar-active) !important;
+    color: white !important;
+  }
 }
 

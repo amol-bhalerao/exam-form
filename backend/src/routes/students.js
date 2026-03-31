@@ -87,7 +87,8 @@ studentsRouter.patch('/me', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Update student profile error:', err);
     if (err.name === 'ZodError') {
-      return res.status(400).json({ error: 'VALIDATION_ERROR', details: err.issues });
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
     }
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
@@ -380,7 +381,8 @@ studentsRouter.patch('/me/previous-exams', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Update previous exams error:', err);
     if (err.name === 'ZodError') {
-      return res.status(400).json({ error: 'VALIDATION_ERROR', details: err.issues });
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
     }
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
@@ -444,7 +446,8 @@ studentsRouter.patch('/me/bank-details', requireAuth, async (req, res) => {
   } catch (err) {
     console.error('Update bank details error:', err);
     if (err.name === 'ZodError') {
-      return res.status(400).json({ error: 'VALIDATION_ERROR', details: err.issues });
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
     }
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
