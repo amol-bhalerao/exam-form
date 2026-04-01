@@ -16,119 +16,168 @@ import { API_BASE_URL } from '../../core/api';
   imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, MatDividerModule],
   template: `
   @if (visible) {
-    <div class="picker-overlay">
-      <mat-card class="picker-card">
-        <div class="header-row">
+    <div class="modern-modal-overlay" (click)="onClose()">
+      <mat-card class="modern-modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-header">
           <div>
-            <div class="title">Search colleges</div>
-            <div class="subtitle">Search by name, code, city, or contact person and select one.</div>
+            <h2 class="modal-title">Search Institutes</h2>
+            <p class="modal-subtitle">Find and select an institute to create user accounts</p>
           </div>
-          <button mat-icon-button color="primary" type="button" aria-label="Close" (click)="onClose()"><mat-icon>close</mat-icon></button>
+          <button mat-icon-button aria-label="Close" (click)="onClose()" class="close-btn">
+            <mat-icon>close</mat-icon>
+          </button>
         </div>
 
-        <div class="search-row">
-          <mat-form-field appearance="outline" class="full">
-            <mat-label>Search institutes</mat-label>
-            <input matInput [value]="query()" (input)="query.set($any($event.target).value)" placeholder="Name, code, city, contact" />
+        <div class="search-container">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search by name, code, city, or contact</mat-label>
+            <input matInput 
+              [(ngModel)]="queryText" 
+              (keyup.enter)="search()" 
+              placeholder="Type to search..." 
+              class="search-input" />
+            <mat-icon matSuffix>search</mat-icon>
           </mat-form-field>
-          <button mat-flat-button color="primary" type="button" (click)="search()">Search</button>
+          <button mat-flat-button color="primary" (click)="search()" [disabled]="loading()" class="search-btn">
+            <mat-icon *ngIf="!loading()">search</mat-icon>
+            <mat-icon *ngIf="loading()" class="spinner">hourglass_empty</mat-icon>
+            {{ loading() ? 'Searching...' : 'Search' }}
+          </button>
         </div>
 
-        <div *ngIf="error()" class="error">{{ error() }}</div>
-        <div *ngIf="loading()" class="muted">Searching…</div>
-        <div *ngIf="!loading() && results().length === 0" class="muted">No institutes found yet.</div>
+        @if (error()) {
+          <div class="error-message">
+            <mat-icon>error</mat-icon>
+            {{ error() }}
+          </div>
+        }
 
-        <div class="table-wrapper" *ngIf="results().length > 0">
-          <table class="inst-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Code</th>
-                <th>City</th>
-                <th>Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let inst of results()">
-                <td>{{ inst.name }}</td>
-                <td>{{ inst.code || 'N/A' }}</td>
-                <td>{{ inst.city || inst.district || '-' }}</td>
-                <td>{{ inst.status || '-' }}</td>
-                <td><button mat-stroked-button color="primary" type="button" (click)="select(inst)">Select</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        @if (loading()) {
+          <div class="loading-state">
+            <div class="pulse-dot"></div>
+            <p>Searching institutes...</p>
+          </div>
+        }
+
+        @if (!loading() && results().length === 0 && queryText) {
+          <div class="empty-state">
+            <mat-icon>search_off</mat-icon>
+            <p>No institutes found matching your search</p>
+          </div>
+        }
+
+        @if (!loading() && !queryText && results().length === 0) {
+          <div class="empty-state">
+            <mat-icon>info</mat-icon>
+            <p>Enter your search query above to find institutes</p>
+          </div>
+        }
+
+        @if (results().length > 0) {
+          <div class="results-container">
+            <div class="results-count">Found {{ results().length }} institute(s)</div>
+            <div class="results-grid">
+              @for (inst of results(); track inst.id) {
+                <div class="institute-card" (click)="select(inst)">
+                  <div class="inst-header">
+                    <h3>{{ inst.name }}</h3>
+                    <span class="badge" [ngClass]="'badge-' + (inst.status || 'pending').toLowerCase()">
+                      {{ inst.status || 'PENDING' }}
+                    </span>
+                  </div>
+                  <div class="inst-details">
+                    <div class="detail-row" *ngIf="inst.code">
+                      <span class="label">Code:</span>
+                      <span class="value">{{ inst.code }}</span>
+                    </div>
+                    <div class="detail-row" *ngIf="inst.collegeNo">
+                      <span class="label">College No:</span>
+                      <span class="value">{{ inst.collegeNo }}</span>
+                    </div>
+                    <div class="detail-row" *ngIf="inst.city || inst.district">
+                      <span class="label">Location:</span>
+                      <span class="value">{{ inst.city || inst.district }}</span>
+                    </div>
+                    <div class="detail-row" *ngIf="inst.contactPerson">
+                      <span class="label">Contact:</span>
+                      <span class="value">{{ inst.contactPerson }}</span>
+                    </div>
+                  </div>
+                  <button mat-flat-button color="primary" class="select-btn" (click)="select(inst); $event.stopPropagation()">
+                    <mat-icon>check_circle</mat-icon>
+                    Select
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+        }
       </mat-card>
     </div>
   }
   `,
-  styles: [`
-    .picker-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.42);
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      z-index: 9999;
-      padding: 10px;
-    }
-    .picker-card {
-      width: min(920px, calc(100% - 140px));
-      max-height: 88vh;
-      overflow: auto;
-      padding: 12px;
-      margin-right: 10px;
-    }
-    .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-    .title { font-weight: 700; font-size: 1.15rem; }
-    .subtitle { color: #4b5563; font-size: .9rem; }
-    .search-row { margin-top: 6px; display: flex; gap: 8px; align-items: center; }
-    .full { width: 100%; }
-    .error { color: #b91c1c; margin: 6px 0; }
-    .muted { color: #6b7280; margin: 6px 0; }
-    .table-wrapper { overflow: auto; margin-top: 10px; }
-    .inst-table { width: 100%; border-collapse: collapse; font-size: .95rem; }
-    .inst-table th, .inst-table td { border: 1px solid #e5e7eb; padding: 8px; text-align: left; }
-    .inst-table th { background: #f9fafb; font-weight: 700; }
-  `]
 })
 export class InstituteSearchModalComponent {
   @Input() visible = false;
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() selected = new EventEmitter<any>();
 
-  readonly query = signal('');
+  queryText = '';
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly results = signal<any[]>([]);
+  private allInstitutes: any[] = [];
 
   private readonly http = inject(HttpClient);
 
-  onClose() {
-    this.visibleChange.emit(false);
-  }
-
   search() {
+    if (!this.queryText.trim()) {
+      this.error.set('Please enter a search term');
+      return;
+    }
+
     this.error.set(null);
     this.loading.set(true);
-    const q = this.query().trim();
-    this.http.get<{ institutes: any[] }>(`${API_BASE_URL}/institutes/search`, { params: { query: q } }).subscribe({
+    
+    // Fetch all institutes and filter on the client side
+    this.http.get<{ institutes: any[] }>(`${API_BASE_URL}/institutes/all`).subscribe({
       next: (res) => {
-        this.results.set(res.institutes || []);
+        this.allInstitutes = res.institutes || [];
+        this.filterInstitutes();
         this.loading.set(false);
       },
-      error: () => {
-        this.error.set('Could not search institutes');
+      error: (err) => {
+        this.error.set('Could not load institutes. Please try again.');
+        console.error('Search error:', err);
         this.loading.set(false);
       }
     });
   }
 
+  private filterInstitutes() {
+    const query = this.queryText.toLowerCase().trim();
+    const filtered = this.allInstitutes.filter((inst) => {
+      const searchableFields = [
+        inst.name || '',
+        inst.code || '',
+        inst.collegeNo || '',
+        inst.udiseNo || '',
+        inst.city || '',
+        inst.district || '',
+        inst.contactPerson || '',
+        inst.contactEmail || ''
+      ];
+      return searchableFields.some(field => field.toLowerCase().includes(query));
+    });
+    this.results.set(filtered);
+  }
+
   select(inst: any) {
     this.selected.emit(inst);
+    this.visibleChange.emit(false);
+  }
+
+  onClose() {
     this.visibleChange.emit(false);
   }
 }

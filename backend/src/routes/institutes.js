@@ -801,41 +801,41 @@ institutesRouter.get('/me/stream-subjects', requireAuth, requireRole(['INSTITUTE
       return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
     }
 
-    // Get all streams
-    const allStreams = await prisma.stream.findMany({
-      orderBy: { name: 'asc' },
-      include: {
-        streamSubjects: {
-          include: { subject: true },
-          orderBy: { subject: { name: 'asc' } }
-        }
-      }
-    });
-
-    // Get institute's current stream-subject mappings
-    const instituteStreamSubjects = await prisma.instituteStreamSubject.findMany({
+    // Get institute's current stream-subject mappings with related stream and subject data
+    const mappings = await prisma.instituteStreamSubject.findMany({
       where: { instituteId: user.institute.id },
       include: {
         stream: true,
         subject: true
-      }
+      },
+      orderBy: [{ stream: { name: 'asc' } }, { subject: { name: 'asc' } }]
     });
 
-    // Build the response structure
-    const streams = allStreams.map(stream => ({
-      id: stream.id,
-      name: stream.name,
-      isSelected: instituteStreamSubjects.some(iss => iss.streamId === stream.id),
-      subjects: stream.streamSubjects.map(ss => ({
-        id: ss.subject.id,
-        name: ss.subject.name,
-        code: ss.subject.code,
-        category: ss.subject.category,
-        isSelected: instituteStreamSubjects.some(
-          iss => iss.streamId === stream.id && iss.subjectId === ss.subject.id
-        )
-      }))
-    }));
+    // Transform mappings into the response structure
+    const streamMap = new Map();
+    
+    mappings.forEach(mapping => {
+      const streamId = mapping.stream.id;
+      
+      if (!streamMap.has(streamId)) {
+        streamMap.set(streamId, {
+          id: mapping.stream.id,
+          name: mapping.stream.name,
+          isSelected: true,
+          subjects: []
+        });
+      }
+      
+      streamMap.get(streamId).subjects.push({
+        id: mapping.subject.id,
+        name: mapping.subject.name,
+        code: mapping.subject.code,
+        category: mapping.subject.category,
+        isSelected: true
+      });
+    });
+
+    const streams = Array.from(streamMap.values());
 
     return res.json({ 
       ok: true, 
@@ -893,31 +893,76 @@ institutesRouter.post('/me/stream-subjects', requireAuth, requireRole(['INSTITUT
       return res.status(400).json({ error: 'INVALID_SUBJECT', message: 'One or more subjects do not exist' });
     }
 
-    // Delete all existing mappings for this institute
-    await prisma.instituteStreamSubject.deleteMany({
-      where: { instituteId }
+    // Get existing mappings for each stream to avoid duplicates
+    const existingMappings = await prisma.instituteStreamSubject.findMany({
+      where: { 
+        instituteId,
+        streamId: { in: streamIds }
+      }
     });
 
-    // Create new mappings
-    const mappings = [];
+    // Create a set of existing subject IDs for each stream
+    const existingByStream = {};
+    existingMappings.forEach(mapping => {
+      if (!existingByStream[mapping.streamId]) {
+        existingByStream[mapping.streamId] = new Set();
+      }
+      existingByStream[mapping.streamId].add(mapping.subjectId);
+    });
+
+    // Only add subjects that don't already exist for each stream (merge mode)
+    const mappingsToAdd = [];
+    const duplicatesSkipped = {};
+    
     for (const streamSubject of body.streamSubjects) {
+      const streamId = streamSubject.streamId;
+      const existingSubjectsForStream = existingByStream[streamId] || new Set();
+      duplicatesSkipped[streamId] = 0;
+      
       for (const subjectId of streamSubject.subjectIds) {
-        mappings.push({
-          instituteId,
-          streamId: streamSubject.streamId,
-          subjectId
-        });
+        if (!existingSubjectsForStream.has(subjectId)) {
+          // Only add if not already mapped
+          mappingsToAdd.push({
+            instituteId,
+            streamId,
+            subjectId
+          });
+          existingSubjectsForStream.add(subjectId);
+        } else {
+          // Count duplicate subjects that were skipped
+          duplicatesSkipped[streamId]++;
+        }
       }
     }
 
-    const created = await prisma.instituteStreamSubject.createMany({
-      data: mappings
-    });
+    // Create only new unique mappings
+    let createdCount = 0;
+    if (mappingsToAdd.length > 0) {
+      const created = await prisma.instituteStreamSubject.createMany({
+        data: mappingsToAdd,
+        skipDuplicates: true
+      });
+      createdCount = created.count;
+    }
+
+    // Build response message
+    let message = `Added ${createdCount} new mapping(s)`;
+    const skippedStreams = Object.entries(duplicatesSkipped)
+      .filter(([_, count]) => count > 0)
+      .map(([streamId, count]) => {
+        const streamName = body.streamSubjects.find(ss => ss.streamId == streamId)?.streamId;
+        return `${count} duplicate(s) for stream ${streamId}`;
+      });
+    
+    if (skippedStreams.length > 0) {
+      message += `. Skipped ${skippedStreams.join(', ')} (already mapped).`;
+    }
 
     return res.status(201).json({
       ok: true,
-      message: `Created ${created.count} stream-subject mappings`,
-      count: created.count
+      message,
+      count: createdCount,
+      duplicatesSkipped: Object.values(duplicatesSkipped).reduce((a, b) => a + b, 0)
     });
   } catch (err) {
     if (err.name === 'ZodError') {

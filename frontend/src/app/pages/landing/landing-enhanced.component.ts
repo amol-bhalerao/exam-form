@@ -73,11 +73,11 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
 
     <!-- Active Exams Section -->
     <section class="exams-section" #examsSection>
-      <div class="waves-top">
+      <!-- <div class="waves-top">
         <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
           <path d="M0,50 Q300,0 600,50 T1200,50 L1200,0 L0,0 Z" fill="white"/>
         </svg>
-      </div>
+      </div> -->
 
       <div class="container">
         <h2 class="section-title">{{ selectedLanguage() === 'mr' ? 'सक्रिय परीक्षा' : 'Active Exams' }}</h2>

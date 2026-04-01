@@ -64,7 +64,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
   [columnDefs]="columnDefs"
   [defaultColDef]="defaultColDef"
   class="ag-theme-alpine"
-  style="width:100%; height:280px;"
+  style="width:100%; height:100%;"
   (cellClicked)="onGridCellClick($event)"
 ></ag-grid-angular>
       </div>
@@ -127,19 +127,37 @@ export class InstituteStreamSubjectsComponent implements OnInit {
 
   load() {
     this.http
-      .get<{ settings: any[] }>(`${API_BASE_URL}/institutes/me/stream-subjects`, {
-        headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' },
+      .get<{ ok: boolean; instituteId: number; streams: any[] }>(`${API_BASE_URL}/institutes/me/stream-subjects`, {
         params: { t: Date.now().toString() }
       })
       .subscribe({
         next: (r) => {
           console.log('stream subject settings', r);
-          const settings = Array.isArray(r?.settings) ? r.settings : this.mappings();
-          this.mappings.set(settings);
+          
+          // Flatten the nested structure into individual mappings
+          const mappings: any[] = [];
+          if (r?.streams) {
+            for (const stream of r.streams) {
+              for (const subject of stream.subjects) {
+                if (subject.isSelected) {
+                  mappings.push({
+                    stream: { id: stream.id, name: stream.name },
+                    subject: {
+                      id: subject.id,
+                      name: subject.name,
+                      code: subject.code,
+                      category: subject.category
+                    }
+                  });
+                }
+              }
+            }
+          }
+          this.mappings.set(mappings);
         },
         error: (e) => {
           console.error('Failed to load stream-subject settings', e);
-          this.mappings.set(this.mappings());
+          this.mappings.set([]);
         }
       });
   }
@@ -148,11 +166,22 @@ export class InstituteStreamSubjectsComponent implements OnInit {
     if (!this.streamId || this.selectedSubjectIds.length === 0) return;
     this.error.set(null);
     this.success.set(null);
-    this.http.post<{ settings: any[] }>(`${API_BASE_URL}/institutes/me/stream-subjects`, { streamId: this.streamId, subjectIds: this.selectedSubjectIds }).subscribe({
+    
+    const payload = {
+      streamSubjects: [
+        {
+          streamId: this.streamId,
+          subjectIds: this.selectedSubjectIds
+        }
+      ]
+    };
+    
+    this.http.post<{ ok: boolean; message?: string; count?: number }>(`${API_BASE_URL}/institutes/me/stream-subjects`, payload).subscribe({
       next: (r) => {
-        this.success.set('Saved successfully');
-        this.mappings.set(r.settings);
-
+        this.success.set(`${r.message || 'Saved successfully'}`);
+        this.load(); // Reload the mappings after save
+        this.streamId = 0;
+        this.selectedSubjectIds = [];
       },
       error: (e) => {
         this.error.set(e?.error?.error ? JSON.stringify(e.error) : 'Save failed');

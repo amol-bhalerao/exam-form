@@ -38,11 +38,7 @@ export interface InstituteOption {
         </mat-select>
       </mat-form-field>
     </div>
-  `,
-  styles: [`
-    .picker-shell { display: grid; gap: 8px; }
-    .full { width: 100%; }
-  `]
+  `
 })
 export class InstitutePickerComponent implements OnInit {
   @Input() selectedInstituteId: number | null = null;
