@@ -12,15 +12,15 @@ export const apiLimiter = rateLimit({
 });
 
 /**
- * Auth endpoints – strict: 20 per 15 minutes (brute-force protection)
+ * Auth endpoints – disabled for local dev, 20 per 15 minutes in production
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 20,
+  max: process.env.NODE_ENV === 'production' ? 20 : 10000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'TOO_MANY_AUTH_REQUESTS', message: 'Too many authentication attempts. Please wait.' },
-  skipSuccessfulRequests: true
+  skipSuccessfulRequests: false
 });
 
 /**

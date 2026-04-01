@@ -181,7 +181,7 @@ class APITester {
     );
 
     // ─── MASTERS ENDPOINTS ──────────────────────────────────────────────
-    console.log(`\n${colors.blue}📚 MASTERS ENDPOINTS${colors.reset}`);
+    console.log(`\n${colors.blue}📚 MASTERS ENDPOINTS (Public)${colors.reset}`);
     await this.test('Get All Subjects', 'GET', '/masters/subjects', null, 200);
     await this.test('Get All Boards', 'GET', '/masters/boards', null, 200);
     await this.test('Get All Streams', 'GET', '/masters/streams', null, 200);

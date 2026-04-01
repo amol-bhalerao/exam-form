@@ -177,56 +177,11 @@ authRouter.put('/me/password', requireAuth, async (req, res) => {
   return res.json({ ok: true });
 });
 
-authRouter.post('/register', async (req, res) => {
-  const body = z
-    .object({
-      firstName: z.string().min(1),
-      lastName: z.string().min(1),
-      email: z.string().email(),
-      password: z.string().min(8)
-    })
-    .parse(req.body);
-
-  // Check if user already exists
-  const existingUser = await prisma.user.findFirst({
-    where: { OR: [{ username: body.email }, { email: body.email }] }
-  });
-
-  if (existingUser) {
-    return res.status(409).json({ error: 'USER_ALREADY_EXISTS' });
-  }
-
-  // Get STUDENT role
-  const studentRole = await prisma.role.findUnique({ where: { name: 'STUDENT' } });
-  if (!studentRole) {
-    return res.status(500).json({ error: 'ROLE_NOT_FOUND' });
-  }
-
-  // Hash password
-  const passwordHash = await bcrypt.hash(body.password, 10);
-
-  // Create user
-  const user = await prisma.user.create({
-    data: {
-      username: body.email,
-      email: body.email,
-      passwordHash,
-      roleId: studentRole.id,
-      status: 'ACTIVE'
-    }
-  });
-
-  return res.status(201).json({
-    message: 'Account created successfully',
-    userId: user.id
-  });
-});
-
 /**
  * POST /api/auth/google
  * Google SSO for STUDENTS only.
  * Receives a Google credential (ID token) from the frontend Google Sign-In button.
- * Creates a new student account on first login, or logs in existing account.
+ * Logs in existing student or creates account if first login.
  */
 authRouter.post('/google', async (req, res) => {
   const body = z.object({ credential: z.string().min(10) }).parse(req.body);

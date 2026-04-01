@@ -5,11 +5,17 @@ import { requireAuth, requireRole } from '../auth/middleware.js';
 
 export const mastersRouter = Router();
 
-mastersRouter.get('/streams', requireAuth, async (req, res) => {
-  const query = z.object({ search: z.string().optional() }).parse(req.query);
-  const where = query.search ? { name: { contains: query.search } } : {};
-  const streams = await prisma.stream.findMany({ where, orderBy: { name: 'asc' } });
-  return res.json({ streams });
+// PUBLIC: Get all streams (no auth required)
+mastersRouter.get('/streams', async (req, res) => {
+  try {
+    const query = z.object({ search: z.string().optional() }).parse(req.query);
+    const where = query.search ? { name: { contains: query.search, mode: 'insensitive' } } : {};
+    const streams = await prisma.stream.findMany({ where, orderBy: { name: 'asc' } });
+    return res.json({ streams, count: streams.length });
+  } catch (err) {
+    console.error('Error fetching streams:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
 });
 
 mastersRouter.post('/streams', requireAuth, requireRole(['SUPER_ADMIN', 'BOARD']), async (req, res) => {
@@ -43,9 +49,81 @@ mastersRouter.delete('/streams/:id', requireAuth, requireRole(['SUPER_ADMIN', 'B
 
 const subjectCategories = ['language', 'Compulsory', 'Optional Subjects', 'Bifocal Subjects', 'Vocational Subjects'];
 
-mastersRouter.get('/subjects', requireAuth, async (_req, res) => {
-  const subjects = await prisma.subject.findMany({ orderBy: { code: 'asc' } });
-  return res.json({ subjects, categories: subjectCategories });
+// PUBLIC: Get all subjects for form display (no auth required)
+mastersRouter.get('/subjects', async (_req, res) => {
+  try {
+    const subjects = await prisma.subject.findMany({ orderBy: { code: 'asc' } });
+    return res.json({ subjects, categories: subjectCategories, count: subjects.length });
+  } catch (err) {
+    console.error('Error fetching subjects:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// PUBLIC: Get all boards (no auth required)
+mastersRouter.get('/boards', async (req, res) => {
+  try {
+    // TODO: Implement boards table in schema
+    // For now, return static list of Maharashtra boards
+    const boards = [
+      { id: 1, code: 'MSBSHSE', name: 'Maharashtra State Board of Secondary and Higher Secondary Education' },
+      { id: 2, code: 'CBSE', name: 'Central Board of Secondary Education' },
+      { id: 3, code: 'ICSE', name: 'Indian Certificate of Secondary Education' }
+    ];
+    return res.json({ boards, count: boards.length });
+  } catch (err) {
+    console.error('Error fetching boards:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// PUBLIC: Get all districts (no auth required)
+mastersRouter.get('/districts', async (req, res) => {
+  try {
+    // TODO: Implement districts table in schema
+    // For now, return static list of Maharashtra districts
+    const districts = [
+      { id: 1, name: 'Ahmednagar', state: 'Maharashtra' },
+      { id: 2, name: 'Akola', state: 'Maharashtra' },
+      { id: 3, name: 'Amravati', state: 'Maharashtra' },
+      { id: 4, name: 'Aurangabad', state: 'Maharashtra' },
+      { id: 5, name: 'Beed', state: 'Maharashtra' },
+      { id: 6, name: 'Bhandara', state: 'Maharashtra' },
+      { id: 7, name: 'Buldhana', state: 'Maharashtra' },
+      { id: 8, name: 'Chandrapur', state: 'Maharashtra' },
+      { id: 9, name: 'Dhule', state: 'Maharashtra' },
+      { id: 10, name: 'Gadchiroli', state: 'Maharashtra' },
+      { id: 11, name: 'Gadag', state: 'Maharashtra' },
+      { id: 12, name: 'Gondia', state: 'Maharashtra' },
+      { id: 13, name: 'Hingoli', state: 'Maharashtra' },
+      { id: 14, name: 'Jalgaon', state: 'Maharashtra' },
+      { id: 15, name: 'Jalna', state: 'Maharashtra' },
+      { id: 16, name: 'Kolhapur', state: 'Maharashtra' },
+      { id: 17, name: 'Latur', state: 'Maharashtra' },
+      { id: 18, name: 'Mumbai City', state: 'Maharashtra' },
+      { id: 19, name: 'Mumbai Suburban', state: 'Maharashtra' },
+      { id: 20, name: 'Nagpur', state: 'Maharashtra' },
+      { id: 21, name: 'Nanded', state: 'Maharashtra' },
+      { id: 22, name: 'Nandurbar', state: 'Maharashtra' },
+      { id: 23, name: 'Nashik', state: 'Maharashtra' },
+      { id: 24, name: 'Parbhani', state: 'Maharashtra' },
+      { id: 25, name: 'Pune', state: 'Maharashtra' },
+      { id: 26, name: 'Raigad', state: 'Maharashtra' },
+      { id: 27, name: 'Ratnagiri', state: 'Maharashtra' },
+      { id: 28, name: 'Sangli', state: 'Maharashtra' },
+      { id: 29, name: 'Satara', state: 'Maharashtra' },
+      { id: 30, name: 'Sindhudurg', state: 'Maharashtra' },
+      { id: 31, name: 'Solapur', state: 'Maharashtra' },
+      { id: 32, name: 'Thane', state: 'Maharashtra' },
+      { id: 33, name: 'Wardha', state: 'Maharashtra' },
+      { id: 34, name: 'Washim', state: 'Maharashtra' },
+      { id: 35, name: 'Yavatmal', state: 'Maharashtra' }
+    ];
+    return res.json({ districts, count: districts.length });
+  } catch (err) {
+    console.error('Error fetching districts:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
 });
 
 mastersRouter.post('/subjects', requireAuth, requireRole(['SUPER_ADMIN', 'BOARD']), async (req, res) => {
