@@ -141,9 +141,9 @@ export class StudentProfileService {
     this.error.set(null);
 
     return new Promise((resolve, reject) => {
-      this.http.get<{ student: StudentProfile }>(`${API_BASE_URL}/students/me`).subscribe({
+      this.http.get<{ student: StudentProfile }>(`${API_BASE_URL}/me`).subscribe({
         next: (response: any) => {
-          const profile = response.student;
+          const profile = response.student || response;
           
           if (!profile || !profile.id) {
             // Profile is missing or incomplete

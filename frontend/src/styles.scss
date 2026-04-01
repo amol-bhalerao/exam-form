@@ -1989,8 +1989,146 @@ mat-sidenav-content {
   grid-column: 1 / -1;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════ */
+/*  MATERIAL FORM FIELD OVERRIDES - VALIDATION & LABEL/PLACEHOLDER         */
+/* ═══════════════════════════════════════════════════════════════════════ */
+
 mat-form-field {
   width: 100%;
+  display: block;
+  
+  /* Ensure error messages always display */
+  .mdc-text-field__resizer {
+    min-height: auto;
+  }
+  
+  /* Error message styling */
+  mat-error {
+    font-size: 0.85rem !important;
+    display: block !important;
+    margin-top: 4px;
+    color: #f44336 !important;
+    font-weight: 500;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* Hint text styling */
+  mat-hint {
+    font-size: 0.8rem;
+    color: #999;
+  }
+  
+  /* Ensure label floats properly when focused or filled */
+  .mdc-floating-label {
+    font-size: 0.95rem;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+  }
+  
+  /* When label is floating (focused/filled) */
+  .mdc-floating-label--float-above {
+    top: -18px !important;
+    transform: translateY(0) scale(0.85) !important;
+  }
+  
+  /* Placeholder visibility on focus */
+  input::placeholder,
+  textarea::placeholder {
+    opacity: 0.7;
+    transition: opacity var(--transition-fast);
+  }
+  
+  input:focus::placeholder,
+  textarea:focus::placeholder {
+    opacity: 0.5;
+  }
+  
+  /* Input styling for proper appearance */
+  input.mdc-text-field__input,
+  textarea.mdc-text-field__input {
+    padding: 12px 0;
+    font-size: 1rem;
+    
+    &:focus {
+      outline: none;
+    }
+  }
+  
+  /* State colors */
+  &.mat-form-field-invalid {
+    .mdc-text-field {
+      border-color: #f44336;
+    }
+  }
+  
+  &.mat-focused {
+    &.mat-form-field-invalid {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: #f44336 !important;
+      }
+    }
+  }
+}
+
+/* Ensure error messages display under all Material form field appearances */
+.mat-mdc-form-field-error-wrapper {
+  display: block !important;
+  height: auto !important;
+  padding-top: 4px;
+  margin-top: 4px;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Material Select dropdown styling */
+mat-select {
+  .mdc-select__anchor {
+    height: auto;
+    padding: 12px 0;
+  }
+}
+
+/* Material Datepicker styling */
+mat-datepicker-toggle {
+  button {
+    color: var(--text-secondary);
+    
+    &:hover {
+      background-color: var(--hover-bg);
+    }
+  }
+}
+
+/* Ensure all form fields show required indicator */
+.mat-mdc-form-field-required-marker {
+  color: #f44336;
+  margin-left: 4px;
+}
+
+/* Form validation styling across all material components */
+.ng-invalid.ng-touched {
+  mat-form-field &,
+  .mat-mdc-form-field & {
+    .mdc-text-field {
+      &:not(.mdc-text-field--disabled) {
+        .mdc-notched-outline__leading,
+        .mdc-notched-outline__notch,
+        .mdc-notched-outline__trailing {
+          border-color: #f44336 !important;
+        }
+      }
+    }
+  }
+}
+
+/* Label color when invalid */
+.ng-invalid.ng-touched {
+  .mdc-floating-label {
+    color: #f44336 !important;
+  }
 }
 
 .error-box {

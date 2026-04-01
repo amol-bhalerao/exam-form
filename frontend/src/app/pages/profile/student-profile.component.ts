@@ -200,6 +200,22 @@ import { PincodeService, PostalLocation } from '../../core/pincode.service';
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'aadharNumber') }}</mat-error>
                   </mat-form-field>
                 </div>
+
+                <div class="form-grid-2">
+                  <mat-form-field class="form-field">
+                    <mat-label>Mobile Number *</mat-label>
+                    <mat-icon matPrefix>phone</mat-icon>
+                    <input matInput formControlName="mobile" placeholder="e.g., 9876543210" required />
+                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'mobile') }}</mat-error>
+                  </mat-form-field>
+
+                  <mat-form-field class="form-field">
+                    <mat-label>Email Address *</mat-label>
+                    <mat-icon matPrefix>email</mat-icon>
+                    <input matInput formControlName="email" placeholder="e.g., student@example.com" required />
+                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'email') }}</mat-error>
+                  </mat-form-field>
+                </div>
               </div>
 
               <!-- ADDRESS DETAILS -->

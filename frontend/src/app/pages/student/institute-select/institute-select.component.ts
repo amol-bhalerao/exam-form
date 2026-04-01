@@ -1086,10 +1086,10 @@ export class InstituteSelectComponent implements OnInit {
     } else {
       const search = this.searchText.toLowerCase();
       this.filteredInstitutes = this.institutes.filter(inst =>
-        inst.name.toLowerCase().includes(search) ||
-        inst.code.toLowerCase().includes(search) ||
-        inst.district.toLowerCase().includes(search) ||
-        inst.city.toLowerCase().includes(search)
+        (inst.name?.toLowerCase() || '').includes(search) ||
+        (inst.code?.toLowerCase() || '').includes(search) ||
+        (inst.district?.toLowerCase() || '').includes(search) ||
+        (inst.city?.toLowerCase() || '').includes(search)
       );
     }
     this.groupByDistrict();
