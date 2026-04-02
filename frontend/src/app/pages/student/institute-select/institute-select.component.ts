@@ -1200,8 +1200,22 @@ export class InstituteSelectComponent implements OnInit {
           this.auth.updateAccessToken(response.accessToken);
         }
         this.snackBar.open('✓ Institute and Stream selected successfully! Redirecting to profile...', 'Close', { duration: 3000 });
+        // Load profile to check completion percentage and redirect accordingly
         setTimeout(() => {
-          this.router.navigate(['/student/profile']);
+          this.profileService.loadProfile()
+            .then((profile: any) => {
+              const completionPercentage = this.profileService.completionPercentage$();
+              // If profile > 70% complete, redirect to dashboard; otherwise to profile for editing
+              if (completionPercentage >= 70) {
+                this.router.navigate(['/student/dashboard']);
+              } else {
+                this.router.navigate(['/student/profile']);
+              }
+            })
+            .catch(() => {
+              // If profile loading fails, redirect to profile page to start filling it
+              this.router.navigate(['/student/profile']);
+            });
         }, 1000);
       },
       error: (err) => {
@@ -1209,15 +1223,27 @@ export class InstituteSelectComponent implements OnInit {
         this.isLoading = false;
         
         // Check for specific error messages
-        if (err.error?.error === 'INSTITUTE_ALREADY_SELECTED') {
-          // Institute already selected - redirect to profile page
+        if (err.error?.error === 'INSTITUTE_ALREADY_SELECTED' || err.status === 409) {
+          // Institute already selected (409 conflict) - load profile and redirect based on completion
           this.snackBar.open(
             '✓ Institute already selected. Redirecting to your profile...',
             'Close',
             { duration: 3000}
           );
           setTimeout(() => {
-            this.router.navigate(['/student/profile']);
+            this.profileService.loadProfile()
+              .then((profile: any) => {
+                const completionPercentage = this.profileService.completionPercentage$();
+                if (completionPercentage >= 70) {
+                  this.router.navigate(['/student/dashboard']);
+                } else {
+                  this.router.navigate(['/student/profile']);
+                }
+              })
+              .catch(() => {
+                // If any error, still redirect to profile
+                this.router.navigate(['/student/profile']);
+              });
           }, 500);
         } else {
           this.snackBar.open('Failed to save selection. Please try again.', 'Close', { duration: 5000 });

@@ -153,14 +153,15 @@ export class StudentProfileService {
     this.error.set(null);
 
     return new Promise((resolve, reject) => {
-      this.http.get<{ student: StudentProfile }>(`${API_BASE_URL}/me`).subscribe({
+      this.http.get<{ user: any; student: StudentProfile }>(`${API_BASE_URL}/me`).subscribe({
         next: (response: any) => {
           // The /me endpoint returns { user: {...}, student: {...} }
+          const user = response.user;
           const student = response.student;
           
-          // Check if student profile exists
-          if (!student) {
-            // Student record doesn't exist - user needs to select institute first
+          // Check if institute has been selected (check from user object which has instituteId after selection)
+          if (!user || !user.instituteId) {
+            // Institute not selected yet - user needs to select institute first
             this.isLoading.set(false);
             const err = new Error('INSTITUTE_NOT_SELECTED');
             (err as any).error = { error: 'INSTITUTE_NOT_SELECTED', message: 'Please select an institute first' };
@@ -168,19 +169,42 @@ export class StudentProfileService {
             return;
           }
           
-          if (!student.id) {
-            // Profile is missing or incomplete
-            this.isLoading.set(false);
-            const err = new Error('STUDENT_PROFILE_MISSING');
-            reject(err);
-          } else {
-            // Profile exists - use it
+          // Institute has been selected, student object may exist but could be minimal
+          if (student && student.id) {
+            // Full student profile exists
             this.studentProfile.set(student);
-            // Calculate completion percentage
             const completionPercentage = this.calculateCompletionPercentage(student);
             this.profileCompletionPercentage.set(completionPercentage);
             this.isLoading.set(false);
             resolve(student);
+          } else {
+            // Institute selected but profile not yet created/incomplete - create empty profile
+            const emptyProfile: any = {
+              userId: currentUser?.userId,
+              instituteId: user.instituteId,
+              firstName: '',
+              lastName: '',
+              email: user.email || '',
+              mobile: '',
+              dob: '',
+              gender: '',
+              aadhaar: '',
+              address: '',
+              pinCode: '',
+              district: '',
+              taluka: '',
+              village: '',
+              categoryCode: '',
+              minorityReligionCode: '',
+              mediumCode: '',
+              streamCode: student?.streamCode || '',
+              previousExams: [],
+              bankDetails: {}
+            };
+            this.studentProfile.set(emptyProfile);
+            this.profileCompletionPercentage.set(0);
+            this.isLoading.set(false);
+            resolve(emptyProfile);
           }
         },
         error: (err: any) => {
