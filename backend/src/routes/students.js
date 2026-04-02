@@ -5,6 +5,61 @@ import { requireAuth } from '../auth/middleware.js';
 
 export const studentsRouter = Router();
 
+// Check student onboarding status - required before accessing dashboard
+studentsRouter.get('/setup-status', requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth?.userId;
+    if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+    // Check if student profile exists (institute selected)
+    const student = await prisma.student.findUnique({
+      where: { userId },
+      select: {
+        id: true,
+        instituteId: true,
+        streamCode: true,
+        firstName: true,
+        lastName: true,
+        motherName: true,
+        institute: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            status: true
+          }
+        }
+      }
+    });
+
+    // Determine profile completion
+    const profileComplete = student ? (
+      student.firstName && 
+      student.lastName && 
+      student.motherName
+    ) : false;
+
+    return res.json({
+      instituteSelected: !!student,
+      profileComplete: profileComplete,
+      student: student ? {
+        id: student.id,
+        institueId: student.instituteId,
+        streamCode: student.streamCode,
+        institute: student.institute
+      } : null,
+      onboardingSteps: {
+        step1_instituteSelected: !!student,
+        step2_profileComplete: profileComplete,
+        allowDashboardAccess: !!student && profileComplete
+      }
+    });
+  } catch (err) {
+    console.error('Get setup status error:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
 // Get current student profile
 studentsRouter.get('/me', requireAuth, async (req, res) => {
   try {

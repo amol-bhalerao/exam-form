@@ -7,6 +7,24 @@ import { requireAuth, requireRole } from '../auth/middleware.js';
 
 export const institutesRouter = Router();
 
+/**
+ * STUDENT ONBOARDING FLOW:
+ * 1. Student logs in → Frontend calls GET /api/students/setup-status
+ * 2. If instituteSelected = false:
+ *    - Show institute selection screen (GET /api/institutes - returns ALL institutes to students)
+ *    - Student selects institute and stream → POST /api/students/select-institute
+ * 3. If instituteSelected = true but profileComplete = false:
+ *    - Show profile setup screen
+ *    - Student fills profile (firstName, lastName, motherName, etc.) → PATCH /api/students/me
+ * 4. If both = true → Allow dashboard access and exam applications
+ * 
+ * KEY DESIGN DECISIONS:
+ * - Students see ALL institutes (status doesn't matter for student visibility)
+ * - Institute status only affects INSTITUTE user (admin) login capability
+ * - Students can only apply for ACTIVE exams (regardless of institute status)
+ * - Once institute selected, cannot be changed
+ */
+
 // Super admin: get all institutes (all statuses) - MUST come before the generic GET /
 institutesRouter.get('/all', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
   try {
@@ -81,12 +99,15 @@ institutesRouter.patch('/admin/approve-all-pending', requireAuth, requireRole(['
   }
 });
 
-// Public: approved institutes list (with district, city for filtering)
+// Public: institutes list - Students see ALL institutes (for selection), non-authenticated see approved only
 institutesRouter.get('/', async (req, res) => {
   try {
+    const isStudent = req.auth?.role === 'STUDENT';
+    
+    // Students can see ALL institutes (regardless of status) to select one
+    // Public/anonymous users see only APPROVED and PENDING institutes
     const institutes = await prisma.institute.findMany({
-      where: { 
-        // Show institutes that are approved OR pending (so newly added institutes show up)
+      where: isStudent ? {} : {
         status: { in: ['APPROVED', 'PENDING'] },
         acceptingApplications: true
       },
@@ -103,10 +124,11 @@ institutesRouter.get('/', async (req, res) => {
         contactPerson: true,
         contactEmail: true,
         contactMobile: true,
-        status: true
+        status: true,
+        acceptingApplications: true
       }
     });
-    return res.json({ institutes });
+    return res.json({ institutes, isStudent, visibleCount: institutes.length });
   } catch (err) {
     console.error('Error fetching institutes:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
