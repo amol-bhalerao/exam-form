@@ -4,8 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "npx ng serve --host 0.0.0.0 --port 4200",
-    "build": "npx ng build --configuration production && npm run postbuild",
-    "postbuild": "node -e \"require('fs').copyFileSync('src/assets/.htaccess', 'dist/exam-form/browser/.htaccess')\"",
+    "build": "npx ng build --configuration production",
+    "postbuild": "node -e \"const fs = require('fs'); const path = require('path'); const destDir = 'dist/exam-form/browser'; if (!fs.existsSync(destDir)) { fs.mkdirSync(destDir, { recursive: true }); } if (fs.existsSync('src/assets/.htaccess')) { fs.copyFileSync('src/assets/.htaccess', path.join(destDir, '.htaccess')); console.log('Copied .htaccess to dist'); } else { console.warn('Warning: src/assets/.htaccess not found'); }\"",
     "watch": "npx ng build --watch --configuration development",
     "test": "npx ng test"
   },
