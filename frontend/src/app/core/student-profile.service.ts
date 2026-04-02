@@ -14,6 +14,7 @@ export interface SubjectMarks {
 }
 
 export interface StudentProfile {
+  id?: number; // Add id field
   userId: number;
   firstName: string;
   lastName: string;
@@ -34,7 +35,9 @@ export interface StudentProfile {
   collegeBranch?: string;
   admissionYear?: number;
   stream?: string; // Science, Commerce, Arts
+  streamCode?: string; // Code for stream selection
   board?: string;
+  instituteId?: number; // Institute selection
   
   // Subject Marks
   subjects: SubjectMarks[];
@@ -122,6 +125,15 @@ export class StudentProfileService {
    */
   isProfileComplete(): boolean {
     return this.profileCompletionPercentage() === 100;
+  }
+
+  /**
+   * Check if basic profile (institute + stream selection) exists
+   * This is required BEFORE students can access other features
+   */
+  hasBasicProfile(): boolean {
+    const profile = this.studentProfile();
+    return !!(profile?.instituteId && profile?.streamCode);
   }
 
   /**

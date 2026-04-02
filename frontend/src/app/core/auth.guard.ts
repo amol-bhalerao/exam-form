@@ -74,19 +74,20 @@ export const profileGuard: CanActivateFn = async (route, state) => {
     return true;
   }
   
-  // For STUDENT role, enforce profile completion
-  // Check if student profile exists and is complete
+  // For STUDENT role, require basic profile (institute + stream selection)
+  // They can access profile form to fill details, but need basic profile first
   try {
     await profileService.loadProfile();
     const profile = profileService.profile$();
     
-    if (!profile) {
-      console.warn('Profile guard: No profile found. Redirecting to institute selection.');
+    // Check if basic profile exists (institute + stream selected)
+    if (!profile || !profile.instituteId || !profile.streamCode) {
+      console.warn('Profile guard: Basic profile missing (no institute/stream). Redirecting to institute selection.');
       router.navigate(['/student/select-institute']);
       return false;
     }
     
-    console.log('Profile guard: Profile found. Allowing access.');
+    console.log('Profile guard: Basic profile found. Allowing access.');
     return true;
   } catch (error: any) {
     // Log for debugging

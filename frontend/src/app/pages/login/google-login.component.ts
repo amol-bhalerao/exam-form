@@ -8,6 +8,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { GoogleAuthService } from '../../core/google-auth.service';
+import { AuthService } from '../../core/auth.service';
 import { I18nService } from '../../core/i18n.service';
 import { BrandingService } from '../../core/branding.service';
 
@@ -537,6 +538,7 @@ import { BrandingService } from '../../core/branding.service';
 })
 export class GoogleLoginComponent implements OnInit {
   private googleAuth = inject(GoogleAuthService);
+  private authService = inject(AuthService);
   private router = inject(Router);
   protected i18n = inject(I18nService);
   protected branding = inject(BrandingService);
@@ -583,7 +585,8 @@ export class GoogleLoginComponent implements OnInit {
   /**
    * Navigate to the appropriate location based on user role and explicit return URL
    * - If returnUrl in query params, use that
-   * - Otherwise navigate to /app/dashboard and let route guards handle role-based redirects
+   * - For STUDENT users, go to /student/select-institute (mandatory institute selection)
+   * - For other roles, navigate to /app/dashboard
    */
   private navigateToAppropriateLocation() {
     if (this.returnUrl) {
@@ -591,9 +594,16 @@ export class GoogleLoginComponent implements OnInit {
       return;
     }
 
-    // Default to dashboard - route guards (profileGuard) will handle redirects based on role
-    // BOARD/INSTITUTE/SUPER_ADMIN users will access dashboard directly
-    // STUDENT users will be redirected to /student/select-institute if no profile
+    // Get current user
+    const user = this.authService.user();
+    
+    // STUDENT users MUST select institute first
+    if (user?.role === 'STUDENT') {
+      this.router.navigate(['/student/select-institute']);
+      return;
+    }
+
+    // Other roles (BOARD, INSTITUTE, SUPER_ADMIN) go to dashboard
     this.router.navigate(['/app/dashboard']);
   }
 
