@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve --host 0.0.0.0 --port 4200",
-    "build": "ng build --configuration production && npm run postbuild",
+    "start": "npx ng serve --host 0.0.0.0 --port 4200",
+    "build": "npx ng build --configuration production && npm run postbuild",
     "postbuild": "node -e \"require('fs').copyFileSync('src/assets/.htaccess', 'dist/exam-form/browser/.htaccess')\"",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "watch": "npx ng build --watch --configuration development",
+    "test": "npx ng test"
   },
   "private": true,
   "dependencies": {
