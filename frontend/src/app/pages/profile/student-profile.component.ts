@@ -1477,12 +1477,29 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       .catch((err: any) => {
         console.error('Failed to load profile:', err);
         
-        // Check if this is an institute not selected error
-        const errorCode = err?.error?.error || err?.message;
-        let errorMsg = err?.error?.message || 'Failed to load profile. Please try again.';
+        // Extract error code from multiple possible locations
+        const errorCode = err?.error?.error || err?.error?.status || err?.message || '';
+        const serverMessage = err?.error?.message || err?.message || '';
         
-        if (errorCode === 'INSTITUTE_NOT_SELECTED') {
+        // Determine the error type and appropriate message
+        let errorMsg = 'Failed to load profile. Please try again.';
+        let isInstituteError = false;
+        
+        // Check if this is specifically an institute not selected error
+        if (
+          errorCode === 'INSTITUTE_NOT_SELECTED' || 
+          errorCode?.includes('INSTITUTE') ||
+          serverMessage?.includes('institute') ||
+          !this.profile // If profile couldn't be loaded at all
+        ) {
+          isInstituteError = true;
           errorMsg = 'Please select your institute and stream first before completing your profile.';
+        } else if (errorCode === 'STUDENT_PROFILE_MISSING' || errorCode === 404) {
+          isInstituteError = true;
+          errorMsg = 'Please select your institute and stream first before completing your profile.';
+        } else {
+          // Generic error
+          errorMsg = err?.error?.message || 'Failed to load profile. Please try again.';
         }
         
         this.error = errorMsg;
