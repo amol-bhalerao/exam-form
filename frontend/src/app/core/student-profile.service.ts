@@ -164,12 +164,44 @@ export class StudentProfileService {
           const errorCode = err?.error?.error;
           const errorMsg = err?.error?.message || err?.error?.error || 'Failed to load profile. Please try again.';
           
-          console.error('Failed to load student profile:', err);
-          this.error.set(errorMsg);
-          this.isLoading.set(false);
-          
-          // Reject with error for guards to handle
-          reject(err);
+          // If profile doesn't exist (404 or STUDENT_PROFILE_MISSING), create a new empty profile
+          if (err.status === 404 || err?.error?.error === 'STUDENT_PROFILE_MISSING') {
+            console.warn('Student profile does not exist yet. Creating new empty profile for form.');
+            
+            // Create new empty profile object for the student to fill
+            const emptyProfile: any = {
+              userId: currentUser?.userId,
+              firstName: '',
+              lastName: '',
+              email: currentUser?.username || '',
+              mobile: '',
+              dob: '',
+              gender: '',
+              aadhaar: '',
+              address: '',
+              pinCode: '',
+              district: '',
+              taluka: '',
+              village: '',
+              categoryCode: '',
+              minorityReligionCode: '',
+              mediumCode: '',
+              previousExams: [],
+              bankDetails: {}
+            };
+            
+            this.studentProfile.set(emptyProfile);
+            this.profileCompletionPercentage.set(0);
+            this.isLoading.set(false);
+            resolve(emptyProfile);
+          } else {
+            console.error('Failed to load student profile:', err);
+            this.error.set(errorMsg);
+            this.isLoading.set(false);
+            
+            // Reject with error for guards to handle
+            reject(err);
+          }
         }
       });
     });
