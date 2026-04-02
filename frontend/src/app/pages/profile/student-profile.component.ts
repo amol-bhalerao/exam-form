@@ -2,6 +2,8 @@ import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -26,6 +28,8 @@ import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { StudentProfileService, StudentProfile } from '../../core/student-profile.service';
 import { I18nService } from '../../core/i18n.service';
 import { PincodeService, PostalLocation } from '../../core/pincode.service';
+import { AuthService } from '../../core/auth.service';
+import { API_BASE_URL } from '../../core/api';
 
 @Component({
   selector: 'app-student-profile',
@@ -33,6 +37,7 @@ import { PincodeService, PostalLocation } from '../../core/pincode.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatTabsModule,
     MatFormFieldModule,
     MatInputModule,
@@ -140,6 +145,66 @@ import { PincodeService, PostalLocation } from '../../core/pincode.service';
       <!-- Profile Content -->
       <div class="profile-content" *ngIf="profile && !isLoading">
         <mat-tab-group class="profile-tabs">
+          
+          <!-- TAB 0: INSTITUTE & STREAM SELECTION -->
+          <mat-tab>
+            <ng-template mat-tab-label>
+              <mat-icon>school</mat-icon>
+              <span>Institute & Stream</span>
+            </ng-template>
+
+            <div class="form-section">
+              <div class="form-card">
+                <h3 class="card-title">Institute & Stream Selection</h3>
+                <p class="card-subtitle">Select your institute and academic stream</p>
+                
+                <div class="form-grid-2">
+                  <mat-form-field class="form-field">
+                    <mat-label>Institute *</mat-label>
+                    <mat-icon matPrefix>school</mat-icon>
+                    <mat-select [(ngModel)]="selectedInstituteId" 
+                                (selectionChange)="onInstituteSelected($event)"
+                                [disabled]="profile?.instituteId"
+                                required>
+                      <mat-option value="">- Select Institute -</mat-option>
+                      <mat-option *ngFor="let inst of institutes" [value]="inst.id">
+                        {{ inst.name }} ({{ inst.code }})
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field class="form-field">
+                    <mat-label>Stream *</mat-label>
+                    <mat-icon matPrefix>layers</mat-icon>
+                    <mat-select [(ngModel)]="selectedStreamCode" 
+                                [disabled]="profile?.instituteId"
+                                required>
+                      <mat-option value="">- Select Stream -</mat-option>
+                      <mat-option *ngFor="let stream of streams" [value]="stream.name">
+                        {{ stream.name }}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+
+                <div class="form-actions">
+                  <button mat-raised-button color="primary" 
+                          (click)="saveInstituteSelection()"
+                          [disabled]="!selectedInstituteId || !selectedStreamCode || profile?.instituteId || savingInstitute">
+                    <mat-icon *ngIf="!savingInstitute">check_circle</mat-icon>
+                    <mat-spinner *ngIf="savingInstitute" diameter="20"></mat-spinner>
+                    <span *ngIf="!savingInstitute">Save Institute Selection</span>
+                    <span *ngIf="savingInstitute">Saving...</span>
+                  </button>
+                  
+                  <div class="institute-info" *ngIf="profile?.instituteId">
+                    <mat-icon>check_circle</mat-icon>
+                    <span>Institute already selected: {{ getInstituteLabel(profile.instituteId) }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </mat-tab>
           
           <!-- TAB 1: PERSONAL DETAILS -->
           <mat-tab>
@@ -1094,6 +1159,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   private readonly profileService = inject(StudentProfileService);
   private readonly pincodeService = inject(PincodeService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
   private destroy$ = new Subject<void>();
 
   profile: StudentProfile | null = null;
@@ -1105,6 +1172,13 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   savingExam = false;
   savingPrevious = false;
   savingBank = false;
+  savingInstitute = false;
+
+  // Institute and Stream selection
+  institutes: any[] = [];
+  streams: any[] = [];
+  selectedInstituteId: number | null = null;
+  selectedStreamCode: string | null = null;
 
   // Profile completion tracking
   profileCompletionPercentage = 0;
@@ -1340,6 +1414,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     this.setupNameFieldTransformers();
     this.loadProfile();
     this.setupPincodeLookup();
+    this.loadInstitutesAndStreams();
   }
 
   /**
@@ -1552,6 +1627,86 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   isProfileComplete(): boolean {
     return this.profileCompletionPercentage === 100;
+  }
+
+  /**
+   * Load institutes and streams for selection
+   */
+  loadInstitutesAndStreams() {
+    // Load institutes
+    this.http.get<{ institutes: any[] }>(`${API_BASE_URL}/institutes`).subscribe({
+      next: (response) => {
+        this.institutes = response.institutes || [];
+      },
+      error: (err) => {
+        console.error('Failed to load institutes:', err);
+      }
+    });
+
+    // Load streams
+    this.http.get<{ streams: any[] }>(`${API_BASE_URL}/public/streams`).subscribe({
+      next: (response) => {
+        this.streams = response.streams || [];
+      },
+      error: (err) => {
+        console.error('Failed to load streams:', err);
+      }
+    });
+  }
+
+  /**
+   * Handle institute selection change
+   */
+  onInstituteSelected(event: any) {
+    this.selectedInstituteId = event.value;
+  }
+
+  /**
+   * Save institute and stream selection
+   */
+  saveInstituteSelection() {
+    if (!this.selectedInstituteId || !this.selectedStreamCode) {
+      this.snackBar.open('Please select both institute and stream', 'Close', { duration: 3000 });
+      return;
+    }
+
+    this.savingInstitute = true;
+
+    this.http.post<any>(`${API_BASE_URL}/students/select-institute`, {
+      instituteId: this.selectedInstituteId,
+      streamCode: this.selectedStreamCode
+    }).subscribe({
+      next: (response) => {
+        // Update access token if provided
+        if (response.accessToken) {
+          this.auth.updateAccessToken(response.accessToken);
+        }
+
+        this.snackBar.open('\u2713 Institute and Stream saved successfully!', 'Close', { duration: 3000 });
+        this.savingInstitute = false;
+
+        // Reload profile to update with institute/stream
+        this.loadProfile();
+      },
+      error: (err) => {
+        console.error('Failed to save institute selection:', err);
+        this.savingInstitute = false;
+
+        if (err.status === 409) {
+          this.snackBar.open('Institute already selected. Cannot change.', 'Close', { duration: 3000 });
+        } else {
+          this.snackBar.open('Failed to save institute selection. Please try again.', 'Close', { duration: 3000 });
+        }
+      }
+    });
+  }
+
+  /**
+   * Get institute label by id
+   */
+  getInstituteLabel(instituteId: number): string {
+    const institute = this.institutes.find(i => i.id === instituteId);
+    return institute ? `${institute.name} (${institute.code})` : 'Unknown Institute';
   }
 
   retryLoadProfile() {

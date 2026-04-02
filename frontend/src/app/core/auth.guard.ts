@@ -35,12 +35,8 @@ export const formGuard: CanActivateFn = async (route, state) => {
     await profileService.loadProfile();
     const profile = profileService.profile$();
     
-    // If no profile, redirect to institute selection
-    if (!profile) {
-      router.navigate(['/student/select-institute']);
-      return false;
-    }
-    
+    // Profile is now optional - students can fill it anytime
+    // Even if profile doesn't exist yet, allow access to create it
     return true;
   } catch (error: any) {
     // Check if this is a session expiry error (401 Unauthorized)
@@ -52,13 +48,13 @@ export const formGuard: CanActivateFn = async (route, state) => {
       return false;
     }
     
-    // If we get a specific error about institute not selected, redirect there
+    // If we get a specific error about institute not selected, log it but allow access
+    // Students can now select institute within the profile page
     const errorCode = error?.error?.error || error?.message;
     if (errorCode === 'INSTITUTE_NOT_SELECTED' || 
         errorCode === 'STUDENT_PROFILE_MISSING' || 
         error?.status === 404) {
-      router.navigate(['/student/select-institute']);
-      return false;
+      console.log('Profile not yet created - will allow student to create it');
     }
     
     // For other errors, allow access (could be network issue)
@@ -66,12 +62,11 @@ export const formGuard: CanActivateFn = async (route, state) => {
   }
 };
 
-// Profile completion guard - requires authenticated student with complete profile
-// Non-student roles bypass profile check
+// Profile guard - allows students to access profile page anytime
+// Institute + stream selection is now part of the profile page itself
 export const profileGuard: CanActivateFn = async (route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
-  const profileService = inject(StudentProfileService);
   
   const isLoggedIn = auth.isLoggedIn();
   const user = auth.user();
@@ -86,49 +81,10 @@ export const profileGuard: CanActivateFn = async (route, state) => {
     return true;
   }
   
-  // For STUDENT role, require basic profile (institute + stream selection)
-  // They can access profile form to fill details, but need basic profile first
-  try {
-    await profileService.loadProfile();
-    const profile = profileService.profile$();
-    
-    // Check if basic profile exists (institute + stream selected)
-    if (!profile || !profile.instituteId || !profile.streamCode) {
-      console.warn('Profile guard: Basic profile missing (no institute/stream). Redirecting to institute selection.');
-      router.navigate(['/student/select-institute']);
-      return false;
-    }
-    
-    console.log('Profile guard: Basic profile found. Allowing access.');
-    return true;
-  } catch (error: any) {
-    // Check if this is a session expiry error (401 Unauthorized)
-    if (error?.status === 401) {
-      console.warn('Session expired during profile check. Redirecting to login.');
-      router.navigate(['/login'], {
-        queryParams: { returnUrl: state.url }
-      });
-      return false;
-    }
-    
-    // Log for debugging
-    console.warn('Profile guard error:', error);
-    
-    // Check for specific errors that indicate institute not selected
-    const errorCode = error?.error?.error || error?.message;
-    if (errorCode === 'INSTITUTE_NOT_SELECTED' || 
-        errorCode === 'STUDENT_PROFILE_MISSING' || 
-        error?.status === 404) {
-      // Profile missing or institute not selected - must select institute first
-      console.warn('Profile guard: Institute not selected. Redirecting to institute selection.');
-      router.navigate(['/student/select-institute']);
-      return false;
-    }
-    
-    // For other errors, allow access to not block user experience
-    console.warn('Profile guard: Error loading profile, allowing access');
-    return true;
-  }
+  // For STUDENT role - allow access anytime (no requirements)
+  // Students can fill institute selection + all profile details in one place
+  console.log('Profile guard: Allowing student to access profile page.');
+  return true;
 };
 
 // Student-only guard

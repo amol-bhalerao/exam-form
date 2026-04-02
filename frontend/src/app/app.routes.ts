@@ -8,7 +8,7 @@ import { UserTypeLoginComponent } from './pages/login/user-type-login.component'
 import { InstituteLoginComponent } from './pages/login/institute-login.component';
 import { AdminLoginComponent } from './pages/login/admin-login.component';
 import { LandingEnhancedComponent } from './pages/landing/landing-enhanced.component';
-import { InstituteSelectComponent } from './pages/student/institute-select/institute-select.component';
+
 import { InstituteRegisterComponent } from './pages/institute-register/institute-register.component';
 import { InstituteActivateComponent } from './pages/institute-activate/institute-activate.component';
 import { InstituteSettingsComponent } from './pages/institute/institute-settings/institute-settings.component';
@@ -44,8 +44,6 @@ export const routes: Routes = [
   // Student Login (Google OAuth)
   { path: 'auth', component: GoogleLoginComponent, data: { title: 'Student Login' } },
   
-  // Institute Selection (after Google login)
-  { path: 'student/select-institute', component: InstituteSelectComponent, canActivate: [authGuard], data: { title: 'Select Institute' } },
   
   
   // Separate login routes for different user types

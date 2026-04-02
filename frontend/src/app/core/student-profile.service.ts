@@ -159,32 +159,24 @@ export class StudentProfileService {
           const user = response.user;
           const student = response.student;
           
-          // Check if institute has been selected (check from user object which has instituteId after selection)
-          if (!user || !user.instituteId) {
-            // Institute not selected yet - user needs to select institute first
-            this.isLoading.set(false);
-            const err = new Error('INSTITUTE_NOT_SELECTED');
-            (err as any).error = { error: 'INSTITUTE_NOT_SELECTED', message: 'Please select an institute first' };
-            reject(err);
-            return;
-          }
+          // Institute selection is now optional - students can select it within the profile page
+          // No longer checking if institute is selected before allowing profile access
           
-          // Institute has been selected
-          // If student record exists, return it with all fields from DB
-          if (student) {
-            // Student profile exists - use it  
+          // Student record exists or create a new profile structure
+          if (student && student.id) {
+            // Student profile exists in database - use it  
             this.studentProfile.set(student);
             const completionPercentage = this.calculateCompletionPercentage(student);
             this.profileCompletionPercentage.set(completionPercentage);
             this.isLoading.set(false);
-            console.log('Resolved student profile with instituteId:', student.instituteId, 'streamCode:', student.streamCode);
+            console.log('Resolved student profile:', { instituteId: student.instituteId, streamCode: student.streamCode });
             resolve(student);
           } else {
-            // Institute selected but student record not yet fully populated - create profile with just instituteId
-            const minimalProfile: any = {
+            // Student record doesn't exist yet - create empty profile for student to fill
+            const emptyProfile: any = {
               userId: currentUser?.userId,
-              instituteId: user.instituteId,
-              streamCode: '',
+              instituteId: null,  // Will be set when student selects institute
+              streamCode: '',      // Will be set when student selects stream
               firstName: '',
               lastName: '',
               email: user.email || '',
@@ -203,20 +195,20 @@ export class StudentProfileService {
               previousExams: [],
               bankDetails: {}
             };
-            this.studentProfile.set(minimalProfile);
+            this.studentProfile.set(emptyProfile);
             this.profileCompletionPercentage.set(0);
             this.isLoading.set(false);
-            console.log('Resolved minimal profile with instituteId:', user.instituteId);
-            resolve(minimalProfile);
+            console.log('Created empty profile - student will fill institute and other details');
+            resolve(emptyProfile);
           }
         },
         error: (err: any) => {
           const errorCode = err?.error?.error;
           const errorMsg = err?.error?.message || err?.error?.error || 'Failed to load profile. Please try again.';
           
-          // If profile doesn't exist (404 or specific errors), handle appropriately
+          // If profile doesn't exist yet, allow student to create it
           if (err.status === 404 || err?.error?.error === 'STUDENT_PROFILE_MISSING' || err?.error?.error === 'INSTITUTE_NOT_SELECTED') {
-            console.warn('Student profile does not exist yet. Institute selection required.');
+            console.warn('Student profile does not exist yet - will be created on first institute selection');
             
             // Create new empty profile object for the student to fill
             const emptyProfile: any = {
