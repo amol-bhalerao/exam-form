@@ -155,30 +155,41 @@ export class StudentProfileService {
     return new Promise((resolve, reject) => {
       this.http.get<{ student: StudentProfile }>(`${API_BASE_URL}/me`).subscribe({
         next: (response: any) => {
-          const profile = response.student || response;
+          // The /me endpoint returns { user: {...}, student: {...} }
+          const student = response.student;
           
-          if (!profile || !profile.id) {
+          // Check if student profile exists
+          if (!student) {
+            // Student record doesn't exist - user needs to select institute first
+            this.isLoading.set(false);
+            const err = new Error('INSTITUTE_NOT_SELECTED');
+            (err as any).error = { error: 'INSTITUTE_NOT_SELECTED', message: 'Please select an institute first' };
+            reject(err);
+            return;
+          }
+          
+          if (!student.id) {
             // Profile is missing or incomplete
             this.isLoading.set(false);
             const err = new Error('STUDENT_PROFILE_MISSING');
             reject(err);
           } else {
             // Profile exists - use it
-            this.studentProfile.set(profile);
+            this.studentProfile.set(student);
             // Calculate completion percentage
-            const completionPercentage = this.calculateCompletionPercentage(profile);
+            const completionPercentage = this.calculateCompletionPercentage(student);
             this.profileCompletionPercentage.set(completionPercentage);
             this.isLoading.set(false);
-            resolve(profile);
+            resolve(student);
           }
         },
         error: (err: any) => {
           const errorCode = err?.error?.error;
           const errorMsg = err?.error?.message || err?.error?.error || 'Failed to load profile. Please try again.';
           
-          // If profile doesn't exist (404 or STUDENT_PROFILE_MISSING), create a new empty profile
-          if (err.status === 404 || err?.error?.error === 'STUDENT_PROFILE_MISSING') {
-            console.warn('Student profile does not exist yet. Creating new empty profile for form.');
+          // If profile doesn't exist (404 or specific errors), handle appropriately
+          if (err.status === 404 || err?.error?.error === 'STUDENT_PROFILE_MISSING' || err?.error?.error === 'INSTITUTE_NOT_SELECTED') {
+            console.warn('Student profile does not exist yet. Institute selection required.');
             
             // Create new empty profile object for the student to fill
             const emptyProfile: any = {
@@ -205,7 +216,11 @@ export class StudentProfileService {
             this.studentProfile.set(emptyProfile);
             this.profileCompletionPercentage.set(0);
             this.isLoading.set(false);
-            resolve(emptyProfile);
+            
+            // Reject with specific error about institute selection
+            const instituteNotSelectedError = new Error('INSTITUTE_NOT_SELECTED');
+            (instituteNotSelectedError as any).error = { error: 'INSTITUTE_NOT_SELECTED', message: 'Please select an institute first' };
+            reject(instituteNotSelectedError);
           } else {
             console.error('Failed to load student profile:', err);
             this.error.set(errorMsg);

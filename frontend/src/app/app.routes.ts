@@ -95,7 +95,7 @@ export const routes: Routes = [
       { path: 'institute/stream-subjects', component: InstituteStreamSubjectsComponent, canActivate: [roleGuard(['INSTITUTE'])] },
 
       // STUDENT - Require Google authentication + complete profile (institute + stream)
-      { path: 'student/profile', component: StudentProfileComponent, canActivate: [roleGuard(['STUDENT'])] },
+      { path: 'student/profile', component: StudentProfileComponent, canActivate: [roleGuard(['STUDENT']), profileGuard] },
       // Allow exam form at 70% profile completion
       { path: 'student/applications', component: StudentApplicationsComponent, canActivate: [roleGuard(['STUDENT']), applicationGuard] },
       { path: 'student/applications/:id', component: StudentApplicationEditComponent, canActivate: [roleGuard(['STUDENT']), applicationGuard] },

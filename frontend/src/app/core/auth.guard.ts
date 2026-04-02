@@ -43,8 +43,11 @@ export const formGuard: CanActivateFn = async (route, state) => {
     
     return true;
   } catch (error: any) {
-    // If we get a STUDENT_PROFILE_MISSING error, redirect to institute selection
-    if (error?.error?.error === 'STUDENT_PROFILE_MISSING' || error?.status === 404) {
+    // If we get a specific error about institute not selected, redirect there
+    const errorCode = error?.error?.error || error?.message;
+    if (errorCode === 'INSTITUTE_NOT_SELECTED' || 
+        errorCode === 'STUDENT_PROFILE_MISSING' || 
+        error?.status === 404) {
       router.navigate(['/student/select-institute']);
       return false;
     }
@@ -93,9 +96,13 @@ export const profileGuard: CanActivateFn = async (route, state) => {
     // Log for debugging
     console.warn('Profile guard error:', error);
     
-    if (error?.error?.error === 'STUDENT_PROFILE_MISSING' || error?.status === 404) {
-      // Profile missing - must select institute first
-      console.warn('Profile guard: Profile missing (404). Redirecting to institute selection.');
+    // Check for specific errors that indicate institute not selected
+    const errorCode = error?.error?.error || error?.message;
+    if (errorCode === 'INSTITUTE_NOT_SELECTED' || 
+        errorCode === 'STUDENT_PROFILE_MISSING' || 
+        error?.status === 404) {
+      // Profile missing or institute not selected - must select institute first
+      console.warn('Profile guard: Institute not selected. Redirecting to institute selection.');
       router.navigate(['/student/select-institute']);
       return false;
     }
@@ -173,9 +180,13 @@ export const applicationGuard: CanActivateFn = async (route, state) => {
     // Log for debugging
     console.warn('Application guard error:', error);
     
-    if (error?.error?.error === 'STUDENT_PROFILE_MISSING' || error?.status === 404) {
+    // Check for specific errors that indicate institute not selected
+    const errorCode = error?.error?.error || error?.message;
+    if (errorCode === 'INSTITUTE_NOT_SELECTED' || 
+        errorCode === 'STUDENT_PROFILE_MISSING' || 
+        error?.status === 404) {
       // Profile missing - must select institute first
-      console.warn('Application guard: Profile missing (404). Redirecting to institute selection.');
+      console.warn('Application guard: Institute not selected. Redirecting to institute selection.');
       router.navigate(['/student/select-institute']);
       return false;
     }
