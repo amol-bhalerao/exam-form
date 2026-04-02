@@ -429,75 +429,95 @@ institutesRouter.patch('/users/:id/approve', requireAuth, requireRole(['SUPER_AD
 
 // Super admin: list all institute users
 institutesRouter.get('/users/all', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
-  const q = z.object({ 
-    status: z.enum(['ACTIVE', 'PENDING', 'DISABLED']).optional(),
-    search: z.string().optional()
-  }).parse(req.query);
-  const where = { role: { name: 'INSTITUTE' } };
-  if (q.status) where.status = q.status;
-  if (q.search) {
-    where.OR = [
-      { username: { contains: q.search } },
-      { email: { contains: q.search } },
-      { mobile: { contains: q.search } },
-      { institute: { name: { contains: q.search } } }
-    ];
+  try {
+    const q = z.object({ 
+      status: z.enum(['ACTIVE', 'PENDING', 'DISABLED']).optional(),
+      search: z.string().optional()
+    }).parse(req.query);
+    const where = { role: { name: 'INSTITUTE' } };
+    if (q.status) where.status = q.status;
+    if (q.search) {
+      where.OR = [
+        { username: { contains: q.search } },
+        { email: { contains: q.search } },
+        { mobile: { contains: q.search } },
+        { institute: { name: { contains: q.search } } }
+      ];
+    }
+    const users = await prisma.user.findMany({ 
+      where,
+      include: { institute: true },
+      orderBy: { createdAt: 'desc' },
+      take: 500 
+    });
+    return res.json({ users });
+  } catch (err) {
+    console.error('Error fetching institute users:', err.message);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
-  const users = await prisma.user.findMany({ 
-    where,
-    include: { institute: true },
-    orderBy: { createdAt: 'desc' },
-    take: 500 
-  });
-  return res.json({ users });
 });
 
 // Super admin: get single institute user
 institutesRouter.get('/users/:id', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
-  const userId = z.coerce.number().int().positive().parse(req.params.id);
-  const user = await prisma.user.findUnique({ where: { id: userId }, include: { institute: true, role: true } });
-  if (!user || user.role.name !== 'INSTITUTE') return res.status(404).json({ error: 'NOT_FOUND' });
-  return res.json({ user });
+  try {
+    const userId = z.coerce.number().int().positive().parse(req.params.id);
+    const user = await prisma.user.findUnique({ where: { id: userId }, include: { institute: true, role: true } });
+    if (!user || user.role.name !== 'INSTITUTE') return res.status(404).json({ error: 'NOT_FOUND' });
+    return res.json({ user });
+  } catch (err) {
+    console.error('Error fetching institute user:', err.message);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
 });
 
 // Super admin: update institute user
 institutesRouter.patch('/users/:id', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
-  const userId = z.coerce.number().int().positive().parse(req.params.id);
-  const body = z
-    .object({
-      username: z.string().min(3).optional(),
-      password: z.string().min(8).optional(),
-      email: z.string().email().optional(),
-      mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
-      status: z.enum(['ACTIVE', 'PENDING', 'DISABLED']).optional()
-    })
-    .parse(req.body);
-  const user = await prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
-  if (!user || user.role.name !== 'INSTITUTE') return res.status(404).json({ error: 'NOT_FOUND' });
-  const data = {};
-  if (body.username && body.username !== user.username) {
-    const existingUsername = await prisma.user.findUnique({ where: { username: body.username } });
-    if (existingUsername) return res.status(409).json({ error: 'USERNAME_TAKEN' });
-    data.username = body.username;
-  }
-  if (body.password) data.passwordHash = await bcrypt.hash(body.password, 10);
-  if (body.email) data.email = body.email;
-  if (body.mobile) data.mobile = body.mobile;
-  if (body.status) data.status = body.status;
-  if (Object.keys(data).length === 0) return res.status(400).json({ error: 'NO_CHANGES' });
+  try {
+    const userId = z.coerce.number().int().positive().parse(req.params.id);
+    const body = z
+      .object({
+        username: z.string().min(3).optional(),
+        password: z.string().min(8).optional(),
+        email: z.string().email().optional(),
+        mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
+        status: z.enum(['ACTIVE', 'PENDING', 'DISABLED']).optional()
+      })
+      .parse(req.body);
+    const user = await prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
+    if (!user || user.role.name !== 'INSTITUTE') return res.status(404).json({ error: 'NOT_FOUND' });
+    const data = {};
+    if (body.username && body.username !== user.username) {
+      const existingUsername = await prisma.user.findUnique({ where: { username: body.username } });
+      if (existingUsername) return res.status(409).json({ error: 'USERNAME_TAKEN' });
+      data.username = body.username;
+    }
+    if (body.password) data.passwordHash = await bcrypt.hash(body.password, 10);
+    if (body.email) data.email = body.email;
+    if (body.mobile) data.mobile = body.mobile;
+    if (body.status) data.status = body.status;
+    if (Object.keys(data).length === 0) return res.status(400).json({ error: 'NO_CHANGES' });
 
-  const updated = await prisma.user.update({ where: { id: userId }, data });
-  return res.json({ user: updated });
+    const updated = await prisma.user.update({ where: { id: userId }, data });
+    return res.json({ user: updated });
+  } catch (err) {
+    console.error('Error updating institute user:', err.message);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
 });
 
 // Super admin: change institute user status
 institutesRouter.patch('/users/:id/status', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
-  const userId = z.coerce.number().int().positive().parse(req.params.id);
-  const body = z.object({ status: z.enum(['ACTIVE', 'PENDING', 'DISABLED']) }).parse(req.body);
-  const user = await prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
-  if (!user || user.role.name !== 'INSTITUTE') return res.status(404).json({ error: 'NOT_FOUND' });
-  const updated = await prisma.user.update({ where: { id: userId }, data: { status: body.status } });
-  return res.json({ user: updated });
+  try {
+    const userId = z.coerce.number().int().positive().parse(req.params.id);
+    const body = z.object({ status: z.enum(['ACTIVE', 'PENDING', 'DISABLED']) }).parse(req.body);
+    const user = await prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
+    if (!user || user.role.name !== 'INSTITUTE') return res.status(404).json({ error: 'NOT_FOUND' });
+    const updated = await prisma.user.update({ where: { id: userId }, data: { status: body.status } });
+    return res.json({ user: updated });
+  } catch (err) {
+    console.error('Error updating institute user status:', err.message);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
 });
 
 // Board: list teachers across institutes (for board dashboards)
