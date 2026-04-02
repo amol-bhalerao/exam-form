@@ -7,12 +7,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { AgGridModule } from 'ag-grid-angular';
-import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+import { ModuleRegistry, ClientSideRowModelModule } from 'ag-grid-community';
 import type { ColDef } from 'ag-grid-community';
 
 import { API_BASE_URL } from '../../../core/api';
 
-ModuleRegistry.registerModules([AllCommunityModule]);
+ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 type Row = {
   id: number;

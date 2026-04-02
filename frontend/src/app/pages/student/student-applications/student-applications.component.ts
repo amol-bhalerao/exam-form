@@ -8,13 +8,13 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { AgGridModule } from 'ag-grid-angular';
-import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
+import { ModuleRegistry, ClientSideRowModelModule } from 'ag-grid-community';
 import type { ColDef } from 'ag-grid-community';
 
 import { API_BASE_URL } from '../../../core/api';
 import { StudentProfileService } from '../../../core/student-profile.service';
 
-ModuleRegistry.registerModules([AllCommunityModule]);
+ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 type Exam = { id: number; name: string; academicYear: string; session: string; applicationOpen: string; applicationClose: string };
 type Application = { id: number; applicationNo: string; status: string; candidateType: string; exam: Exam; updatedAt: string };
