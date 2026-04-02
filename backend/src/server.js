@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import compression from 'compression';
 import pinoHttp from 'pino-http';
 import swaggerUi from 'swagger-ui-express';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 import { env } from './env.js';
 import { apiLimiter, authLimiter, paymentLimiter } from './middleware/rate-limit.js';
@@ -25,6 +27,8 @@ import { migrationRouter } from './routes/migrations.js';
 import pincodesRouter from './routes/pincodes.js';
 import { swaggerSpec } from './swagger.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const isProd = env.NODE_ENV === 'production';
 const app = express();
 
@@ -109,6 +113,23 @@ app.use('/api', apiLimiter);
 // ── Audit logging for mutating routes ──────────────────────────────────
 app.use('/api', auditMiddleware);
 
+// ── Serve Static Frontend Files (Angular Build) ─────────────────────────
+// Priority: Serve static files before API routes so assets are cached efficiently
+// The frontend build output is at: frontend/dist/exam-form/browser
+const frontendPath = path.join(__dirname, '../../frontend/dist/exam-form/browser');
+const frontendIndexPath = path.join(frontendPath, 'index.html');
+
+app.use(express.static(frontendPath, {
+  maxAge: '1d', // Cache assets for 1 day
+  dotfiles: 'allow' // Allow serving .htaccess
+}));
+
+// ── SPA Routing: Fallback to index.html for Angular routing ──────────────
+// This allows Angular's client-side routing to work for all paths except /api
+app.get(['/', '/student*', '/institute*', '/admin*'], (_req, res) => {
+  res.sendFile(frontendIndexPath);
+});
+
 // ── Routes ──────────────────────────────────────────────────────────────
 app.get('/', (_req, res) => res.json({ name: 'hsc-exam-backend', ok: true, version: env.BUILD_ID }));
 
@@ -128,6 +149,13 @@ app.use('/api/admin', adminRouter);
 app.use('/api/migrations', migrationRouter);
 app.use('/api/pincodes', pincodesRouter);
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// ── SPA Fallback: Serve index.html for any unmatched routes ──────────────
+// This is critical for Angular's client-side routing when users bookmark or
+// directly navigate to non-root paths. Must come after all API routes but before error handler
+app.get('*', (_req, res) => {
+  res.sendFile(frontendIndexPath);
+});
 
 // ── Global error handler (must be last) ─────────────────────────────────
 // eslint-disable-next-line no-unused-vars
