@@ -99,18 +99,13 @@ institutesRouter.patch('/admin/approve-all-pending', requireAuth, requireRole(['
   }
 });
 
-// Public: institutes list - Students see ALL institutes (for selection), non-authenticated see approved only
+// Public: institutes list - Show ALL institutes to everyone (for student selection)
+// Status and acceptingApplications filtering handled at application level
 institutesRouter.get('/', async (req, res) => {
   try {
-    const isStudent = req.auth?.role === 'STUDENT';
-    
-    // Students can see ALL institutes (regardless of status) to select one
-    // Public/anonymous users see only APPROVED and PENDING institutes
+    // Return ALL institutes - no filtering by status or acceptingApplications
+    // This allows students to select any institute regardless of status
     const institutes = await prisma.institute.findMany({
-      where: isStudent ? {} : {
-        status: { in: ['APPROVED', 'PENDING'] },
-        acceptingApplications: true
-      },
       orderBy: [{ district: 'asc' }, { name: 'asc' }],
       select: {
         id: true,
@@ -128,7 +123,7 @@ institutesRouter.get('/', async (req, res) => {
         acceptingApplications: true
       }
     });
-    return res.json({ institutes, isStudent, visibleCount: institutes.length });
+    return res.json({ institutes, total: institutes.length });
   } catch (err) {
     console.error('Error fetching institutes:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
