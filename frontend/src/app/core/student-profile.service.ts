@@ -169,19 +169,22 @@ export class StudentProfileService {
             return;
           }
           
-          // Institute has been selected, student object may exist but could be minimal
-          if (student && student.id) {
-            // Full student profile exists
+          // Institute has been selected
+          // If student record exists, return it with all fields from DB
+          if (student) {
+            // Student profile exists - use it  
             this.studentProfile.set(student);
             const completionPercentage = this.calculateCompletionPercentage(student);
             this.profileCompletionPercentage.set(completionPercentage);
             this.isLoading.set(false);
+            console.log('Resolved student profile with instituteId:', student.instituteId, 'streamCode:', student.streamCode);
             resolve(student);
           } else {
-            // Institute selected but profile not yet created/incomplete - create empty profile
-            const emptyProfile: any = {
+            // Institute selected but student record not yet fully populated - create profile with just instituteId
+            const minimalProfile: any = {
               userId: currentUser?.userId,
               instituteId: user.instituteId,
+              streamCode: '',
               firstName: '',
               lastName: '',
               email: user.email || '',
@@ -197,14 +200,14 @@ export class StudentProfileService {
               categoryCode: '',
               minorityReligionCode: '',
               mediumCode: '',
-              streamCode: student?.streamCode || '',
               previousExams: [],
               bankDetails: {}
             };
-            this.studentProfile.set(emptyProfile);
+            this.studentProfile.set(minimalProfile);
             this.profileCompletionPercentage.set(0);
             this.isLoading.set(false);
-            resolve(emptyProfile);
+            console.log('Resolved minimal profile with instituteId:', user.instituteId);
+            resolve(minimalProfile);
           }
         },
         error: (err: any) => {

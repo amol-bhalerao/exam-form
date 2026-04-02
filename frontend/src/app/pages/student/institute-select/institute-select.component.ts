@@ -1055,9 +1055,10 @@ export class InstituteSelectComponent implements OnInit {
   private checkIfInstituteAlreadySelected() {
     this.profileService.loadProfile()
       .then((profile: any) => {
-        // If profile exists and has institute/stream selected, redirect to profile page
-        if (profile && profile.instituteId && profile.streamCode) {
-          console.log('Institute already selected. Redirecting to profile page.');
+        // If profile exists and has institute selected (instituteId exists), redirect to profile page
+        // streamCode can be empty/null initially, but instituteId indicates selection has been made
+        if (profile && profile.instituteId) {
+          console.log('Institute already selected. Redirecting to profile page.', profile.instituteId);
           this.snackBar.open('✓ Institute already selected. Redirecting to your profile...', 'Close', { duration: 2000 });
           setTimeout(() => {
             this.router.navigate(['/student/profile']);
@@ -1066,6 +1067,7 @@ export class InstituteSelectComponent implements OnInit {
         }
         
         // Otherwise, load institutes and streams for selection
+        console.log('No institute selected. Showing selection form.');
         this.loadInstitutes();
         this.loadStreams();
       })
