@@ -8,6 +8,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { env } from './env.js';
+import { prisma } from './prisma.js';
 import { apiLimiter, authLimiter, paymentLimiter } from './middleware/rate-limit.js';
 import { auditMiddleware } from './middleware/audit-log.js';
 import { healthRouter } from './routes/health.js';
@@ -126,7 +127,12 @@ app.use(express.static(frontendPath, {
 
 // ── SPA Routing: Fallback to index.html for Angular routing ──────────────
 // This allows Angular's client-side routing to work for all paths except /api
-app.get(['/', '/student*', '/institute*', '/admin*'], (_req, res) => {
+app.get([
+  '/',
+  /^\/student.*/,
+  /^\/institute.*/,
+  /^\/admin.*/
+], (_req, res) => {
   res.sendFile(frontendIndexPath);
 });
 
@@ -153,7 +159,7 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 // ── SPA Fallback: Serve index.html for any unmatched routes ──────────────
 // This is critical for Angular's client-side routing when users bookmark or
 // directly navigate to non-root paths. Must come after all API routes but before error handler
-app.get('*', (_req, res) => {
+app.get(/.*/, (_req, res) => {
   res.sendFile(frontendIndexPath);
 });
 
@@ -177,10 +183,39 @@ app.use((err, _req, res, _next) => {
 });
 
 const port = process.env.PORT ? Number(process.env.PORT) : 3000;
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`✓ API listening on http://localhost:${port}`);
   console.log(`  Environment : ${env.NODE_ENV ?? 'development'}`);
   console.log(`  Database    : ${env.DATABASE_URL.split('@').pop() ?? 'unknown'}`);
   console.log(`  Google SSO  : ${env.GOOGLE_CLIENT_ID ? 'enabled' : 'not configured'}`);
   console.log(`  Cashfree    : ${env.CASHFREE_APP_ID ? 'enabled' : 'sandbox only'}`);
 });
+
+// ── Graceful Shutdown ──────────────────────────────────────────────────
+const gracefulShutdown = async () => {
+  console.log('\n✓ Shutting down gracefully...');
+  
+  // Close the HTTP server
+  server.close(async () => {
+    console.log('✓ HTTP server closed');
+    
+    // Disconnect Prisma
+    try {
+      await prisma.$disconnect();
+      console.log('✓ Prisma connection closed');
+    } catch (err) {
+      console.error('✗ Error disconnecting Prisma:', err);
+    }
+    
+    process.exit(0);
+  });
+  
+  // Force exit after 10 seconds
+  setTimeout(() => {
+    console.error('✗ Forcefully shutting down after timeout');
+    process.exit(1);
+  }, 10000);
+};
+
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);
