@@ -159,81 +159,30 @@ import { API_BASE_URL } from '../../core/api';
                 <p class="card-subtitle">Select your institute and academic stream</p>
                 
                 <div class="form-grid-2">
-                  <div>
-                    <mat-form-field class="form-field">
-                      <mat-label>Search Institute</mat-label>
-                      <mat-icon matPrefix>search</mat-icon>
-                      <input matInput [(ngModel)]="instituteSearchTerm" placeholder="Search by name or code..." [disabled]="profile?.instituteId">
-                    </mat-form-field>
-                  </div>
-                  <div></div>
-                </div>
-
-                <div class="form-grid-2">
-                  <mat-form-field class="form-field">
-                    <mat-label>Institute *</mat-label>
-                    <mat-icon matPrefix>school</mat-icon>
-                    <mat-select [(ngModel)]="selectedInstituteId" 
-                                (selectionChange)="onInstituteSelected($event)"
-                                [disabled]="profile?.instituteId"
-                                required>
-                      <mat-option value="">- Select Institute -</mat-option>
-                      <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst.id">
-                        {{ inst.name }} ({{ inst.code }})
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>Stream *</mat-label>
-                    <mat-icon matPrefix>layers</mat-icon>
-                    <mat-select [(ngModel)]="selectedStreamCode" 
-                                [disabled]="profile?.instituteId"
-                                required>
-                      <mat-option value="">- Select Stream -</mat-option>
-                      <mat-option *ngFor="let stream of getFilteredStreams()" [value]="stream.name">
-                        {{ stream.name }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                </div>
-                
-                <div class="form-grid-2">
                   <mat-form-field class="form-field">
                     <mat-label>Institute *</mat-label>
                     <mat-icon matPrefix>school</mat-icon>
                     <mat-select [(ngModel)]="selectedInstituteId" 
                                 (selectionChange)="onInstituteSelected($event)"
                                 required>
-                      <mat-option value="">- Select Institute -</mat-option>
+                      <mat-option value="">- Search or Select Institute -</mat-option>
                       <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst.id">
                         {{ inst.name }} ({{ inst.code }})
                       </mat-option>
                     </mat-select>
+                    <mat-hint>Type to search by name or code</mat-hint>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
                     <mat-label>Stream *</mat-label>
                     <mat-icon matPrefix>layers</mat-icon>
-                    <mat-select [(ngModel)]="selectedStreamCode" 
-                                required>
+                    <mat-select [(ngModel)]="selectedStreamCode" required>
                       <mat-option value="">- Select Stream -</mat-option>
-                      <mat-option *ngFor="let stream of getFilteredStreams()" [value]="stream.name">
+                      <mat-option *ngFor="let stream of streams" [value]="stream.name">
                         {{ stream.name }}
                       </mat-option>
                     </mat-select>
                   </mat-form-field>
-                </div>
-
-                <div class="form-grid-2">
-                  <div>
-                    <mat-form-field class="form-field">
-                      <mat-label>Search Stream</mat-label>
-                      <mat-icon matPrefix>search</mat-icon>
-                      <input matInput [(ngModel)]="streamSearchTerm" placeholder="Search by name...">
-                    </mat-form-field>
-                  </div>
-                  <div></div>
                 </div>
 
                 <div class="form-actions">
@@ -1701,14 +1650,10 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Filter streams based on search term
+   * Filter streams based on search term (removed - return all)
    */
   getFilteredStreams(): any[] {
-    if (!this.streamSearchTerm) return this.streams;
-    const term = this.streamSearchTerm.toLowerCase();
-    return this.streams.filter(stream => 
-      stream.name?.toLowerCase().includes(term)
-    );
+    return this.streams;
   }
 
   /**
