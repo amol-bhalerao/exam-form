@@ -162,15 +162,17 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>Institute *</mat-label>
                     <mat-icon matPrefix>school</mat-icon>
-                    <mat-select [(ngModel)]="selectedInstituteId" 
-                                (selectionChange)="onInstituteSelected($event)"
-                                required>
-                      <mat-option value="">- Search or Select Institute -</mat-option>
+                    <input matInput 
+                           [matAutocomplete]="instituteAuto"
+                           [(ngModel)]="selectedInstituteName"
+                           (optionSelected)="onInstituteAutocompleteSelected($event)"
+                           placeholder="Search by name or code..."
+                           required>
+                    <mat-autocomplete #instituteAuto="matAutocomplete" [displayWith]="displayInstituteName.bind(this)">
                       <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst.id">
                         {{ inst.name }} ({{ inst.code }})
                       </mat-option>
-                    </mat-select>
-                    <mat-hint>Type to search by name or code</mat-hint>
+                    </mat-autocomplete>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
@@ -1176,9 +1178,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   institutes: any[] = [];
   streams: any[] = [];
   selectedInstituteId: number | null = null;
+  selectedInstituteName: string = '';
   selectedStreamCode: string | null = null;
   instituteSearchTerm = '';
-  streamSearchTerm = '';
 
   // Profile completion tracking
   profileCompletionPercentage = 0;
@@ -1505,6 +1507,10 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         // Pre-populate institute and stream selections if already set
         if (profile.instituteId) {
           this.selectedInstituteId = profile.instituteId;
+          const institute = this.institutes.find(i => i.id === profile.instituteId);
+          if (institute) {
+            this.selectedInstituteName = `${institute.name} (${institute.code})`;
+          }
         }
         if (profile.streamCode) {
           this.selectedStreamCode = profile.streamCode;
@@ -1638,11 +1644,11 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Filter institutes based on search term
+   * Filter institutes based on search term (for autocomplete)
    */
   getFilteredInstitutes(): any[] {
-    if (!this.instituteSearchTerm) return this.institutes;
-    const term = this.instituteSearchTerm.toLowerCase();
+    if (!this.selectedInstituteName) return this.institutes;
+    const term = this.selectedInstituteName.toLowerCase();
     return this.institutes.filter(inst => 
       inst.name?.toLowerCase().includes(term) || 
       inst.code?.toLowerCase().includes(term)
@@ -1650,15 +1656,24 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Filter streams based on search term (removed - return all)
+   * Display institute name in autocomplete field
    */
-  getFilteredStreams(): any[] {
-    return this.streams;
+  displayInstituteName(instituteId: number): string {
+    const institute = this.institutes.find(i => i.id === instituteId);
+    return institute ? `${institute.name} (${institute.code})` : '';
   }
 
   /**
-   * Load institutes and streams for selection
+   * Handle institute autocomplete selection
    */
+  onInstituteAutocompleteSelected(event: MatAutocompleteSelectedEvent): void {
+    this.selectedInstituteId = event.option.value;
+    // Update display name
+    const institute = this.institutes.find(i => i.id === this.selectedInstituteId);
+    if (institute) {
+      this.selectedInstituteName = `${institute.name} (${institute.code})`;
+    }
+  }
   loadInstitutesAndStreams() {
     // Load institutes
     this.http.get<{ institutes: any[] }>(`${API_BASE_URL}/institutes`).subscribe({
