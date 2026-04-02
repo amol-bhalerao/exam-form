@@ -43,6 +43,15 @@ export const formGuard: CanActivateFn = async (route, state) => {
     
     return true;
   } catch (error: any) {
+    // Check if this is a session expiry error (401 Unauthorized)
+    if (error?.status === 401) {
+      console.warn('Session expired. Redirecting to login.');
+      router.navigate(['/login'], {
+        queryParams: { returnUrl: state.url }
+      });
+      return false;
+    }
+    
     // If we get a specific error about institute not selected, redirect there
     const errorCode = error?.error?.error || error?.message;
     if (errorCode === 'INSTITUTE_NOT_SELECTED' || 
@@ -93,6 +102,15 @@ export const profileGuard: CanActivateFn = async (route, state) => {
     console.log('Profile guard: Basic profile found. Allowing access.');
     return true;
   } catch (error: any) {
+    // Check if this is a session expiry error (401 Unauthorized)
+    if (error?.status === 401) {
+      console.warn('Session expired during profile check. Redirecting to login.');
+      router.navigate(['/login'], {
+        queryParams: { returnUrl: state.url }
+      });
+      return false;
+    }
+    
     // Log for debugging
     console.warn('Profile guard error:', error);
     

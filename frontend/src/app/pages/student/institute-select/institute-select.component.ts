@@ -13,6 +13,7 @@ import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { API_BASE_URL } from '../../../core/api';
 import { AuthService } from '../../../core/auth.service';
+import { StudentProfileService } from '../../../core/student-profile.service';
 import { I18nService } from '../../../core/i18n.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { MatInput } from '@angular/material/input';
@@ -1019,6 +1020,7 @@ export class InstituteSelectComponent implements OnInit {
   private router = inject(Router);
   private http = inject(HttpClient);
   private auth = inject(AuthService);
+  private profileService = inject(StudentProfileService);
   private snackBar = inject(MatSnackBar);
   protected i18n = inject(I18nService);
 
@@ -1041,9 +1043,56 @@ export class InstituteSelectComponent implements OnInit {
       return;
     }
 
-    // Load list of institutes and streams
-    this.loadInstitutes();
-    this.loadStreams();
+    // Check if student has already selected an institute
+    this.checkIfInstituteAlreadySelected();
+  }
+
+  /**
+   * Check if student has already selected an institute
+   * If yes, redirect to student profile page
+   * If no, allow them to select institute
+   */
+  private checkIfInstituteAlreadySelected() {
+    this.profileService.loadProfile()
+      .then((profile: any) => {
+        // If profile exists and has institute/stream selected, redirect to profile page
+        if (profile && profile.instituteId && profile.streamCode) {
+          console.log('Institute already selected. Redirecting to profile page.');
+          this.snackBar.open('✓ Institute already selected. Redirecting to your profile...', 'Close', { duration: 2000 });
+          setTimeout(() => {
+            this.router.navigate(['/student/profile']);
+          }, 500);
+          return;
+        }
+        
+        // Otherwise, load institutes and streams for selection
+        this.loadInstitutes();
+        this.loadStreams();
+      })
+      .catch((err: any) => {
+        // If error is institute not selected (404 or specific error), allow selection
+        const errorCode = err?.error?.error || err?.message;
+        if (errorCode === 'INSTITUTE_NOT_SELECTED' || 
+            errorCode === 'STUDENT_PROFILE_MISSING' || 
+            err?.status === 404) {
+          console.log('No institute selected yet. Showing selection form.');
+          this.loadInstitutes();
+          this.loadStreams();
+          return;
+        }
+        
+        // For session expiry (401), redirect to login
+        if (err?.status === 401) {
+          console.warn('Session expired. Redirecting to login.');
+          this.router.navigate(['/login']);
+          return;
+        }
+        
+        // For other errors, still show selection form (network error, etc)
+        console.warn('Error checking profile:', err);
+        this.loadInstitutes();
+        this.loadStreams();
+      });
   }
 
   loadInstitutes() {
@@ -1157,11 +1206,15 @@ export class InstituteSelectComponent implements OnInit {
         
         // Check for specific error messages
         if (err.error?.error === 'INSTITUTE_ALREADY_SELECTED') {
+          // Institute already selected - redirect to profile page
           this.snackBar.open(
-            '⚠️ Institute and Stream cannot be changed after initial selection. Please contact support.',
+            '✓ Institute already selected. Redirecting to your profile...',
             'Close',
-            { duration: 8000}
+            { duration: 3000}
           );
+          setTimeout(() => {
+            this.router.navigate(['/student/profile']);
+          }, 500);
         } else {
           this.snackBar.open('Failed to save selection. Please try again.', 'Close', { duration: 5000 });
         }
