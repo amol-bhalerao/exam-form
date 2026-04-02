@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -41,7 +41,8 @@ import { AddSubjectMarkDialogComponent } from './add-subject-mark-dialog.compone
     MatSnackBarModule,
     MatIconModule,
     MatTableModule,
-    MatDialogModule
+    MatDialogModule,
+    RouterModule
   ],
   template: `
     <div class="student-profile-container">
@@ -61,8 +62,21 @@ import { AddSubjectMarkDialogComponent } from './add-subject-mark-dialog.compone
         </div>
       </div>
 
-      <!-- Error Message -->
-      <div class="error-banner" *ngIf="error && !isLoading">
+      <!-- Error Message - Institute Not Selected -->
+      <div class="error-banner" *ngIf="error && error.includes('institute') && !isLoading" style="background-color: #fff3cd; border-left-color: #ff9800;">
+        <mat-icon style="color: #ff9800;">info</mat-icon>
+        <div class="error-content">
+          <h3 style="color: #ff9800;">Institute Selection Required</h3>
+          <p>{{ error }}</p>
+          <button mat-raised-button color="primary" routerLink="/student/select-institute">
+            <mat-icon>school</mat-icon>
+            Select Institute & Stream
+          </button>
+        </div>
+      </div>
+
+      <!-- Error Message - Generic -->
+      <div class="error-banner" *ngIf="error && !error.includes('institute') && !isLoading">
         <mat-icon>error_outline</mat-icon>
         <div class="error-content">
           <h3>Unable to Load Profile</h3>
@@ -924,7 +938,15 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       })
       .catch((err: any) => {
         console.error('Failed to load profile:', err);
-        const errorMsg = err?.error?.message || err?.error?.error || 'Failed to load profile. Please try again.';
+        
+        // Check if this is an institute not selected error
+        const errorCode = err?.error?.error || err?.message;
+        let errorMsg = err?.error?.message || 'Failed to load profile. Please try again.';
+        
+        if (errorCode === 'INSTITUTE_NOT_SELECTED') {
+          errorMsg = 'Please select your institute and stream first before completing your profile.';
+        }
+        
         this.error = errorMsg;
         this.isLoading = false;
       });
