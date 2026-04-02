@@ -543,10 +543,13 @@ studentsRouter.post('/select-institute', requireAuth, async (req, res) => {
         }
       });
     } else {
-      // Once a student profile exists, prevent changing institute and stream
-      return res.status(409).json({ 
-        error: 'INSTITUTE_ALREADY_SELECTED',
-        message: 'Institute and Stream cannot be changed after initial selection. Please contact support if you need to change.'
+      // Allow changing institute and stream - just update the existing record
+      student = await prisma.student.update({
+        where: { userId },
+        data: {
+          instituteId: body.instituteId,
+          streamCode: body.streamCode
+        }
       });
     }
 

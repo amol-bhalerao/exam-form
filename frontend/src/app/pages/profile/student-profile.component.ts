@@ -197,17 +197,16 @@ import { API_BASE_URL } from '../../core/api';
                     </mat-select>
                   </mat-form-field>
                 </div>
-                <oldString>                
+                
                 <div class="form-grid-2">
                   <mat-form-field class="form-field">
                     <mat-label>Institute *</mat-label>
                     <mat-icon matPrefix>school</mat-icon>
                     <mat-select [(ngModel)]="selectedInstituteId" 
                                 (selectionChange)="onInstituteSelected($event)"
-                                [disabled]="profile?.instituteId"
                                 required>
                       <mat-option value="">- Select Institute -</mat-option>
-                      <mat-option *ngFor="let inst of institutes" [value]="inst.id">
+                      <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst.id">
                         {{ inst.name }} ({{ inst.code }})
                       </mat-option>
                     </mat-select>
@@ -217,22 +216,21 @@ import { API_BASE_URL } from '../../core/api';
                     <mat-label>Stream *</mat-label>
                     <mat-icon matPrefix>layers</mat-icon>
                     <mat-select [(ngModel)]="selectedStreamCode" 
-                                [disabled]="profile?.instituteId"
                                 required>
                       <mat-option value="">- Select Stream -</mat-option>
-                      <mat-option *ngFor="let stream of streams" [value]="stream.name">
+                      <mat-option *ngFor="let stream of getFilteredStreams()" [value]="stream.name">
                         {{ stream.name }}
                       </mat-option>
                     </mat-select>
                   </mat-form-field>
-                </div></oldString>
+                </div>
 
                 <div class="form-grid-2">
                   <div>
                     <mat-form-field class="form-field">
                       <mat-label>Search Stream</mat-label>
                       <mat-icon matPrefix>search</mat-icon>
-                      <input matInput [(ngModel)]="streamSearchTerm" placeholder="Search by name..." [disabled]="profile?.instituteId">
+                      <input matInput [(ngModel)]="streamSearchTerm" placeholder="Search by name...">
                     </mat-form-field>
                   </div>
                   <div></div>
@@ -241,16 +239,16 @@ import { API_BASE_URL } from '../../core/api';
                 <div class="form-actions">
                   <button mat-raised-button color="primary" 
                           (click)="saveInstituteSelection()"
-                          [disabled]="!selectedInstituteId || !selectedStreamCode || profile?.instituteId || savingInstitute">
+                          [disabled]="!selectedInstituteId || !selectedStreamCode || savingInstitute">
                     <mat-icon *ngIf="!savingInstitute">check_circle</mat-icon>
                     <mat-spinner *ngIf="savingInstitute" diameter="20"></mat-spinner>
-                    <span *ngIf="!savingInstitute">Save Institute Selection</span>
+                    <span *ngIf="!savingInstitute">{{ profile?.instituteId ? 'Update' : 'Save' }} Institute & Stream</span>
                     <span *ngIf="savingInstitute">Saving...</span>
                   </button>
                   
                   <div class="institute-info" *ngIf="profile?.instituteId">
                     <mat-icon>check_circle</mat-icon>
-                    <span>Institute already selected: {{ getInstituteLabel(profile.instituteId) }}</span>
+                    <span>Current: {{ getInstituteLabel(profile.instituteId) }} • {{ profile.streamCode }}</span>
                   </div>
                 </div>
               </div>
@@ -1554,6 +1552,14 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     this.profileService.loadProfile()
       .then((profile: any) => {
         this.profile = profile as StudentProfile;
+        
+        // Pre-populate institute and stream selections if already set
+        if (profile.instituteId) {
+          this.selectedInstituteId = profile.instituteId;
+        }
+        if (profile.streamCode) {
+          this.selectedStreamCode = profile.streamCode;
+        }
         
         // Bind personal details form
         this.personalDetailsForm.patchValue({
