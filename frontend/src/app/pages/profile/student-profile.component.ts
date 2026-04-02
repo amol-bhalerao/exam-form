@@ -1644,7 +1644,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     });
 
     // Load streams
-    this.http.get<{ streams: any[] }>(`${API_BASE_URL}/public/streams`).subscribe({
+    this.http.get<{ streams: any[] }>(`${API_BASE_URL}/masters/streams`).subscribe({
       next: (response) => {
         this.streams = response.streams || [];
       },
