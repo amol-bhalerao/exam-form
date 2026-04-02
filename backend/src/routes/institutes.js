@@ -36,6 +36,51 @@ institutesRouter.get('/all', requireAuth, requireRole(['SUPER_ADMIN']), async (r
   }
 });
 
+// Super admin: get institute statistics (status breakdown)
+institutesRouter.get('/admin/stats', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+  try {
+    const [total, approved, pending, rejected, disabled, accepting] = await Promise.all([
+      prisma.institute.count(),
+      prisma.institute.count({ where: { status: 'APPROVED' } }),
+      prisma.institute.count({ where: { status: 'PENDING' } }),
+      prisma.institute.count({ where: { status: 'REJECTED' } }),
+      prisma.institute.count({ where: { status: 'DISABLED' } }),
+      prisma.institute.count({ where: { acceptingApplications: true } })
+    ]);
+    
+    return res.json({
+      total,
+      byStatus: { approved, pending, rejected, disabled },
+      acceptingApplications: accepting,
+      summary: {
+        visibleToStudents: approved + pending,
+        message: pending > 0 ? `${pending} institutes are PENDING and should be visible to students` : 'All institutes are either APPROVED or in other statuses'
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching institute stats:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Super admin: approve all pending institutes
+institutesRouter.patch('/admin/approve-all-pending', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+  try {
+    const result = await prisma.institute.updateMany({
+      where: { status: 'PENDING' },
+      data: { status: 'APPROVED' }
+    });
+    return res.json({
+      success: true,
+      message: `${result.count} institutes have been approved`,
+      count: result.count
+    });
+  } catch (err) {
+    console.error('Error approving pending institutes:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
 // Public: approved institutes list (with district, city for filtering)
 institutesRouter.get('/', async (req, res) => {
   try {
