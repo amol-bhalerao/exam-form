@@ -40,7 +40,11 @@ institutesRouter.get('/all', requireAuth, requireRole(['SUPER_ADMIN']), async (r
 institutesRouter.get('/', async (req, res) => {
   try {
     const institutes = await prisma.institute.findMany({
-      where: { status: 'APPROVED' },
+      where: { 
+        // Show institutes that are approved OR pending (so newly added institutes show up)
+        status: { in: ['APPROVED', 'PENDING'] },
+        acceptingApplications: true
+      },
       orderBy: [{ district: 'asc' }, { name: 'asc' }],
       select: {
         id: true,
