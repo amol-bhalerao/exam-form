@@ -1190,14 +1190,18 @@ export class InstituteSelectComponent implements OnInit {
     this.isLoading = true;
 
     // Save institute and stream selection to backend
-    this.http.post(`${API_BASE_URL}/students/select-institute`, {
+    this.http.post<any>(`${API_BASE_URL}/students/select-institute`, {
       instituteId: this.selectedInstituteId,
       streamCode: this.selectedStream
     }).subscribe({
-      next: () => {
-        this.snackBar.open('✓ Institute and Stream selected successfully! Redirecting to dashboard...', 'Close', { duration: 3000 });
+      next: (response) => {
+        // Update access token with the new one that includes instituteId
+        if (response.accessToken) {
+          this.auth.updateAccessToken(response.accessToken);
+        }
+        this.snackBar.open('✓ Institute and Stream selected successfully! Redirecting to profile...', 'Close', { duration: 3000 });
         setTimeout(() => {
-          this.router.navigate(['/app/dashboard']);
+          this.router.navigate(['/student/profile']);
         }, 1000);
       },
       error: (err) => {

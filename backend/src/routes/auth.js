@@ -110,10 +110,22 @@ authRouter.post('/refresh', async (req, res) => {
   if (!user || user.status !== 'ACTIVE') return res.status(401).json({ error: 'INVALID_REFRESH' });
   if (user.role.name === 'INSTITUTE' && user.institute?.status !== 'APPROVED') return res.status(401).json({ error: 'INVALID_REFRESH' });
 
+  // For students, fetch the Student profile to get the correct instituteId
+  let instituteId = user.instituteId ?? null;
+  if (user.role.name === 'STUDENT') {
+    const student = await prisma.student.findUnique({
+      where: { userId: user.id },
+      select: { instituteId: true }
+    });
+    if (student) {
+      instituteId = student.instituteId;
+    }
+  }
+
   const authUser = {
     userId: user.id,
     role: user.role.name,
-    instituteId: user.instituteId ?? null,
+    instituteId: instituteId,
     username: user.username
   };
 

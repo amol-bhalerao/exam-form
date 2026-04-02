@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth } from '../auth/middleware.js';
+import { signAccessToken } from '../auth/tokens.js';
 
 export const studentsRouter = Router();
 
@@ -552,6 +553,13 @@ studentsRouter.post('/select-institute', requireAuth, async (req, res) => {
     return res.json({
       ok: true,
       message: 'Institute and Stream selected successfully',
+      // Return updated access token with correct instituteId
+      accessToken: signAccessToken({
+        userId,
+        role: 'STUDENT',
+        instituteId: student.instituteId,
+        username: req.auth.username
+      }),
       student: {
         id: student.id,
         userId: student.userId,

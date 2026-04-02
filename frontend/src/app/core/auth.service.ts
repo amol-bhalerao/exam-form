@@ -58,6 +58,13 @@ export class AuthService {
       .catch(() => null);
   }
 
+  /** Update access token and user info (used after institute selection) */
+  updateAccessToken(accessToken: string, user?: AuthUser) {
+    const current = this._auth();
+    if (!current) return;
+    this.setAuth({ ...current, accessToken, user: user || current.user });
+  }
+
   private setAuth(auth: StoredAuth) {
     this._auth.set(auth);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(auth));

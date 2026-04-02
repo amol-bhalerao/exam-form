@@ -30,11 +30,14 @@ meRouter.get('/', requireAuth, async (req, res) => {
       userId: user.id,
       username: user.username,
       role: user.role.name,
-      instituteId: user.instituteId,
+      // For students, use instituteId from Student table; for others, use from User table
+      instituteId: user.role.name === 'STUDENT' ? (student?.instituteId ?? null) : user.instituteId,
       email: user.email,
       mobile: user.mobile,
       status: user.status,
-      institute: user.institute ? { id: user.institute.id, name: user.institute.name, status: user.institute.status } : null
+      institute: user.role.name === 'STUDENT' 
+        ? (student?.institute ? { id: student.institute.id, name: student.institute.name, status: student.institute.status } : null)
+        : (user.institute ? { id: user.institute.id, name: user.institute.name, status: user.institute.status } : null)
     },
     student: student ? {
       id: student.id,
