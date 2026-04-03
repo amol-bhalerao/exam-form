@@ -166,8 +166,8 @@ import { API_BASE_URL } from '../../core/api';
                            #instituteInput
                            [matAutocomplete]="instituteAuto"
                            [value]="selectedInstituteName"
-                           (input)="selectedInstituteName = instituteInput.value"
-                           (optionSelected)="onInstituteAutocompleteSelected($event); instituteInput.blur()"
+                           (input)="selectedInstituteName = instituteInput.value; console.log('[INPUT CHANGE]', selectedInstituteName)"
+                           (optionSelected)="console.log('[OPTION SELECTED CALLED]'); onInstituteAutocompleteSelected($event); instituteInput.blur()"
                            placeholder="Search by name or code..."
                            required>
                     <mat-autocomplete #instituteAuto="matAutocomplete">
@@ -192,7 +192,8 @@ import { API_BASE_URL } from '../../core/api';
                 <div class="form-actions">
                   <button mat-raised-button color="primary" 
                           (click)="saveInstituteSelection()"
-                          [disabled]="!selectedInstituteId || !selectedStreamCode || savingInstitute">
+                          [disabled]="!selectedInstituteId || !selectedStreamCode || savingInstitute"
+                          [title]="'Institute ID: ' + (selectedInstituteId || 'null') + ', Stream: ' + (selectedStreamCode || 'null') + ', Saving: ' + savingInstitute">
                     <mat-icon *ngIf="!savingInstitute">check_circle</mat-icon>
                     <mat-spinner *ngIf="savingInstitute" diameter="20"></mat-spinner>
                     <span *ngIf="!savingInstitute">{{ profile?.instituteId ? 'Update' : 'Save' }} Institute & Stream</span>
@@ -202,6 +203,24 @@ import { API_BASE_URL } from '../../core/api';
                   <div class="institute-info" *ngIf="profile?.instituteId">
                     <mat-icon>check_circle</mat-icon>
                     <span>Current: {{ getInstituteLabel(profile.instituteId) }} • {{ profile.streamCode }}</span>
+                  </div>
+                  
+                  <!-- DEBUG INFO - Remove after testing -->
+                  <div style="font-size: 12px; color: #666; margin-top: 1rem; padding: 1rem; background: #f0f0f0; border-radius: 4px; font-family: monospace;">
+                    <div><strong>DEBUG INFO:</strong></div>
+                    <div>selectedInstituteId: {{ selectedInstituteId || 'null' }}</div>
+                    <div>selectedInstituteName: {{ selectedInstituteName || 'empty' }}</div>
+                    <div>selectedStreamCode: {{ selectedStreamCode || 'null' }}</div>
+                    <div>savingInstitute: {{ savingInstitute }}</div>
+                    <div>Button Disabled: {{ !selectedInstituteId || !selectedStreamCode || savingInstitute }}</div>
+                    <div style="margin-top: 0.5rem;">
+                      <span *ngIf="!selectedInstituteId" style="color: red;">❌ No institute selected</span>
+                      <span *ngIf="selectedInstituteId" style="color: green;">✓ Institute selected</span>
+                      <span style="margin-left: 1rem;">
+                        <span *ngIf="!selectedStreamCode" style="color: red;">❌ No stream selected</span>
+                        <span *ngIf="selectedStreamCode" style="color: green;">✓ Stream selected</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
