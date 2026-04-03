@@ -13,6 +13,7 @@ export const apiLimiter = rateLimit({
 
 /**
  * Auth endpoints – disabled for local dev, 20 per 15 minutes in production
+ * Only counts FAILED attempts (skipSuccessfulRequests: true) to allow multiple valid logins
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -20,7 +21,7 @@ export const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'TOO_MANY_AUTH_REQUESTS', message: 'Too many authentication attempts. Please wait.' },
-  skipSuccessfulRequests: false
+  skipSuccessfulRequests: true
 });
 
 /**

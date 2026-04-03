@@ -157,10 +157,8 @@ import { API_BASE_URL } from '../../core/api';
               <div class="form-card">
                 <h3 class="card-title">Institute & Stream Selection</h3>
                 <p class="card-subtitle">Select your institute and academic stream</p>
-                
-                <div class="form-grid-2">
-                  
 
+                <div class="form-grid-2">
                   <mat-form-field class="example-full-width">
                     <mat-label>Institute</mat-label>
                     <input 
