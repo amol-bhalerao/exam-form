@@ -163,14 +163,13 @@ import { API_BASE_URL } from '../../core/api';
                     <mat-label>Institute *</mat-label>
                     <mat-icon matPrefix>school</mat-icon>
                     <input matInput 
-                           #instituteInput
                            [matAutocomplete]="instituteAuto"
-                           [value]="selectedInstituteName"
-                           (input)="selectedInstituteName = instituteInput.value"
-                           (optionSelected)="onInstituteAutocompleteSelected($event); instituteInput.blur()"
+                           [(ngModel)]="selectedInstitute"
+                           (optionSelected)="onInstituteAutocompleteSelected($event)"
+                           [displayWith]="displayInstituteName.bind(this)"
                            placeholder="Search by name or code..."
                            required>
-                    <mat-autocomplete #instituteAuto="matAutocomplete" [displayWith]="displayInstituteName.bind(this)">
+                    <mat-autocomplete #instituteAuto="matAutocomplete">
                       <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst">
                         {{ inst.name }} ({{ inst.code }})
                       </mat-option>
@@ -209,7 +208,7 @@ import { API_BASE_URL } from '../../core/api';
                   <div style="font-size: 12px; color: #666; margin-top: 1rem; padding: 1rem; background: #f0f0f0; border-radius: 4px; font-family: monospace;">
                     <div><strong>DEBUG INFO:</strong></div>
                     <div>selectedInstituteId: {{ selectedInstituteId || 'null' }}</div>
-                    <div>selectedInstituteName: {{ selectedInstituteName || 'empty' }}</div>
+                    <div>selectedInstitute: {{ selectedInstitute?.name || 'empty' }} ({{ selectedInstitute?.code || '-' }})</div>
                     <div>selectedStreamCode: {{ selectedStreamCode || 'null' }}</div>
                     <div>savingInstitute: {{ savingInstitute }}</div>
                     <div>Button Disabled: {{ !selectedInstituteId || !selectedStreamCode || savingInstitute }}</div>
@@ -1536,7 +1535,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   institutesMap: Map<number, any> = new Map(); // Map of ID -> institute object for quick lookup
   streams: any[] = [];
   selectedInstituteId: number | null = null;
-  selectedInstituteName: string = '';
+  selectedInstitute: any = null; // Full institute object for display in autocomplete
   selectedStreamCode: string | null = null;
   instituteSearchTerm = '';
 
@@ -1870,7 +1869,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           this.selectedInstituteId = profile.instituteId;
           const institute = this.institutesMap.get(profile.instituteId);
           if (institute) {
-            this.selectedInstituteName = `${institute.name} (${institute.code})`;
+            this.selectedInstitute = institute; // Store the full object
           }
         }
         if (profile.streamCode) {
@@ -2011,10 +2010,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     if (!this.institutes || this.institutes.length === 0) {
       return [];
     }
-    if (!this.selectedInstituteName || typeof this.selectedInstituteName !== 'string') {
+    // If nothing selected or typed, show all institutes
+    if (!this.selectedInstitute || typeof this.selectedInstitute !== 'string') {
       return this.institutes;
     }
-    const term = this.selectedInstituteName.toLowerCase();
+    // Filter by user input (selectedInstitute holds the input text when typing)
+    const term = this.selectedInstitute.toLowerCase();
     return this.institutes.filter(inst => 
       inst.name?.toLowerCase().includes(term) || 
       inst.code?.toLowerCase().includes(term)
@@ -2050,12 +2051,13 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     // Handle if value is an institute object
     if (institute && typeof institute === 'object' && institute.id && institute.name && institute.code) {
       this.selectedInstituteId = institute.id;
-      this.selectedInstituteName = `${institute.name} (${institute.code})`;
+      this.selectedInstitute = institute; // Store the full object
       this.institutesMap.set(institute.id, institute); // Ensure it's in the map
       this.cdr.markForCheck();
       console.log('[INSTITUTE SET SUCCESS]', {
         id: this.selectedInstituteId,
-        name: this.selectedInstituteName,
+        name: institute.name,
+        code: institute.code,
         fromObject: true
       });
     } else {
