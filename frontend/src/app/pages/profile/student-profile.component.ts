@@ -168,7 +168,7 @@ import { API_BASE_URL } from '../../core/api';
                     matInput 
                     [formControl]="selectedInstitute" 
                     [matAutocomplete]="instituteAuto">
-                    <mat-autocomplete #instituteAuto="matAutocomplete" [displayWith]="displayInstituteName.bind(this)">
+                    <mat-autocomplete #instituteAuto="matAutocomplete" [displayWith]="displayInstituteName.bind(this)" (optionSelected)="onInstituteAutocompleteSelected($event)">
                       @for (inst of getFilteredInstitutes() | async; track inst) {
                         <mat-option [value]="inst">{{inst.name}}</mat-option>
                       }
