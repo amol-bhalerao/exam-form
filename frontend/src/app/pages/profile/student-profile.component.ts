@@ -1672,10 +1672,11 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   getFilteredInstitutes(): any[] {
     if (!this.institutes || this.institutes.length === 0) {
-      console.log('[FILTER] No institutes loaded yet');
+      console.log('[FILTER] No institutes loaded yet. institutes array:', this.institutes);
       return [];
     }
     if (!this.selectedInstituteName || typeof this.selectedInstituteName !== 'string') {
+      console.log('[FILTER] No search term, returning all', this.institutes.length, 'institutes');
       return this.institutes;
     }
     const term = this.selectedInstituteName.toLowerCase();
@@ -1684,6 +1685,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       inst.code?.toLowerCase().includes(term)
     );
     console.log('[FILTER]', 'term:', term, 'found:', filtered.length, 'results');
+    if (filtered.length > 0) {
+      console.log('[FILTER SAMPLE]', 'First result:', filtered[0], 'structure:',  JSON.stringify(filtered[0]));
+    }
     return filtered;
   }
 
@@ -1712,13 +1716,24 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   onInstituteAutocompleteSelected(event: MatAutocompleteSelectedEvent): void {
     const institute = event.option.value;
-    console.log('[INSTITUTE SELECTED]', event.option.viewValue, 'value:', institute);
+    console.log('[INSTITUTE SELECTED EVENT]', {
+      viewValue: event.option.viewValue,
+      valueType: typeof institute,
+      valueJSON: JSON.stringify(institute),
+      isObject: typeof institute === 'object',
+      hasId: institute?.id !== undefined,
+      hasName: institute?.name !== undefined,
+      hasCode: institute?.code !== undefined,
+      actualId: institute?.id,
+      actualName: institute?.name,
+      actualCode: institute?.code
+    });
     
     // Handle if value is an institute object
     if (institute && typeof institute === 'object' && institute.id) {
       this.selectedInstituteId = institute.id;
       this.selectedInstituteName = `${institute.name} (${institute.code})`;
-      console.log('[INSTITUTE SET]', 'ID:', this.selectedInstituteId, 'Name:', this.selectedInstituteName);
+      console.log('[INSTITUTE SET SUCCESS]', 'ID:', this.selectedInstituteId, 'Name:', this.selectedInstituteName);
     } else if (typeof institute === 'number') {
       // Handle if value is just an ID (fallback)
       this.selectedInstituteId = institute;
@@ -1726,9 +1741,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       if (inst) {
         this.selectedInstituteName = `${inst.name} (${inst.code})`;
       }
-      console.log('[INSTITUTE SET]', 'ID:', this.selectedInstituteId, 'from fallback logic');
+      console.log('[INSTITUTE SET VIA FALLBACK]', 'ID:', this.selectedInstituteId);
     } else {
-      console.log('[INSTITUTE SELECTION FAILED]', 'Unexpected value type:', typeof institute, institute);
+      console.error('[INSTITUTE SELECTION FAILED]', 'Unexpected value type:', typeof institute, 'Value:', institute);
     }
   }
   loadInstitutesAndStreams(): Promise<void> {
@@ -1737,7 +1752,11 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       this.http.get<{ institutes: any[] }>(`${API_BASE_URL}/institutes`).toPromise()
         .then((response: any) => {
           this.institutes = response?.institutes || [];
-          console.log('[INSTITUTES LOADED]', this.institutes.length, 'institutes', this.institutes.slice(0, 2));
+          console.log('[INSTITUTES LOADED]', this.institutes.length, 'institutes');
+          if (this.institutes.length > 0) {
+            console.log('[INSTITUTES SAMPLE]', JSON.stringify(this.institutes[0]));
+            console.log('[INSTITUTES FIRST 3]', this.institutes.slice(0, 3).map(i => ({ id: i.id, name: i.name, code: i.code })));
+          }
         })
         .catch((err) => {
           console.error('[INSTITUTES ERROR]', err);
@@ -1748,7 +1767,10 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       this.http.get<{ streams: any[] }>(`${API_BASE_URL}/masters/streams`).toPromise()
         .then((response: any) => {
           this.streams = response?.streams || [];
-          console.log('[STREAMS LOADED]', this.streams.length, 'streams', this.streams.slice(0, 2));
+          console.log('[STREAMS LOADED]', this.streams.length, 'streams');
+          if (this.streams.length > 0) {
+            console.log('[STREAMS FIRST 3]', this.streams.slice(0, 3).map(s => ({ name: s.name, code: s.code })));
+          }
         })
         .catch((err) => {
           console.error('[STREAMS ERROR]', err);
@@ -1756,7 +1778,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         })
     ]).then(() => {
       // Both loading complete
-      console.log('[INIT COMPLETE] Loaded', this.institutes.length, 'institutes,', this.streams.length, 'streams');
+      console.log('[INIT COMPLETE] Loaded institutes array length:', this.institutes.length, ', streams array length:', this.streams.length);
     });
   }
 
