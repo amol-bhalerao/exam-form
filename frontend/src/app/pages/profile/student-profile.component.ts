@@ -166,12 +166,12 @@ import { API_BASE_URL } from '../../core/api';
                            #instituteInput
                            [matAutocomplete]="instituteAuto"
                            [value]="selectedInstituteName"
-                           (input)="selectedInstituteName = instituteInput.value; console.log('[INPUT CHANGE]', selectedInstituteName)"
-                           (optionSelected)="console.log('[OPTION SELECTED CALLED]'); onInstituteAutocompleteSelected($event); instituteInput.blur()"
+                           (input)="selectedInstituteName = instituteInput.value"
+                           (optionSelected)="onInstituteAutocompleteSelected($event); instituteInput.blur()"
                            placeholder="Search by name or code..."
                            required>
-                    <mat-autocomplete #instituteAuto="matAutocomplete">
-                      <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst.id">
+                    <mat-autocomplete #instituteAuto="matAutocomplete" [displayWith]="displayInstituteName.bind(this)">
+                      <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst">
                         {{ inst.name }} ({{ inst.code }})
                       </mat-option>
                     </mat-autocomplete>
@@ -1674,23 +1674,16 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   getFilteredInstitutes(): any[] {
     if (!this.institutes || this.institutes.length === 0) {
-      console.log('[FILTER] No institutes loaded yet. institutes array:', this.institutes);
       return [];
     }
     if (!this.selectedInstituteName || typeof this.selectedInstituteName !== 'string') {
-      console.log('[FILTER] No search term, returning all', this.institutes.length, 'institutes');
       return this.institutes;
     }
     const term = this.selectedInstituteName.toLowerCase();
-    const filtered = this.institutes.filter(inst => 
+    return this.institutes.filter(inst => 
       inst.name?.toLowerCase().includes(term) || 
       inst.code?.toLowerCase().includes(term)
     );
-    console.log('[FILTER]', 'term:', term, 'found:', filtered.length, 'results');
-    if (filtered.length > 0) {
-      console.log('[FILTER SAMPLE]', 'First result:', filtered[0], 'structure:',  JSON.stringify(filtered[0]));
-    }
-    return filtered;
   }
 
   /**
@@ -1698,12 +1691,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   displayInstituteName(value: any): string {
     // Handle if value is an institute object
-    if (value && typeof value === 'object' && value.id) {
+    if (value && typeof value === 'object' && value.id && value.name && value.code) {
       return `${value.name} (${value.code})`;
     }
-    // Handle if value is an institute ID (number)
+    // Handle if it's a number (ID) - look up from map
     if (typeof value === 'number') {
-      const institute = this.institutes.find(i => i.id === value);
+      const institute = this.institutesMap.get(value);
       return institute ? `${institute.name} (${institute.code})` : '';
     }
     // Handle if it's already a string (display format)
@@ -1717,29 +1710,21 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    * Handle institute autocomplete selection
    */
   onInstituteAutocompleteSelected(event: MatAutocompleteSelectedEvent): void {
-    const instituteId = event.option.value;
-    console.log('[INSTITUTE SELECTED]', event.option.viewValue, 'ID:', instituteId);
+    const institute = event.option.value;
     
-    // Look up the full institute object from the map
-    if (typeof instituteId === 'number' || typeof instituteId === 'string') {
-      const numId = typeof instituteId === 'string' ? parseInt(instituteId, 10) : instituteId;
-      const institute = this.institutesMap.get(numId);
-      
-      if (institute && institute.id && institute.name && institute.code) {
-        this.selectedInstituteId = institute.id;
-        this.selectedInstituteName = `${institute.name} (${institute.code})`;
-        this.cdr.markForCheck();
-        console.log('[INSTITUTE SET SUCCESS]', {
-          id: this.selectedInstituteId,
-          name: this.selectedInstituteName,
-          mapSize: this.institutesMap.size,
-          found: true
-        });
-      } else {
-        console.error('[INSTITUTE LOOKUP FAILED]', 'ID:', numId, 'Found in map:', !!institute, 'Institute:', institute);
-      }
+    // Handle if value is an institute object
+    if (institute && typeof institute === 'object' && institute.id && institute.name && institute.code) {
+      this.selectedInstituteId = institute.id;
+      this.selectedInstituteName = `${institute.name} (${institute.code})`;
+      this.institutesMap.set(institute.id, institute); // Ensure it's in the map
+      this.cdr.markForCheck();
+      console.log('[INSTITUTE SET SUCCESS]', {
+        id: this.selectedInstituteId,
+        name: this.selectedInstituteName,
+        fromObject: true
+      });
     } else {
-      console.error('[INSTITUTE SELECTION FAILED]', 'Unexpected value type:', typeof instituteId, 'Value:', instituteId);
+      console.error('[INSTITUTE SELECTION FAILED]', 'Expected object, got:', typeof institute, institute);
     }
   }
   loadInstitutesAndStreams(): Promise<void> {
