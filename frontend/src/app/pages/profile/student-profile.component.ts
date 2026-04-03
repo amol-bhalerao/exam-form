@@ -1414,9 +1414,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.setupNameFieldTransformers();
-    this.loadProfile();
     this.setupPincodeLookup();
-    this.loadInstitutesAndStreams();
+    // Load institutes and streams FIRST, then load profile
+    // This ensures institutes array is populated before pre-population logic runs
+    this.loadInstitutesAndStreams().then(() => {
+      this.loadProfile();
+    });
   }
 
   /**
@@ -1693,25 +1696,28 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       }
     }
   }
-  loadInstitutesAndStreams() {
-    // Load institutes
-    this.http.get<{ institutes: any[] }>(`${API_BASE_URL}/institutes`).subscribe({
-      next: (response) => {
-        this.institutes = response.institutes || [];
-      },
-      error: (err) => {
-        console.error('Failed to load institutes:', err);
-      }
-    });
-
-    // Load streams
-    this.http.get<{ streams: any[] }>(`${API_BASE_URL}/masters/streams`).subscribe({
-      next: (response) => {
-        this.streams = response.streams || [];
-      },
-      error: (err) => {
-        console.error('Failed to load streams:', err);
-      }
+  loadInstitutesAndStreams(): Promise<void> {
+    return Promise.all([
+      // Load institutes
+      this.http.get<{ institutes: any[] }>(`${API_BASE_URL}/institutes`).toPromise()
+        .then((response: any) => {
+          this.institutes = response?.institutes || [];
+        })
+        .catch((err) => {
+          console.error('Failed to load institutes:', err);
+        }),
+      
+      // Load streams
+      this.http.get<{ streams: any[] }>(`${API_BASE_URL}/masters/streams`).toPromise()
+        .then((response: any) => {
+          this.streams = response?.streams || [];
+        })
+        .catch((err) => {
+          console.error('Failed to load streams:', err);
+        })
+    ]).then(() => {
+      // Both loading complete
+      console.log(`Loaded ${this.institutes.length} institutes and ${this.streams.length} streams`);
     });
   }
 
