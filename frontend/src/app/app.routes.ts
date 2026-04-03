@@ -25,6 +25,7 @@ import { SuperInstitutesComponent } from './pages/super/super-institutes/super-i
 import { SuperInstituteUsersComponent } from './pages/super/super-institute-users/super-institute-users.component';
 import { SuperMastersComponent } from './pages/super/super-masters/super-masters.component';
 import { SuperUsersComponent } from './pages/super/super-users/super-users.component';
+import { SuperHealthDashboardComponent } from './pages/super/super-health-dashboard/super-health-dashboard.component';
 import { ProfileComponent } from './pages/profile/profile.component';
 import { BoardApplicationsComponent } from './pages/board/board-applications/board-applications.component';
 import { BoardSubjectsComponent } from './pages/board/board-subjects/board-subjects.component';
@@ -80,6 +81,7 @@ export const routes: Routes = [
       { path: 'super/institute-users', component: SuperInstituteUsersComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
       { path: 'super/users', component: SuperUsersComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
       { path: 'super/masters', component: SuperMastersComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
+      { path: 'super/health', component: SuperHealthDashboardComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
       { path: 'profile', component: ProfileComponent },
 
       // BOARD

@@ -188,8 +188,7 @@ import { API_BASE_URL } from '../../core/api';
                 <div class="form-actions">
                   <button mat-raised-button color="primary" 
                           (click)="saveInstituteSelection()"
-                          [disabled]="!selectedInstituteId || !selectedStreamCode || savingInstitute"
-                          [title]="'Institute ID: ' + (selectedInstituteId || 'null') + ', Stream: ' + (selectedStreamCode || 'null') + ', Saving: ' + savingInstitute">
+                          [disabled]="!selectedInstituteId || !selectedStreamCode || savingInstitute">
                     <mat-icon *ngIf="!savingInstitute">check_circle</mat-icon>
                     <mat-spinner *ngIf="savingInstitute" diameter="20"></mat-spinner>
                     <span *ngIf="!savingInstitute">{{ profile?.instituteId ? 'Update' : 'Save' }} Institute & Stream</span>
@@ -199,24 +198,6 @@ import { API_BASE_URL } from '../../core/api';
                   <div class="institute-info" *ngIf="profile?.instituteId">
                     <mat-icon>check_circle</mat-icon>
                     <span>Current: {{ getInstituteLabel(profile.instituteId) }} • {{ profile.streamCode }}</span>
-                  </div>
-                  
-                  <!-- DEBUG INFO - Remove after testing -->
-                  <div style="font-size: 12px; color: #666; margin-top: 1rem; padding: 1rem; background: #f0f0f0; border-radius: 4px; font-family: monospace;">
-                    <div><strong>DEBUG INFO:</strong></div>
-                    <div>selectedInstituteId: {{ selectedInstituteId || 'null' }}</div>
-                    <div>selectedInstitute: {{ selectedInstitute?.name || 'empty' }} ({{ selectedInstitute?.code || '-' }})</div>
-                    <div>selectedStreamCode: {{ selectedStreamCode || 'null' }}</div>
-                    <div>savingInstitute: {{ savingInstitute }}</div>
-                    <div>Button Disabled: {{ !selectedInstituteId || !selectedStreamCode || savingInstitute }}</div>
-                    <div style="margin-top: 0.5rem;">
-                      <span *ngIf="!selectedInstituteId" style="color: red;">❌ No institute selected</span>
-                      <span *ngIf="selectedInstituteId" style="color: green;">✓ Institute selected</span>
-                      <span style="margin-left: 1rem;">
-                        <span *ngIf="!selectedStreamCode" style="color: red;">❌ No stream selected</span>
-                        <span *ngIf="selectedStreamCode" style="color: green;">✓ Stream selected</span>
-                      </span>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -238,21 +219,21 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>Last Name / Surname *</mat-label>
                     <mat-icon matPrefix>person</mat-icon>
-                    <input matInput formControlName="lastName" placeholder="e.g., RATHOD" required />
+                    <input matInput formControlName="lastName" required />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'lastName') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
                     <mat-label>Candidate's Name (First Name) *</mat-label>
                     <mat-icon matPrefix>person</mat-icon>
-                    <input matInput formControlName="firstName" placeholder="e.g., PAYAL" required />
+                    <input matInput formControlName="firstName" required />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'firstName') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
                     <mat-label>Middle / Father's Name</mat-label>
                     <mat-icon matPrefix>person</mat-icon>
-                    <input matInput formControlName="middleName" placeholder="e.g., SURESH" />
+                    <input matInput formControlName="middleName" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'middleName') }}</mat-error>
                   </mat-form-field>
                 </div>
@@ -261,14 +242,14 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>Mother's Name *</mat-label>
                     <mat-icon matPrefix>family_restroom</mat-icon>
-                    <input matInput formControlName="motherName" placeholder="e.g., ANUSAYA" required />
+                    <input matInput formControlName="motherName" required />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'motherName') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
                     <mat-label>Date of Birth (DD/MM/YYYY) *</mat-label>
                     <mat-icon matPrefix>cake</mat-icon>
-                    <input matInput formControlName="dateOfBirth" [matDatepicker]="picker" placeholder="e.g., 07/04/2009" />
+                    <input matInput formControlName="dateOfBirth" [matDatepicker]="picker" />
                     <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                     <mat-datepicker #picker></mat-datepicker>
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'dateOfBirth') }}</mat-error>
@@ -292,7 +273,7 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>Aadhar Number</mat-label>
                     <mat-icon matPrefix>badge</mat-icon>
-                    <input matInput formControlName="aadharNumber" placeholder="e.g., 287047290812" />
+                    <input matInput formControlName="aadharNumber" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'aadharNumber') }}</mat-error>
                   </mat-form-field>
                 </div>
@@ -301,14 +282,14 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>Mobile Number *</mat-label>
                     <mat-icon matPrefix>phone</mat-icon>
-                    <input matInput formControlName="mobile" placeholder="e.g., 9876543210" required />
+                    <input matInput formControlName="mobile" required />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'mobile') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
                     <mat-label>Email Address *</mat-label>
                     <mat-icon matPrefix>email</mat-icon>
-                    <input matInput formControlName="email" placeholder="e.g., student@example.com" required />
+                    <input matInput formControlName="email" required />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'email') }}</mat-error>
                   </mat-form-field>
                 </div>
@@ -321,7 +302,7 @@ import { API_BASE_URL } from '../../core/api';
                 <mat-form-field class="form-field-full">
                   <mat-label>Address Line One *</mat-label>
                   <mat-icon matPrefix>location_on</mat-icon>
-                  <input matInput formControlName="addressLineOne" placeholder="e.g., CHINCHOLI HINGOLI" required />
+                  <input matInput formControlName="addressLineOne" required />
                   <mat-error>{{ getErrorMessage(personalDetailsForm, 'addressLineOne') }}</mat-error>
                 </mat-form-field>
 
@@ -345,7 +326,7 @@ import { API_BASE_URL } from '../../core/api';
                     <mat-icon matPrefix>location_on</mat-icon>
                     <input matInput 
                            formControlName="pincode" 
-                           placeholder="e.g., 431513" 
+ 
                            [matAutocomplete]="pincodeAuto"
                            (input)="onPincodeInput($event)"
                            required />
@@ -375,14 +356,14 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>District</mat-label>
                     <mat-icon matPrefix>public</mat-icon>
-                    <input matInput formControlName="district" placeholder="e.g., HINGOLI" />
+                    <input matInput formControlName="district" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'district') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
                     <mat-label>Taluka</mat-label>
                     <mat-icon matPrefix>public</mat-icon>
-                    <input matInput formControlName="taluka" placeholder="e.g., HINGOLI" />
+                    <input matInput formControlName="taluka" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'taluka') }}</mat-error>
                   </mat-form-field>
 
@@ -396,7 +377,7 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field form-full-width">
                     <mat-label>Village</mat-label>
                     <mat-icon matPrefix>public</mat-icon>
-                    <input matInput formControlName="village" placeholder="e.g., hingoli" />
+                    <input matInput formControlName="village" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'village') }}</mat-error>
                   </mat-form-field>
                 </div>
@@ -477,7 +458,7 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>Seat Number</mat-label>
                     <mat-icon matPrefix>confirmation_number</mat-icon>
-                    <input matInput formControlName="sscSeatNo" placeholder="e.g., k171622" />
+                    <input matInput formControlName="sscSeatNo" />
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
@@ -497,13 +478,13 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>Year</mat-label>
                     <mat-icon matPrefix>calendar_today</mat-icon>
-                    <input matInput type="number" formControlName="sscYear" placeholder="e.g., 2024" />
+                    <input matInput type="number" formControlName="sscYear" />
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
                     <mat-label>Board / College</mat-label>
                     <mat-icon matPrefix>domain</mat-icon>
-                    <input matInput formControlName="sscBoard" placeholder="e.g., STATE BOARD C SAMBHAGI NAGAR" />
+                    <input matInput formControlName="sscBoard" />
                   </mat-form-field>
                 </div>
 
@@ -511,7 +492,7 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>Percentage Obtained (%)</mat-label>
                     <mat-icon matPrefix>percent</mat-icon>
-                    <input matInput type="number" formControlName="sscPercentage" placeholder="e.g., 85.5" min="0" max="100" step="0.01" />
+                    <input matInput type="number" formControlName="sscPercentage" min="0" max="100" step="0.01" />
                   </mat-form-field>
                 </div>
               </div>
@@ -525,7 +506,7 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>Seat Number</mat-label>
                     <mat-icon matPrefix>confirmation_number</mat-icon>
-                    <input matInput formControlName="xithSeatNo" placeholder="e.g., 371" />
+                    <input matInput formControlName="xithSeatNo" />
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
@@ -545,13 +526,13 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>Year</mat-label>
                     <mat-icon matPrefix>calendar_today</mat-icon>
-                    <input matInput type="number" formControlName="xithYear" placeholder="e.g., 2025" />
+                    <input matInput type="number" formControlName="xithYear" />
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
                     <mat-label>Jr. College</mat-label>
                     <mat-icon matPrefix>domain</mat-icon>
-                    <input matInput formControlName="xithCollege" placeholder="e.g., S COLLEGE HINGOLI" />
+                    <input matInput formControlName="xithCollege" />
                   </mat-form-field>
                 </div>
 
@@ -559,7 +540,7 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>Percentage Obtained (%)</mat-label>
                     <mat-icon matPrefix>percent</mat-icon>
-                    <input matInput type="number" formControlName="xithPercentage" placeholder="e.g., 78.5" min="0" max="100" step="0.01" />
+                    <input matInput type="number" formControlName="xithPercentage" min="0" max="100" step="0.01" />
                   </mat-form-field>
                 </div>
               </div>
@@ -613,14 +594,14 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>IFSC Code *</mat-label>
                     <mat-icon matPrefix>code</mat-icon>
-                    <input matInput formControlName="ifscCode" placeholder="e.g., SBIN0020652" required />
+                    <input matInput formControlName="ifscCode" required />
                     <mat-error>IFSC Code is required</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
                     <mat-label>Account Number *</mat-label>
                     <mat-icon matPrefix>numbers</mat-icon>
-                    <input matInput formControlName="accountNumber" placeholder="e.g., 39144685470" required />
+                    <input matInput formControlName="accountNumber" required />
                     <mat-error>Account Number is required</mat-error>
                   </mat-form-field>
                 </div>
