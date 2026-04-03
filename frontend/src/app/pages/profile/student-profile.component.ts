@@ -163,12 +163,14 @@ import { API_BASE_URL } from '../../core/api';
                     <mat-label>Institute *</mat-label>
                     <mat-icon matPrefix>school</mat-icon>
                     <input matInput 
+                           #instituteInput
                            [matAutocomplete]="instituteAuto"
-                           [(ngModel)]="selectedInstituteName"
-                           (optionSelected)="onInstituteAutocompleteSelected($event)"
+                           [value]="selectedInstituteName"
+                           (input)="selectedInstituteName = instituteInput.value"
+                           (optionSelected)="onInstituteAutocompleteSelected($event); instituteInput.blur()"
                            placeholder="Search by name or code..."
                            required>
-                    <mat-autocomplete #instituteAuto="matAutocomplete" [displayWith]="displayInstituteName.bind(this)">
+                    <mat-autocomplete #instituteAuto="matAutocomplete">
                       <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst">
                         {{ inst.name }} ({{ inst.code }})
                       </mat-option>
@@ -1650,12 +1652,20 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    * Filter institutes based on search term (for autocomplete)
    */
   getFilteredInstitutes(): any[] {
-    if (!this.selectedInstituteName || typeof this.selectedInstituteName !== 'string') return this.institutes;
+    if (!this.institutes || this.institutes.length === 0) {
+      console.log('[FILTER] No institutes loaded yet');
+      return [];
+    }
+    if (!this.selectedInstituteName || typeof this.selectedInstituteName !== 'string') {
+      return this.institutes;
+    }
     const term = this.selectedInstituteName.toLowerCase();
-    return this.institutes.filter(inst => 
+    const filtered = this.institutes.filter(inst => 
       inst.name?.toLowerCase().includes(term) || 
       inst.code?.toLowerCase().includes(term)
     );
+    console.log('[FILTER]', 'term:', term, 'found:', filtered.length, 'results');
+    return filtered;
   }
 
   /**
@@ -1683,10 +1693,13 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   onInstituteAutocompleteSelected(event: MatAutocompleteSelectedEvent): void {
     const institute = event.option.value;
+    console.log('[INSTITUTE SELECTED]', event.option.viewValue, 'value:', institute);
+    
     // Handle if value is an institute object
     if (institute && typeof institute === 'object' && institute.id) {
       this.selectedInstituteId = institute.id;
       this.selectedInstituteName = `${institute.name} (${institute.code})`;
+      console.log('[INSTITUTE SET]', 'ID:', this.selectedInstituteId, 'Name:', this.selectedInstituteName);
     } else if (typeof institute === 'number') {
       // Handle if value is just an ID (fallback)
       this.selectedInstituteId = institute;
@@ -1694,6 +1707,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       if (inst) {
         this.selectedInstituteName = `${inst.name} (${inst.code})`;
       }
+      console.log('[INSTITUTE SET]', 'ID:', this.selectedInstituteId, 'from fallback logic');
+    } else {
+      console.log('[INSTITUTE SELECTION FAILED]', 'Unexpected value type:', typeof institute, institute);
     }
   }
   loadInstitutesAndStreams(): Promise<void> {
@@ -1702,22 +1718,26 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       this.http.get<{ institutes: any[] }>(`${API_BASE_URL}/institutes`).toPromise()
         .then((response: any) => {
           this.institutes = response?.institutes || [];
+          console.log('[INSTITUTES LOADED]', this.institutes.length, 'institutes', this.institutes.slice(0, 2));
         })
         .catch((err) => {
-          console.error('Failed to load institutes:', err);
+          console.error('[INSTITUTES ERROR]', err);
+          this.institutes = [];
         }),
       
       // Load streams
       this.http.get<{ streams: any[] }>(`${API_BASE_URL}/masters/streams`).toPromise()
         .then((response: any) => {
           this.streams = response?.streams || [];
+          console.log('[STREAMS LOADED]', this.streams.length, 'streams', this.streams.slice(0, 2));
         })
         .catch((err) => {
-          console.error('Failed to load streams:', err);
+          console.error('[STREAMS ERROR]', err);
+          this.streams = [];
         })
     ]).then(() => {
       // Both loading complete
-      console.log(`Loaded ${this.institutes.length} institutes and ${this.streams.length} streams`);
+      console.log('[INIT COMPLETE] Loaded', this.institutes.length, 'institutes,', this.streams.length, 'streams');
     });
   }
 
