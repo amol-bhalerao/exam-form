@@ -1,7 +1,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { AgGridModule } from 'ag-grid-angular';
+import { AgGridAngular } from 'ag-grid-angular';
 import { ModuleRegistry, ClientSideRowModelModule } from 'ag-grid-community';
 import type { ColDef } from 'ag-grid-community';
 import { MatCardModule } from '@angular/material/card';
@@ -29,7 +29,7 @@ type TeacherRow = {
 @Component({
   selector: 'app-board-teachers',
   standalone: true,
-  imports: [FormsModule, AgGridModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule],
+  imports: [FormsModule, AgGridAngular, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule],
   template: `
     <mat-card class="card">
       <div class="dashboard-grid">

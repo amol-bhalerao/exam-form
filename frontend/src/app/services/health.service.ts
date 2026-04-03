@@ -30,21 +30,18 @@ export interface HealthCheckResult {
 export class HealthService {
   private readonly TIMEOUT = 5000; // 5 seconds
 
+  // API endpoints to test - only endpoints that actually exist
   private backendApiTests = [
-    { endpoint: '/health/metrics/status', method: 'GET', name: 'Health Status' },
-    { endpoint: '/health/metrics/ping', method: 'GET', name: 'Ping' },
-    { endpoint: '/health/metrics/ready', method: 'GET', name: 'Readiness' },
-    { endpoint: '/health/metrics/sessions', method: 'GET', name: 'Sessions' },
-    { endpoint: '/students', method: 'GET', name: 'Students List' },
-    { endpoint: '/institutes', method: 'GET', name: 'Institutes List' },
-    { endpoint: '/masters/streams', method: 'GET', name: 'Streams List' },
-    { endpoint: '/masters/subjects', method: 'GET', name: 'Subjects List' },
-    { endpoint: '/exams', method: 'GET', name: 'Exams List' },
+    { endpoint: '/students', method: 'GET', name: 'Students API' },
+    { endpoint: '/institutes', method: 'GET', name: 'Institutes API' },
+    { endpoint: '/masters/streams', method: 'GET', name: 'Streams Data' },
+    { endpoint: '/masters/subjects', method: 'GET', name: 'Subjects Data' },
+    { endpoint: '/exams', method: 'GET', name: 'Exams API' },
     { endpoint: '/users', method: 'GET', name: 'Users List' },
     { 
       endpoint: '/auth/login', 
       method: 'POST', 
-      name: 'Login',
+      name: 'Auth Login',
       payload: { username: 'test', password: 'test' }
     },
     {

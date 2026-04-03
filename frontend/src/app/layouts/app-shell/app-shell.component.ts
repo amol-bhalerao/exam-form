@@ -214,48 +214,53 @@ import { API_BASE_URL } from '../../core/api';
     }
 
     .nav-item {
-      margin: 0.25rem 0.5rem;
-      border-radius: 8px;
-      position: relative;
-      transition: all 0.2s ease;
-      color: #333;
-      font-size: 0.95rem;
-      height: auto;
-      min-height: 44px;
+      margin: 0.25rem 0.5rem !important;
+      border-radius: 8px !important;
+      position: relative !important;
+      transition: all 0.2s ease !important;
+      color: #333 !important;
+      font-size: 0.95rem !important;
+      height: auto !important;
+      min-height: 44px !important;
       padding: 0 1rem !important;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      overflow: visible;
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 12px !important;
+      overflow: visible !important;
+      flex-wrap: nowrap !important;
+      width: 100% !important;
     }
 
     .nav-item:hover {
-      background: rgba(102, 126, 234, 0.1);
-      color: #667eea;
+      background: rgba(102, 126, 234, 0.1) !important;
+      color: #667eea !important;
     }
 
     .nav-item.active {
-      background: linear-gradient(90deg, rgba(102, 126, 234, 0.2) 0%, transparent 100%);
-      color: #667eea;
-      font-weight: 600;
-      border-right: 3px solid #667eea;
+      background: linear-gradient(90deg, rgba(102, 126, 234, 0.2) 0%, transparent 100%) !important;
+      color: #667eea !important;
+      font-weight: 600 !important;
+      border-right: 3px solid #667eea !important;
     }
 
     .nav-item .icon {
-      flex-shrink: 0;
-      font-size: 24px;
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      flex-shrink: 0 !important;
+      font-size: 24px !important;
+      width: 24px !important;
+      height: 24px !important;
+      min-width: 24px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
     }
 
     .nav-item .label {
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      flex: 1 !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      min-width: 0 !important;
     }
 
     .icon-badge {
