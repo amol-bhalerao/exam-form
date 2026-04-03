@@ -12,6 +12,7 @@ import { prisma } from './prisma.js';
 import { apiLimiter, authLimiter, paymentLimiter } from './middleware/rate-limit.js';
 import { auditMiddleware } from './middleware/audit-log.js';
 import { healthRouter } from './routes/health.js';
+import { healthMetricsRouter } from './routes/health-metrics.js';
 import { authRouter } from './routes/auth.js';
 import { meRouter } from './routes/me.js';
 import { institutesRouter } from './routes/institutes.js';
@@ -140,6 +141,7 @@ app.get([
 app.get('/', (_req, res) => res.json({ name: 'hsc-exam-backend', ok: true, version: env.BUILD_ID }));
 
 app.use('/api/health', healthRouter);
+app.use('/api/health/metrics', healthMetricsRouter);
 app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/me', meRouter);
 app.use('/api/institutes', institutesRouter);

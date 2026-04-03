@@ -34,9 +34,13 @@ import { InstituteApplicationsComponent } from './pages/institute/institute-appl
 import { BoardExamsComponent } from './pages/board/board-exams/board-exams.component';
 import { BoardNewsComponent } from './pages/board/board-news/board-news.component';
 import { AdminStatusDashboardComponent } from './components/admin-status-dashboard/admin-status-dashboard.component';
+import { HealthCheckComponent } from './pages/health/health-check.component';
 
 export const routes: Routes = [
   { path: '', component: LandingEnhancedComponent },
+  
+  // Public Health Check (no auth required)
+  { path: 'health', component: HealthCheckComponent, data: { title: 'System Health Monitor' } },
   
   // Admin Status Dashboard (MUST come before catch-all)
   { path: 'admin/status', component: AdminStatusDashboardComponent, data: { title: 'API Status Dashboard' } },
