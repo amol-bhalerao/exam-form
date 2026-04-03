@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, FormControl } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -22,8 +22,8 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { Subject } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { Subject, Observable, of } from 'rxjs';
+import { takeUntil, debounceTime, distinctUntilChanged, startWith, map } from 'rxjs/operators';
 
 import { StudentProfileService, StudentProfile } from '../../core/student-profile.service';
 import { I18nService } from '../../core/i18n.service';
@@ -159,20 +159,19 @@ import { API_BASE_URL } from '../../core/api';
                 <p class="card-subtitle">Select your institute and academic stream</p>
                 
                 <div class="form-grid-2">
-                  <mat-form-field class="form-field">
-                    <mat-label>Institute *</mat-label>
-                    <mat-icon matPrefix>school</mat-icon>
-                    <input matInput 
-                           [matAutocomplete]="instituteAuto"
-                           [(ngModel)]="selectedInstitute"
-                           (optionSelected)="onInstituteAutocompleteSelected($event)"
-                           [displayWith]="displayInstituteName.bind(this)"
-                           placeholder="Search by name or code..."
-                           required>
-                    <mat-autocomplete #instituteAuto="matAutocomplete">
-                      <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst">
-                        {{ inst.name }} ({{ inst.code }})
-                      </mat-option>
+                  
+
+                  <mat-form-field class="example-full-width">
+                    <mat-label>Institute</mat-label>
+                    <input 
+                    type="text" 
+                    matInput 
+                    [formControl]="selectedInstitute" 
+                    [matAutocomplete]="instituteAuto">
+                    <mat-autocomplete #instituteAuto="matAutocomplete" [displayWith]="displayInstituteName.bind(this)">
+                      @for (inst of getFilteredInstitutes() | async; track inst) {
+                        <mat-option [value]="inst">{{inst.name}}</mat-option>
+                      }
                     </mat-autocomplete>
                   </mat-form-field>
 
@@ -1533,11 +1532,11 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   // Institute and Stream selection
   institutes: any[] = [];
   institutesMap: Map<number, any> = new Map(); // Map of ID -> institute object for quick lookup
+  selectedInstitute = new FormControl(null); // FormControl for institute autocomplete
+  filteredInstitutes$: Observable<any[]> = of([]); // Observable for filtered institutes
   streams: any[] = [];
   selectedInstituteId: number | null = null;
-  selectedInstitute: any = null; // Full institute object for display in autocomplete
   selectedStreamCode: string | null = null;
-  instituteSearchTerm = '';
 
   // Profile completion tracking
   profileCompletionPercentage = 0;
@@ -1565,39 +1564,39 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         Validators.maxLength(50),
         Validators.pattern(/^[a-zA-Z\s'-]+$/)
       ]],
-      
+
       firstName: ['', [
         Validators.required,
         Validators.minLength(2),
         Validators.maxLength(50),
         Validators.pattern(/^[a-zA-Z\s'-]+$/)
       ]],
-      
+
       middleName: ['', [
         Validators.maxLength(50),
         Validators.pattern(/^[a-zA-Z\s'-]*$/)
       ]],
-      
+
       motherName: ['', [
         Validators.required,
         Validators.minLength(2),
         Validators.maxLength(50),
         Validators.pattern(/^[a-zA-Z\s'-]+$/)
       ]],
-      
+
       // Date of Birth - valid date, not future, age >= 14
       dateOfBirth: ['', [Validators.required, this.dateOfBirthValidator.bind(this)]],
-      
+
       // Gender - required
       gender: ['', Validators.required],
-      
+
       // Aadhar - exactly 12 digits
       aadharNumber: ['', [
         Validators.minLength(12),
         Validators.maxLength(12),
         Validators.pattern(/^\d{12}$|^$/)
       ]],
-      
+
       // Mobile - exactly 10 digits, starts with 6-9
       mobile: ['', [
         Validators.required,
@@ -1605,29 +1604,29 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         Validators.maxLength(10),
         Validators.pattern(/^[6-9]\d{9}$/)
       ]],
-      
+
       // Email - valid format
       email: ['', [
         Validators.required,
         Validators.email,
         Validators.maxLength(100)
       ]],
-      
+
       // Address - 3-100 chars
       addressLineOne: ['', [
         Validators.required,
         Validators.minLength(3),
         Validators.maxLength(100)
       ]],
-      
+
       addressLineTwo: ['', [
         Validators.maxLength(100)
       ]],
-      
+
       addressLineThree: ['', [
         Validators.maxLength(100)
       ]],
-      
+
       // Pincode - exactly 6 digits
       pincode: ['', [
         Validators.required,
@@ -1635,28 +1634,28 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         Validators.maxLength(6),
         Validators.pattern(/^\d{6}$/)
       ]],
-      
+
       // District - 2-50 chars
       district: ['', [
         Validators.minLength(2),
         Validators.maxLength(50)
       ]],
-      
+
       // Taluka - 2-50 chars
       taluka: ['', [
         Validators.minLength(2),
         Validators.maxLength(50)
       ]],
-      
+
       revenueCircle: ['', [
         Validators.maxLength(50)
       ]],
-      
+
       // Village - 1-50 chars
       village: ['', [
         Validators.maxLength(50)
       ]],
-      
+
       // Demographics
       categoryCode: [''],
       minorityReligionCode: [''],
@@ -1741,7 +1740,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   dateOfBirthValidator(control: AbstractControl): ValidationErrors | null {
     if (!control.value) return null;
-    
+
     const dob = new Date(control.value);
     const today = new Date();
 
@@ -1772,6 +1771,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.setupNameFieldTransformers();
     this.setupPincodeLookup();
+    this.setupInstituteAutocomplete();
     // Load institutes and streams FIRST, then load profile
     // This ensures institutes array is populated before pre-population logic runs
     this.loadInstitutesAndStreams().then(() => {
@@ -1786,7 +1786,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   private setupNameFieldTransformers() {
     const nameFields = ['lastName', 'firstName', 'middleName', 'motherName'];
     const seatFields = ['sscSeatNo', 'xithSeatNo'];
-    
+
     // Uppercase transformers for name fields
     nameFields.forEach(fieldName => {
       const control = this.personalDetailsForm.get(fieldName);
@@ -1863,19 +1863,19 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     this.profileService.loadProfile()
       .then((profile: any) => {
         this.profile = profile as StudentProfile;
-        
+
         // Pre-populate institute and stream selections if already set
         if (profile.instituteId) {
           this.selectedInstituteId = profile.instituteId;
           const institute = this.institutesMap.get(profile.instituteId);
           if (institute) {
-            this.selectedInstitute = institute; // Store the full object
+            this.selectedInstitute.setValue(institute); // Set the full object to FormControl
           }
         }
         if (profile.streamCode) {
           this.selectedStreamCode = profile.streamCode;
         }
-        
+
         // Bind personal details form
         this.personalDetailsForm.patchValue({
           firstName: profile.firstName || '',
@@ -1925,18 +1925,18 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       })
       .catch((err: any) => {
         console.error('Failed to load profile:', err);
-        
+
         // Extract error code from multiple possible locations
         const errorCode = err?.error?.error || err?.error?.status || err?.message || '';
         const serverMessage = err?.error?.message || err?.message || '';
-        
+
         // Determine the error type and appropriate message
         let errorMsg = 'Failed to load profile. Please try again.';
         let isInstituteError = false;
-        
+
         // Check if this is specifically an institute not selected error
         if (
-          errorCode === 'INSTITUTE_NOT_SELECTED' || 
+          errorCode === 'INSTITUTE_NOT_SELECTED' ||
           errorCode?.includes('INSTITUTE') ||
           serverMessage?.includes('institute') ||
           !this.profile // If profile couldn't be loaded at all
@@ -1950,7 +1950,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           // Generic error
           errorMsg = err?.error?.message || 'Failed to load profile. Please try again.';
         }
-        
+
         this.error = errorMsg;
         this.isLoading = false;
       });
@@ -1983,7 +1983,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     });
 
     // Check previous exams (at least one exam year)
-    const hasPreviousExams = profile.previousExams && 
+    const hasPreviousExams = profile.previousExams &&
       profile.previousExams.some((e: any) => e.year);
     if (hasPreviousExams) {
       completedCount++;
@@ -1991,7 +1991,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
     // Check mobile from user data
     const hasMobile = profile.mobile || this.profile?.mobile;
-    
+
     this.profileCompletionCount = completedCount;
     this.profileCompletionPercentage = Math.round((completedCount / this.totalProfileFields) * 100);
   }
@@ -2004,22 +2004,43 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Filter institutes based on search term (for autocomplete)
+   * Setup institute autocomplete filtering - creates Observable from form control
    */
-  getFilteredInstitutes(): any[] {
+  private setupInstituteAutocomplete() {
+    this.filteredInstitutes$ = this.selectedInstitute.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filterInstitutes(value)),
+      takeUntil(this.destroy$)
+    );
+  }
+
+  /**
+   * Filter institutes based on search term (internal helper)
+   */
+  private _filterInstitutes(value: any): any[] {
     if (!this.institutes || this.institutes.length === 0) {
       return [];
     }
-    // If nothing selected or typed, show all institutes
-    if (!this.selectedInstitute || typeof this.selectedInstitute !== 'string') {
+    // If value is an object, show all institutes (user selected something)
+    if (value && typeof value === 'object' && value.id) {
       return this.institutes;
     }
-    // Filter by user input (selectedInstitute holds the input text when typing)
-    const term = this.selectedInstitute.toLowerCase();
-    return this.institutes.filter(inst => 
-      inst.name?.toLowerCase().includes(term) || 
+    // Filter by user input text
+    const term = (typeof value === 'string' ? value : '').toLowerCase();
+    if (!term) {
+      return this.institutes;
+    }
+    return this.institutes.filter(inst =>
+      inst.name?.toLowerCase().includes(term) ||
       inst.code?.toLowerCase().includes(term)
     );
+  }
+
+  /**
+   * Get filtered institutes (for template use with | async)
+   */
+  getFilteredInstitutes(): Observable<any[]> {
+    return this.filteredInstitutes$;
   }
 
   /**
@@ -2047,18 +2068,18 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   onInstituteAutocompleteSelected(event: MatAutocompleteSelectedEvent): void {
     const institute = event.option.value;
-    
+
     // Handle if value is an institute object
     if (institute && typeof institute === 'object' && institute.id && institute.name && institute.code) {
       this.selectedInstituteId = institute.id;
-      this.selectedInstitute = institute; // Store the full object
+      this.selectedInstitute.setValue(institute, { emitEvent: false }); // Set FormControl value without triggering valueChanges
       this.institutesMap.set(institute.id, institute); // Ensure it's in the map
       this.cdr.markForCheck();
       console.log('[INSTITUTE SET SUCCESS]', {
         id: this.selectedInstituteId,
         name: institute.name,
         code: institute.code,
-        fromObject: true
+        displayName: `${institute.name} (${institute.code})`
       });
     } else {
       console.error('[INSTITUTE SELECTION FAILED]', 'Expected object, got:', typeof institute, institute);
@@ -2071,7 +2092,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         .then((response: any) => {
           this.institutes = response?.institutes || [];
           console.log('[INSTITUTES LOADED]', this.institutes.length, 'institutes');
-          
+
           // Build map for quick ID lookup
           this.institutesMap.clear();
           this.institutes.forEach(inst => {
@@ -2080,7 +2101,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
               console.log('[INSTITUTE MAPPED]', inst.id, '→', inst.name);
             }
           });
-          
+
           if (this.institutes.length > 0) {
             console.log('[INSTITUTES SAMPLE]', JSON.stringify(this.institutes[0]));
             console.log('[INSTITUTES FIRST 3]', this.institutes.slice(0, 3).map(i => ({ id: i.id, name: i.name, code: i.code })));
@@ -2091,7 +2112,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           this.institutes = [];
           this.institutesMap.clear();
         }),
-      
+
       // Load streams
       this.http.get<{ streams: any[] }>(`${API_BASE_URL}/masters/streams`).toPromise()
         .then((response: any) => {
@@ -2174,7 +2195,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     if (this.personalDetailsForm.valid) {
       this.savingPersonal = true;
       const formData = this.personalDetailsForm.value;
-      
+
       // Ensure all values are properly formatted before sending
       const cleanedData = {
         ...formData,
@@ -2188,9 +2209,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         email: formData.email || '',
         mobile: formData.mobile || ''
       };
-      
+
       this.profileService.updatePersonalDetails(cleanedData);
-      
+
       setTimeout(() => {
         this.savingPersonal = false;
         // Recalculate progress after save
@@ -2248,7 +2269,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   onPincodeSelected(event: MatAutocompleteSelectedEvent) {
     const selectedPincode = event.option.value;
     const location = this.pincodeOptions.find(loc => loc.pincode === selectedPincode);
-    
+
     if (location) {
       // Auto-fill address fields
       this.personalDetailsForm.patchValue({
@@ -2261,7 +2282,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       // Clear autocomplete options and error
       this.pincodeOptions = [];
       this.pincodeError = null;
-      
+
       this.snackBar.open('✓ Address details auto-filled from pincode', '', { duration: 2000 });
     }
   }
