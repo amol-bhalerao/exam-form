@@ -169,7 +169,7 @@ import { API_BASE_URL } from '../../core/api';
                            placeholder="Search by name or code..."
                            required>
                     <mat-autocomplete #instituteAuto="matAutocomplete" [displayWith]="displayInstituteName.bind(this)">
-                      <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst.id">
+                      <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst">
                         {{ inst.name }} ({{ inst.code }})
                       </mat-option>
                     </mat-autocomplete>
@@ -1647,7 +1647,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    * Filter institutes based on search term (for autocomplete)
    */
   getFilteredInstitutes(): any[] {
-    if (!this.selectedInstituteName) return this.institutes;
+    if (!this.selectedInstituteName || typeof this.selectedInstituteName !== 'string') return this.institutes;
     const term = this.selectedInstituteName.toLowerCase();
     return this.institutes.filter(inst => 
       inst.name?.toLowerCase().includes(term) || 
@@ -1658,20 +1658,39 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   /**
    * Display institute name in autocomplete field
    */
-  displayInstituteName(instituteId: number): string {
-    const institute = this.institutes.find(i => i.id === instituteId);
-    return institute ? `${institute.name} (${institute.code})` : '';
+  displayInstituteName(value: any): string {
+    // Handle if value is an institute object
+    if (value && typeof value === 'object' && value.id) {
+      return `${value.name} (${value.code})`;
+    }
+    // Handle if value is an institute ID (number)
+    if (typeof value === 'number') {
+      const institute = this.institutes.find(i => i.id === value);
+      return institute ? `${institute.name} (${institute.code})` : '';
+    }
+    // Handle if it's already a string (display format)
+    if (typeof value === 'string') {
+      return value;
+    }
+    return '';
   }
 
   /**
    * Handle institute autocomplete selection
    */
   onInstituteAutocompleteSelected(event: MatAutocompleteSelectedEvent): void {
-    this.selectedInstituteId = event.option.value;
-    // Update display name
-    const institute = this.institutes.find(i => i.id === this.selectedInstituteId);
-    if (institute) {
+    const institute = event.option.value;
+    // Handle if value is an institute object
+    if (institute && typeof institute === 'object' && institute.id) {
+      this.selectedInstituteId = institute.id;
       this.selectedInstituteName = `${institute.name} (${institute.code})`;
+    } else if (typeof institute === 'number') {
+      // Handle if value is just an ID (fallback)
+      this.selectedInstituteId = institute;
+      const inst = this.institutes.find(i => i.id === institute);
+      if (inst) {
+        this.selectedInstituteName = `${inst.name} (${inst.code})`;
+      }
     }
   }
   loadInstitutesAndStreams() {
