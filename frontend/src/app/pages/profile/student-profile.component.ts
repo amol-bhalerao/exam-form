@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, OnDestroy } from '@angular/core';
+import { Component, OnInit, inject, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
@@ -171,7 +171,7 @@ import { API_BASE_URL } from '../../core/api';
                            placeholder="Search by name or code..."
                            required>
                     <mat-autocomplete #instituteAuto="matAutocomplete">
-                      <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst">
+                      <mat-option *ngFor="let inst of getFilteredInstitutes()" [value]="inst.id">
                         {{ inst.name }} ({{ inst.code }})
                       </mat-option>
                     </mat-autocomplete>
@@ -1182,6 +1182,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   private readonly snackBar = inject(MatSnackBar);
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
+  private readonly cdr = inject(ChangeDetectorRef);
   private destroy$ = new Subject<void>();
 
   profile: StudentProfile | null = null;
@@ -1197,6 +1198,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
   // Institute and Stream selection
   institutes: any[] = [];
+  institutesMap: Map<number, any> = new Map(); // Map of ID -> institute object for quick lookup
   streams: any[] = [];
   selectedInstituteId: number | null = null;
   selectedInstituteName: string = '';
@@ -1531,7 +1533,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         // Pre-populate institute and stream selections if already set
         if (profile.instituteId) {
           this.selectedInstituteId = profile.instituteId;
-          const institute = this.institutes.find(i => i.id === profile.instituteId);
+          const institute = this.institutesMap.get(profile.instituteId);
           if (institute) {
             this.selectedInstituteName = `${institute.name} (${institute.code})`;
           }
@@ -1715,35 +1717,29 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    * Handle institute autocomplete selection
    */
   onInstituteAutocompleteSelected(event: MatAutocompleteSelectedEvent): void {
-    const institute = event.option.value;
-    console.log('[INSTITUTE SELECTED EVENT]', {
-      viewValue: event.option.viewValue,
-      valueType: typeof institute,
-      valueJSON: JSON.stringify(institute),
-      isObject: typeof institute === 'object',
-      hasId: institute?.id !== undefined,
-      hasName: institute?.name !== undefined,
-      hasCode: institute?.code !== undefined,
-      actualId: institute?.id,
-      actualName: institute?.name,
-      actualCode: institute?.code
-    });
+    const instituteId = event.option.value;
+    console.log('[INSTITUTE SELECTED]', event.option.viewValue, 'ID:', instituteId);
     
-    // Handle if value is an institute object
-    if (institute && typeof institute === 'object' && institute.id) {
-      this.selectedInstituteId = institute.id;
-      this.selectedInstituteName = `${institute.name} (${institute.code})`;
-      console.log('[INSTITUTE SET SUCCESS]', 'ID:', this.selectedInstituteId, 'Name:', this.selectedInstituteName);
-    } else if (typeof institute === 'number') {
-      // Handle if value is just an ID (fallback)
-      this.selectedInstituteId = institute;
-      const inst = this.institutes.find(i => i.id === institute);
-      if (inst) {
-        this.selectedInstituteName = `${inst.name} (${inst.code})`;
+    // Look up the full institute object from the map
+    if (typeof instituteId === 'number' || typeof instituteId === 'string') {
+      const numId = typeof instituteId === 'string' ? parseInt(instituteId, 10) : instituteId;
+      const institute = this.institutesMap.get(numId);
+      
+      if (institute && institute.id && institute.name && institute.code) {
+        this.selectedInstituteId = institute.id;
+        this.selectedInstituteName = `${institute.name} (${institute.code})`;
+        this.cdr.markForCheck();
+        console.log('[INSTITUTE SET SUCCESS]', {
+          id: this.selectedInstituteId,
+          name: this.selectedInstituteName,
+          mapSize: this.institutesMap.size,
+          found: true
+        });
+      } else {
+        console.error('[INSTITUTE LOOKUP FAILED]', 'ID:', numId, 'Found in map:', !!institute, 'Institute:', institute);
       }
-      console.log('[INSTITUTE SET VIA FALLBACK]', 'ID:', this.selectedInstituteId);
     } else {
-      console.error('[INSTITUTE SELECTION FAILED]', 'Unexpected value type:', typeof institute, 'Value:', institute);
+      console.error('[INSTITUTE SELECTION FAILED]', 'Unexpected value type:', typeof instituteId, 'Value:', instituteId);
     }
   }
   loadInstitutesAndStreams(): Promise<void> {
@@ -1753,6 +1749,16 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         .then((response: any) => {
           this.institutes = response?.institutes || [];
           console.log('[INSTITUTES LOADED]', this.institutes.length, 'institutes');
+          
+          // Build map for quick ID lookup
+          this.institutesMap.clear();
+          this.institutes.forEach(inst => {
+            if (inst.id) {
+              this.institutesMap.set(inst.id, inst);
+              console.log('[INSTITUTE MAPPED]', inst.id, '→', inst.name);
+            }
+          });
+          
           if (this.institutes.length > 0) {
             console.log('[INSTITUTES SAMPLE]', JSON.stringify(this.institutes[0]));
             console.log('[INSTITUTES FIRST 3]', this.institutes.slice(0, 3).map(i => ({ id: i.id, name: i.name, code: i.code })));
@@ -1761,6 +1767,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         .catch((err) => {
           console.error('[INSTITUTES ERROR]', err);
           this.institutes = [];
+          this.institutesMap.clear();
         }),
       
       // Load streams
@@ -1833,7 +1840,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    * Get institute label by id
    */
   getInstituteLabel(instituteId: number): string {
-    const institute = this.institutes.find(i => i.id === instituteId);
+    const institute = this.institutesMap.get(instituteId);
     return institute ? `${institute.name} (${institute.code})` : 'Unknown Institute';
   }
 
