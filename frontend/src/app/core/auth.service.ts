@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
 import { API_BASE_URL } from './api';
 import type { AuthUser, LoginResponse, GoogleLoginResponse } from './auth.types';
+import { rateLimiter } from './rate-limiter';
 
 type StoredAuth = {
   accessToken: string;
@@ -40,6 +41,8 @@ export class AuthService {
     const current = this._auth();
     this._auth.set(null);
     localStorage.removeItem(STORAGE_KEY);
+    // Clear rate limiter on logout
+    rateLimiter.clearAll();
     if (!current) return;
     this.http.post(`${API_BASE_URL}/auth/logout`, { refreshToken: current.refreshToken }).subscribe({ error: () => {} });
   }

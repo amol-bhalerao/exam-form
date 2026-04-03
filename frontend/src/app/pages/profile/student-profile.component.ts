@@ -2045,19 +2045,33 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    * Display institute name in autocomplete field
    */
   displayInstituteName(value: any): string {
+    console.log('[DISPLAY WITH CALLED]', 'value:', value, 'type:', typeof value);
+    
     // Handle if value is an institute object
-    if (value && typeof value === 'object' && value.id && value.name && value.code) {
-      return `${value.name} (${value.code})`;
+    if (value && typeof value === 'object' && value.id) {
+      // Build display string with available properties
+      const name = value.name || 'Unknown Institute';
+      const code = value.code ? ` (${value.code})` : '';
+      const display = `${name}${code}`;
+      console.log('[DISPLAY STRING]', display);
+      return display;
     }
     // Handle if it's a number (ID) - look up from map
     if (typeof value === 'number') {
       const institute = this.institutesMap.get(value);
-      return institute ? `${institute.name} (${institute.code})` : '';
+      if (institute) {
+        const name = institute.name || 'Unknown Institute';
+        const code = institute.code ? ` (${institute.code})` : '';
+        return `${name}${code}`;
+      }
+      return '';
     }
-    // Handle if it's already a string (display format)
+    // Handle if it's a string (user input or already formatted)
     if (typeof value === 'string') {
       return value;
     }
+    // Handle null, undefined, or other values
+    console.log('[DISPLAY RETURNING EMPTY]', 'value was:', value);
     return '';
   }
 
@@ -2066,21 +2080,36 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   onInstituteAutocompleteSelected(event: MatAutocompleteSelectedEvent): void {
     const institute = event.option.value;
+    
+    console.log('[AUTOCOMPLETE SELECTED]', institute, 'type:', typeof institute);
 
-    // Handle if value is an institute object
-    if (institute && typeof institute === 'object' && institute.id && institute.name && institute.code) {
+    // Handle if value is an institute object with id
+    if (institute && typeof institute === 'object' && institute.id) {
       this.selectedInstituteId = institute.id;
-      this.selectedInstitute.setValue(institute, { emitEvent: false }); // Set FormControl value without triggering valueChanges
-      this.institutesMap.set(institute.id, institute); // Ensure it's in the map
+      
+      // Set the institute object to FormControl
+      // This will trigger displayWith to show the formatted name
+      this.selectedInstitute.setValue(institute, { emitEvent: false });
+      
+      // Also update the institutes map for lookup
+      this.institutesMap.set(institute.id, institute);
+      
+      // Force view update
       this.cdr.markForCheck();
+      this.cdr.detectChanges();
+      
       console.log('[INSTITUTE SET SUCCESS]', {
         id: this.selectedInstituteId,
         name: institute.name,
         code: institute.code,
-        displayName: `${institute.name} (${institute.code})`
+        fullObject: institute,
+        formControlValue: this.selectedInstitute.value
       });
     } else {
-      console.error('[INSTITUTE SELECTION FAILED]', 'Expected object, got:', typeof institute, institute);
+      console.error('[INSTITUTE SELECTION FAILED]', 'Expected object with id, got:', institute);
+      // Try to recover by clearing and showing error
+      this.selectedInstituteId = null;
+      this.selectedInstitute.setValue(null);
     }
   }
   loadInstitutesAndStreams(): Promise<void> {

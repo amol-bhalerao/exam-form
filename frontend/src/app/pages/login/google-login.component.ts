@@ -11,6 +11,7 @@ import { GoogleAuthService } from '../../core/google-auth.service';
 import { AuthService } from '../../core/auth.service';
 import { I18nService } from '../../core/i18n.service';
 import { BrandingService } from '../../core/branding.service';
+import { rateLimiter } from '../../core/rate-limiter';
 
 @Component({
   selector: 'app-google-login',
@@ -552,7 +553,15 @@ export class GoogleLoginComponent implements OnInit {
   ngOnInit() {
     // Check if already logged in
     if (this.googleAuth.isLoggedIn()) {
+      // Clear rate limiter when already logged in
+      rateLimiter.clearAll();
       this.navigateToAppropriateLocation();
+      return;
+    }
+
+    // Check if user is rate limited
+    if (rateLimiter.isBlocked('login')) {
+      this.errorMessage.set(rateLimiter.getThrottleMessage('login'));
       return;
     }
 
@@ -572,12 +581,23 @@ export class GoogleLoginComponent implements OnInit {
     this.googleAuth.initializeGoogleSignIn(
       'google-signin-button',
       (token: string) => {
+        // Record successful login attempt
+        rateLimiter.recordSuccess('login');
         this.loading.set(false);
+        this.errorMessage.set(null);
         this.navigateToAppropriateLocation();
       },
       () => {
+        // Record failed login attempt
+        rateLimiter.recordFailure('login');
+        
+        // Check if now blocked due to too many attempts
+        if (rateLimiter.isBlocked('login')) {
+          this.errorMessage.set(rateLimiter.getThrottleMessage('login'));
+        } else {
+          this.errorMessage.set('Failed to authenticate. Please try again.');
+        }
         this.loading.set(false);
-        this.errorMessage.set('Failed to authenticate. Please try again.');
       }
     );
   }

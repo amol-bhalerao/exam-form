@@ -2,6 +2,7 @@ import { Injectable, signal, inject, computed } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import type { GoogleLoginResponse } from './auth.types';
+import { rateLimiter } from './rate-limiter';
 
 @Injectable({
   providedIn: 'root'
@@ -158,6 +159,8 @@ export class GoogleAuthService {
 
   // Logout (delegate to AuthService)
   logout() {
+    // Clear rate limiter on logout
+    rateLimiter.clearAll();
     this.authService.logout();
     // Sign out from Google
     if ((window as any).google?.accounts?.id) {
