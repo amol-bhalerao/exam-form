@@ -2,25 +2,24 @@ import { z } from 'zod';
 import { config } from 'dotenv';
 import fs from 'fs';
 
-// Load environment-specific .env file only if it exists (for local development)
-// In production (Hostinger), environment variables are set in cPanel
-const isDev = process.env.NODE_ENV !== 'production';
-
-if (isDev) {
-  const envPath = process.env.NODE_ENV === 'development' ? '.env.development' : '.env';
-  if (fs.existsSync(envPath)) {
-    config({ path: envPath });
-  }
-}
-// In production, variables are already loaded from process.env (set via Hostinger cPanel)
-
+// Load environment-specific .env file when present.
+// Hostinger panel variables still win because we never override existing values.
 const isProd = process.env.NODE_ENV === 'production';
+const envPath = isProd
+  ? '.env.production'
+  : process.env.NODE_ENV === 'development'
+    ? '.env.development'
+    : '.env';
+
+if (fs.existsSync(envPath)) {
+  config({ path: envPath, override: false });
+}
 
 const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().min(1).default(
     isProd
-      ? 'mysql://u441114691_exam:Exam%401234567890@127.0.0.1:3306/u441114691_exam'
+      ? 'mysql://u441114691_exam:ExamHSC1234567890@127.0.0.1:3306/u441114691_exam'
       : 'mysql://root:@localhost:3306/hsc_exam_local'
   ),
 
