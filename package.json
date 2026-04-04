@@ -4,11 +4,11 @@
   "description": "HSC Exam Portal - Backend API & Frontend Application",
   "private": true,
   "scripts": {
-    "install-all": "npm install && cd backend && npm install && cd ../frontend && npm install && cd ..",
+    "install-all": "npm --prefix backend install && npm --prefix frontend install",
     "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "cd backend && npm run dev",
     "dev:frontend": "cd frontend && npm start",
-    "build": "npm install && cd backend && npm install && cd ../frontend && npm install && npm run build && cd ..",
+    "build": "npm --prefix backend install && npm --prefix frontend install && npm --prefix frontend run build",
     "build:backend": "cd backend && npm run build",
     "build:frontend": "cd frontend && npm install && npm run build",
     "start": "cd backend && npm start",

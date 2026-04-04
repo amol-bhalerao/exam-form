@@ -49,21 +49,26 @@ echo -e "${GREEN}✅ Node.js $(node --version)${NC}"
 echo -e "${GREEN}✅ npm $(npm --version)${NC}"
 echo ""
 
-# Check if .env exists
-if [ ! -f backend/.env ]; then
-    echo -e "${RED}❌ Missing backend/.env file${NC}"
+# Check if environment config exists
+if [ ! -f backend/.env ] && [ ! -f backend/.env.production ] && [ -z "${DATABASE_URL:-}" ]; then
+    echo -e "${RED}❌ Missing backend environment configuration${NC}"
     echo ""
-    echo "Please create backend/.env with required variables:"
-    echo "  - DATABASE_URL (required)"
-    echo "  - JWT_ACCESS_SECRET (required)"
-    echo "  - JWT_REFRESH_SECRET (required)"
-    echo "  - CORS_ORIGIN (required)"
+    echo "Please provide one of the following before deployment:"
+    echo "  - backend/.env"
+    echo "  - backend/.env.production"
+    echo "  - exported DATABASE_URL / JWT / CORS variables"
     echo ""
     echo "See .env.example for template."
     exit 1
 fi
 
-echo -e "${GREEN}✅ .env file found${NC}"
+if [ -f backend/.env.production ]; then
+    echo -e "${GREEN}✅ backend/.env.production found${NC}"
+elif [ -f backend/.env ]; then
+    echo -e "${GREEN}✅ backend/.env found${NC}"
+else
+    echo -e "${GREEN}✅ Using exported environment variables${NC}"
+fi
 echo ""
 
 # Option to pull latest code
@@ -84,13 +89,24 @@ echo ""
 echo "📦 Installing backend dependencies..."
 cd backend
 npm install --legacy-peer-deps
-# Load production environment if available
+# Load environment values
 if [ -f .env.production ]; then
     echo "🔐 Loading environment from backend/.env.production"
     set -a
     . ./.env.production
     set +a
+elif [ -f .env ]; then
+    echo "🔐 Loading environment from backend/.env"
+    set -a
+    . ./.env
+    set +a
 fi
+
+if [ -z "${DATABASE_URL:-}" ]; then
+    echo -e "${RED}❌ DATABASE_URL is not set. Aborting deployment to prevent a partial release.${NC}"
+    exit 1
+fi
+
 # Check Prisma
 echo ""
 echo "🗄️  Checking database migrations..."
