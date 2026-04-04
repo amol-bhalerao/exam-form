@@ -1,8 +1,46 @@
+# Dependencies
 node_modules/
-.env
+**/node_modules/
+.pnpm-store/
+.npm/
+.yarn/
+
+# Build output
 build/
+dist/
+**/dist/
+out/
+.tmp/
+tmp/
+coverage/
+.nyc_output/
+.angular/cache/
+
+# Environment files
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Logs
+logs/
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / OS files
 .DS_Store
-package-lock.json
-**/package-lock.json
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.swp
+*.swo
 
