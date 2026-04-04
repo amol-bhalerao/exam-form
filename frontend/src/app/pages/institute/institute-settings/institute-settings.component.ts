@@ -6,19 +6,22 @@ import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
-import { MatTableModule } from '@angular/material/table';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { API_BASE_URL } from '../../../core/api';
 
 @Component({
   selector: 'app-institute-settings',
   standalone: true,
-  imports: [NgIf, ReactiveFormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatTableModule, MatSnackBarModule],
+  imports: [NgIf, ReactiveFormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSnackBarModule],
   template: `
     <mat-card class="card">
-      <div class="h">Institute Settings</div>
-      <div class="p">Update your institute contact and location details. Basic institute identifiers are read-only.</div>
+      <div class="header-row">
+        <div>
+          <div class="h">Institute Basic Details</div>
+          <div class="p">Update institute address and contact details. Exam intake settings are now handled separately during exam or subject mapping.</div>
+        </div>
+      </div>
+
       <form [formGroup]="detailsForm" (ngSubmit)="saveDetails()">
         <div class="grid">
           <mat-form-field appearance="outline"><mat-label>Institute Code</mat-label><input matInput formControlName="code" [disabled]="true" /></mat-form-field>
@@ -26,34 +29,41 @@ import { API_BASE_URL } from '../../../core/api';
           <mat-form-field appearance="outline"><mat-label>College No</mat-label><input matInput formControlName="collegeNo" [disabled]="true" /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Institute Name</mat-label><input matInput formControlName="name" [disabled]="true" /></mat-form-field>
         </div>
+
         <div class="grid">
           <mat-form-field appearance="outline"><mat-label>Address</mat-label><input matInput formControlName="address" /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>District</mat-label><input matInput formControlName="district" /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Taluka</mat-label><input matInput formControlName="taluka" /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>City</mat-label><input matInput formControlName="city" /></mat-form-field>
         </div>
+
         <div class="grid">
-          <mat-form-field appearance="outline"><mat-label>Pincode</mat-label><input matInput formControlName="pincode" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Contact person</mat-label><input matInput formControlName="contactPerson" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Contact email</mat-label><input matInput formControlName="contactEmail" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Contact mobile</mat-label><input matInput formControlName="contactMobile" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Pincode</mat-label><input matInput formControlName="pincode" maxlength="10" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Contact Person</mat-label><input matInput formControlName="contactPerson" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Contact Email</mat-label><input matInput formControlName="contactEmail" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Contact Mobile</mat-label><input matInput formControlName="contactMobile" maxlength="10" /></mat-form-field>
         </div>
-        <mat-slide-toggle formControlName="acceptingApplications" color="primary" style="margin-bottom: 10px;">Accepting Student Applications</mat-slide-toggle>
-        <mat-form-field appearance="outline"><mat-label>Exam Application Limit</mat-label><input matInput type="number" formControlName="examApplicationLimit" /></mat-form-field>
-        <button mat-flat-button color="primary" [disabled]="detailsForm.invalid || loadingDetails()">{{ loadingDetails() ? 'Saving...' : 'Save institute details' }}</button>
+
+        <div class="actions">
+          <button mat-flat-button color="primary" [disabled]="detailsForm.invalid || loadingDetails()">
+            {{ loadingDetails() ? 'Saving…' : 'Save institute details' }}
+          </button>
+        </div>
       </form>
-      <p class="success" *ngIf="savedDetails()">Saved.</p>
+
+      <p class="success" *ngIf="savedDetails()">Institute details updated successfully.</p>
       <div class="error" *ngIf="errorDetails()">{{ errorDetails() }}</div>
     </mat-card>
   `,
   styles: [`
-    .card { margin-bottom: 14px; padding: 16px; }
+    .card { margin-bottom: 14px; padding: 18px; }
+    .header-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
     .h { font-weight: 800; margin-bottom: 4px; }
-    .p { color: #6b7280; margin-bottom: 12px; }
+    .p { color: #6b7280; margin-bottom: 0; line-height: 1.45; }
     .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 12px; }
-    .table { width: 100%; margin-top: 12px; }
-    .success { color: #065f46; font-size: 13px; }
-    .error { color: #b91c1c; font-size: 13px; }
+    .actions { display: flex; justify-content: flex-start; margin-top: 8px; }
+    .success { color: #065f46; font-size: 13px; margin-top: 10px; }
+    .error { color: #b91c1c; font-size: 13px; margin-top: 10px; }
   `]
 })
 export class InstituteSettingsComponent implements OnInit {
@@ -69,9 +79,7 @@ export class InstituteSettingsComponent implements OnInit {
     pincode: new FormControl('', { nonNullable: true }),
     contactPerson: new FormControl('', { nonNullable: true }),
     contactEmail: new FormControl('', { nonNullable: true, validators: [Validators.email] }),
-    contactMobile: new FormControl('', { nonNullable: true, validators: [Validators.minLength(8)] }),
-    acceptingApplications: new FormControl(true, { nonNullable: true }),
-    examApplicationLimit: new FormControl(100, { nonNullable: true, validators: [Validators.min(1)] })
+    contactMobile: new FormControl('', { nonNullable: true, validators: [Validators.pattern(/^\d{0,10}$/)] })
   });
 
   readonly loadingDetails = signal(false);
@@ -99,9 +107,7 @@ export class InstituteSettingsComponent implements OnInit {
           pincode: r.institute.pincode ?? '',
           contactPerson: r.institute.contactPerson ?? '',
           contactEmail: r.institute.contactEmail ?? '',
-          contactMobile: r.institute.contactMobile ?? '',
-          acceptingApplications: r.institute.acceptingApplications ?? true,
-          examApplicationLimit: r.institute.examApplicationLimit ?? 100
+          contactMobile: r.institute.contactMobile ?? ''
         });
       },
       error: (e) => this.showError(e, 'Unable to load institute data')
@@ -122,13 +128,11 @@ export class InstituteSettingsComponent implements OnInit {
       pincode: this.detailsForm.value.pincode,
       contactPerson: this.detailsForm.value.contactPerson,
       contactEmail: this.detailsForm.value.contactEmail,
-      contactMobile: this.detailsForm.value.contactMobile,
-      acceptingApplications: this.detailsForm.value.acceptingApplications,
-      examApplicationLimit: this.detailsForm.value.examApplicationLimit
+      contactMobile: this.detailsForm.value.contactMobile
     };
 
-    this.http.put(`${API_BASE_URL}/institutes/me`, payload).subscribe({
-      next: (_r: any) => {
+    this.http.patch(`${API_BASE_URL}/institutes/me`, payload).subscribe({
+      next: () => {
         this.loadingDetails.set(false);
         this.savedDetails.set(true);
         this.snackBar.open('Institute details updated', 'Close', { duration: 2000 });
@@ -142,8 +146,8 @@ export class InstituteSettingsComponent implements OnInit {
   }
 
   private showError(err: any, fallback: string) {
-    const message = err?.error?.error || err?.message || fallback;
+    const message = err?.error?.message || err?.error?.error || err?.message || fallback;
     this.snackBar.open(message, 'Close', { duration: 3000 });
   }
-
 }
+

@@ -463,11 +463,12 @@ model Teacher {
 }
 
 model InstituteStreamSubject {
-  id          Int      @id @default(autoincrement())
-  instituteId Int
-  streamId    Int
-  subjectId   Int
-  createdAt   DateTime @default(now())
+  id                 Int      @id @default(autoincrement())
+  instituteId        Int
+  streamId           Int
+  subjectId          Int
+  answerLanguageCode String?  @db.VarChar(10)
+  createdAt          DateTime @default(now())
 
   institute Institute @relation(fields: [instituteId], references: [id])
   stream    Stream    @relation(fields: [streamId], references: [id])

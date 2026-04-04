@@ -240,13 +240,36 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
   const effectiveCandidateType = body.candidateType ?? app.candidateType;
   if (body.subjects && body.subjects.length > 0) {
     const subjectIds = body.subjects.map((s) => s.subjectId);
-    const validStream = await prisma.instituteStreamSubject.findMany({
+    const instituteMappedSubjects = await prisma.instituteStreamSubject.findMany({
       where: { instituteId: student.instituteId, streamId: exam.streamId, subjectId: { in: subjectIds } },
       include: { subject: true }
     });
 
+    const hasInstituteSpecificMappings = await prisma.instituteStreamSubject.count({
+      where: { instituteId: student.instituteId, streamId: exam.streamId }
+    });
+    const hasBaseStreamMappings = await prisma.streamSubject.count({
+      where: { streamId: exam.streamId }
+    });
+
+    const validStream = hasInstituteSpecificMappings > 0
+      ? instituteMappedSubjects
+      : hasBaseStreamMappings > 0
+        ? await prisma.streamSubject.findMany({
+            where: { streamId: exam.streamId, subjectId: { in: subjectIds } },
+            include: { subject: true }
+          })
+        : (await prisma.subject.findMany({
+            where: { id: { in: subjectIds } }
+          })).map((subject) => ({ subject }));
+
     if (validStream.length !== subjectIds.length) {
-      return res.status(400).json({ error: 'INVALID_SUBJECT_SELECTION', message: 'Selected subject is not mapped for this institute and stream.' });
+      return res.status(400).json({
+        error: 'INVALID_SUBJECT_SELECTION',
+        message: hasInstituteSpecificMappings > 0
+          ? 'Selected subject is not mapped for this institute and stream.'
+          : 'Selected subject is not available for this stream.'
+      });
     }
 
     if (effectiveCandidateType !== 'BACKLOG') {

@@ -16,7 +16,7 @@ type TeacherRow = {
   fullName: string;
   designation?: string;
   subjectSpecialization?: string;
-  institute?: { name?: string };
+  institute?: { name?: string; district?: string; address?: string; fullAddress?: string };
   active: boolean;
   createdAt: string;
   email?: string;
@@ -79,6 +79,8 @@ export class BoardTeachersComponent implements OnInit {
     { field: 'designation', headerName: 'Designation', sortable: true, filter: true, resizable: true },
     { field: 'subjectSpecialization', headerName: 'Subject', sortable: true, filter: true, resizable: true },
     { headerName: 'Institute', valueGetter: (params: any) => params.data?.institute?.name ?? '-', sortable: true, filter: true, resizable: true },
+    { headerName: 'District', valueGetter: (params: any) => params.data?.institute?.district ?? '-', sortable: true, filter: true, resizable: true },
+    { headerName: 'College Address', valueGetter: (params: any) => params.data?.institute?.fullAddress ?? params.data?.institute?.address ?? '-', sortable: true, filter: true, resizable: true },
     { field: 'email', headerName: 'Email', sortable: true, filter: true, resizable: true },
     { field: 'mobile', headerName: 'Mobile', sortable: true, filter: true, resizable: true },
     { headerName: 'Status', valueGetter: (params: any) => (params.data.active ? 'Active' : 'Inactive'), sortable: true, filter: true, resizable: true },
@@ -111,6 +113,8 @@ export class BoardTeachersComponent implements OnInit {
       Designation: t.designation ?? '',
       Subject: t.subjectSpecialization ?? '',
       Institute: t.institute?.name ?? '',
+      District: t.institute?.district ?? '',
+      Address: t.institute?.fullAddress ?? t.institute?.address ?? '',
       Email: t.email ?? '',
       Mobile: t.mobile ?? '',
       Status: t.active ? 'Active' : 'Inactive',
@@ -127,8 +131,8 @@ export class BoardTeachersComponent implements OnInit {
   }
 
   printGrid() {
-    const rows = this.teachers().map((t) => `<tr><td>${t.fullName}</td><td>${t.designation ?? ''}</td><td>${t.subjectSpecialization ?? ''}</td><td>${t.institute?.name ?? ''}</td><td>${t.email ?? ''}</td><td>${t.mobile ?? ''}</td><td>${t.active ? 'Active' : 'Inactive'}</td><td>${new Date(t.createdAt).toLocaleDateString()}</td></tr>`).join('');
-    const html = `<html><head><style>table{width:100%;border-collapse:collapse;}th,td{border:1px solid #666;padding:4px;text-align:left;}</style></head><body><h2>Teachers</h2><table><thead><tr><th>Name</th><th>Designation</th><th>Subject</th><th>Institute</th><th>Email</th><th>Mobile</th><th>Status</th><th>Created</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+    const rows = this.teachers().map((t) => `<tr><td>${t.fullName}</td><td>${t.designation ?? ''}</td><td>${t.subjectSpecialization ?? ''}</td><td>${t.institute?.name ?? ''}</td><td>${t.institute?.district ?? ''}</td><td>${t.institute?.fullAddress ?? t.institute?.address ?? ''}</td><td>${t.email ?? ''}</td><td>${t.mobile ?? ''}</td><td>${t.active ? 'Active' : 'Inactive'}</td><td>${new Date(t.createdAt).toLocaleDateString()}</td></tr>`).join('');
+    const html = `<html><head><style>table{width:100%;border-collapse:collapse;}th,td{border:1px solid #666;padding:4px;text-align:left;}</style></head><body><h2>Teachers</h2><table><thead><tr><th>Name</th><th>Designation</th><th>Subject</th><th>Institute</th><th>District</th><th>Address</th><th>Email</th><th>Mobile</th><th>Status</th><th>Created</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
     const w = window.open('', '_blank');
     if (!w) return;
     w.document.write(html);
@@ -141,7 +145,7 @@ export class BoardTeachersComponent implements OnInit {
     const row = event.data;
     if (!action || !row) return;
     if (action === 'view') {
-      alert(`Teacher: ${row.fullName}\nInstitute: ${row.institute?.name ?? 'N/A'}\nSubject: ${row.subjectSpecialization ?? ''}`);
+      alert(`Teacher: ${row.fullName}\nInstitute: ${row.institute?.name ?? 'N/A'}\nDistrict: ${row.institute?.district ?? '-'}\nAddress: ${row.institute?.fullAddress ?? row.institute?.address ?? '-'}\nSubject: ${row.subjectSpecialization ?? ''}`);
       return;
     }
     if (action === 'toggle') {

@@ -18,7 +18,7 @@ import { InstituteSearchModalComponent } from '../../../components/institute-sea
 
 import { API_BASE_URL } from '../../../core/api';
 
-type Subject = { id: number; code: string; name: string; category?: string };
+type Subject = { id: number; code: string; name: string; category?: string; answerLanguageCode?: string | null; mappingId?: number };
 
 @Component({
   selector: 'app-student-application-edit',
@@ -304,11 +304,11 @@ type Subject = { id: number; code: string; name: string; category?: string };
 
                 <form [formGroup]="personFormGroup()" class="form-grid">
                   <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Last Name (3a)</mat-label>
+                    <mat-label>Last Name / आडनाव (3a)</mat-label>
                     <input matInput formControlName="lastName" required />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w100">
-                    <mat-label>First Name (3b)</mat-label>
+                    <mat-label>First Name / नाव (3b)</mat-label>
                     <input matInput formControlName="firstName" required />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w100">
@@ -316,33 +316,33 @@ type Subject = { id: number; code: string; name: string; category?: string };
                     <input matInput formControlName="middleName" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Mother's Name (3d)</mat-label>
+                    <mat-label>Mother's Name / आईचे नाव (3d)</mat-label>
                     <input matInput formControlName="motherName" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w200">
-                    <mat-label>Address (4)</mat-label>
+                    <mat-label>Address / पत्ता (4)</mat-label>
                     <input matInput formControlName="address" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Pin Code</mat-label>
+                    <mat-label>Pin Code / पिनकोड</mat-label>
                     <input matInput formControlName="pinCode" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Mobile (5)</mat-label>
+                    <mat-label>Mobile / मोबाईल (5)</mat-label>
                     <input matInput formControlName="mobile" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Date of Birth</mat-label>
+                    <mat-label>Date of Birth / जन्मतारीख</mat-label>
                     <input matInput [matDatepicker]="dobPicker" formControlName="dob" />
                     <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
                     <mat-datepicker #dobPicker></mat-datepicker>
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Aadhaar (7)</mat-label>
+                    <mat-label>Aadhaar / आधार (7)</mat-label>
                     <input matInput formControlName="aadhaar" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Gender (9)</mat-label>
+                    <mat-label>Gender / लिंग (9)</mat-label>
                     <mat-select formControlName="gender">
                       <mat-option value="Male">Male</mat-option>
                       <mat-option value="Female">Female</mat-option>
@@ -379,7 +379,7 @@ type Subject = { id: number; code: string; name: string; category?: string };
 
                 <form [formGroup]="academicFormGroup()" class="form-grid">
                   <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Stream Code (8)</mat-label>
+                    <mat-label>Stream / प्रवाह (8)</mat-label>
                     <mat-select formControlName="streamCode">
                       <mat-option value="1">1) Science</mat-option>
                       <mat-option value="2">2) Arts</mat-option>
@@ -393,7 +393,7 @@ type Subject = { id: number; code: string; name: string; category?: string };
                     <input matInput formControlName="minorityReligionCode" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Category Code (11)</mat-label>
+                    <mat-label>Category / जात प्रवर्ग (11)</mat-label>
                     <input matInput formControlName="categoryCode" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w100">
@@ -401,7 +401,7 @@ type Subject = { id: number; code: string; name: string; category?: string };
                     <input matInput formControlName="divyangCode" />
                   </mat-form-field>
                   <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Medium Code (13)</mat-label>
+                    <mat-label>Medium / माध्यम (13)</mat-label>
                     <input matInput formControlName="mediumCode" />
                   </mat-form-field>
                 </form>
@@ -428,16 +428,26 @@ type Subject = { id: number; code: string; name: string; category?: string };
               </ng-template>
 
               <div class="step-content">
-                <h3 class="step-title">{{ examType() === 'backlog' ? 'Selected Subjects & Previous Marks' : 'Subject Selection' }}</h3>
-                <p class="step-desc">{{ examType() === 'backlog' ? 'Select your failed subjects and enter marks from previous exam (optional).' : 'Select your subjects. You can select up to 9 subjects.' }}</p>
+                <h3 class="step-title">{{ examType() === 'backlog' ? 'Selected Subjects & Previous Marks / मागील गुण' : 'Subject Selection / विषय निवड' }}</h3>
+                <p class="step-desc">{{ examType() === 'backlog' ? 'Select your failed subjects and enter marks from previous exam (optional).' : 'Select your subjects. If your institute has already mapped subjects for your stream, only those subjects are shown here.' }}</p>
+
+                @if (subjectSource() === 'institute') {
+                  <mat-card class="info-card">
+                    <mat-icon class="info-icon">verified</mat-icon>
+                    <div>
+                      <strong>Institute mapped subjects loaded</strong>
+                      <p>Only the subjects configured by your institute for this stream are shown. The answer language is auto-filled wherever the institute has already set it.</p>
+                    </div>
+                  </mat-card>
+                }
 
                 <div class="subjects-list">
                   <div class="subject-item-grid">
                     @for (idx of getSubjectIndices(); track idx) {
                       <div class="subject-input-group" [formGroup]="getSubjectFormGroup(idx)">
                         <mat-form-field appearance="outline" class="flex-1">
-                          <mat-label>Subject (15)</mat-label>
-                          <mat-select formControlName="subjectId" required>
+                          <mat-label>Subject / विषय (15)</mat-label>
+                          <mat-select formControlName="subjectId" required (selectionChange)="onSubjectSelectionChange(idx)">
                             <mat-option value="">-- None --</mat-option>
                             @for (s of masterSubjects(); track s.id) {
                               <mat-option [value]="s.id">{{ s.code }} - {{ s.name }}</mat-option>
@@ -446,13 +456,16 @@ type Subject = { id: number; code: string; name: string; category?: string };
                         </mat-form-field>
                         @if (examType() === 'backlog') {
                           <mat-form-field appearance="outline" class="marks-field">
-                            <mat-label>Prev. Marks</mat-label>
+                            <mat-label>Prev. Marks / मागील गुण</mat-label>
                             <input matInput type="number" formControlName="marks" min="0" max="100" />
                           </mat-form-field>
                         } @else {
                           <mat-form-field appearance="outline" class="w120">
-                            <mat-label>Lang Code</mat-label>
-                            <input matInput formControlName="langOfAnsCode" />
+                            <mat-label>Answer Language / उत्तर भाषा</mat-label>
+                            <input matInput formControlName="langOfAnsCode" [readonly]="isLanguageLocked(getSubjectFormGroup(idx).get('subjectId')?.value)" placeholder="Auto from institute" />
+                            @if (isLanguageLocked(getSubjectFormGroup(idx).get('subjectId')?.value)) {
+                              <mat-hint>Set by institute</mat-hint>
+                            }
                           </mat-form-field>
                         }
                         <button mat-icon-button type="button" (click)="removeSubject(idx)" [disabled]="!isEditable()" class="remove-btn">
@@ -1107,11 +1120,13 @@ export class StudentApplicationEditComponent implements OnInit {
   readonly selectedInstitute = signal<any | null>(null);
   readonly lastSaved = signal<string | null>(null);
   readonly examType = signal<'fresh' | 'backlog'>('fresh');
+  readonly subjectSource = signal<'institute' | 'stream' | 'all'>('all');
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly personalInfoComplete = signal(false);
 
   form!: FormGroup;
+  private subjectWatcherInitialized = false;
 
   private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
@@ -1125,6 +1140,13 @@ export class StudentApplicationEditComponent implements OnInit {
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.loading.set(true);
     this.error.set(null);
+
+    if (!this.subjectWatcherInitialized) {
+      this.subjectWatcherInitialized = true;
+      this.form.get('academicGroup.streamCode')?.valueChanges.subscribe((value: any) => {
+        this.refreshSubjectOptions(value);
+      });
+    }
 
     // Load exams list
     this.http.get<{ exams: any[] }>(`${API_BASE_URL}/exams`).subscribe({
@@ -1143,17 +1165,7 @@ export class StudentApplicationEditComponent implements OnInit {
       }
     });
 
-    // FIX: Added error handling and loading state for subjects
-    this.http.get<{ subjects: Subject[] }>(`${API_BASE_URL}/masters/subjects`).subscribe({
-      next: (r: any) => {
-        this.masterSubjects.set(r.subjects || []);
-      },
-      error: (err: any) => {
-        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to load subjects';
-        console.error('Failed to load subjects:', errorMsg);
-        this.error.set(errorMsg);
-      }
-    });
+    this.refreshSubjectOptions();
     
     // Fetch student profile to pre-fill personal information
     this.http.get<{ student: any }>(`${API_BASE_URL}/me`).subscribe({
@@ -1248,6 +1260,7 @@ export class StudentApplicationEditComponent implements OnInit {
       centreNo: inst.code ?? '',
       address: inst.address ?? ''
     });
+    this.refreshSubjectOptions(this.form.get('academicGroup.streamCode')?.value, inst.id);
     this.showInstitutePicker.set(false);
   }
 
@@ -1258,6 +1271,50 @@ export class StudentApplicationEditComponent implements OnInit {
   getExamName(examId: number | null): string {
     if (!examId) return 'Not Selected';
     return this.exams().find((e: any) => e.id === examId)?.name || 'Unknown';
+  }
+
+  getMappedLanguage(subjectId: number | null | undefined): string {
+    if (!subjectId) return '';
+    return this.masterSubjects().find((subject: Subject) => subject.id === subjectId)?.answerLanguageCode || '';
+  }
+
+  isLanguageLocked(subjectId: number | null | undefined): boolean {
+    return !!this.getMappedLanguage(subjectId);
+  }
+
+  onSubjectSelectionChange(index: number) {
+    const group = this.getSubjectFormGroup(index);
+    const subjectId = group.get('subjectId')?.value;
+    const mappedLanguage = this.getMappedLanguage(subjectId);
+    if (mappedLanguage) {
+      group.patchValue({ langOfAnsCode: mappedLanguage }, { emitEvent: false });
+    }
+  }
+
+  private applyMappedLanguagesToSelectedRows() {
+    for (const idx of this.getSubjectIndices()) {
+      this.onSubjectSelectionChange(idx);
+    }
+  }
+
+  private refreshSubjectOptions(streamCode?: string | null, instituteId?: number | null) {
+    const effectiveStreamCode = streamCode ?? this.form.get('academicGroup.streamCode')?.value ?? '';
+    const effectiveInstituteId = instituteId ?? this.selectedInstitute()?.id ?? this.application()?.institute?.id ?? this.application()?.instituteId ?? null;
+
+    const params: Record<string, string> = {};
+    if (effectiveStreamCode) params['streamCode'] = String(effectiveStreamCode);
+    if (effectiveInstituteId) params['instituteId'] = String(effectiveInstituteId);
+
+    this.http.get<{ ok: boolean; source: 'institute' | 'stream' | 'all'; subjects: Subject[] }>(`${API_BASE_URL}/institutes/subject-options`, { params }).subscribe({
+      next: (response: any) => {
+        this.masterSubjects.set(response.subjects || []);
+        this.subjectSource.set(response.source || 'all');
+        this.applyMappedLanguagesToSelectedRows();
+      },
+      error: (err: any) => {
+        console.error('Failed to load subject options:', err?.error?.message || err?.message);
+      }
+    });
   }
 
   private normalizeGenderValue(value: string | null | undefined): string {
@@ -1372,7 +1429,7 @@ export class StudentApplicationEditComponent implements OnInit {
       },
       subjects: selectedSubjects.map((s: any) => ({
         subjectId: s.subjectId,
-        langOfAnsCode: s.langOfAnsCode || undefined,
+        langOfAnsCode: s.langOfAnsCode || this.getMappedLanguage(s.subjectId) || undefined,
         isExemptedClaim: candidateType === 'BACKLOG'
       })),
       exemptedSubjects
@@ -1492,6 +1549,8 @@ export class StudentApplicationEditComponent implements OnInit {
     });
 
     this.selectedInstitute.set(a.institute ?? null);
+    this.refreshSubjectOptions(student.streamCode ?? a.exam?.stream?.name ?? null, a.institute?.id ?? a.instituteId ?? student.instituteId ?? null);
+
     const subjects = this.form.get('subjects') as FormArray;
     subjects.clear();
     for (const s of a.subjects ?? []) {
@@ -1555,6 +1614,7 @@ export class StudentApplicationEditComponent implements OnInit {
     });
 
     this.selectedInstitute.set(null);
+    this.refreshSubjectOptions(student?.streamCode ?? null, student?.instituteId ?? null);
 
     if (this.subjects().length === 0) {
       this.addSubject();
