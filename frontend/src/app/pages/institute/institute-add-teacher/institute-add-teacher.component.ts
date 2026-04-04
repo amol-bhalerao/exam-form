@@ -11,12 +11,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { AgGridModule } from 'ag-grid-angular';
-import { ModuleRegistry, ClientSideRowModelModule } from 'ag-grid-community';
 import type { ColDef } from 'ag-grid-community';
 import { API_BASE_URL } from '../../../core/api';
 import * as XLSX from 'xlsx';
-
-ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 @Component({
   selector: 'app-institute-add-teacher',

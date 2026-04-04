@@ -7,11 +7,9 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { AgGridAngular } from 'ag-grid-angular';
-import { ModuleRegistry, ClientSideRowModelModule, ColDef } from 'ag-grid-community';
+import { ColDef } from 'ag-grid-community';
 import { API_BASE_URL } from '../../../core/api';
 import { FormsModule } from '@angular/forms';
-
-ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 @Component({
   selector: 'app-institute-stream-subjects',

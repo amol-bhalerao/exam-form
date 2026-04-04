@@ -79,7 +79,7 @@ import { API_BASE_URL } from '../../core/api';
               <li>Do not use special characters, numbers, or lowercase letters in name fields</li>
               <li>All personal information must match your official documents (Aadhar, SSC Certificate, etc.)</li>
               <li>Verify spelling carefully - Name once submitted cannot be changed without approval</li>
-              <li>Mobile and Email should be current - you may receive important exam notifications</li>
+              <li>Mobile number should be current - you may receive important exam notifications</li>
             </ul>
           </div>
         </div>
@@ -144,7 +144,10 @@ import { API_BASE_URL } from '../../core/api';
 
       <!-- Profile Content -->
       <div class="profile-content" *ngIf="profile && !isLoading">
-        <mat-tab-group class="profile-tabs">
+        <mat-tab-group
+          class="profile-tabs"
+          [selectedIndex]="selectedTabIndex"
+          (selectedIndexChange)="selectedTabIndex = $event">
           
           <!-- TAB 0: INSTITUTE & STREAM SELECTION -->
           <mat-tab>
@@ -193,6 +196,11 @@ import { API_BASE_URL } from '../../core/api';
                     <mat-spinner *ngIf="savingInstitute" diameter="20"></mat-spinner>
                     <span *ngIf="!savingInstitute">{{ profile?.instituteId ? 'Update' : 'Save' }} Institute & Stream</span>
                     <span *ngIf="savingInstitute">Saving...</span>
+                  </button>
+
+                  <button mat-stroked-button type="button" (click)="goToNextTab(1)" [disabled]="!profile?.instituteId && !selectedInstituteId">
+                    Next
+                    <mat-icon>arrow_forward</mat-icon>
                   </button>
                   
                   <div class="institute-info" *ngIf="profile?.instituteId">
@@ -294,10 +302,10 @@ import { API_BASE_URL } from '../../core/api';
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Email Address *</mat-label>
+                    <mat-label>Login Email (Google)</mat-label>
                     <mat-icon matPrefix>email</mat-icon>
-                    <input matInput formControlName="email" required />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'email') }}</mat-error>
+                    <input matInput [value]="profile?.email || auth.user()?.username || ''" readonly />
+                    <mat-hint>This email is automatically taken from your Google sign-in.</mat-hint>
                   </mat-form-field>
                 </div>
               </div>
@@ -307,24 +315,11 @@ import { API_BASE_URL } from '../../core/api';
                 <h3 class="card-title">Address Details</h3>
                 
                 <mat-form-field class="form-field-full">
-                  <mat-label>Address Line One *</mat-label>
+                  <mat-label>Complete Address *</mat-label>
                   <mat-icon matPrefix>location_on</mat-icon>
-                  <input matInput formControlName="addressLineOne" required />
+                  <textarea matInput formControlName="addressLineOne" rows="3" required></textarea>
+                  <mat-hint>Enter full address in one field.</mat-hint>
                   <mat-error>{{ getErrorMessage(personalDetailsForm, 'addressLineOne') }}</mat-error>
-                </mat-form-field>
-
-                <mat-form-field class="form-field-full">
-                  <mat-label>Address Line Two</mat-label>
-                  <mat-icon matPrefix>location_on</mat-icon>
-                  <input matInput formControlName="addressLineTwo" />
-                  <mat-error>{{ getErrorMessage(personalDetailsForm, 'addressLineTwo') }}</mat-error>
-                </mat-form-field>
-
-                <mat-form-field class="form-field-full">
-                  <mat-label>Address Line Three</mat-label>
-                  <mat-icon matPrefix>location_on</mat-icon>
-                  <input matInput formControlName="addressLineThree" />
-                  <mat-error>{{ getErrorMessage(personalDetailsForm, 'addressLineThree') }}</mat-error>
                 </mat-form-field>
 
                 <div class="form-grid-4">
@@ -400,20 +395,21 @@ import { API_BASE_URL } from '../../core/api';
                     <mat-label>Category</mat-label>
                     <mat-icon matPrefix>group</mat-icon>
                     <mat-select formControlName="categoryCode">
-                      <mat-option value="">- Select -</mat-option>
+                      <mat-option value="">-- Select Category --</mat-option>
                       <mat-option value="GEN">General</mat-option>
                       <mat-option value="OBC">OBC</mat-option>
                       <mat-option value="SC">SC</mat-option>
                       <mat-option value="ST">ST</mat-option>
                       <mat-option value="NT">NT</mat-option>
                     </mat-select>
+                    <mat-hint>Select your social category</mat-hint>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
                     <mat-label>Minority Religion</mat-label>
                     <mat-icon matPrefix>people</mat-icon>
                     <mat-select formControlName="minorityReligionCode">
-                      <mat-option value="">- Select -</mat-option>
+                      <mat-option value="">-- Select Minority Religion --</mat-option>
                       <mat-option value="MUSLIM">Muslim</mat-option>
                       <mat-option value="CHRISTIAN">Christian</mat-option>
                       <mat-option value="SIKH">Sikh</mat-option>
@@ -421,28 +417,38 @@ import { API_BASE_URL } from '../../core/api';
                       <mat-option value="PARSI">Parsi</mat-option>
                       <mat-option value="JEWISH">Jewish</mat-option>
                     </mat-select>
+                    <mat-hint>Select minority religion if applicable</mat-hint>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
                     <mat-label>Medium of Study</mat-label>
                     <mat-icon matPrefix>language</mat-icon>
                     <mat-select formControlName="mediumCode">
-                      <mat-option value="">- Select -</mat-option>
+                      <mat-option value="">-- Select Medium of Study --</mat-option>
                       <mat-option value="MARATHI">Marathi</mat-option>
                       <mat-option value="HINDI">Hindi</mat-option>
                       <mat-option value="ENGLISH">English</mat-option>
                       <mat-option value="URDU">Urdu</mat-option>
                     </mat-select>
+                    <mat-hint>Select the language medium you studied in</mat-hint>
                   </mat-form-field>
                 </div>
               </div>
 
               <div class="form-actions">
+                <button mat-stroked-button type="button" (click)="goToPreviousTab()">
+                  <mat-icon>arrow_back</mat-icon>
+                  Back
+                </button>
                 <button mat-raised-button color="primary" (click)="savePersonalDetails()" [disabled]="personalDetailsForm.invalid || savingPersonal">
                   <mat-icon *ngIf="!savingPersonal">save</mat-icon>
                   <mat-spinner *ngIf="savingPersonal" diameter="20"></mat-spinner>
-                  <span *ngIf="!savingPersonal">Save Personal Details</span>
+                  <span *ngIf="!savingPersonal">Save / Update Personal Details</span>
                   <span *ngIf="savingPersonal">Saving...</span>
+                </button>
+                <button mat-stroked-button type="button" (click)="goToNextTab(2)">
+                  Next
+                  <mat-icon>arrow_forward</mat-icon>
                 </button>
               </div>
             </form>
@@ -553,11 +559,19 @@ import { API_BASE_URL } from '../../core/api';
               </div>
 
               <div class="form-actions">
+                <button mat-stroked-button type="button" (click)="goToPreviousTab()">
+                  <mat-icon>arrow_back</mat-icon>
+                  Back
+                </button>
                 <button mat-raised-button color="primary" (click)="savePreviousExams()" [disabled]="savingPrevious">
                   <mat-icon *ngIf="!savingPrevious">save</mat-icon>
                   <mat-spinner *ngIf="savingPrevious" diameter="20"></mat-spinner>
-                  <span *ngIf="!savingPrevious">Save Previous Exams</span>
+                  <span *ngIf="!savingPrevious">Save / Update Previous Exams</span>
                   <span *ngIf="savingPrevious">Saving...</span>
+                </button>
+                <button mat-stroked-button type="button" (click)="goToNextTab(3)">
+                  Next
+                  <mat-icon>arrow_forward</mat-icon>
                 </button>
               </div>
             </form>
@@ -601,7 +615,7 @@ import { API_BASE_URL } from '../../core/api';
                   <mat-form-field class="form-field">
                     <mat-label>IFSC Code *</mat-label>
                     <mat-icon matPrefix>code</mat-icon>
-                    <input matInput formControlName="ifscCode" required />
+                    <input matInput formControlName="ifscCode" required style="text-transform: uppercase;" />
                     <mat-error>IFSC Code is required</mat-error>
                   </mat-form-field>
 
@@ -615,11 +629,19 @@ import { API_BASE_URL } from '../../core/api';
               </div>
 
               <div class="form-actions">
+                <button mat-stroked-button type="button" (click)="goToPreviousTab()">
+                  <mat-icon>arrow_back</mat-icon>
+                  Back
+                </button>
                 <button mat-raised-button color="primary" (click)="saveBankDetails()" [disabled]="bankDetailsForm.invalid || savingBank">
                   <mat-icon *ngIf="!savingBank">save</mat-icon>
                   <mat-spinner *ngIf="savingBank" diameter="20"></mat-spinner>
-                  <span *ngIf="!savingBank">Save Bank Details</span>
+                  <span *ngIf="!savingBank">Save / Update Bank Details</span>
                   <span *ngIf="savingBank">Saving...</span>
+                </button>
+                <button mat-stroked-button type="button" (click)="goToNextTab(4)">
+                  Next
+                  <mat-icon>arrow_forward</mat-icon>
                 </button>
               </div>
             </form>
@@ -671,6 +693,29 @@ import { API_BASE_URL } from '../../core/api';
                         <div class="summary-item">
                           <label>Aadhar Number:</label>
                           <span>{{ profile.aadhaar || '-' }}</span>
+                        </div>
+                        <div class="summary-item">
+                          <label>APAAR ID:</label>
+                          <span>{{ profile.apaarId || '-' }}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Demographics Summary -->
+                    <div class="summary-section">
+                      <h3 class="summary-section-title">Demographics & Personal Information</h3>
+                      <div class="summary-grid">
+                        <div class="summary-item">
+                          <label>Category:</label>
+                          <span>{{ getCategoryLabel(profile.categoryCode) }}</span>
+                        </div>
+                        <div class="summary-item">
+                          <label>Minority Religion:</label>
+                          <span>{{ getReligionLabel(profile.minorityReligionCode) }}</span>
+                        </div>
+                        <div class="summary-item">
+                          <label>Medium of Study:</label>
+                          <span>{{ getMediumLabel(profile.mediumCode) }}</span>
                         </div>
                       </div>
                     </div>
@@ -1529,6 +1574,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   profileCompletionCount = 0;
   totalProfileFields = 11; // firstName, lastName, dob, gender, aadhaar, address, pinCode, mobile, email, sscYear, xithYear
 
+  // Active tab index for auto-navigation after save
+  selectedTabIndex = 0;
+
   // Pincode lookup properties
   pincodeOptions: PostalLocation[] = [];
   pincodeLookupLoading = false;
@@ -1598,9 +1646,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         Validators.pattern(/^[6-9]\d{9}$/)
       ]],
 
-      // Email - valid format
+      // Email - shown from Google sign-in and kept read-only in the UI
       email: ['', [
-        Validators.required,
         Validators.email,
         Validators.maxLength(100)
       ]],
@@ -1807,6 +1854,18 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         });
       }
     });
+
+    // Uppercase IFSC while typing so validation passes for lowercase input too
+    const ifscControl = this.bankDetailsForm.get('ifscCode');
+    if (ifscControl) {
+      ifscControl.valueChanges.pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(value => {
+        if (value && value !== value.toUpperCase()) {
+          ifscControl.setValue(value.toUpperCase(), { emitEvent: false });
+        }
+      });
+    }
   }
 
   /**
@@ -2155,6 +2214,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         this.snackBar.open('\u2713 Institute and Stream saved successfully!', 'Close', { duration: 3000 });
         this.savingInstitute = false;
 
+        // Move to next tab after successful save
+        this.goToNextTab(1);
+
         // Reload profile to update with institute/stream
         this.loadProfile();
       },
@@ -2178,6 +2240,39 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     return institute ? `${institute.name} (${institute.code})` : 'Unknown Institute';
   }
 
+  getCategoryLabel(code?: string | null): string {
+    const labels: Record<string, string> = {
+      GEN: 'General',
+      OBC: 'OBC',
+      SC: 'SC',
+      ST: 'ST',
+      NT: 'NT'
+    };
+    return code ? (labels[code] || code) : '-';
+  }
+
+  getReligionLabel(code?: string | null): string {
+    const labels: Record<string, string> = {
+      MUSLIM: 'Muslim',
+      CHRISTIAN: 'Christian',
+      SIKH: 'Sikh',
+      BUDDHIST: 'Buddhist',
+      PARSI: 'Parsi',
+      JEWISH: 'Jewish'
+    };
+    return code ? (labels[code] || code) : '-';
+  }
+
+  getMediumLabel(code?: string | null): string {
+    const labels: Record<string, string> = {
+      MARATHI: 'Marathi',
+      HINDI: 'Hindi',
+      ENGLISH: 'English',
+      URDU: 'Urdu'
+    };
+    return code ? (labels[code] || code) : '-';
+  }
+
   retryLoadProfile() {
     this.loadProfile();
   }
@@ -2195,6 +2290,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         lastName: formData.lastName?.toUpperCase() || '',
         middleName: formData.middleName?.toUpperCase() || '',
         motherName: formData.motherName?.toUpperCase() || '',
+        apaarId: formData.apaarId?.toUpperCase() || null,
         // Ensure optional fields aren't undefined
         gender: formData.gender || null,
         email: formData.email || '',
@@ -2210,6 +2306,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           this.calculateProfileCompletion(this.profile);
         }
         this.snackBar.open('✓ Personal details saved', '', { duration: 3000 });
+        this.goToNextTab(2);
         // Reload profile to ensure all data is current
         this.loadProfile();
       }, 1500);
@@ -2224,6 +2321,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.savingPrevious = false;
       this.snackBar.open('✓ Previous exam details saved', '', { duration: 3000 });
+      this.goToNextTab(3);
     }, 1500);
   }
 
@@ -2233,15 +2331,33 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       const bankData = {
         accountHolder: this.bankDetailsForm.get('accountHolder')?.value,
         accountHolderRelation: this.bankDetailsForm.get('accountHolderRelation')?.value,
-        ifscCode: this.bankDetailsForm.get('ifscCode')?.value,
+        ifscCode: this.bankDetailsForm.get('ifscCode')?.value?.toUpperCase(),
         accountNumber: this.bankDetailsForm.get('accountNumber')?.value
       };
       this.profileService.updateBankDetails(bankData);
       setTimeout(() => {
         this.savingBank = false;
         this.snackBar.open('✓ Bank details saved successfully', '', { duration: 3000 });
+        this.goToNextTab(4);
       }, 1500);
     }
+  }
+
+  goToNextTab(targetIndex?: number) {
+    const maxTabIndex = 4;
+    if (typeof targetIndex === 'number') {
+      this.selectedTabIndex = Math.min(targetIndex, maxTabIndex);
+      return;
+    }
+    this.selectedTabIndex = Math.min(this.selectedTabIndex + 1, maxTabIndex);
+  }
+
+  goToPreviousTab(targetIndex?: number) {
+    if (typeof targetIndex === 'number') {
+      this.selectedTabIndex = Math.max(targetIndex, 0);
+      return;
+    }
+    this.selectedTabIndex = Math.max(this.selectedTabIndex - 1, 0);
   }
 
   /**
@@ -2318,8 +2434,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       dateOfBirth: 'Date of Birth',
       aadharNumber: 'Aadhar Number',
       mobile: 'Mobile Number',
-      email: 'Email',
-      addressLineOne: 'Address Line 1',
+      email: 'Login Email',
+      addressLineOne: 'Complete Address',
       addressLineTwo: 'Address Line 2',
       addressLineThree: 'Address Line 3',
       pincode: 'Pincode',

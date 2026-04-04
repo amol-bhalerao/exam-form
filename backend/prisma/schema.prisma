@@ -1,5 +1,6 @@
 generator client {
   provider      = "prisma-client-js"
+  engineType    = "binary"
   binaryTargets = ["native", "linux-musl", "debian-openssl-1.0.x", "debian-openssl-3.0.x", "rhel-openssl-3.0.x"]
 }
 
@@ -195,7 +196,11 @@ model Student {
   dob          DateTime?
   gender       String?  @db.VarChar(20)
   aadhaar      String?  @db.VarChar(20)
+  apaarId      String?  @db.VarChar(20)
   address      String?  @db.Text
+  district     String?  @db.VarChar(100)
+  taluka       String?  @db.VarChar(100)
+  village      String?  @db.VarChar(100)
   pinCode      String?  @db.VarChar(10)
   mobile       String?  @db.VarChar(15)
 

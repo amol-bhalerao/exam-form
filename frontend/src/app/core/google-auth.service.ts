@@ -17,15 +17,19 @@ export class GoogleAuthService {
   private googleScriptLoaded = signal(false);
   private googleInitialized = false;  // Guard against multiple initializations
 
-  // Development/Test mode - set to true to use test button while Google config is pending
-  private devMode = false;
+  // Use a local dev fallback button on localhost to avoid Google origin restrictions
+  private readonly devMode = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
   constructor() {
+    if (this.devMode) {
+      this.googleScriptLoaded.set(true);
+      return;
+    }
     this.loadGoogleScript();
   }
 
   private loadGoogleScript() {
-    if (document.getElementById('google-sign-in-script')) {
+    if (this.devMode || document.getElementById('google-sign-in-script')) {
       return;
     }
 
@@ -129,8 +133,8 @@ export class GoogleAuthService {
         testButton.disabled = true;
         testButton.textContent = 'Signing in...';
         
-        // In test mode, simulate a Google response
-        const mockToken = 'mock_google_token_for_testing_' + Date.now();
+        // In local test mode, use a stable mock token so the same student account can log in again
+        const mockToken = 'mock_google_token_for_testing_local-student';
         this.handleGoogleSignIn(mockToken).subscribe(
           (response) => {
             // Test authentication successful

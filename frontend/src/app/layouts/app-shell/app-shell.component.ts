@@ -190,21 +190,24 @@ import { API_BASE_URL } from '../../core/api';
     }
 
     .nav-list {
-      padding: 0.5rem 0;
+      padding: 0.5rem 0 1rem;
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
     }
 
     .section-header {
-      padding: 1rem 1.5rem 0.5rem;
-      font-size: 0.8rem;
-      font-weight: 600;
+      padding: 0.9rem 1.25rem 0.4rem;
+      font-size: 0.78rem;
+      font-weight: 700;
       color: #667eea;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 0.5rem;
+      margin-top: 0.35rem;
     }
 
     .section-indicator {
@@ -215,14 +218,15 @@ import { API_BASE_URL } from '../../core/api';
 
     .nav-item {
       margin: 0.25rem 0.5rem !important;
-      border-radius: 8px !important;
+      border-radius: 10px !important;
       position: relative !important;
       transition: all 0.2s ease !important;
       color: #333 !important;
       font-size: 0.95rem !important;
       height: auto !important;
-      min-height: 44px !important;
-      padding: 0 1rem !important;
+      min-height: 46px !important;
+      padding: 0.7rem 1rem !important;
+      box-sizing: border-box !important;
       display: flex !important;
       flex-direction: row !important;
       align-items: center !important;
@@ -234,22 +238,28 @@ import { API_BASE_URL } from '../../core/api';
       white-space: nowrap !important;
     }
 
-    /* Override Material's internal structure */
+    /* Force Angular Material list item content into a single row */
+    ::ng-deep .nav-item,
+    ::ng-deep .nav-item .mat-mdc-list-item-unscoped-content,
+    ::ng-deep .nav-item .mdc-list-item__content,
+    ::ng-deep .nav-item .mdc-list-item__primary-text,
     ::ng-deep .nav-item .mat-list-item-content {
       display: flex !important;
       flex-direction: row !important;
       align-items: center !important;
+      justify-content: flex-start !important;
       gap: 12px !important;
-      padding: 0 !important;
-      margin: 0 !important;
       width: 100% !important;
       flex-wrap: nowrap !important;
+      white-space: nowrap !important;
     }
 
-    ::ng-deep .nav-item {
-      display: flex !important;
-      flex-direction: row !important;
-      align-items: center !important;
+    ::ng-deep .nav-item .mdc-list-item__content,
+    ::ng-deep .nav-item .mdc-list-item__primary-text,
+    ::ng-deep .nav-item .mat-mdc-list-item-unscoped-content {
+      padding: 0 !important;
+      margin: 0 !important;
+      overflow: hidden !important;
     }
 
     .nav-item:hover {
@@ -276,6 +286,8 @@ import { API_BASE_URL } from '../../core/api';
     }
 
     .nav-item .label {
+      display: inline-flex !important;
+      align-items: center !important;
       flex: 1 !important;
       white-space: nowrap !important;
       overflow: hidden !important;
@@ -284,18 +296,58 @@ import { API_BASE_URL } from '../../core/api';
     }
 
     .icon-badge {
-      display: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       font-size: 1rem;
+      flex-shrink: 0;
     }
 
     @media (max-width: 960px) {
+      .nav-list {
+        padding: 0.4rem 0 0.9rem;
+      }
+
+      .section-header {
+        padding: 0.8rem 1rem 0.35rem;
+        font-size: 0.72rem;
+      }
+
       .nav-item {
         font-size: 0.9rem;
-        padding: 0 0.75rem !important;
+        margin: 0.18rem 0.45rem !important;
+        min-height: 48px !important;
+        padding: 0.7rem 0.85rem !important;
+        gap: 10px !important;
+      }
+
+      .nav-item .icon {
+        font-size: 20px !important;
+        width: 20px !important;
+        height: 20px !important;
+        min-width: 20px !important;
       }
 
       .nav-item .label {
-        display: inline;
+        display: inline-flex !important;
+        align-items: center !important;
+        font-size: 0.92rem;
+      }
+
+      .icon-badge {
+        display: none !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .nav-item {
+        margin: 0.15rem 0.35rem !important;
+        padding: 0.72rem 0.8rem !important;
+        border-radius: 9px !important;
+      }
+
+      .section-header {
+        padding-inline: 0.85rem;
       }
     }
 

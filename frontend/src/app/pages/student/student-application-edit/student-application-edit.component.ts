@@ -82,7 +82,8 @@ type Subject = { id: number; code: string; name: string; category?: string };
 
         <!-- Multi-Step Form -->
         <mat-card class="form-card">
-          <mat-stepper #stepper [linear]="false">
+          <p class="stepper-help">Complete each step below for institute, exam, personal details, academic details, and subjects before submitting.</p>
+          <mat-stepper #stepper [linear]="false" class="application-stepper">
             <!-- Step 1: Institute & Reference -->
             <mat-step [editable]="isEditable()">
               <ng-template matStepLabel>
@@ -119,28 +120,30 @@ type Subject = { id: number; code: string; name: string; category?: string };
                 <mat-divider class="my-24"></mat-divider>
 
                 <h3 class="step-title">Reference Fields</h3>
-                <div class="form-grid">
-                  <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Index No (1a)</mat-label>
-                    <input matInput formControlName="indexNo" />
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="w100">
-                    <mat-label>UDISE No (1b)</mat-label>
-                    <input matInput formControlName="udiseNo" />
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Student Saral ID (1c)</mat-label>
-                    <input matInput formControlName="studentSaralId" />
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Appl.Sr.No (2a)</mat-label>
-                    <input matInput formControlName="applSrNo" />
-                  </mat-form-field>
-                  <mat-form-field appearance="outline" class="w100">
-                    <mat-label>Centre No (2b)</mat-label>
-                    <input matInput formControlName="centreNo" />
-                  </mat-form-field>
-                </div>
+                <form [formGroup]="form">
+                  <div class="form-grid">
+                    <mat-form-field appearance="outline" class="w100">
+                      <mat-label>Index No (1a)</mat-label>
+                      <input matInput formControlName="indexNo" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="w100">
+                      <mat-label>UDISE No (1b)</mat-label>
+                      <input matInput formControlName="udiseNo" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="w100">
+                      <mat-label>Student Saral ID (1c)</mat-label>
+                      <input matInput formControlName="studentSaralId" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="w100">
+                      <mat-label>Appl.Sr.No (2a)</mat-label>
+                      <input matInput formControlName="applSrNo" />
+                    </mat-form-field>
+                    <mat-form-field appearance="outline" class="w100">
+                      <mat-label>Centre No (2b)</mat-label>
+                      <input matInput formControlName="centreNo" />
+                    </mat-form-field>
+                  </div>
+                </form>
 
                 <div class="step-actions">
                   <button mat-button matStepperNext>
@@ -236,9 +239,34 @@ type Subject = { id: number; code: string; name: string; category?: string };
                       <mat-icon class="info-icon">info</mat-icon>
                       <div>
                         <strong>Previous Exam Details</strong>
-                        <p>You can enter your marks from the previous exam for reference.</p>
+                        <p>You can now enter your previous exam month, year, seat number, and subject-wise marks for reference.</p>
                       </div>
                     </mat-card>
+
+                    <div class="form-grid backlog-grid">
+                      <mat-form-field appearance="outline" class="w100">
+                        <mat-label>Previous Exam Month</mat-label>
+                        <mat-select formControlName="lastExamMonth">
+                          <mat-option value="">-- Select Month --</mat-option>
+                          <mat-option value="FEB">February</mat-option>
+                          <mat-option value="MAR">March</mat-option>
+                          <mat-option value="JUN">June</mat-option>
+                          <mat-option value="JUL">July</mat-option>
+                          <mat-option value="AUG">August</mat-option>
+                          <mat-option value="OCT">October</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" class="w100">
+                        <mat-label>Previous Exam Year</mat-label>
+                        <input matInput type="number" formControlName="lastExamYear" min="1990" max="2100" />
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" class="w100">
+                        <mat-label>Previous Exam Seat No</mat-label>
+                        <input matInput formControlName="lastExamSeatNo" />
+                      </mat-form-field>
+                    </div>
                   }
                 </form>
 
@@ -316,9 +344,10 @@ type Subject = { id: number; code: string; name: string; category?: string };
                   <mat-form-field appearance="outline" class="w100">
                     <mat-label>Gender (9)</mat-label>
                     <mat-select formControlName="gender">
-                      <mat-option value="MALE">Male</mat-option>
-                      <mat-option value="FEMALE">Female</mat-option>
-                      <mat-option value="TRANSGENDER">Transgender</mat-option>
+                      <mat-option value="Male">Male</mat-option>
+                      <mat-option value="Female">Female</mat-option>
+                      <mat-option value="Other">Other</mat-option>
+                      <mat-option value="Prefer Not to Say">Prefer Not to Say</mat-option>
                     </mat-select>
                   </mat-form-field>
                 </form>
@@ -640,6 +669,16 @@ type Subject = { id: number; code: string; name: string; category?: string };
       padding: 20px;
       box-shadow: var(--card-shadow);
       border-radius: var(--card-radius);
+    }
+
+    .stepper-help {
+      margin: 0 0 12px 0;
+      color: #475569;
+      font-size: 0.95rem;
+    }
+
+    .application-stepper {
+      background: transparent;
     }
 
     .step-label {
@@ -1193,7 +1232,8 @@ export class StudentApplicationEditComponent implements OnInit {
     this.subjects().push(
       new FormGroup({
         subjectId: new FormControl<number | null>(null, { validators: [Validators.required] }),
-        langOfAnsCode: new FormControl('')
+        langOfAnsCode: new FormControl(''),
+        marks: new FormControl('', [Validators.min(0), Validators.max(100)])
       })
     );
   }
@@ -1220,6 +1260,15 @@ export class StudentApplicationEditComponent implements OnInit {
     return this.exams().find((e: any) => e.id === examId)?.name || 'Unknown';
   }
 
+  private normalizeGenderValue(value: string | null | undefined): string {
+    if (!value) return '';
+    const normalized = String(value).toUpperCase();
+    if (normalized === 'MALE') return 'Male';
+    if (normalized === 'FEMALE') return 'Female';
+    if (normalized === 'TRANSGENDER') return 'Other';
+    return value;
+  }
+
   private createDefaultFormGroup(): FormGroup {
     return new FormGroup({
       examId: new FormControl<number | null>(null, [Validators.required]),
@@ -1229,6 +1278,9 @@ export class StudentApplicationEditComponent implements OnInit {
       studentSaralId: new FormControl(''),
       applSrNo: new FormControl(''),
       centreNo: new FormControl(''),
+      lastExamMonth: new FormControl(''),
+      lastExamYear: new FormControl<number | null>(null),
+      lastExamSeatNo: new FormControl(''),
 
       personGroup: new FormGroup({
         lastName: new FormControl('', [Validators.required]),
@@ -1271,19 +1323,36 @@ export class StudentApplicationEditComponent implements OnInit {
     return Array.from({ length: this.subjects().length }, (_, i) => i);
   }
 
-  save() {
-    const app = this.application();
-    if (!app) return;
-    this.saving.set(true);
-
+  private buildApplicationPayload() {
     const raw: any = this.form.getRawValue();
-    const payload = {
+    const candidateType = raw.examType === 'backlog' ? 'BACKLOG' : 'REGULAR';
+    const selectedSubjects = (raw.subjects ?? []).filter((s: any) => !!s.subjectId);
+
+    const exemptedSubjects = candidateType === 'BACKLOG'
+      ? selectedSubjects.map((s: any) => {
+          const subjectMeta = this.masterSubjects().find((subject: any) => subject.id === s.subjectId);
+          return {
+            subjectName: subjectMeta?.name || undefined,
+            subjectCode: subjectMeta?.code || undefined,
+            seatNo: raw.lastExamSeatNo || undefined,
+            month: raw.lastExamMonth || undefined,
+            year: raw.lastExamYear ? Number(raw.lastExamYear) : undefined,
+            marksObt: s.marks !== null && s.marks !== undefined && s.marks !== '' ? String(s.marks) : undefined
+          };
+        })
+      : [];
+
+    return {
       examId: raw.examId || undefined,
+      candidateType,
       indexNo: raw.indexNo || undefined,
       udiseNo: raw.udiseNo || undefined,
       studentSaralId: raw.studentSaralId || undefined,
       applSrNo: raw.applSrNo || undefined,
       centreNo: raw.centreNo || undefined,
+      lastExamMonth: raw.lastExamMonth || undefined,
+      lastExamYear: raw.lastExamYear ? Number(raw.lastExamYear) : undefined,
+      lastExamSeatNo: raw.lastExamSeatNo || undefined,
       student: {
         lastName: raw.personGroup.lastName || undefined,
         firstName: raw.personGroup.firstName || undefined,
@@ -1301,8 +1370,21 @@ export class StudentApplicationEditComponent implements OnInit {
         divyangCode: raw.academicGroup.divyangCode || undefined,
         mediumCode: raw.academicGroup.mediumCode || undefined
       },
-      subjects: (raw.subjects ?? []).filter((s: any) => !!s.subjectId)
+      subjects: selectedSubjects.map((s: any) => ({
+        subjectId: s.subjectId,
+        langOfAnsCode: s.langOfAnsCode || undefined,
+        isExemptedClaim: candidateType === 'BACKLOG'
+      })),
+      exemptedSubjects
     };
+  }
+
+  save() {
+    const app = this.application();
+    if (!app) return;
+    this.saving.set(true);
+
+    const payload = this.buildApplicationPayload();
 
     this.http.put(`${API_BASE_URL}/applications/${app.id}`, payload).subscribe({
       next: () => {
@@ -1310,6 +1392,7 @@ export class StudentApplicationEditComponent implements OnInit {
         this.saving.set(false);
         this.error.set(null);
         this.form.markAsPristine();
+        this.reload(app.id);
       },
       error: (err: any) => {
         const errorMsg = err?.error?.error || err?.error?.message || 'Failed to save application. Your changes may be lost. Please try again.';
@@ -1325,15 +1408,28 @@ export class StudentApplicationEditComponent implements OnInit {
     if (!app) return;
     this.submitting.set(true);
     this.error.set(null);
-    this.http.post(`${API_BASE_URL}/applications/${app.id}/submit`, {}).subscribe({
+
+    const payload = this.buildApplicationPayload();
+
+    this.http.put(`${API_BASE_URL}/applications/${app.id}`, payload).subscribe({
       next: () => {
-        this.submitting.set(false);
-        this.error.set(null);
-        this.reload(app.id);
+        this.http.post(`${API_BASE_URL}/applications/${app.id}/submit`, {}).subscribe({
+          next: () => {
+            this.submitting.set(false);
+            this.error.set(null);
+            this.reload(app.id);
+          },
+          error: (err: any) => {
+            const errorMsg = err?.error?.error || err?.error?.message || 'Failed to submit application';
+            console.error('Failed to submit application:', errorMsg);
+            this.error.set(errorMsg);
+            this.submitting.set(false);
+          }
+        });
       },
       error: (err: any) => {
-        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to submit application';
-        console.error('Failed to submit application:', errorMsg);
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to save application before submission';
+        console.error('Failed to save application before submission:', errorMsg);
         this.error.set(errorMsg);
         this.submitting.set(false);
       }
@@ -1356,18 +1452,22 @@ export class StudentApplicationEditComponent implements OnInit {
 
   private patchFromApplication(a: any) {
     const student = a.student ?? {};
+    const derivedExamType = ['BACKLOG', 'ATKT', 'REPEATER'].includes(a.candidateType) ? 'backlog' : 'fresh';
 
-    this.examType.set(a.examType ?? 'fresh');
+    this.examType.set(derivedExamType as 'fresh' | 'backlog');
 
     // Patch existing form instead of recreating it
     this.form.patchValue({
       examId: a.exam?.id ?? a.examId ?? null,
-      examType: a.examType ?? 'fresh',
+      examType: derivedExamType,
       indexNo: a.indexNo ?? '',
       udiseNo: a.udiseNo ?? '',
       studentSaralId: a.studentSaralId ?? '',
       applSrNo: a.applSrNo ?? '',
       centreNo: a.centreNo ?? '',
+      lastExamMonth: a.lastExamMonth ?? '',
+      lastExamYear: a.lastExamYear ?? null,
+      lastExamSeatNo: a.lastExamSeatNo ?? '',
 
       personGroup: {
         lastName: student.lastName ?? '',
@@ -1379,7 +1479,7 @@ export class StudentApplicationEditComponent implements OnInit {
         mobile: student.mobile ?? '',
         dob: student.dob ? new Date(student.dob) : null,
         aadhaar: student.aadhaar ?? '',
-        gender: student.gender ?? ''
+        gender: this.normalizeGenderValue(student.gender)
       },
 
       academicGroup: {
@@ -1395,13 +1495,22 @@ export class StudentApplicationEditComponent implements OnInit {
     const subjects = this.form.get('subjects') as FormArray;
     subjects.clear();
     for (const s of a.subjects ?? []) {
+      const matchedExempted = (a.exemptedSubjects ?? []).find((e: any) =>
+        (e.subjectCode && e.subjectCode === s.subject?.code) ||
+        (e.subjectName && e.subjectName === s.subject?.name)
+      );
+
       subjects.push(
         new FormGroup({
           subjectId: new FormControl<number | null>(s.subjectId ?? s.subject?.id ?? null, { validators: [Validators.required] }),
           langOfAnsCode: new FormControl(s.langOfAnsCode ?? ''),
-          marks: new FormControl(s.marks ?? '', [Validators.min(0), Validators.max(100)])
+          marks: new FormControl(matchedExempted?.marksObt ?? '', [Validators.min(0), Validators.max(100)])
         })
       );
+    }
+
+    if (subjects.length === 0) {
+      this.addSubject();
     }
 
     // Watch examType changes to toggle display
@@ -1433,7 +1542,7 @@ export class StudentApplicationEditComponent implements OnInit {
         mobile: student?.mobile ?? '',
         dob: student?.dob ? new Date(student.dob) : null,
         aadhaar: student?.aadhaar ?? '',
-        gender: student?.gender ?? ''
+        gender: this.normalizeGenderValue(student?.gender)
       },
 
       academicGroup: {
@@ -1446,6 +1555,10 @@ export class StudentApplicationEditComponent implements OnInit {
     });
 
     this.selectedInstitute.set(null);
+
+    if (this.subjects().length === 0) {
+      this.addSubject();
+    }
 
     // Watch examType changes to toggle display
     this.form.get('examType')?.valueChanges.subscribe((value: any) => {

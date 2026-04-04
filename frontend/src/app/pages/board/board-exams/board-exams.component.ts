@@ -11,12 +11,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { AgGridModule } from 'ag-grid-angular';
-import { ModuleRegistry, ClientSideRowModelModule } from 'ag-grid-community';
 import type { ColDef } from 'ag-grid-community';
 
 import { API_BASE_URL } from '../../../core/api';
-
-ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 type Exam = { id: number; name: string; academicYear: string; session: string; applicationOpen: string; applicationClose: string; stream: { name: string } };
 

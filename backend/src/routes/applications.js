@@ -109,9 +109,6 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
 
     const institute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
     if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
-    if (institute.status !== 'APPROVED') return res.status(403).json({ error: 'INSTITUTE_NOT_APPROVED' });
-    if (!institute.acceptingApplications) return res.status(403).json({ error: 'INSTITUTE_NOT_ACCEPTING_APPLICATIONS' });
-
     const app = await prisma.examApplication.create({
       data: {
         instituteId: student.instituteId,
@@ -166,6 +163,7 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
   const body = z
     .object({
       // exam_applications
+      candidateType: z.enum(['REGULAR', 'REPEATER', 'ATKT', 'BACKLOG', 'IMPROVEMENT', 'PRIVATE']).optional(),
       indexNo: z.string().optional(),
       udiseNo: z.string().optional(),
       studentSaralId: z.string().optional(),
@@ -238,9 +236,8 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
 
   const institute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
   if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
-  if (institute.status !== 'APPROVED') return res.status(403).json({ error: 'INSTITUTE_NOT_APPROVED' });
-  if (!institute.acceptingApplications) return res.status(403).json({ error: 'INSTITUTE_NOT_ACCEPTING_APPLICATIONS' });
 
+  const effectiveCandidateType = body.candidateType ?? app.candidateType;
   if (body.subjects && body.subjects.length > 0) {
     const subjectIds = body.subjects.map((s) => s.subjectId);
     const validStream = await prisma.instituteStreamSubject.findMany({
@@ -252,12 +249,14 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
       return res.status(400).json({ error: 'INVALID_SUBJECT_SELECTION', message: 'Selected subject is not mapped for this institute and stream.' });
     }
 
-    const selectedCategories = [...new Set(validStream.map((m) => m.subject.category))];
-    if (!selectedCategories.includes('language') || !selectedCategories.includes('Compulsory')) {
-      return res.status(400).json({
-        error: 'INVALID_SUBJECT_CATEGORY',
-        message: 'You must select at least one language and one compulsory subject.'
-      });
+    if (effectiveCandidateType !== 'BACKLOG') {
+      const selectedCategories = [...new Set(validStream.map((m) => m.subject.category))];
+      if (!selectedCategories.includes('language') || !selectedCategories.includes('Compulsory')) {
+        return res.status(400).json({
+          error: 'INVALID_SUBJECT_CATEGORY',
+          message: 'You must select at least one language and one compulsory subject.'
+        });
+      }
     }
   }
 
@@ -306,6 +305,7 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
     const app2 = await tx.examApplication.update({
       where: { id: applicationId },
       data: {
+        candidateType: body.candidateType,
         indexNo: body.indexNo,
         udiseNo: body.udiseNo,
         studentSaralId: body.studentSaralId,

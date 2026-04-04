@@ -84,22 +84,39 @@ echo ""
 echo "📦 Installing backend dependencies..."
 cd backend
 npm install --legacy-peer-deps
-
+# Load production environment if available
+if [ -f .env.production ]; then
+    echo "🔐 Loading environment from backend/.env.production"
+    set -a
+    . ./.env.production
+    set +a
+fi
 # Check Prisma
 echo ""
 echo "🗄️  Checking database migrations..."
-npx prisma migrate status
-
-# Ask to run migrations
-read -p "Run pending migrations? (y/n) " -n 1 -r
-echo
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    echo "Running database migrations..."
+if npx prisma migrate status; then
+    echo "Running production database migrations..."
     npx prisma migrate deploy
     echo -e "${GREEN}✅ Migrations completed${NC}"
+else
+    echo -e "${YELLOW}⚠️  Prisma migration history is out of sync. Falling back to schema sync...${NC}"
+    npx prisma db push
+    echo -e "${GREEN}✅ Database schema synced with prisma db push${NC}"
 fi
 
 # Go back to root
+cd ..
+
+# Build frontend
+echo ""
+echo "📦 Installing frontend dependencies..."
+cd frontend
+npm install --legacy-peer-deps
+
+echo ""
+echo "🏗️  Building frontend..."
+npm run build
+echo -e "${GREEN}✅ Frontend build completed${NC}"
 cd ..
 
 # Check if PM2 is installed
@@ -143,6 +160,9 @@ pm2 logs hsc-api --nostream --lines 20
 echo ""
 echo "🧪 Test the API:"
 echo "  curl https://hsc-api.hisofttechnology.com/api/health"
+echo ""
+echo "🌐 Frontend build output:"
+echo "  frontend/dist/exam-form/browser"
 echo ""
 echo "📝 View logs:"
 echo "  pm2 logs hsc-api"

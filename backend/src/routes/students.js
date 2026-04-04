@@ -119,7 +119,12 @@ studentsRouter.patch('/me', requireAuth, async (req, res) => {
       dob: z.string().datetime().nullable().optional(),
       gender: z.string().nullable().optional(),
       aadhaar: z.string().nullable().optional(),
+      apaarId: z.string().max(20).nullable().optional(),
+      email: z.string().email().nullable().optional(),
       address: z.string().nullable().optional(),
+      district: z.string().max(100).nullable().optional(),
+      taluka: z.string().max(100).nullable().optional(),
+      village: z.string().max(100).nullable().optional(),
       pinCode: z.string().nullable().optional(),
       mobile: z.string().regex(/^[6-9]\d{9}$/).nullable().optional(),
       streamCode: z.string().nullable().optional(),
@@ -130,13 +135,43 @@ studentsRouter.patch('/me', requireAuth, async (req, res) => {
     });
 
     const data = updateSchema.parse(req.body);
-    
-    const updated = await prisma.student.update({
-      where: { id: student.id },
-      data: {
-        ...data,
-        dob: data.dob ? new Date(data.dob) : undefined
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const userData = {};
+      if (data.email !== undefined) userData.email = data.email || null;
+      if (data.mobile !== undefined) userData.mobile = data.mobile || null;
+
+      if (Object.keys(userData).length > 0) {
+        await tx.user.update({
+          where: { id: userId },
+          data: userData
+        });
       }
+
+      return tx.student.update({
+        where: { id: student.id },
+        data: {
+          firstName: data.firstName ?? undefined,
+          middleName: data.middleName ?? undefined,
+          lastName: data.lastName ?? undefined,
+          motherName: data.motherName ?? undefined,
+          dob: data.dob ? new Date(data.dob) : undefined,
+          gender: data.gender ?? undefined,
+          aadhaar: data.aadhaar ?? undefined,
+          apaarId: data.apaarId ? data.apaarId.toUpperCase() : undefined,
+          address: data.address ?? undefined,
+          district: data.district ?? undefined,
+          taluka: data.taluka ?? undefined,
+          village: data.village ?? undefined,
+          pinCode: data.pinCode ?? undefined,
+          mobile: data.mobile ?? undefined,
+          streamCode: data.streamCode ?? undefined,
+          minorityReligionCode: data.minorityReligionCode ?? undefined,
+          categoryCode: data.categoryCode ?? undefined,
+          divyangCode: data.divyangCode ?? undefined,
+          mediumCode: data.mediumCode ?? undefined
+        }
+      });
     });
 
     return res.json({ ok: true, student: updated });
@@ -467,6 +502,7 @@ studentsRouter.patch('/me/bank-details', requireAuth, async (req, res) => {
     });
 
     const data = updateSchema.parse(req.body);
+    const normalizedIfsc = data.ifscCode ? data.ifscCode.toUpperCase() : null;
 
     // Get or create fee reimbursement record
     let bankDetails = await prisma.feeReimbursement.findUnique({
@@ -478,7 +514,7 @@ studentsRouter.patch('/me/bank-details', requireAuth, async (req, res) => {
         data: {
           studentId: student.id,
           accountHolder: data.accountHolder || null,
-          ifscCode: data.ifscCode || null,
+          ifscCode: normalizedIfsc,
           accountNo: data.accountNumber || null,
           revenueCircleAndVillage: null
         }
@@ -488,7 +524,7 @@ studentsRouter.patch('/me/bank-details', requireAuth, async (req, res) => {
         where: { id: bankDetails.id },
         data: {
           accountHolder: data.accountHolder || null,
-          ifscCode: data.ifscCode || null,
+          ifscCode: normalizedIfsc,
           accountNo: data.accountNumber || null
         }
       });

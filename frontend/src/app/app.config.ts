@@ -17,7 +17,7 @@ import { StudentProfileService } from './core/student-profile.service';
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
-    provideHttpClient(withInterceptors([authInterceptor, errorInterceptor])),
+    provideHttpClient(withInterceptors([errorInterceptor, authInterceptor])),
     provideAnimations(),
     // Global services
     ThemeService,

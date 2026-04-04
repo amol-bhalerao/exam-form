@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { PrismaMariaDb } from '@prisma/adapter-mariadb';
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -6,10 +7,13 @@ if (!databaseUrl) {
   throw new Error('DATABASE_URL environment variable is not set');
 }
 
+// Some environments keep wrapping quotes from .env values; strip them for adapter parsing
+const normalizedDatabaseUrl = databaseUrl.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1');
+
 // Build connection string with optimized pool settings
 // For Hostinger/shared hosting, be conservative with connection limit
 const isProduction = process.env.NODE_ENV === 'production';
-let connectionUrl = databaseUrl;
+let connectionUrl = normalizedDatabaseUrl;
 
 // Add connection pool parameters if not already present
 if (!connectionUrl.includes('connection_limit')) {
@@ -22,15 +26,24 @@ if (!connectionUrl.includes('connection_limit')) {
   connectionUrl += `${connector}${poolParams}`;
 }
 
+// Prisma MariaDB adapter expects mariadb:// protocol
+let adapterUrl = connectionUrl.startsWith('mysql://')
+  ? connectionUrl.replace(/^mysql:\/\//, 'mariadb://')
+  : connectionUrl;
+
+// Normalize empty-password URLs like user:@host -> user@host for mariadb parser compatibility
+adapterUrl = adapterUrl.replace(/:\@/, '@');
+
+// Make the optimized URL available to Prisma via environment variables
+process.env.DATABASE_URL = adapterUrl;
+
+const adapter = new PrismaMariaDb(adapterUrl);
+
 // Prevent multiple PrismaClient instances in development (singleton pattern)
 const globalForPrisma = global;
 
 export const prisma = globalForPrisma.prisma || new PrismaClient({
-  datasources: {
-    db: {
-      url: connectionUrl,
-    },
-  },
+  adapter,
   errorFormat: 'pretty',
   log: isProduction 
     ? [{ emit: 'event', level: 'error' }]

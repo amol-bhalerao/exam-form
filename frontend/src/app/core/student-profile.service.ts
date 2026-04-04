@@ -165,9 +165,15 @@ export class StudentProfileService {
           
           // Student record exists or create a new profile structure
           if (student && student.id) {
+            const mergedStudent = {
+              ...student,
+              email: student.email || user?.email || '',
+              mobile: student.mobile || user?.mobile || ''
+            };
+
             // Student profile exists in database - use it  
-            this.studentProfile.set(student);
-            const completionPercentage = this.calculateCompletionPercentage(student);
+            this.studentProfile.set(mergedStudent);
+            const completionPercentage = this.calculateCompletionPercentage(mergedStudent);
             this.profileCompletionPercentage.set(completionPercentage);
             this.isLoading.set(false);
             console.log('Resolved student profile:', { instituteId: student.instituteId, streamCode: student.streamCode });
@@ -285,7 +291,7 @@ export class StudentProfileService {
       'revenueCircle': null,
       'village': 'village',
       'mobile': 'mobile',
-      'email': null,
+      'email': 'email',
       'streamCode': 'streamCode',
       'categoryCode': 'categoryCode',
       'minorityReligionCode': 'minorityReligionCode',

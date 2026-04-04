@@ -1,4 +1,5 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
+import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -7,14 +8,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { AgGridModule } from 'ag-grid-angular';
-import { ModuleRegistry, ClientSideRowModelModule } from 'ag-grid-community';
-import type { ColDef } from 'ag-grid-community';
 
 import { API_BASE_URL } from '../../../core/api';
 import { StudentProfileService } from '../../../core/student-profile.service';
-
-ModuleRegistry.registerModules([ClientSideRowModelModule]);
 
 type Exam = { id: number; name: string; academicYear: string; session: string; applicationOpen: string; applicationClose: string };
 type Application = { id: number; applicationNo: string; status: string; candidateType: string; exam: Exam; updatedAt: string };
@@ -23,13 +19,13 @@ type Application = { id: number; applicationNo: string; status: string; candidat
   selector: 'app-student-applications',
   standalone: true,
   imports: [
+    DatePipe,
     MatCardModule,
     MatButtonModule,
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
-    MatSnackBarModule,
-    AgGridModule
+    MatSnackBarModule
   ],
   template: `
     <mat-card class="card">
@@ -50,6 +46,13 @@ type Application = { id: number; applicationNo: string; status: string; candidat
             }
           </mat-select>
         </mat-form-field>
+        <mat-form-field appearance="outline" class="w240">
+          <mat-label>Application Type</mat-label>
+          <mat-select [value]="selectedCandidateType()" (selectionChange)="selectedCandidateType.set($event.value)">
+            <mat-option value="REGULAR">Fresh Application</mat-option>
+            <mat-option value="BACKLOG">Backlog Application</mat-option>
+          </mat-select>
+        </mat-form-field>
         <button mat-flat-button color="primary" (click)="create()" [disabled]="!selectedExamId() || creating()">
           {{ creating() ? 'Creating…' : 'New application' }}
         </button>
@@ -64,7 +67,7 @@ type Application = { id: number; applicationNo: string; status: string; candidat
       </mat-card>
     }
 
-    <mat-card class="card">
+    <mat-card class="card applications-section">
       @if (loading()) {
         <div class="loading">Loading applications...</div>
       } @else if (applications().length === 0) {
@@ -72,14 +75,44 @@ type Application = { id: number; applicationNo: string; status: string; candidat
           <p>No applications yet. Create a new one to get started!</p>
         </div>
       } @else {
-        <div class="ag-theme-alpine" style="width:100%; height:340px; margin-top: 10px;">
-          <ag-grid-angular
-            [rowData]="applications()"
-            [columnDefs]="columnDefs"
-            [defaultColDef]="defaultColDef"
-            [rowSelection]="{ mode: 'singleRow' }"
-            (rowClicked)="onRowClicked($event.data)"
-          ></ag-grid-angular>
+        <div class="applications-grid">
+          @for (app of applications(); track app.id) {
+            <div class="application-tile" [class.draft-tile]="app.status === 'DRAFT'" [class.submitted-tile]="app.status === 'SUBMITTED'">
+              <div class="tile-header">
+                <div>
+                  <div class="tile-app-no">{{ app.applicationNo }}</div>
+                  <div class="tile-exam">{{ app.exam?.name }}</div>
+                </div>
+                <span class="status-pill" [class.status-draft]="app.status === 'DRAFT'" [class.status-submitted]="app.status === 'SUBMITTED'">
+                  {{ app.status }}
+                </span>
+              </div>
+
+              <div class="tile-meta-grid">
+                <div class="tile-meta-item">
+                  <label>Session</label>
+                  <span>{{ app.exam?.session }} {{ app.exam?.academicYear }}</span>
+                </div>
+                <div class="tile-meta-item">
+                  <label>Application Type</label>
+                  <span>{{ formatCandidateType(app.candidateType) }}</span>
+                </div>
+                <div class="tile-meta-item full-width">
+                  <label>Last Updated</label>
+                  <span>{{ app.updatedAt ? (app.updatedAt | date:'medium') : '-' }}</span>
+                </div>
+              </div>
+
+              <div class="tile-actions">
+                <button mat-flat-button color="primary" (click)="openApplication(app)">
+                  {{ app.status === 'DRAFT' ? 'Continue Draft' : 'Open Application' }}
+                </button>
+                <button mat-stroked-button (click)="printApplication(app)">
+                  Print
+                </button>
+              </div>
+            </div>
+          }
         </div>
       }
     </mat-card>
@@ -127,6 +160,93 @@ type Application = { id: number; applicationNo: string; status: string; candidat
         width: 280px;
         max-width: 100%;
       }
+      .applications-section {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      }
+      .applications-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+        margin-top: 8px;
+      }
+      .application-tile {
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        padding: 16px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .draft-tile {
+        border-color: #fbbf24;
+        background: linear-gradient(180deg, #fffdf6 0%, #ffffff 100%);
+      }
+      .submitted-tile {
+        border-color: #86efac;
+      }
+      .tile-header {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: flex-start;
+      }
+      .tile-app-no {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #111827;
+      }
+      .tile-exam {
+        margin-top: 4px;
+        color: #4b5563;
+        font-size: 0.92rem;
+      }
+      .status-pill {
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .status-draft {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .status-submitted {
+        background: #dcfce7;
+        color: #166534;
+      }
+      .tile-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+      }
+      .tile-meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .tile-meta-item.full-width {
+        grid-column: 1 / -1;
+      }
+      .tile-meta-item label {
+        font-size: 0.74rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6b7280;
+      }
+      .tile-meta-item span {
+        font-size: 0.95rem;
+        color: #111827;
+      }
+      .tile-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: auto;
+      }
       .table {
         width: 100%;
       }
@@ -142,17 +262,10 @@ export class StudentApplicationsComponent implements OnInit {
   readonly exams = signal<Exam[]>([]);
   readonly creating = signal(false);
   readonly selectedExamId = signal<number | null>(null);
+  readonly selectedCandidateType = signal<'REGULAR' | 'BACKLOG'>('REGULAR');
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   selectedApplication: Application | null = null;
-
-  readonly columnDefs: ColDef[] = [
-    { field: 'applicationNo', headerName: 'Application No', flex: 1, sortable: true, filter: true },
-    { field: 'exam', headerName: 'Exam', valueGetter: (params: any) => `${params.data.exam?.name || ''} (${params.data.exam?.session || ''} ${params.data.exam?.academicYear || ''})`, flex: 2 },
-    { field: 'status', headerName: 'Status', flex: 1 },
-    { field: 'updatedAt', headerName: 'Updated', valueGetter: (params: any) => params.data.updatedAt ? new Date(params.data.updatedAt).toLocaleString() : '', flex: 1 }
-  ];
-  readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true, minWidth: 120 };
 
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
@@ -214,8 +327,26 @@ export class StudentApplicationsComponent implements OnInit {
     });
   }
 
-  onRowClicked(row: Application | undefined) {
-    this.selectedApplication = row ?? null;
+  formatCandidateType(value: string): string {
+    const mapping: Record<string, string> = {
+      REGULAR: 'Fresh Application',
+      BACKLOG: 'Backlog Application',
+      REPEATER: 'Repeater',
+      ATKT: 'ATKT',
+      IMPROVEMENT: 'Improvement',
+      PRIVATE: 'Private'
+    };
+    return mapping[value] || value;
+  }
+
+  openApplication(app: Application | null) {
+    if (!app) return;
+    this.router.navigate(['/app/student/applications', app.id]);
+  }
+
+  printApplication(app: Application | null) {
+    if (!app) return;
+    this.router.navigate(['/app/student/forms', app.id, 'print']);
   }
 
   create() {
@@ -230,7 +361,7 @@ export class StudentApplicationsComponent implements OnInit {
 
     // Check if student profile is complete before allowing application creation
     const profileCompletion = this.getProfileCompletion();
-    if (profileCompletion < 100) {
+    if (profileCompletion < 70) {
       this.snackBar.open(
         `⚠️ Please complete your profile (${profileCompletion}% done) before creating an exam application`,
         'Go to Profile',
@@ -238,7 +369,7 @@ export class StudentApplicationsComponent implements OnInit {
       ).onAction().subscribe(() => {
         this.router.navigate(['/app/student/profile']);
       });
-      this.error.set('Please complete your student profile before creating an exam application.');
+      this.error.set('Please complete at least 70% of your student profile before creating an exam application.');
       return;
     }
 
@@ -247,7 +378,7 @@ export class StudentApplicationsComponent implements OnInit {
 
     // FIX: Added error handling and proper response typing
     this.http
-      .post<{ application: Application }>(`${API_BASE_URL}/applications`, { examId, candidateType: 'REGULAR' })
+      .post<{ application: Application }>(`${API_BASE_URL}/applications`, { examId, candidateType: this.selectedCandidateType() })
       .subscribe({
         next: (r: any) => {
           this.creating.set(false);
