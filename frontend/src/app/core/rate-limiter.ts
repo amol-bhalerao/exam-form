@@ -39,17 +39,8 @@ export class ClientSideRateLimiter {
    * Falls back to random string if IP detection fails
    */
   private initializeIP() {
-    // Try to get IP from backend
-    fetch('/api/health/metrics/status')
-      .then(res => res.json())
-      .then(data => {
-        // In real implementation, backend would return client IP
-        // For now, use fingerprint-based ID
-        this.clientIP = this.generateClientFingerprint();
-      })
-      .catch(() => {
-        this.clientIP = this.generateClientFingerprint();
-      });
+    // Use fingerprint-based ID (no API call needed)
+    this.clientIP = this.generateClientFingerprint();
   }
 
   /**

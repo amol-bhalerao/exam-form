@@ -27,6 +27,7 @@ export interface StudentProfile {
   state?: string;
   pincode?: string;
   aadharNumber?: string;
+  apaarId?: string; // Automated Permanent Academic Account Registry
   rollNumber?: string;
   
   // College Information
@@ -268,16 +269,21 @@ export class StudentProfileService {
       'middleName': 'middleName',
       'motherName': 'motherName',
       'dateOfBirth': 'dob',
+      'dob': 'dob',
       'gender': 'gender',
       'aadharNumber': 'aadhaar',
+      'aadhaar': 'aadhaar',
+      'apaarId': 'apaarId',
       'addressLineOne': 'address',
+      'address': 'address',
       'addressLineTwo': null,
       'addressLineThree': null,
       'pincode': 'pinCode',
-      'district': null,
-      'taluka': null,
+      'pinCode': 'pinCode',
+      'district': 'district',
+      'taluka': 'taluka',
       'revenueCircle': null,
-      'village': null,
+      'village': 'village',
       'mobile': 'mobile',
       'email': null,
       'streamCode': 'streamCode',
@@ -289,12 +295,29 @@ export class StudentProfileService {
     
     for (const [key, value] of Object.entries(data)) {
       const backendKey = fieldMap[key];
-      if (backendKey) {
-        // Skip null values - let backend use existing values
-        if (value !== null && value !== undefined && value !== '') {
-          transformed[backendKey] = value;
-        }
+      
+      // Skip if field not in map or mapped to null
+      if (!fieldMap.hasOwnProperty(key) || backendKey === null) {
+        continue;
       }
+      
+      // Skip null/undefined/empty string values
+      if (value === null || value === undefined || value === '') {
+        continue;
+      }
+      
+      // Skip NaN values
+      if (typeof value === 'number' && isNaN(value)) {
+        continue;
+      }
+      
+      // Skip objects that aren't dates
+      if (typeof value === 'object' && !(value instanceof Date)) {
+        continue;
+      }
+      
+      // Only send valid values
+      transformed[backendKey] = value;
     }
     
     return transformed;

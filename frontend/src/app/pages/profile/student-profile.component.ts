@@ -276,6 +276,13 @@ import { API_BASE_URL } from '../../core/api';
                     <input matInput formControlName="aadharNumber" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'aadharNumber') }}</mat-error>
                   </mat-form-field>
+
+                  <mat-form-field class="form-field">
+                    <mat-label>APAAR ID (12-digit)</mat-label>
+                    <mat-icon matPrefix>verified_user</mat-icon>
+                    <input matInput formControlName="apaarId" placeholder="e.g., APAAR123456" />
+                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'apaarId') }}</mat-error>
+                  </mat-form-field>
                 </div>
 
                 <div class="form-grid-2">
@@ -1576,6 +1583,13 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         Validators.pattern(/^\d{12}$|^$/)
       ]],
 
+      // APAAR ID - Automated Permanent Academic Account Registry (12 characters)
+      apaarId: ['', [
+        Validators.minLength(12),
+        Validators.maxLength(12),
+        Validators.pattern(/^[0-9A-Za-z]*$/)
+      ]],
+
       // Mobile - exactly 10 digits, starts with 6-9
       mobile: ['', [
         Validators.required,
@@ -1863,6 +1877,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           dateOfBirth: profile.dob || '',
           gender: profile.gender || '',
           aadharNumber: profile.aadhaar || '',
+          apaarId: profile.apaarId || '',
           addressLineOne: profile.address || '',
           pincode: profile.pinCode || '',
           mobile: profile.mobile || '',
