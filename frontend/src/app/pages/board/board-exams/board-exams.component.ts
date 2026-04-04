@@ -70,6 +70,7 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
           [defaultColDef]="defaultColDef"
           [pagination]="true"
           [paginationPageSize]="10"
+          [paginationPageSizeSelector]="[10, 20, 50]"
         ></ag-grid-angular>
       </div>
       <div class="pager"><button mat-stroked-button (click)="prevPage()" [disabled]="page<=1">Prev</button><span>Page {{ page }}</span><button mat-stroked-button (click)="nextPage()">Next</button></div>

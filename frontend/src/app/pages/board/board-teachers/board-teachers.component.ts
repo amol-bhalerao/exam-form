@@ -49,6 +49,7 @@ type TeacherRow = {
           [columnDefs]="columnDefs"
           [pagination]="true"
           [paginationPageSize]="metadata().limit"
+          [paginationPageSizeSelector]="[10, 20, 50, 100]"
           [defaultColDef]="defaultColDef"
           (cellClicked)="onGridAction($event)"
         ></ag-grid-angular>
