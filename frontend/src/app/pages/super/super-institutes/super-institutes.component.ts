@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
 import { AgGridModule } from 'ag-grid-angular';
 import type { ColDef } from 'ag-grid-community';
 import { API_BASE_URL } from '../../../core/api';
@@ -33,32 +34,44 @@ type Institute = {
 @Component({
   selector: 'app-super-institutes',
   standalone: true,
-  imports: [FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, AgGridModule],
+  imports: [FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, AgGridModule],
   template: `
-    <mat-card class="card">
-      <div class="row">
+    <mat-card class="card grid-panel">
+      <div class="grid-panel__header">
         <div>
-          <div class="h">Institutes</div>
-          <div class="p">Manage institutes - create new ones and approve pending registrations.</div>
+          <div class="grid-panel__title">
+            <mat-icon>school</mat-icon>
+            Institutes
+          </div>
+          <div class="grid-panel__subtitle">Manage institute approvals, contact details, and activation links from one place.</div>
         </div>
-        <div class="grow"></div>
-        <button mat-flat-button color="primary" (click)="showCreateInstitute.set(true)">Add New Institute</button>
-        <mat-form-field appearance="outline" class="w260">
-          <mat-label>Search</mat-label>
-          <input matInput [(ngModel)]="search" (input)="load()" />
-        </mat-form-field>
+        <div class="grid-panel__actions">
+          <span class="grid-pill">{{ institutes().length }} institutes</span>
+          <button mat-flat-button color="primary" (click)="showCreateInstitute.set(true)">Add New Institute</button>
+          <mat-form-field appearance="outline" class="table-search-field">
+            <mat-label>Search institutes</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput [(ngModel)]="search" (input)="load()" placeholder="Name, city, mobile or email" />
+          </mat-form-field>
+        </div>
       </div>
     </mat-card>
 
-    <mat-card class="card">
-      <div class="ag-theme-alpine" style="width:100%; height:360px; margin-top:10px;">
+    <mat-card class="card grid-panel">
+      <div class="grid-panel__header">
+        <div>
+          <div class="grid-panel__title">Institute Directory</div>
+          <div class="grid-panel__subtitle">Select a row to view details or update institute configuration.</div>
+        </div>
+      </div>
+      <div class="grid-panel__table grid-panel__table--lg">
         <ag-grid-angular
           [rowData]="institutes()"
           [columnDefs]="columnDefs"
           [defaultColDef]="defaultColDef"
           [rowSelection]="{ mode: 'singleRow' }"
           class="ag-theme-alpine"
-          style="width:100%; height:280px;"
+          style="width:100%; height:100%;"
           (cellClicked)="onGridCellClicked($event)"
         ></ag-grid-angular>
       </div>
@@ -142,7 +155,7 @@ type Institute = {
             <div style="font-weight:700;">Edit Institute</div>
             <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showEditInstitute.set(false)">&times;</button>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="admin-form-grid">
             <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="editInstituteForm.name" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Code</mat-label><input matInput [(ngModel)]="editInstituteForm.code" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>College No</mat-label><input matInput [(ngModel)]="editInstituteForm.collegeNo" /></mat-form-field>
@@ -150,7 +163,7 @@ type Institute = {
             <mat-form-field appearance="outline"><mat-label>Contact Person</mat-label><input matInput [(ngModel)]="editInstituteForm.contactPerson" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Contact Email</mat-label><input matInput type="email" [(ngModel)]="editInstituteForm.contactEmail" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Contact Mobile</mat-label><input matInput [(ngModel)]="editInstituteForm.contactMobile" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Phone</mat-label><input matInput [(ngModel)]="editInstituteForm.pincode" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Pincode</mat-label><input matInput [(ngModel)]="editInstituteForm.pincode" /></mat-form-field>
             <mat-form-field appearance="outline" class="full"><mat-label>Address</mat-label><input matInput [(ngModel)]="editInstituteForm.address" /></mat-form-field>
             <mat-form-field appearance="outline" class="full"><mat-label>City</mat-label><input matInput [(ngModel)]="editInstituteForm.city" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="editInstituteForm.status"><mat-option value="APPROVED">Approved</mat-option><mat-option value="PENDING">Pending</mat-option><mat-option value="DISABLED">Disabled</mat-option><mat-option value="REJECTED">Rejected</mat-option></mat-select></mat-form-field>
@@ -167,25 +180,9 @@ type Institute = {
         margin-bottom: 14px;
         padding: 16px;
       }
-      .row {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        flex-wrap: wrap;
-      }
-      .grow {
-        flex: 1;
-      }
-      .h {
-        font-weight: 900;
-      }
-      .p {
-        color: #6b7280;
-        margin-top: 4px;
-      }
       .form-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
         margin-top: 10px;
       }
@@ -193,6 +190,7 @@ type Institute = {
         margin-top: 10px;
         display: flex;
         gap: 8px;
+        flex-wrap: wrap;
       }
       .msg {
         margin-top: 8px;
@@ -204,37 +202,41 @@ type Institute = {
       .success {
         color: #065f46;
       }
-      .table {
-        width: 100%;
-      }
-      .w260 {
-        width: 280px;
-        max-width: 100%;
-      }
       .selected-row {
-        margin-top: 10px;
-        padding: 8px;
-        background: #f3f4f6;
-        border-radius: 4px;
+        margin-top: 12px;
+        padding: 12px 14px;
+        background: #eef6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
       }
       .modal-backdrop {
         position: fixed;
         inset: 0;
-        background: rgba(0,0,0,0.35);
+        background: rgba(15, 23, 42, 0.45);
         display: flex;
         align-items: center;
         justify-content: center;
         z-index: 1000;
+        padding: 16px;
       }
       .modal {
         background: #fff;
-        border-radius: 8px;
+        border-radius: 16px;
         padding: 16px;
-        width: min(500px, 90vw);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        width: min(720px, 92vw);
+        max-height: 90vh;
+        overflow: auto;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      }
+      @media (max-width: 768px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
       }
     `
   ]
@@ -250,11 +252,11 @@ export class SuperInstitutesComponent implements OnInit {
     { field: 'city', headerName: 'City', flex: 1, sortable: true, filter: true, minWidth: 120, valueGetter: (params: any) => params.data.city || '—' },
     { field: 'contactMobile', headerName: 'Mobile', flex: 1, sortable: true, filter: true, minWidth: 130, valueGetter: (params: any) => params.data.contactMobile || '—' },
     { field: 'contactEmail', headerName: 'Email', flex: 1.2, sortable: true, filter: true, minWidth: 180, valueGetter: (params: any) => params.data.contactEmail || '—' },
-    { headerName: 'Actions', field: 'actions', flex: 0.8, minWidth: 90, cellRenderer: (params: any) => {
-        return `<div style="display:flex;flex-wrap:wrap;gap:4px;"><button data-action=view style="border:none;background:#dbeafe;color:#1d4ed8;padding:3px 8px;border-radius:4px;font-size:12px;">View</button></div>`;
+    { headerName: 'Actions', field: 'actions', flex: 0.8, minWidth: 110, cellRenderer: () => {
+        return `<div style="display:flex;flex-wrap:wrap;gap:6px;"><button data-action="view" class="grid-action-btn grid-action-btn--view">View</button></div>`;
       } }
   ];
-  readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true, minWidth: 120, flex: 1 };
+  readonly defaultColDef: ColDef = { sortable: true, filter: true, floatingFilter: true, resizable: true, minWidth: 120, flex: 1 };
   search = '';
 
   createForm = {

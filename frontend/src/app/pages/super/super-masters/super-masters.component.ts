@@ -21,11 +21,18 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
   standalone: true,
   imports: [NgIf, NgFor, FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, MatTabsModule, AgGridModule],
   template: `
-    <mat-card class="card">
-      <div class="header">
+    <mat-card class="card grid-panel">
+      <div class="grid-panel__header">
         <div>
-          <div class="h">Master Data Management</div>
-          <div class="p">Manage streams and subjects for the examination system.</div>
+          <div class="grid-panel__title">
+            <mat-icon>dataset</mat-icon>
+            Master Data Management
+          </div>
+          <div class="grid-panel__subtitle">Manage streams and subjects used across the examination system.</div>
+        </div>
+        <div class="grid-panel__actions">
+          <span class="grid-pill">{{ streams().length }} streams</span>
+          <span class="grid-pill">{{ subjects().length }} subjects</span>
         </div>
       </div>
     </mat-card>
@@ -44,22 +51,31 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
           <div class="msg success" *ngIf="streamSuccess">{{ streamSuccess }}</div>
         </mat-card>
 
-        <mat-card class="card">
-          <div class="table-header">
-            <div class="h">Streams</div>
-            <mat-form-field appearance="outline" class="search"><mat-label>Search</mat-label><input matInput [(ngModel)]="streamSearch" (input)="loadStreams()" /></mat-form-field>
+        <mat-card class="card grid-panel">
+          <div class="grid-panel__header">
+            <div>
+              <div class="grid-panel__title">Streams</div>
+              <div class="grid-panel__subtitle">Search, edit, and maintain available academic streams.</div>
+            </div>
+            <div class="grid-panel__actions">
+              <span class="grid-pill">{{ streams().length }} records</span>
+              <mat-form-field appearance="outline" class="search">
+                <mat-label>Search streams</mat-label>
+                <mat-icon matPrefix>search</mat-icon>
+                <input matInput [(ngModel)]="streamSearch" (input)="loadStreams()" placeholder="Search by name" />
+              </mat-form-field>
+            </div>
           </div>
-          <div class="ag-theme-alpine" style="height: 350px; width: 100%; margin-top: 8px;">
-           
+          <div class="grid-panel__table">
             <ag-grid-angular
-          [rowData]="streams()"
-          [columnDefs]="streamColumnDefs"
-          [defaultColDef]="defaultColDef"
-          [rowSelection]="{ mode: 'singleRow' }"
-          class="ag-theme-alpine"
-          style="width:100%; height:280px;"
-          (cellClicked)="onStreamCellClicked($event)"
-        ></ag-grid-angular>
+              [rowData]="streams()"
+              [columnDefs]="streamColumnDefs"
+              [defaultColDef]="defaultColDef"
+              [rowSelection]="{ mode: 'singleRow' }"
+              class="ag-theme-alpine"
+              style="width:100%; height:100%;"
+              (cellClicked)="onStreamCellClicked($event)"
+            ></ag-grid-angular>
           </div>
         </mat-card>
       </mat-tab>
@@ -79,24 +95,31 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
           <div class="msg success" *ngIf="subjectSuccess">{{ subjectSuccess }}</div>
         </mat-card>
 
-        <mat-card class="card">
-          <div class="table-header">
-            <div class="h">Subjects</div>
-            <mat-form-field appearance="outline" class="search"><mat-label>Search</mat-label><input matInput [(ngModel)]="subjectSearch" (input)="loadSubjects()" /></mat-form-field>
+        <mat-card class="card grid-panel">
+          <div class="grid-panel__header">
+            <div>
+              <div class="grid-panel__title">Subjects</div>
+              <div class="grid-panel__subtitle">Quickly search, edit, and organize subject master records.</div>
+            </div>
+            <div class="grid-panel__actions">
+              <span class="grid-pill">{{ subjects().length }} records</span>
+              <mat-form-field appearance="outline" class="search">
+                <mat-label>Search subjects</mat-label>
+                <mat-icon matPrefix>search</mat-icon>
+                <input matInput [(ngModel)]="subjectSearch" (input)="loadSubjects()" placeholder="Search by code or name" />
+              </mat-form-field>
+            </div>
           </div>
-          <div class="ag-theme-alpine" style="height: 360px; width: 100%; margin-top: 8px;">
-           
-
+          <div class="grid-panel__table grid-panel__table--lg">
             <ag-grid-angular
-          [rowData]="subjects()"
-          [columnDefs]="subjectColumnDefs"
-          [defaultColDef]="defaultColDef"
-          [rowSelection]="{ mode: 'singleRow' }"
-          class="ag-theme-alpine"
-          style="width:100%; height:280px;"
-          (cellClicked)="onSubjectCellClicked($event)"
-        ></ag-grid-angular>
-
+              [rowData]="subjects()"
+              [columnDefs]="subjectColumnDefs"
+              [defaultColDef]="defaultColDef"
+              [rowSelection]="{ mode: 'singleRow' }"
+              class="ag-theme-alpine"
+              style="width:100%; height:100%;"
+              (cellClicked)="onSubjectCellClicked($event)"
+            ></ag-grid-angular>
           </div>
         </mat-card>
       </mat-tab>
@@ -104,16 +127,16 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
   `,
   styles: [`
     .card { margin-bottom: 14px; padding: 16px; }
-    .header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-    .h { font-weight: 900; font-size: 1rem; }
-    .p { color: #6b7280; margin-top: 4px; }
-    .form-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
-    .card-actions { margin-top: 10px; display: flex; gap: 8px; }
+    .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+    .card-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
     .msg { margin-top: 8px; font-weight: 700; }
     .error { color: #b91c1c; }
     .success { color: #065f46; }
-    .table-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .search { width: 240px; }
+    .search { width: min(280px, 100%); }
+    @media (max-width: 900px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .search { width: 100%; }
+    }
   `]
 })
 export class SuperMastersComponent implements OnInit {
@@ -136,17 +159,17 @@ export class SuperMastersComponent implements OnInit {
   readonly streamColumnDefs: ColDef[] = [
     { field: 'name', headerName: 'Name', sortable: true, filter: true, flex: 1 },
     { field: 'createdAt', headerName: 'Created', valueGetter: (params: any) => new Date(params.data.createdAt).toLocaleDateString(), flex: 1, sortable: true, filter: true },
-    { headerName: 'Actions', field: 'actions', flex: 1, minWidth: 180, cellRenderer: (params: any) => `<div style="display:flex;gap:4px;"><button data-action=edit style="border:none;background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:4px;">Edit</button><button data-action=delete style="border:none;background:#fee2e2;color:#b91c1c;padding:3px 8px;border-radius:4px;">Delete</button></div>` }
+    { headerName: 'Actions', field: 'actions', flex: 1, minWidth: 190, cellRenderer: () => `<div style="display:flex;gap:6px;flex-wrap:wrap;"><button data-action="edit" class="grid-action-btn grid-action-btn--edit">Edit</button><button data-action="delete" class="grid-action-btn grid-action-btn--delete">Delete</button></div>` }
   ];
 
   readonly subjectColumnDefs: ColDef[] = [
     { field: 'code', headerName: 'Code', sortable: true, filter: true, flex: 1 },
     { field: 'name', headerName: 'Name', sortable: true, filter: true, flex: 1 },
     { field: 'category', headerName: 'Category', sortable: true, filter: true, flex: 1 },
-    { headerName: 'Actions', field: 'actions', flex: 1, minWidth: 180, cellRenderer: (params: any) => `<div style="display:flex;gap:4px;"><button data-action=edit style="border:none;background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:4px;">Edit</button><button data-action=delete style="border:none;background:#fee2e2;color:#b91c1c;padding:3px 8px;border-radius:4px;">Delete</button></div>` }
+    { headerName: 'Actions', field: 'actions', flex: 1, minWidth: 190, cellRenderer: () => `<div style="display:flex;gap:6px;flex-wrap:wrap;"><button data-action="edit" class="grid-action-btn grid-action-btn--edit">Edit</button><button data-action="delete" class="grid-action-btn grid-action-btn--delete">Delete</button></div>` }
   ];
 
-  readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true, minWidth: 120, flex: 1 };
+  readonly defaultColDef: ColDef = { sortable: true, filter: true, floatingFilter: true, resizable: true, minWidth: 120, flex: 1 };
 
   constructor() {}
 

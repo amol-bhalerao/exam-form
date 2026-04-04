@@ -681,92 +681,229 @@ mat-toolbar {
 /* ═══════════════════════════════════════════════════════════════════════ */
 
 .ag-theme-alpine {
+  --ag-font-family: 'Inter', 'Segoe UI', sans-serif !important;
   --ag-background-color: var(--panel) !important;
+  --ag-foreground-color: var(--text) !important;
   --ag-border-color: var(--border) !important;
-  --ag-cell-border-color: var(--border-light) !important;
-  --ag-header-background-color: var(--surface-alt) !important;
-  --ag-odd-row-background-color: var(--panel) !important;
-  --ag-row-hover-color: var(--hover-bg) !important;
-  --ag-select-agg-background-color: var(--primary-light) !important;
-  --ag-row-selected-background-color: var(--focus-ring) !important;
-  border-radius: var(--radius-lg) !important;
+  --ag-cell-horizontal-border: solid var(--border-light) !important;
+  --ag-header-foreground-color: var(--text) !important;
+  --ag-odd-row-background-color: #fbfdff !important;
+  --ag-row-hover-color: rgba(99, 102, 241, 0.08) !important;
+  --ag-selected-row-background-color: rgba(99, 102, 241, 0.12) !important;
+  --ag-checkbox-checked-color: var(--primary) !important;
+  border-radius: 18px !important;
   border: 1px solid var(--border) !important;
   box-shadow: var(--card-shadow) !important;
   overflow: hidden !important;
   transition: box-shadow var(--transition) !important;
-  min-height: 400px;
-  height: auto;
+  min-height: 320px;
+  height: 100%;
+  background: var(--panel) !important;
 }
 
 .ag-theme-alpine:hover {
   box-shadow: var(--card-shadow-hover) !important;
 }
 
-.ag-theme-alpine .ag-header-cell {
+.ag-theme-alpine .ag-root-wrapper {
+  border: none !important;
+  border-radius: inherit !important;
+}
+
+.ag-theme-alpine .ag-header {
+  background: linear-gradient(180deg, var(--surface-alt) 0%, #eef4ff 100%) !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+.ag-theme-alpine .ag-header-cell,
+.ag-theme-alpine .ag-header-group-cell {
   color: var(--text) !important;
-  font-weight: 600 !important;
-  background: linear-gradient(180deg, var(--surface-alt) 0%, var(--bg-alt) 100%) !important;
+  font-weight: 700 !important;
   transition: background-color var(--transition) !important;
-  height: 48px;
-  padding: 12px;
+  min-height: 48px !important;
+  padding: 10px 12px;
 }
 
 .ag-theme-alpine .ag-cell {
   color: var(--text-secondary) !important;
-  line-height: 44px !important;
-  transition: background-color var(--transition), color var(--transition) !important;
-  padding: 8px 12px;
+  line-height: 1.4 !important;
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
 }
 
 .ag-theme-alpine .ag-row {
-  animation: slideUpSubtle 0.3s ease-out backwards;
-  height: 48px;
+  animation: slideUpSubtle 0.25s ease-out backwards;
+  min-height: 48px !important;
+  border-bottom: 1px solid var(--border-light) !important;
 }
 
 .ag-theme-alpine .ag-row:hover {
-  box-shadow: inset 0 0 0 1px var(--primary-light) !important;
-  transform: scale(1.01);
+  box-shadow: inset 3px 0 0 var(--primary) !important;
+}
+
+.ag-theme-alpine .ag-row.ag-row-selected {
+  font-weight: 600;
+}
+
+.ag-theme-alpine .ag-paging-panel {
+  border-top: 1px solid var(--border) !important;
+  background: var(--surface) !important;
+  padding: 10px 14px !important;
+}
+
+.ag-theme-alpine .ag-input-field-input,
+.ag-theme-alpine .ag-text-field-input {
+  border-radius: 10px !important;
+  border: 1px solid var(--border) !important;
+  padding: 8px 10px !important;
+}
+
+.grid-panel {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-xl) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%) !important;
+  box-shadow: var(--card-shadow) !important;
+}
+
+.grid-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.grid-panel__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.grid-panel__subtitle {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  margin-top: 4px;
+}
+
+.grid-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.grid-panel__table {
+  min-height: 360px;
+  height: 360px;
+}
+
+.grid-panel__table--lg {
+  min-height: 420px;
+  height: 420px;
+}
+
+.grid-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--info-bg);
+  color: #075985;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.table-search-field {
+  width: min(320px, 100%);
+  min-width: 240px;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.grid-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), filter var(--transition-fast);
+}
+
+.grid-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+  filter: brightness(0.98);
+}
+
+.grid-action-btn--view {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.grid-action-btn--edit {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.grid-action-btn--delete {
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 @media (max-width: 768px) {
   .ag-theme-alpine {
-    min-height: 300px;
+    min-height: 280px;
     font-size: 13px;
   }
 
-  .ag-theme-alpine .ag-header-cell {
-    height: 44px;
+  .ag-theme-alpine .ag-header-cell,
+  .ag-theme-alpine .ag-header-group-cell {
+    min-height: 44px !important;
     padding: 8px;
   }
 
   .ag-theme-alpine .ag-cell {
-    line-height: 40px !important;
-    padding: 6px 8px;
+    padding: 8px;
   }
 
-  .ag-theme-alpine .ag-row {
-    height: 44px;
+  .grid-panel__table,
+  .grid-panel__table--lg {
+    min-height: 320px;
+    height: 320px;
+  }
+
+  .table-search-field {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-form-grid {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
   .ag-theme-alpine {
-    min-height: 200px;
+    min-height: 220px;
     font-size: 12px;
   }
 
-  .ag-theme-alpine .ag-header-cell {
-    height: 40px;
-    padding: 6px;
-  }
-
-  .ag-theme-alpine .ag-cell {
-    line-height: 36px !important;
-    padding: 4px 6px;
-  }
-
-  .ag-theme-alpine .ag-row {
-    height: 40px;
+  .grid-panel {
+    border-radius: var(--radius-lg) !important;
   }
 }
 

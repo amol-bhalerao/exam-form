@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, forkJoin } from 'rxjs';
 import { map, catchError, timeout } from 'rxjs/operators';
 import { API_BASE_URL } from '../core/api';
 
@@ -58,28 +58,25 @@ export class HealthService {
    * Run all health checks for backend
    */
   checkBackendHealth(): Observable<HealthCheckResult> {
-    const checks$ = this.backendApiTests.map(test => this.checkEndpoint(test));
-    
-    return new Observable(observer => {
-      Promise.all(checks$.map(check$ => check$.toPromise())).then((results: any[]) => {
-        const results_filtered = results.filter(r => r !== null);
-        const healthyCount = results_filtered.filter(r => r.status === 'success').length;
-        const totalCount = results_filtered.length;
-        
-        const overallStatus = healthyCount === totalCount ? 'healthy' : 
-                            healthyCount >= totalCount * 0.7 ? 'degraded' : 'unhealthy';
-        
-        observer.next({
+    return forkJoin(this.backendApiTests.map(test => this.checkEndpoint(test))).pipe(
+      map((results) => {
+        const healthyCount = results.filter(result => result.status === 'success').length;
+        const totalCount = results.length;
+
+        const overallStatus = healthyCount === totalCount
+          ? 'healthy'
+          : healthyCount >= totalCount * 0.7
+            ? 'degraded'
+            : 'unhealthy';
+
+        return {
           category: 'Backend APIs',
           timestamp: new Date(),
-          checks: results_filtered,
+          checks: results,
           overallStatus
-        });
-        observer.complete();
-      }).catch(err => {
-        observer.error(err);
-      });
-    });
+        };
+      })
+    );
   }
 
   /**
@@ -89,87 +86,79 @@ export class HealthService {
     const startTime = performance.now();
     const url = `${API_BASE_URL}${test.endpoint}`;
 
-    if (test.method === 'GET') {
-      return this.http.get(url, { observe: 'response' }).pipe(
-        timeout(this.TIMEOUT),
-        map(response => {
-          const result: ApiHealthCheck = {
-            endpoint: test.endpoint,
-            method: 'GET',
-            name: test.name,
-            status: response.status === 200 ? 'success' : 'failed',
-            statusCode: response.status,
-            responseTime: Math.round(performance.now() - startTime),
-            message: `${response.status} OK`,
-            timestamp: new Date(),
-            testPayload: test.payload
-          };
-          return result;
-        }),
-        catchError(error => {
-          const responseTime = Math.round(performance.now() - startTime);
-          const result: ApiHealthCheck = {
-            endpoint: test.endpoint,
-            method: 'GET',
-            name: test.name,
-            status: error.status === 0 ? 'timeout' : 'failed',
-            statusCode: error.status || 0,
-            responseTime,
-            message: error.statusText || error.message || 'Request failed',
-            error: error.error?.message || error.message || 'Unknown error',
-            timestamp: new Date(),
-            testPayload: test.payload
-          };
-          return of(result);
-        })
-      );
-    } else if (test.method === 'POST') {
-      return this.http.post(url, test.payload || {}, { observe: 'response' }).pipe(
-        timeout(this.TIMEOUT),
-        map(response => {
-          const result: ApiHealthCheck = {
-            endpoint: test.endpoint,
-            method: 'POST',
-            name: test.name,
-            status: [200, 201, 409].includes(response.status) ? 'success' : 'failed',
-            statusCode: response.status,
-            responseTime: Math.round(performance.now() - startTime),
-            message: `${response.status} OK`,
-            timestamp: new Date(),
-            testPayload: test.payload
-          };
-          return result;
-        }),
-        catchError(error => {
-          const responseTime = Math.round(performance.now() - startTime);
-          const result: ApiHealthCheck = {
-            endpoint: test.endpoint,
-            method: 'POST',
-            name: test.name,
-            status: error.status === 0 ? 'timeout' : 'failed',
-            statusCode: error.status || 0,
-            responseTime,
-            message: error.statusText || error.message || 'Request failed',
-            error: error.error?.message || error.message || 'Unknown error',
-            timestamp: new Date(),
-            testPayload: test.payload
-          };
-          return of(result);
-        })
-      );
-    }
+    const request$ = test.method === 'GET'
+      ? this.http.get(url, { observe: 'response', responseType: 'text' as const })
+      : this.http.post(url, test.payload || {}, { observe: 'response', responseType: 'text' as const });
 
-    const result: ApiHealthCheck = {
+    return request$.pipe(
+      timeout(this.TIMEOUT),
+      map(response => this.buildCheckResult(test, startTime, response.status)),
+      catchError(error => {
+        const statusCode = Number(error?.status || 0);
+        const endpointReachable = this.isHealthyStatus(test, statusCode);
+
+        const result: ApiHealthCheck = {
+          endpoint: test.endpoint,
+          method: test.method,
+          name: test.name,
+          status: statusCode === 0 ? 'timeout' : endpointReachable ? 'success' : 'failed',
+          statusCode,
+          responseTime: Math.round(performance.now() - startTime),
+          message: this.getStatusMessage(test, statusCode, error?.statusText || error?.message || 'Request failed'),
+          error: statusCode === 0 || !endpointReachable ? (error?.error?.message || error?.message || 'Unknown error') : undefined,
+          timestamp: new Date(),
+          testPayload: test.payload
+        };
+
+        return of(result);
+      })
+    );
+  }
+
+  private buildCheckResult(test: any, startTime: number, statusCode: number): ApiHealthCheck {
+    return {
       endpoint: test.endpoint,
       method: test.method,
       name: test.name,
-      status: 'failed',
-      responseTime: 0,
-      message: 'Invalid request method',
-      error: 'Method not supported',
-      timestamp: new Date()
+      status: this.isHealthyStatus(test, statusCode) ? 'success' : 'failed',
+      statusCode,
+      responseTime: Math.round(performance.now() - startTime),
+      message: this.getStatusMessage(test, statusCode),
+      timestamp: new Date(),
+      testPayload: test.payload
     };
-    return of(result);
+  }
+
+  private isHealthyStatus(test: any, statusCode: number): boolean {
+    if (!statusCode || statusCode === 404 || statusCode >= 500) {
+      return false;
+    }
+
+    if (test.endpoint === '/auth/login') {
+      return [200, 201, 400, 401, 403].includes(statusCode);
+    }
+
+    if (test.method === 'POST') {
+      return [200, 201, 400, 401, 403, 409].includes(statusCode);
+    }
+
+    return statusCode >= 200 && statusCode < 300;
+  }
+
+  private getStatusMessage(test: any, statusCode: number, fallback = 'OK'): string {
+    if (statusCode === 0) {
+      return 'Request timed out or server is unreachable';
+    }
+
+    if (test.endpoint === '/auth/login' && [400, 401, 403].includes(statusCode)) {
+      return `${statusCode} endpoint reachable (authentication validation working)`;
+    }
+
+    if (test.method === 'POST' && [400, 401, 403, 409].includes(statusCode)) {
+      return `${statusCode} endpoint reachable (validation/auth returned as expected)`;
+    }
+
+    return `${statusCode} ${fallback}`.trim();
   }
 
   /**

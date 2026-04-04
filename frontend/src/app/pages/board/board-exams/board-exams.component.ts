@@ -22,11 +22,19 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
   standalone: true,
   imports: [FormsModule, NgFor, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, AgGridModule],
   template: `
-    <mat-card class="card">
-      <div class="row"><div><div class="h">Exams</div><div class="p">Board can create exam windows, filter, and view latest records first.</div></div></div>
-      <div class="badges" style="display:flex; gap:8px; margin-bottom: 10px; align-items:center; flex-wrap:wrap;">
-        <span style="background:#e0f2fe; color:#0369a1; border-radius:999px; padding:4px 10px; font-size:0.8rem; font-weight:600;">Active exams only</span>
-        <span style="background:#f3f4f6; color:#334155; border-radius:999px; padding:4px 10px; font-size:0.8rem;">{{ activeCount() }} active · {{ dateRange() }}</span>
+    <mat-card class="card grid-panel">
+      <div class="grid-panel__header">
+        <div>
+          <div class="grid-panel__title">
+            <mat-icon>event_note</mat-icon>
+            Exams
+          </div>
+          <div class="grid-panel__subtitle">Create exam windows, search quickly, and review the latest records first.</div>
+        </div>
+        <div class="grid-panel__actions">
+          <span class="grid-pill">{{ activeCount() }} active exams</span>
+          <span class="grid-pill">{{ dateRange() }}</span>
+        </div>
       </div>
       <div class="grid">
         <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="form.name" /></mat-form-field>
@@ -36,20 +44,25 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
         <mat-form-field appearance="outline"><mat-label>Open date</mat-label><input matInput [matDatepicker]="openPicker" [(ngModel)]="form.applicationOpen" /><mat-datepicker-toggle matSuffix [for]="openPicker"></mat-datepicker-toggle><mat-datepicker #openPicker></mat-datepicker></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Close date</mat-label><input matInput [matDatepicker]="closePicker" [(ngModel)]="form.applicationClose" /><mat-datepicker-toggle matSuffix [for]="closePicker"></mat-datepicker-toggle><mat-datepicker #closePicker></mat-datepicker></mat-form-field>
       </div>
-      <div class="actions"><button mat-flat-button color="primary" (click)="create()">Create Exam</button><span class="status">{{ status }}</span></div>
-      <div class="stream-row" style="margin-top: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-        <mat-form-field appearance="outline" style="width: 280px;"><mat-label>New stream name</mat-label><input matInput [(ngModel)]="newStreamName" placeholder="E.g. Science" /></mat-form-field>
+      <div class="actions"><button mat-flat-button color="primary" (click)="create()">Create Exam</button><span class="status" [class.status--error]="status.includes('failed') || status.includes('Invalid') || status.includes('Fill')">{{ status }}</span></div>
+      <div class="stream-row">
+        <mat-form-field appearance="outline" class="table-search-field"><mat-label>New stream name</mat-label><input matInput [(ngModel)]="newStreamName" placeholder="E.g. Science" /></mat-form-field>
         <button mat-stroked-button color="primary" (click)="createStream()" [disabled]="!newStreamName">Add Stream</button>
       </div>
     </mat-card>
 
-    <mat-card class="card">
-      <div class="filter-row">
-        <mat-form-field appearance="outline" class="w260"><mat-label>Search</mat-label><input matInput [(ngModel)]="search" (input)="load()" /></mat-form-field>
-        <mat-form-field appearance="outline" class="w180"><mat-label>Stream</mat-label><mat-select [(ngModel)]="filterStream" (selectionChange)="load()"><mat-option value="">All</mat-option><mat-option *ngFor="let s of streams()" [value]="s.id">{{ s.name }}</mat-option></mat-select></mat-form-field>
-        <div class="grow"></div>
+    <mat-card class="card grid-panel">
+      <div class="grid-panel__header">
+        <div>
+          <div class="grid-panel__title">Exam List</div>
+          <div class="grid-panel__subtitle">Use the search and stream filter to find records quickly.</div>
+        </div>
+        <div class="grid-panel__actions">
+          <mat-form-field appearance="outline" class="table-search-field"><mat-label>Search exams</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="search" (input)="load()" placeholder="Search by exam name or year" /></mat-form-field>
+          <mat-form-field appearance="outline" class="w180"><mat-label>Stream</mat-label><mat-select [(ngModel)]="filterStream" (selectionChange)="load()"><mat-option value="">All</mat-option><mat-option *ngFor="let s of streams()" [value]="s.id">{{ s.name }}</mat-option></mat-select></mat-form-field>
+        </div>
       </div>
-      <div class="ag-theme-alpine" style="height: 360px; width: 100%; margin-top: 6px;">
+      <div class="grid-panel__table grid-panel__table--lg">
         <ag-grid-angular
           style="width:100%; height:100%;"
           [rowData]="exams()"
@@ -65,21 +78,16 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
   styles: [
     `
       .card { margin-bottom: 14px; padding: 16px; }
-      .row { display: flex; gap: 12px; align-items: center; }
-      .h { font-weight: 900; }
-      .p { color: #6b7280; margin-top: 4px; }
-      .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; align-items: center; }
-      .actions { margin-top: 10px; display: flex; align-items: center; gap: 12px; }
-      .status { color: #166534; }
-      .filter-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 8px; }
-      .w260 { width: 260px; }
-      .w180 { width: 180px; }
-      .table { width: 100%; }
-      .grow { flex: 1; }
-      .pager { margin-top: 10px; display: flex; align-items: center; gap: 10px; }
+      .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+      .actions { margin-top: 10px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      .status { color: #166534; font-weight: 600; }
+      .status--error { color: #b91c1c; }
+      .stream-row { margin-top: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .w180 { width: min(180px, 100%); }
+      .pager { margin-top: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
       @media (max-width: 980px) {
         .grid { grid-template-columns: 1fr; }
-        .w260, .w180 { width: 100%; }
+        .w180 { width: 100%; }
       }
     `
   ]
