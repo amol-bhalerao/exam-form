@@ -13,7 +13,7 @@ if (existsSync(envPath)) {
 }
 
 if (existsSync(productionEnvPath) && (process.env.NODE_ENV === "production" || !existsSync(envPath))) {
-  dotenv.config({ path: productionEnvPath, override: true });
+  dotenv.config({ path: productionEnvPath, override: false });
 }
 
 const databaseUrl =
