@@ -64,8 +64,8 @@ const MARATHI_TRANSLATIONS = {
   selectSubjects: 'विषय निवडा',
   
   // Board
-  boardName: 'महाराष्ट्र राज्य माध्यमिक व उच्च माध्यमिक शिक्षण मंडळ, पुणे',
-  boardNameShort: 'MSBSHSE',
+  boardName: 'HSC परीक्षा व्यवस्थापन प्रणाली',
+  boardNameShort: 'HEMS',
   
   // Messages
   formSubmitted: 'फॉर्म यशस्वीरित्या सादर केला गेला',
@@ -248,8 +248,8 @@ const ENGLISH_TRANSLATIONS = {
   selectSubjects: 'Select Subjects',
   
   // Board
-  boardName: 'Maharashtra State Board of Secondary and Higher Secondary Education, Pune',
-  boardNameShort: 'MSBSHSE',
+  boardName: 'HSC Exam Management System',
+  boardNameShort: 'HEMS',
   
   // Messages
   formSubmitted: 'Form submitted successfully',

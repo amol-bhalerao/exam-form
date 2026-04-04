@@ -307,7 +307,7 @@ export class SuperInstitutesComponent implements OnInit {
     this.http.get<{ institutes: Institute[] }>(`${API_BASE_URL}/institutes/all`).subscribe({
       next: (r) => this.institutes.set(r.institutes),
       error: (err) => {
-        console.error('Error loading institutes:', err);
+        // Error loading institutes handled silently
         // Fallback to regular endpoint if /all is not available
         this.http.get<{ institutes: Institute[] }>(`${API_BASE_URL}/institutes`).subscribe(
           (r) => this.institutes.set(r.institutes)

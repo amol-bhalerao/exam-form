@@ -19,10 +19,10 @@ import { API_BASE_URL } from '../../../core/api';
       <div class="page">
         <div class="header">
           <div class="title">
-            MAHARASHTRA STATE BOARD OF SECONDARY & HIGHER SECONDARY EDUCATION, PUNE 411 004
+            HSC EXAM MANAGEMENT SYSTEM - POWERED BY HISOFT IT SOLUTIONS
           </div>
           <div class="sub">
-            APPLICATION FORM TEMPLATE FOR H.S.C. EXAMINATION OF {{ application()!.exam.session }}
+            APPLICATION FORM FOR H.S.C. EXAMINATION OF {{ application()!.exam.session }}
             {{ application()!.exam.academicYear }}
           </div>
         </div>
@@ -228,7 +228,7 @@ import { API_BASE_URL } from '../../../core/api';
               <div class="val">{{ a().lastExamMonth || '—' }} {{ a().lastExamYear || '—' }} / {{ a().lastExamSeatNo || '—' }}</div>
             </div>
             <div class="box">
-              <div class="lbl">20 SSC passed from Maharashtra Board</div>
+              <div class="lbl">20 Previous Education Board</div>
               <div class="val">{{ a().sscPassedFromMaharashtra === null || a().sscPassedFromMaharashtra === undefined ? '—' : (a().sscPassedFromMaharashtra ? 'Yes' : 'No') }}</div>
             </div>
           </div>

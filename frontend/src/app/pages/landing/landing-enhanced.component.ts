@@ -270,10 +270,10 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       <div class="container">
         <div class="footer-content">
           <div class="footer-section">
-            <h4>{{ selectedLanguage() === 'mr' ? 'संस्था माहिती' : 'About Board' }}</h4>
+            <h4>{{ selectedLanguage() === 'mr' ? 'अंतर्गत माहिती' : 'About' }}</h4>
             <p>{{ selectedLanguage() === 'mr'
-              ? 'महाराष्ट्र राज्य माध्यमिक व उच्च माध्यमिक शिक्षण मंडळ'
-              : 'Maharashtra State Board of Secondary and Higher Secondary Education'
+              ? 'HSC परीक्षा व्यवस्थापन प्रणाली - Hisoft IT Solutions'
+              : 'HSC Exam Management System - Powered by Hisoft IT Solutions'
             }}</p>
           </div>
 

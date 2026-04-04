@@ -382,7 +382,7 @@ export class SuperUsersComponent implements OnInit {
         this.load();
       },
       error: (err: any) => {
-        console.error('Failed to update user status', err);
+        // Failed to update user status
       }
     });
   }

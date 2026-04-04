@@ -41,7 +41,7 @@ export const formGuard: CanActivateFn = async (route, state) => {
   } catch (error: any) {
     // Check if this is a session expiry error (401 Unauthorized)
     if (error?.status === 401) {
-      console.warn('Session expired. Redirecting to login.');
+      // Session expired. Redirecting to login.
       router.navigate(['/login'], {
         queryParams: { returnUrl: state.url }
       });
@@ -54,7 +54,7 @@ export const formGuard: CanActivateFn = async (route, state) => {
     if (errorCode === 'INSTITUTE_NOT_SELECTED' || 
         errorCode === 'STUDENT_PROFILE_MISSING' || 
         error?.status === 404) {
-      console.log('Profile not yet created - will allow student to create it');
+      // Profile not yet created - will allow student to create it
     }
     
     // For other errors, allow access (could be network issue)
@@ -83,7 +83,7 @@ export const profileGuard: CanActivateFn = async (route, state) => {
   
   // For STUDENT role - allow access anytime (no requirements)
   // Students can fill institute selection + all profile details in one place
-  console.log('Profile guard: Allowing student to access profile page.');
+  // Profile guard: Allowing student to access profile page.
   return true;
 };
 
@@ -135,13 +135,13 @@ export const applicationGuard: CanActivateFn = async (route, state) => {
     const completionPercentage = profileService.completionPercentage$();
     
     if (!profile) {
-      console.warn('Application guard: No profile found. Redirecting to institute selection.');
+      // Application guard: No profile found. Redirecting to institute selection.
       router.navigate(['/student/select-institute']);
       return false;
     }
     
     if (completionPercentage < 70) {
-      console.warn(`Application guard: Profile only ${completionPercentage}% complete. Minimum 70% required. Redirecting to profile.`);
+      // Application guard: Profile incomplete. Redirecting to profile.
       router.navigate(['/app/student/profile'], {
         queryParams: { returnUrl: state.url }
       });

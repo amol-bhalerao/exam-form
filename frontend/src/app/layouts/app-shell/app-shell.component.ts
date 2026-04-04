@@ -47,7 +47,7 @@ import { API_BASE_URL } from '../../core/api';
             <a mat-list-item routerLink="/app/super/health" routerLinkActive="active" class="nav-item"><mat-icon class="icon">health_and_safety</mat-icon><span class="label">Health Monitor</span></a>
             <a mat-list-item routerLink="/app/super/institutes" routerLinkActive="active" class="nav-item"><mat-icon class="icon">apartment</mat-icon><span class="label">Institutes</span></a>
             <a mat-list-item routerLink="/app/super/institute-users" routerLinkActive="active" class="nav-item"><mat-icon class="icon">person_add</mat-icon><span class="label">Institute Users</span></a>
-            <a mat-list-item routerLink="/app/super/users" routerLinkActive="active" class="nav-item"><mat-icon class="icon">admin_panel_settings</mat-icon><span class="label">Board Users</span></a>
+            <a mat-list-item routerLink="/app/super/users" routerLinkActive="active" class="nav-item"><mat-icon class="icon">admin_panel_settings</mat-icon><span class="label">Admin Users</span></a>
             <a mat-list-item routerLink="/app/super/masters" routerLinkActive="active" class="nav-item"><mat-icon class="icon">tune</mat-icon><span class="label">Master Data</span></a>
           }
 
@@ -226,10 +226,30 @@ import { API_BASE_URL } from '../../core/api';
       display: flex !important;
       flex-direction: row !important;
       align-items: center !important;
+      justify-content: flex-start !important;
       gap: 12px !important;
       overflow: visible !important;
       flex-wrap: nowrap !important;
+      width: calc(100% - 1rem) !important;
+      white-space: nowrap !important;
+    }
+
+    /* Override Material's internal structure */
+    ::ng-deep .nav-item .mat-list-item-content {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 12px !important;
+      padding: 0 !important;
+      margin: 0 !important;
       width: 100% !important;
+      flex-wrap: nowrap !important;
+    }
+
+    ::ng-deep .nav-item {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
     }
 
     .nav-item:hover {
@@ -420,8 +440,8 @@ export class AppShellComponent {
   readonly instituteName = signal<string>('');
   readonly centerTitle = computed(() => {
     if (this.role() === 'INSTITUTE') return this.instituteName() || 'Institute Portal';
-    if (this.role() === 'BOARD') return 'Board Portal';
-    if (this.role() === 'SUPER_ADMIN') return 'Super Admin Portal';
+    if (this.role() === 'BOARD') return 'Admin Portal';
+    if (this.role() === 'SUPER_ADMIN') return 'System Admin Portal';
     if (this.role() === 'STUDENT') return 'Student Portal';
     return 'HSC Exam System';
   });

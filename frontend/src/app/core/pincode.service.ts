@@ -47,7 +47,7 @@ export class PincodeService {
         return [];
       }),
       catchError((error) => {
-        console.error('Error fetching pincode details:', error);
+        // Error fetching pincode details
         return of([]);
       })
     );

@@ -63,8 +63,8 @@ import { API_BASE_URL } from '../../core/api';
       <!-- Header Section -->
       <div class="profile-header">
         <div class="board-header">
-          <h2>Maharashtra State Board Of Secondary & Higher Secondary Education, Pune</h2>
-          <h3 id="divisional-board">{{ boardName }}</h3>
+          <h2>HSC Exam Management System</h2>
+          <h3 id="divisional-board">{{ examPortalName }}</h3>
         </div>
         <h1>HSC Exam Application Form</h1>
         <p class="form-info">Complete all marked (*) fields to create your exam application</p>
@@ -1498,7 +1498,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
   profile: StudentProfile | null = null;
-  boardName = 'CHH. SAMBHAJINAGAR DIVISIONAL BOARD';
+  examPortalName = 'Powered by Hisoft IT Solutions';
 
   isLoading = true;
   error: string | null = null;
@@ -1528,7 +1528,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   pincodeError: string | null = null;
   private pincodeSubject = new Subject<string>();
 
-  // Form groups matching oficial Maharashtra HSC exam form structure
+  // Form groups matching HSC exam form structure
   personalDetailsForm: FormGroup;
   previousExamForm: FormGroup;
   bankDetailsForm: FormGroup;
@@ -1820,7 +1820,6 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
             }
           },
           error: (err) => {
-            console.error('Pincode lookup error:', err);
             this.pincodeError = 'Unable to fetch pincode details. Please try again.';
             this.pincodeLookupLoading = false;
           }
@@ -1903,7 +1902,6 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         this.isLoading = false;
       })
       .catch((err: any) => {
-        console.error('Failed to load profile:', err);
 
         // Extract error code from multiple possible locations
         const errorCode = err?.error?.error || err?.error?.status || err?.message || '';
@@ -2026,15 +2024,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    * Display institute name in autocomplete field
    */
   displayInstituteName(value: any): string {
-    console.log('[DISPLAY WITH CALLED]', 'value:', value, 'type:', typeof value);
-    
     // Handle if value is an institute object
     if (value && typeof value === 'object' && value.id) {
       // Build display string with available properties
       const name = value.name || 'Unknown Institute';
       const code = value.code ? ` (${value.code})` : '';
       const display = `${name}${code}`;
-      console.log('[DISPLAY STRING]', display);
       return display;
     }
     // Handle if it's a number (ID) - look up from map
@@ -2052,7 +2047,6 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       return value;
     }
     // Handle null, undefined, or other values
-    console.log('[DISPLAY RETURNING EMPTY]', 'value was:', value);
     return '';
   }
 
@@ -2061,8 +2055,6 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   onInstituteAutocompleteSelected(event: MatAutocompleteSelectedEvent): void {
     const institute = event.option.value;
-    
-    console.log('[AUTOCOMPLETE SELECTED]', institute, 'type:', typeof institute);
 
     // Handle if value is an institute object with id
     if (institute && typeof institute === 'object' && institute.id) {
@@ -2078,16 +2070,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       // Force view update
       this.cdr.markForCheck();
       this.cdr.detectChanges();
-      
-      console.log('[INSTITUTE SET SUCCESS]', {
-        id: this.selectedInstituteId,
-        name: institute.name,
-        code: institute.code,
-        fullObject: institute,
-        formControlValue: this.selectedInstitute.value
-      });
     } else {
-      console.error('[INSTITUTE SELECTION FAILED]', 'Expected object with id, got:', institute);
       // Try to recover by clearing and showing error
       this.selectedInstituteId = null;
       this.selectedInstitute.setValue(null);
@@ -2099,24 +2082,16 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       this.http.get<{ institutes: any[] }>(`${API_BASE_URL}/institutes`).toPromise()
         .then((response: any) => {
           this.institutes = response?.institutes || [];
-          console.log('[INSTITUTES LOADED]', this.institutes.length, 'institutes');
 
           // Build map for quick ID lookup
           this.institutesMap.clear();
           this.institutes.forEach(inst => {
             if (inst.id) {
               this.institutesMap.set(inst.id, inst);
-              console.log('[INSTITUTE MAPPED]', inst.id, '→', inst.name);
             }
           });
-
-          if (this.institutes.length > 0) {
-            console.log('[INSTITUTES SAMPLE]', JSON.stringify(this.institutes[0]));
-            console.log('[INSTITUTES FIRST 3]', this.institutes.slice(0, 3).map(i => ({ id: i.id, name: i.name, code: i.code })));
-          }
         })
         .catch((err) => {
-          console.error('[INSTITUTES ERROR]', err);
           this.institutes = [];
           this.institutesMap.clear();
         }),
@@ -2125,18 +2100,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       this.http.get<{ streams: any[] }>(`${API_BASE_URL}/masters/streams`).toPromise()
         .then((response: any) => {
           this.streams = response?.streams || [];
-          console.log('[STREAMS LOADED]', this.streams.length, 'streams');
-          if (this.streams.length > 0) {
-            console.log('[STREAMS FIRST 3]', this.streams.slice(0, 3).map(s => ({ name: s.name, code: s.code })));
-          }
         })
         .catch((err) => {
-          console.error('[STREAMS ERROR]', err);
           this.streams = [];
         })
     ]).then(() => {
       // Both loading complete
-      console.log('[INIT COMPLETE] Loaded institutes array length:', this.institutes.length, ', streams array length:', this.streams.length);
     });
   }
 
@@ -2175,7 +2144,6 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         this.loadProfile();
       },
       error: (err) => {
-        console.error('Failed to save institute selection:', err);
         this.savingInstitute = false;
 
         if (err.status === 409) {

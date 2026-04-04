@@ -80,14 +80,14 @@ interface Stream {
           </div>
         </div>
 
-        <!-- Warning Banner -->
+        <!-- Info Banner -->
         <div class="warning-section">
-          <div class="warning-box">
-            <mat-icon>warning_amber</mat-icon>
+          <div class="warning-box info-style">
+            <mat-icon>info</mat-icon>
             <div class="warning-content">
-              <h3>⚠️ Important Notice</h3>
-              <p>Your Institute and Stream selection <strong>cannot be changed</strong> after submission. Please select carefully.</p>
-              <p class="marathi">आपली संस्था आणि प्रवाह निवड सबमिट केल्यानंतर बदलली जाऊ शकत नाही.</p>
+              <h3>ℹ️ Selection Update</h3>
+              <p>You can change your institute and stream selection anytime. Please select carefully.</p>
+              <p class="marathi">आप कभी भी अपनी संस्था व प्रवाह निवड बदल सकते हैं।</p>
             </div>
           </div>
         </div>
@@ -418,6 +418,18 @@ interface Stream {
       border-radius: 12px;
       border-left: 5px solid #ff9800;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .warning-box.info-style {
+      border-left-color: #2196F3;
+    }
+
+    .warning-box.info-style h3 {
+      color: #2196F3;
+    }
+
+    .warning-box.info-style mat-icon {
+      color: #2196F3;
     }
 
     .warning-box mat-icon {

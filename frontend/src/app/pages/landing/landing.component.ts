@@ -51,7 +51,7 @@ interface RegisterData {
             <mat-icon>school</mat-icon>
           </div>
           <div class="brand-text">
-            <h1>Maharashtra HSC</h1>
+            <h1>HSC Exam Portal</h1>
             <p>Educational Excellence</p>
           </div>
         </div>
@@ -71,7 +71,7 @@ interface RegisterData {
       </div>
       <div class="hero-content">
         <div class="hero-text fade-in-up">
-          <h2 class="hero-subtitle">Welcome to Maharashtra Board</h2>
+          <h2 class="hero-subtitle">HSC Exam Management System</h2>
           <h1 class="hero-title">Next Generation HSC Exam Portal</h1>
           <p class="hero-desc">Seamlessly manage your exam applications with our secure, fast platform.</p>
           <div class="hero-actions">
@@ -239,7 +239,7 @@ interface RegisterData {
         <div class="footer-content">
           <div class="footer-section">
             <h4>About Board</h4>
-            <p>Maharashtra State Board dedicated to providing quality education and fair assessment.</p>
+            <p>Hisoft IT Solutions dedicated to providing a seamless examination experience and fair assessment.</p>
           </div>
           <div class="footer-section">
             <h4>Quick Links</h4>
@@ -264,7 +264,7 @@ interface RegisterData {
           </div>
         </div>
         <div class="footer-bottom">
-          <p>&copy; 2026 Maharashtra State Board. All rights reserved.</p>
+          <p>&copy; 2026 Hisoft IT Solutions. All rights reserved. | <a href="https://hisofttechnology.com/" target="_blank" rel="noopener">Visit Website</a></p>
         </div>
       </div>
     </footer>

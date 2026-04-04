@@ -265,7 +265,7 @@ import { AddSubjectMarkDialogComponent } from './add-subject-mark-dialog.compone
                   <mat-icon matPrefix>domain</mat-icon>
                   <mat-select formControlName="board">
                     <mat-option value="">- Select -</mat-option>
-                    <mat-option value="MSBSHSE">Maharashtra State Board</mat-option>
+                    <mat-option value="MSBSHSE">State Board</mat-option>
                     <mat-option value="CBSE">CBSE</mat-option>
                     <mat-option value="ICSE">ICSE</mat-option>
                     <mat-option value="OTHER">{{ i18n.t('other') }}</mat-option>

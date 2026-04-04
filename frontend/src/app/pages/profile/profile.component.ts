@@ -111,10 +111,6 @@ import { StudentProfileService } from '../../core/student-profile.service';
                     <span class="info-label">Stream Code:</span>
                     <span class="info-value">{{ studentProfile()?.streamCode || '-' }}</span>
                   </div>
-                  <div style="margin-top: 16px; padding: 12px; background-color: #f3f4f6; border-radius: 4px; color: #4b5563;">
-                    <mat-icon style="font-size: 18px; width: 18px; height: 18px; margin-right: 8px; vertical-align: middle;">info</mat-icon>
-                    <span>Your institute and stream selection is permanent and cannot be changed. To change, contact your institute administrator.</span>
-                  </div>
                 </div>
               }
             </mat-card>

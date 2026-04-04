@@ -35,7 +35,7 @@ declare const google: any;
           <div class="brand-logo">
             <mat-icon class="logo-icon">school</mat-icon>
           </div>
-          <h1 class="brand-title">Maharashtra HSC</h1>
+          <h1 class="brand-title">HSC Exam Portal</h1>
           <p class="brand-subtitle">State Board Exam Portal</p>
           <p class="brand-desc">
             Secure, seamless examination form submission for students, institutes, and board officials.

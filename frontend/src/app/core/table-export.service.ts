@@ -80,7 +80,7 @@ export class TableExportService {
       // Write to file
       XLSX.writeFile(wb, `${filename}.xlsx`);
     } catch (error) {
-      console.error('Export to Excel failed. Install: npm install xlsx', error);
+      // Export to Excel failed
       // Fallback to CSV
       this.exportToCSV(data, columns, filename);
     }

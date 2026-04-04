@@ -38,7 +38,7 @@ export class GoogleAuthService {
 
     script.onload = () => {
       this.googleScriptLoaded.set(true);
-      console.log('Google Sign-In script loaded');
+      // Google Sign-In script loaded
     };
   }
 
@@ -125,7 +125,7 @@ export class GoogleAuthService {
     const testButton = button.querySelector('#test-signin-btn') as HTMLButtonElement;
     if (testButton) {
       testButton.addEventListener('click', () => {
-        console.log('🧪 Test mode: Attempting authentication with mock Google token');
+        // Test mode: Attempting authentication with mock Google token
         testButton.disabled = true;
         testButton.textContent = 'Signing in...';
         
@@ -133,12 +133,12 @@ export class GoogleAuthService {
         const mockToken = 'mock_google_token_for_testing_' + Date.now();
         this.handleGoogleSignIn(mockToken).subscribe(
           (response) => {
-            console.log('✅ Test authentication successful!', response);
+            // Test authentication successful
             testButton.disabled = false;
             onSuccess(mockToken);
           },
           (error) => {
-            console.error('❌ Test auth failed:', error);
+            // Test auth failed
             testButton.disabled = false;
             testButton.textContent = 'Sign in with Google (TEST MODE)';
             onError();

@@ -17,15 +17,15 @@ export interface BrandingConfig {
 })
 export class BrandingService {
   private branding: BrandingConfig = {
-    boardName: 'Maharashtra State Board of Secondary and Higher Secondary Education',
-    boardNameMarathi: 'महाराष्ट्र राज्य माध्यमिक व उच्च माध्यमिक शिक्षण मंडळ',
-    boardNameShort: 'MSBSHSE',
-    logoUrl: 'https://mahahsscboard.in/boardlogo.svg',
-    address: 'Survey No. 832-A, Final Plot No. 178 and 179, Near Balachitra Vani, Behind Agarkar Research Institute, Bhanburda, Shivajiनagar, Pune-411004. Maharashtra (India)',
-    addressMarathi: 'सर्व्हे क्रमांक ८३२-अ, फायनल प्लॉट क्रमांक १७८ आणि १७९, बालचित्रवाणीजवळ, आघारकर संशोधन संस्थेच्या मागे, भांबुर्डा, शिवाजीनगर, पुणे-४११००४. महाराष्ट्र (भारत)',
-    contactNumber: '020-25705000',
-    email: 'info@mahahsscboard.in',
-    website: 'https://mahahsscboard.in/'
+    boardName: 'HSC Exam Management System',
+    boardNameMarathi: 'HSC परीक्षा व्यवस्थापन प्रणाली',
+    boardNameShort: 'HEMS',
+    logoUrl: 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 fill=%22%23003d7a%22/%3E%3Ctext x=%2250%22 y=%2250%22 text-anchor=%22middle%22 dy=%22.3em%22 fill=%22white%22 font-size=%2224%22 font-weight=%22bold%22 font-family=%22Arial%22%3EHEMS%3C/text%3E%3C/svg%3E',
+    address: 'Developed by Hisoft IT Solutions | Pune, Maharashtra',
+    addressMarathi: 'Hisoft IT Solutions द्वारे विकसित | पुणे, महाराष्ट्र',
+    contactNumber: '',
+    email: 'support@hisofttechnology.com',
+    website: 'https://hisofttechnology.com/'
   };
 
   constructor() {}

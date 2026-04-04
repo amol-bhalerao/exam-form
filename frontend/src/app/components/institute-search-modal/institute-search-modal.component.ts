@@ -148,7 +148,7 @@ export class InstituteSearchModalComponent {
       },
       error: (err) => {
         this.error.set('Could not load institutes. Please try again.');
-        console.error('Search error:', err);
+        // Search error handled silently
         this.loading.set(false);
       }
     });

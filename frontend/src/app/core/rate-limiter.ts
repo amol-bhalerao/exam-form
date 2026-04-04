@@ -132,7 +132,7 @@ export class ClientSideRateLimiter {
     // Check if limit exceeded
     if (data.failures >= this.FAILURE_LIMIT) {
       data.blockedUntil = Date.now() + this.BLOCK_DURATION_MS;
-      console.warn(`[RATE LIMIT] ${endpoint} endpoint blocked for ${this.FAILURE_LIMIT} failures`);
+      // Rate limit blocked for endpoint
     }
 
     // Save to localStorage
@@ -146,7 +146,7 @@ export class ClientSideRateLimiter {
   public recordSuccess(endpoint: string): void {
     const key = this.getStorageKey(endpoint);
     localStorage.removeItem(key);
-    console.debug(`[RATE LIMIT] ${endpoint} success, failures cleared`);
+    // Rate limit success, failures cleared
   }
 
   /**
@@ -211,7 +211,7 @@ export class ClientSideRateLimiter {
     }
 
     if (cleaned > 0) {
-      console.debug(`[RATE LIMIT] Cleaned up ${cleaned} expired entries`);
+      // Cleaned up expired entries from storage
     }
   }
 
@@ -230,7 +230,7 @@ export class ClientSideRateLimiter {
       const data = localStorage.getItem(key);
       return data ? JSON.parse(data) : null;
     } catch (e) {
-      console.error('[RATE LIMIT] Failed to parse storage data:', e);
+      // Failed to parse storage data
       return null;
     }
   }
@@ -242,7 +242,7 @@ export class ClientSideRateLimiter {
     try {
       localStorage.setItem(key, JSON.stringify(data));
     } catch (e) {
-      console.error('[RATE LIMIT] Failed to save to localStorage:', e);
+      // Failed to save to localStorage
       // If quota exceeded, try cleanup first
       if (e instanceof DOMException && e.name === 'QuotaExceededError') {
         this.cleanup();
@@ -285,7 +285,7 @@ export class ClientSideRateLimiter {
         localStorage.removeItem(key);
       }
     }
-    console.debug('[RATE LIMIT] Cleared all rate limit data');
+    // Cleared all rate limit data
   }
 }
 
