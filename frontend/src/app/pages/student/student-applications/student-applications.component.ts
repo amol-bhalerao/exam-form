@@ -12,7 +12,18 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { API_BASE_URL } from '../../../core/api';
 import { StudentProfileService } from '../../../core/student-profile.service';
 
-type Exam = { id: number; name: string; academicYear: string; session: string; applicationOpen: string; applicationClose: string };
+type Exam = {
+  id: number;
+  name: string;
+  academicYear: string;
+  session: string;
+  applicationOpen: string;
+  applicationClose: string;
+  totalStudents?: number | null;
+  applicationsUsed?: number;
+  remainingApplications?: number | null;
+  isCapacityReached?: boolean;
+};
 type Application = { id: number; applicationNo: string; status: string; candidateType: string; exam: Exam; updatedAt: string };
 
 @Component({
@@ -39,9 +50,11 @@ type Application = { id: number; applicationNo: string; status: string; candidat
           <mat-label>Exam</mat-label>
           <mat-select [value]="selectedExamId()" (selectionChange)="selectedExamId.set($event.value)">
             @for (e of exams(); track e.id) {
-              <mat-option [value]="e.id" [disabled]="!isExamOpen(e)">
+              <mat-option [value]="e.id" [disabled]="!canCreateForExam(e)">
                 {{ e.name }} ({{ e.session }} {{ e.academicYear }})
-                <span style="color: #9ca3af; font-size: 0.8rem; margin-left: 6px;">{{ isExamOpen(e) ? 'Apply now' : 'Closed' }}</span>
+                <span style="color: #9ca3af; font-size: 0.8rem; margin-left: 6px;">
+                  {{ !isExamOpen(e) ? 'Closed' : (e.isCapacityReached ? 'Full' : getExamCapacityLabel(e)) }}
+                </span>
               </mat-option>
             }
           </mat-select>
@@ -49,14 +62,24 @@ type Application = { id: number; applicationNo: string; status: string; candidat
         <mat-form-field appearance="outline" class="w240">
           <mat-label>Application Type</mat-label>
           <mat-select [value]="selectedCandidateType()" (selectionChange)="selectedCandidateType.set($event.value)">
-            <mat-option value="REGULAR">Fresh Application</mat-option>
-            <mat-option value="BACKLOG">Backlog Application</mat-option>
+            <mat-option value="REGULAR">Fresh / Regular</mat-option>
+            <mat-option value="BACKLOG">Backlog</mat-option>
+            <mat-option value="REPEATER">Repeater</mat-option>
+            <mat-option value="ATKT">ATKT</mat-option>
+            <mat-option value="IMPROVEMENT">Improvement</mat-option>
+            <mat-option value="PRIVATE">Private</mat-option>
           </mat-select>
         </mat-form-field>
-        <button mat-flat-button color="primary" (click)="create()" [disabled]="!selectedExamId() || creating()">
+        <button mat-flat-button color="primary" (click)="create()" [disabled]="!selectedExamId() || creating() || selectedExamCapacityReached()">
           {{ creating() ? 'Creating…' : 'New application' }}
         </button>
       </div>
+
+      @if (selectedExamCapacityReached()) {
+        <div style="margin-top:8px;color:#b91c1c;">
+          No remaining application slots are available for the selected exam at your institute.
+        </div>
+      }
     </mat-card>
 
     @if (error()) {
@@ -262,7 +285,7 @@ export class StudentApplicationsComponent implements OnInit {
   readonly exams = signal<Exam[]>([]);
   readonly creating = signal(false);
   readonly selectedExamId = signal<number | null>(null);
-  readonly selectedCandidateType = signal<'REGULAR' | 'BACKLOG'>('REGULAR');
+  readonly selectedCandidateType = signal<'REGULAR' | 'BACKLOG' | 'REPEATER' | 'ATKT' | 'IMPROVEMENT' | 'PRIVATE'>('REGULAR');
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   selectedApplication: Application | null = null;
@@ -304,6 +327,22 @@ export class StudentApplicationsComponent implements OnInit {
   isExamOpen(exam: Exam): boolean {
     const now = new Date();
     return new Date(exam.applicationOpen) <= now && now <= new Date(exam.applicationClose);
+  }
+
+  canCreateForExam(exam: Exam): boolean {
+    return this.isExamOpen(exam) && !exam.isCapacityReached;
+  }
+
+  selectedExamCapacityReached(): boolean {
+    const exam = this.exams().find((item) => item.id === this.selectedExamId());
+    return !!exam?.isCapacityReached;
+  }
+
+  getExamCapacityLabel(exam: Exam): string {
+    if (typeof exam.remainingApplications === 'number') {
+      return `${exam.remainingApplications} remaining`;
+    }
+    return 'Apply now';
   }
 
   reload() {

@@ -8,6 +8,7 @@ import { requireAuth, requireRole } from '../auth/middleware.js';
 export const institutesRouter = Router();
 
 const instituteDetailsSchema = z.object({
+  code: z.string().min(2).max(50).optional(),
   name: z.string().min(3).max(200).optional(),
   address: z.string().max(500).optional(),
   district: z.string().max(100).optional(),
@@ -55,12 +56,15 @@ function calculateTotalYearsService(serviceStartDate) {
   return Number(years.toFixed(1));
 }
 
-function calculateRetirementDate(dob, retirementAgeYears = 60) {
+const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
+
+function calculateRetirementDate(dob, retirementAgeYears = MAHARASHTRA_TEACHER_RETIREMENT_AGE) {
   const date = parseOptionalDate(dob);
   if (!date) return null;
-  const retirementDate = new Date(date);
-  retirementDate.setFullYear(retirementDate.getFullYear() + retirementAgeYears);
-  return retirementDate;
+
+  // Maharashtra teaching-staff rule: retirement is considered on the last day
+  // of the month in which the employee attains the retirement age.
+  return new Date(date.getFullYear() + retirementAgeYears, date.getMonth() + 1, 0);
 }
 
 function toTeacherDto(teacher) {
@@ -105,6 +109,22 @@ async function handleInstituteDetailsUpdate(req, res) {
     }
 
     const updateData = {};
+    if (body.code !== undefined) {
+      const normalizedCode = String(body.code).trim().toUpperCase();
+      if (!normalizedCode) {
+        return res.status(422).json({ error: 'VALIDATION_ERROR', message: 'Index No cannot be empty' });
+      }
+      const existingInstitute = await prisma.institute.findFirst({
+        where: {
+          code: normalizedCode,
+          NOT: { id: user.institute.id }
+        }
+      });
+      if (existingInstitute) {
+        return res.status(409).json({ error: 'INDEX_NO_ALREADY_EXISTS', message: 'This Index No is already used by another institute.' });
+      }
+      updateData.code = normalizedCode;
+    }
     if (body.name !== undefined) updateData.name = body.name;
     if (body.address !== undefined) updateData.address = body.address;
     if (body.district !== undefined) updateData.district = body.district;
@@ -150,6 +170,72 @@ async function handleInstituteDetailsUpdate(req, res) {
     console.error('Error updating institute details:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
+}
+
+function isAnswerLanguageMigrationError(err) {
+  return String(err?.message || '').includes('institute_stream_subjects.answerLanguageCode');
+}
+
+function sendAnswerLanguageMigrationError(res) {
+  return res.status(503).json({
+    error: 'DATABASE_MIGRATION_REQUIRED',
+    message: 'Database update required for answer-language subject mapping. Run `npm --prefix backend run db:sync` and restart the backend.'
+  });
+}
+
+async function getInstituteExamCapacityRows(instituteId, { openOnly = false } = {}) {
+  const now = new Date();
+  const examWhere = openOnly
+    ? { applicationClose: { gte: now } }
+    : {};
+
+  const exams = await prisma.exam.findMany({
+    where: examWhere,
+    include: { stream: true },
+    orderBy: [{ applicationClose: 'desc' }, { createdAt: 'desc' }]
+  });
+
+  if (exams.length === 0) {
+    return [];
+  }
+
+  const examIds = exams.map((exam) => exam.id);
+  const [capacityRows, usageRows] = await Promise.all([
+    prisma.instituteExamCapacity.findMany({
+      where: { instituteId, examId: { in: examIds } }
+    }),
+    prisma.examApplication.groupBy({
+      by: ['examId'],
+      where: { instituteId, examId: { in: examIds } },
+      _count: { _all: true }
+    })
+  ]);
+
+  const capacityMap = new Map(capacityRows.map((row) => [row.examId, row]));
+  const usageMap = new Map(usageRows.map((row) => [row.examId, row._count._all]));
+
+  return exams.map((exam) => {
+    const configured = capacityMap.get(exam.id);
+    const totalStudents = configured?.totalStudents ?? null;
+    const applicationsUsed = usageMap.get(exam.id) ?? 0;
+    const remainingApplications = totalStudents === null ? null : Math.max(totalStudents - applicationsUsed, 0);
+
+    return {
+      examId: exam.id,
+      examName: exam.name,
+      academicYear: exam.academicYear,
+      session: exam.session,
+      streamId: exam.streamId,
+      streamName: exam.stream?.name ?? '',
+      applicationOpen: exam.applicationOpen,
+      applicationClose: exam.applicationClose,
+      totalStudents,
+      applicationsUsed,
+      remainingApplications,
+      isConfigured: totalStudents !== null,
+      isCapacityReached: totalStudents !== null ? applicationsUsed >= totalStudents : false
+    };
+  });
 }
 
 /**
@@ -1262,6 +1348,9 @@ institutesRouter.get('/subject-options', requireAuth, async (req, res) => {
       const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
       return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
     }
+    if (isAnswerLanguageMigrationError(err)) {
+      return sendAnswerLanguageMigrationError(res);
+    }
     console.error('Error fetching subject options:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
@@ -1326,6 +1415,9 @@ institutesRouter.get('/me/stream-subjects', requireAuth, requireRole(['INSTITUTE
       }))
     });
   } catch (err) {
+    if (isAnswerLanguageMigrationError(err)) {
+      return sendAnswerLanguageMigrationError(res);
+    }
     console.error('Error fetching stream-subjects:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
@@ -1434,6 +1526,9 @@ institutesRouter.post('/me/stream-subjects', requireAuth, requireRole(['INSTITUT
       const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
       return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
     }
+    if (isAnswerLanguageMigrationError(err)) {
+      return sendAnswerLanguageMigrationError(res);
+    }
     console.error('Error updating stream-subjects:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
@@ -1507,6 +1602,9 @@ institutesRouter.put('/me/stream-subjects/:id', requireAuth, requireRole(['INSTI
       const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
       return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
     }
+    if (isAnswerLanguageMigrationError(err)) {
+      return sendAnswerLanguageMigrationError(res);
+    }
     console.error('Error updating stream-subject mapping:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
@@ -1531,7 +1629,98 @@ institutesRouter.delete('/me/stream-subjects/:id', requireAuth, requireRole(['IN
     await prisma.instituteStreamSubject.delete({ where: { id: mappingId } });
     return res.json({ ok: true, deletedId: mappingId });
   } catch (err) {
+    if (isAnswerLanguageMigrationError(err)) {
+      return sendAnswerLanguageMigrationError(res);
+    }
     console.error('Error deleting stream-subject mapping:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Institute admin: Get per-exam application capacities and remaining slots
+institutesRouter.get('/me/exam-capacities', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
+  try {
+    const q = z.object({
+      openOnly: z.coerce.boolean().optional()
+    }).parse(req.query);
+
+    const user = await getInstituteUserWithInstitute(req.auth.userId);
+    if (!user || !user.institute) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
+    }
+
+    const exams = await getInstituteExamCapacityRows(user.institute.id, { openOnly: q.openOnly ?? false });
+    return res.json({ ok: true, instituteId: user.institute.id, exams });
+  } catch (err) {
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    console.error('Error fetching institute exam capacities:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Institute admin: Set total students allowed for a specific exam
+institutesRouter.put('/me/exam-capacities/:examId', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
+  try {
+    const examId = z.coerce.number().int().positive().parse(req.params.examId);
+    const body = z.object({
+      totalStudents: z.coerce.number().int().min(0).max(100000)
+    }).parse(req.body);
+
+    const user = await getInstituteUserWithInstitute(req.auth.userId);
+    if (!user || !user.institute) {
+      return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
+    }
+
+    const exam = await prisma.exam.findUnique({ where: { id: examId }, include: { stream: true } });
+    if (!exam) {
+      return res.status(404).json({ error: 'EXAM_NOT_FOUND' });
+    }
+
+    const saved = await prisma.instituteExamCapacity.upsert({
+      where: {
+        instituteId_examId: {
+          instituteId: user.institute.id,
+          examId
+        }
+      },
+      update: {
+        totalStudents: body.totalStudents
+      },
+      create: {
+        instituteId: user.institute.id,
+        examId,
+        totalStudents: body.totalStudents
+      }
+    });
+
+    const applicationsUsed = await prisma.examApplication.count({
+      where: {
+        instituteId: user.institute.id,
+        examId
+      }
+    });
+
+    return res.json({
+      ok: true,
+      exam: {
+        examId: exam.id,
+        examName: exam.name,
+        streamName: exam.stream?.name ?? '',
+        totalStudents: saved.totalStudents,
+        applicationsUsed,
+        remainingApplications: Math.max(saved.totalStudents - applicationsUsed, 0),
+        isCapacityReached: applicationsUsed >= saved.totalStudents
+      }
+    });
+  } catch (err) {
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    console.error('Error saving institute exam capacity:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
 });

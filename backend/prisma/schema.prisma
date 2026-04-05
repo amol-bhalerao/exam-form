@@ -73,6 +73,7 @@ model Institute {
   teachers     Teacher[]
   instituteStreamSubjects InstituteStreamSubject[]
   instituteInvites InstituteInvite[]
+  examCapacities InstituteExamCapacity[]
 
   @@index([status])
   @@map("institutes")
@@ -179,10 +180,28 @@ model Exam {
   stream Stream @relation(fields: [streamId], references: [id])
   createdBy User @relation("ExamCreatedBy", fields: [createdByUserId], references: [id])
   applications ExamApplication[]
+  instituteCapacities InstituteExamCapacity[]
 
   @@index([streamId])
   @@index([applicationOpen, applicationClose])
   @@map("exams")
+}
+
+model InstituteExamCapacity {
+  id           Int      @id @default(autoincrement())
+  instituteId  Int
+  examId       Int
+  totalStudents Int     @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  institute Institute @relation(fields: [instituteId], references: [id])
+  exam      Exam      @relation(fields: [examId], references: [id])
+
+  @@unique([instituteId, examId])
+  @@index([instituteId])
+  @@index([examId])
+  @@map("institute_exam_capacities")
 }
 
 model Student {
@@ -336,12 +355,13 @@ model PreviousExam {
 }
 
 model FeeReimbursement {
-  id           Int    @id @default(autoincrement())
-  studentId    Int    @unique
+  id                    Int    @id @default(autoincrement())
+  studentId             Int    @unique
   revenueCircleAndVillage String? @db.VarChar(200)
-  accountNo    String? @db.VarChar(30)
-  ifscCode     String? @db.VarChar(15)
-  accountHolder String? @db.VarChar(20) // OWN/FATHER/MOTHER/OTHER
+  accountNo             String? @db.VarChar(30)
+  ifscCode              String? @db.VarChar(15)
+  accountHolder         String? @db.VarChar(100)
+  accountHolderRelation String? @db.VarChar(20)
 
   student Student @relation(fields: [studentId], references: [id])
 

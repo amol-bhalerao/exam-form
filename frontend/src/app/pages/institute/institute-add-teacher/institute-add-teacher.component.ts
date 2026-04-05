@@ -17,7 +17,7 @@ import { API_BASE_URL } from '../../../core/api';
 
 const CASTE_OPTIONS = ['General', 'OBC', 'SC', 'ST', 'VJNT', 'SBC', 'EWS', 'Other'];
 const TEACHER_TYPE_OPTIONS = ['Government', 'Contract', 'Adhoc', 'Temporary'];
-const RETIREMENT_AGE = 60;
+const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
 
 @Component({
   selector: 'app-institute-add-teacher',
@@ -43,10 +43,10 @@ const RETIREMENT_AGE = 60;
         <mat-form-field appearance="outline"><mat-label>Subject Specialization</mat-label><input matInput formControlName="subjectSpecialization" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Qualification</mat-label><input matInput formControlName="qualification" [readonly]="isReadonly()" /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Date of Birth</mat-label><input matInput [matDatepicker]="dobPicker" formControlName="dob" [readonly]="isReadonly()" /><mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle><mat-datepicker #dobPicker></mat-datepicker></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Retirement Date</mat-label><input matInput [value]="retirementDateDisplay()" disabled /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Retirement Date</mat-label><input matInput [value]="retirementDateDisplay()" readonly /><mat-hint>Last day of retirement month at age {{ maharashtraRetirementAge }}</mat-hint></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Date of Joining</mat-label><input matInput [matDatepicker]="dojPicker" formControlName="appointmentDate" /><mat-datepicker-toggle matSuffix [for]="dojPicker"></mat-datepicker-toggle><mat-datepicker #dojPicker></mat-datepicker></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Service Start Date</mat-label><input matInput [matDatepicker]="serviceStartPicker" formControlName="serviceStartDate" /><mat-datepicker-toggle matSuffix [for]="serviceStartPicker"></mat-datepicker-toggle><mat-datepicker #serviceStartPicker></mat-datepicker></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Total Experience</mat-label><input matInput [value]="experience()" disabled /></mat-form-field>
+        <mat-form-field appearance="outline"><mat-label>Total Experience</mat-label><input matInput [value]="experience()" readonly /></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Teacher Type</mat-label><mat-select formControlName="teacherType"><mat-option *ngFor="let type of teacherTypeOptions" [value]="type">{{ type }}</mat-option></mat-select></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Caste Category</mat-label><mat-select formControlName="casteCategory"><mat-option value="">Not specified</mat-option><mat-option *ngFor="let caste of casteOptions" [value]="caste">{{ caste }}</mat-option></mat-select></mat-form-field>
         <mat-form-field appearance="outline"><mat-label>Gender</mat-label><mat-select formControlName="gender" [disabled]="isReadonly()"><mat-option value="Male">Male</mat-option><mat-option value="Female">Female</mat-option><mat-option value="Other">Other</mat-option></mat-select></mat-form-field>
@@ -169,6 +169,9 @@ export class InstituteAddTeacherComponent implements OnInit {
   readonly isReadonly = signal(false);
   readonly casteOptions = CASTE_OPTIONS;
   readonly teacherTypeOptions = TEACHER_TYPE_OPTIONS;
+  readonly maharashtraRetirementAge = MAHARASHTRA_TEACHER_RETIREMENT_AGE;
+  readonly experience = signal('');
+  readonly retirementDateDisplay = signal('');
 
   readonly filteredTeachers = computed(() => {
     const q = this.searchText().trim().toLowerCase();
@@ -189,28 +192,40 @@ export class InstituteAddTeacherComponent implements OnInit {
     );
   });
 
-  readonly experience = computed(() => {
-    const serviceStartDate = this.form.value.serviceStartDate;
+  private calculateExperienceDisplay(serviceStartDate: Date | string | null | undefined): string {
     if (!serviceStartDate) return '';
     const date = new Date(serviceStartDate);
     if (Number.isNaN(date.getTime())) return '';
 
     const diffMs = Date.now() - date.getTime();
+    if (diffMs <= 0) return '0 years 0 months';
+
     const totalMonths = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44)));
     const years = Math.floor(totalMonths / 12);
     const months = totalMonths % 12;
     return `${years} year${years === 1 ? '' : 's'} ${months} month${months === 1 ? '' : 's'}`;
-  });
+  }
 
-  readonly retirementDateDisplay = computed(() => {
-    const dob = this.form.value.dob;
-    if (!dob) return '';
+  private calculateMaharashtraRetirementDate(dob: Date | string | null | undefined): Date | null {
+    if (!dob) return null;
     const date = new Date(dob);
-    if (Number.isNaN(date.getTime())) return '';
-    const retirementDate = new Date(date);
-    retirementDate.setFullYear(retirementDate.getFullYear() + RETIREMENT_AGE);
-    return `${retirementDate.toLocaleDateString()} (Age ${RETIREMENT_AGE})`;
-  });
+    if (Number.isNaN(date.getTime())) return null;
+
+    return new Date(date.getFullYear() + MAHARASHTRA_TEACHER_RETIREMENT_AGE, date.getMonth() + 1, 0);
+  }
+
+  private refreshDerivedValues() {
+    const serviceStartDate = this.form.controls.serviceStartDate.value;
+    const dob = this.form.controls.dob.value;
+    this.experience.set(this.calculateExperienceDisplay(serviceStartDate));
+
+    const retirementDate = this.calculateMaharashtraRetirementDate(dob);
+    this.retirementDateDisplay.set(
+      retirementDate
+        ? `${retirementDate.toLocaleDateString('en-GB')} (Age ${MAHARASHTRA_TEACHER_RETIREMENT_AGE})`
+        : ''
+    );
+  }
 
   readonly columnDefs: ColDef[] = [
     { field: 'fullName', headerName: 'Name', flex: 1.5 },
@@ -222,7 +237,13 @@ export class InstituteAddTeacherComponent implements OnInit {
     {
       field: 'totalYearsService',
       headerName: 'Experience',
-      valueGetter: (params: any) => params.data?.totalYearsService ? `${params.data.totalYearsService} years` : '-',
+      valueGetter: (params: any) => params.data?.totalYearsService !== null && params.data?.totalYearsService !== undefined ? `${params.data.totalYearsService} years` : '-',
+      flex: 1
+    },
+    {
+      field: 'retirementDate',
+      headerName: 'Retirement Date',
+      valueGetter: (params: any) => params.data?.retirementDate ? new Date(params.data.retirementDate).toLocaleDateString('en-GB') : '-',
       flex: 1
     },
     { headerName: 'College', valueGetter: (params: any) => params.data?.institute?.name ?? '-', flex: 1.4 },
@@ -254,6 +275,9 @@ export class InstituteAddTeacherComponent implements OnInit {
   constructor(private readonly http: HttpClient, private readonly snackBar: MatSnackBar) {}
 
   ngOnInit() {
+    this.form.controls.dob.valueChanges.subscribe(() => this.refreshDerivedValues());
+    this.form.controls.serviceStartDate.valueChanges.subscribe(() => this.refreshDerivedValues());
+    this.refreshDerivedValues();
     this.load();
   }
 

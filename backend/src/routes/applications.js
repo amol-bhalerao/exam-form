@@ -109,6 +109,34 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
 
     const institute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
     if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
+
+    const examCapacity = await prisma.instituteExamCapacity.findUnique({
+      where: {
+        instituteId_examId: {
+          instituteId: student.instituteId,
+          examId: exam.id
+        }
+      }
+    });
+
+    const totalStudentsAllowed = examCapacity?.totalStudents ?? institute.examApplicationLimit ?? null;
+    const applicationsUsed = await prisma.examApplication.count({
+      where: {
+        instituteId: student.instituteId,
+        examId: exam.id
+      }
+    });
+
+    if (typeof totalStudentsAllowed === 'number' && applicationsUsed >= totalStudentsAllowed) {
+      return res.status(409).json({
+        error: 'EXAM_APPLICATION_LIMIT_REACHED',
+        message: 'No remaining application slots are available for this exam at your institute.',
+        totalStudents: totalStudentsAllowed,
+        applicationsUsed,
+        remainingApplications: 0
+      });
+    }
+
     const app = await prisma.examApplication.create({
       data: {
         instituteId: student.instituteId,
@@ -116,9 +144,9 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
         examId: exam.id,
         applicationNo: `APP-${Date.now()}`,
         candidateType: body.candidateType,
-      status: 'DRAFT'
-    }
-  });
+        status: 'DRAFT'
+      }
+    });
 
     await addStatusHistory({
       applicationId: app.id,
@@ -127,7 +155,16 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
       toStatus: 'DRAFT'
     });
 
-    return res.json({ application: app });
+    return res.json({
+      application: app,
+      capacity: {
+        totalStudents: totalStudentsAllowed,
+        applicationsUsed: applicationsUsed + 1,
+        remainingApplications: typeof totalStudentsAllowed === 'number'
+          ? Math.max(totalStudentsAllowed - (applicationsUsed + 1), 0)
+          : null
+      }
+    });
   } catch (err) {
     console.error('Create application error:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });

@@ -43,7 +43,46 @@ examsRouter.get('/', requireAuth, async (req, res) => {
     take: limit
   });
 
-  return res.json({ exams, metadata: { page, limit, total } });
+  let instituteId = null;
+  if (req.auth?.role === 'INSTITUTE') {
+    instituteId = req.auth.instituteId ?? null;
+  } else if (req.auth?.role === 'STUDENT') {
+    const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
+    instituteId = student?.instituteId ?? null;
+  }
+
+  let examsWithCapacity = exams;
+  if (instituteId && exams.length > 0) {
+    const examIds = exams.map((exam) => exam.id);
+    const [capacityRows, usageRows] = await Promise.all([
+      prisma.instituteExamCapacity.findMany({
+        where: { instituteId, examId: { in: examIds } }
+      }),
+      prisma.examApplication.groupBy({
+        by: ['examId'],
+        where: { instituteId, examId: { in: examIds } },
+        _count: { _all: true }
+      })
+    ]);
+
+    const capacityMap = new Map(capacityRows.map((row) => [row.examId, row.totalStudents]));
+    const usageMap = new Map(usageRows.map((row) => [row.examId, row._count._all]));
+
+    examsWithCapacity = exams.map((exam) => {
+      const totalStudents = capacityMap.has(exam.id) ? capacityMap.get(exam.id) : null;
+      const applicationsUsed = usageMap.get(exam.id) ?? 0;
+      const remainingApplications = totalStudents === null ? null : Math.max(totalStudents - applicationsUsed, 0);
+      return {
+        ...exam,
+        totalStudents,
+        applicationsUsed,
+        remainingApplications,
+        isCapacityReached: totalStudents === null ? false : applicationsUsed >= totalStudents
+      };
+    });
+  }
+
+  return res.json({ exams: examsWithCapacity, metadata: { page, limit, total } });
 });
 
 examsRouter.post('/', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {

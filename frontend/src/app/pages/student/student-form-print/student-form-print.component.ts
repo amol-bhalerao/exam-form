@@ -30,23 +30,23 @@ import { API_BASE_URL } from '../../../core/api';
         <div class="grid2">
           <div class="box">
             <div class="lbl">1a Index No</div>
-            <div class="val">{{ a().indexNo || '—' }}</div>
+            <div class="val">{{ indexNoValue() }}</div>
           </div>
           <div class="box">
             <div class="lbl">1b UDISE No</div>
-            <div class="val">{{ a().udiseNo || '—' }}</div>
+            <div class="val">{{ udiseNoValue() }}</div>
           </div>
           <div class="box">
             <div class="lbl">1c Student Saral ID</div>
-            <div class="val">{{ a().studentSaralId || '—' }}</div>
+            <div class="val">{{ studentSaralIdValue() }}</div>
           </div>
           <div class="box">
             <div class="lbl">2a Appl.Sr.No</div>
-            <div class="val">{{ a().applSrNo || '—' }}</div>
+            <div class="val">{{ applicationSerialValue() }}</div>
           </div>
           <div class="box">
             <div class="lbl">2b Centre No</div>
-            <div class="val">{{ a().centreNo || '—' }}</div>
+            <div class="val">{{ centreNoValue() }}</div>
           </div>
         </div>
 
@@ -126,30 +126,18 @@ import { API_BASE_URL } from '../../../core/api';
 
         <div class="section">
           <div class="h">14 Type of Candidate</div>
-          <div class="row4">
+          <div class="row3">
             <div class="box">
-              <div class="lbl">A (Fresh/Repeater)</div>
-              <div class="val">{{ a().typeA || '—' }}</div>
+              <div class="lbl">Candidate Type</div>
+              <div class="val">{{ candidateTypeLabel() }}</div>
             </div>
             <div class="box">
-              <div class="lbl">B (Regular/Private/Isolated/Improvement)</div>
-              <div class="val">{{ a().typeB || '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">C (Exempted/Non Exempted)</div>
-              <div class="val">{{ a().typeC || '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">D (Agriculture/Bifocal/IT/General/Home Science)</div>
-              <div class="val">{{ a().typeD || '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">E Foreigner</div>
-              <div class="val">{{ a().isForeigner ? 'Yes' : 'No' }}</div>
+              <div class="lbl">Exemption Status</div>
+              <div class="val">{{ isBacklogCandidate() ? 'Applicable if claimed' : 'Not applicable' }}</div>
             </div>
             <div class="box">
               <div class="lbl">16 Total exemptions claimed</div>
-              <div class="val">{{ a().totalExemptionsClaimed ?? '—' }}</div>
+              <div class="val">{{ a().totalExemptionsClaimed ?? ((a().exemptedSubjects?.length ?? 0) || '0') }}</div>
             </div>
           </div>
         </div>
@@ -181,72 +169,80 @@ import { API_BASE_URL } from '../../../core/api';
           </table>
         </div>
 
-        <div class="section">
-          <div class="h">Exempted Subject Information (if any)</div>
-          <table class="tbl">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Name</th>
-                <th>Code</th>
-                <th>Seat No</th>
-                <th>Month</th>
-                <th>Year</th>
-                <th>Marks Obt</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (e of (a().exemptedSubjects ?? []); track e.id) {
+        @if (isBacklogCandidate()) {
+          <div class="section">
+            <div class="h">Exempted Subject Information (if any)</div>
+            <table class="tbl">
+              <thead>
                 <tr>
-                  <td>{{ $index + 1 }}</td>
-                  <td>{{ e.subjectName || '—' }}</td>
-                  <td>{{ e.subjectCode || '—' }}</td>
-                  <td>{{ e.seatNo || '—' }}</td>
-                  <td>{{ e.month || '—' }}</td>
-                  <td>{{ e.year || '—' }}</td>
-                  <td>{{ e.marksObt || '—' }}</td>
+                  <th>#</th>
+                  <th>Name</th>
+                  <th>Code</th>
+                  <th>Seat No</th>
+                  <th>Month</th>
+                  <th>Year</th>
+                  <th>Marks Obt</th>
                 </tr>
-              }
-              @if (!(a().exemptedSubjects?.length)) {
-                <tr>
-                  <td colspan="7" class="muted">No exemptions.</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                @for (e of (a().exemptedSubjects ?? []); track e.id) {
+                  <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ e.subjectName || '—' }}</td>
+                    <td>{{ e.subjectCode || '—' }}</td>
+                    <td>{{ e.seatNo || '—' }}</td>
+                    <td>{{ e.month || '—' }}</td>
+                    <td>{{ e.year || '—' }}</td>
+                    <td>{{ e.marksObt || '—' }}</td>
+                  </tr>
+                }
+                @if (!(a().exemptedSubjects?.length)) {
+                  <tr>
+                    <td colspan="7" class="muted">No exemptions.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
 
-        <div class="section">
-          <div class="h">17–22 Other Details</div>
-          <div class="row3">
-            <div class="box">
-              <div class="lbl">17 Enrollment Cert (Private): Month/Year/No</div>
-              <div class="val">{{ a().enrollmentCertMonth || '—' }}/{{ a().enrollmentCertYear || '—' }}/{{ a().enrollmentNo || '—' }}</div>
+        @if (hasOtherDetails()) {
+          <div class="section">
+            <div class="h">17–22 Other Details</div>
+            <div class="row3">
+              @if (isPrivateCandidate()) {
+                <div class="box">
+                  <div class="lbl">17 Enrollment Cert (Private): Month/Year/No</div>
+                  <div class="val">{{ a().enrollmentCertMonth || '—' }}/{{ a().enrollmentCertYear || '—' }}/{{ a().enrollmentNo || '—' }}</div>
+                </div>
+              }
+              @if (isBacklogCandidate()) {
+                <div class="box">
+                  <div class="lbl">19 Last Exam Seat (Repeaters/Backlog)</div>
+                  <div class="val">{{ a().lastExamMonth || '—' }} {{ a().lastExamYear || '—' }} / {{ a().lastExamSeatNo || '—' }}</div>
+                </div>
+              }
+              <div class="box">
+                <div class="lbl">20 Previous Education Board</div>
+                <div class="val">{{ a().sscPassedFromMaharashtra === null || a().sscPassedFromMaharashtra === undefined ? '—' : (a().sscPassedFromMaharashtra ? 'Yes' : 'No') }}</div>
+              </div>
             </div>
-            <div class="box">
-              <div class="lbl">19 Last Exam Seat (Repeaters)</div>
-              <div class="val">{{ a().lastExamMonth || '—' }} {{ a().lastExamYear || '—' }} / {{ a().lastExamSeatNo || '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">20 Previous Education Board</div>
-              <div class="val">{{ a().sscPassedFromMaharashtra === null || a().sscPassedFromMaharashtra === undefined ? '—' : (a().sscPassedFromMaharashtra ? 'Yes' : 'No') }}</div>
+            <div class="row3">
+              <div class="box">
+                <div class="lbl">21 Eligibility Certificate issued</div>
+                <div class="val">{{ a().eligibilityCertIssued === null || a().eligibilityCertIssued === undefined ? '—' : (a().eligibilityCertIssued ? 'Yes' : 'No') }}</div>
+              </div>
+              <div class="box">
+                <div class="lbl">21 Eligibility Certificate No</div>
+                <div class="val">{{ a().eligibilityCertNo || '—' }}</div>
+              </div>
+              <div class="box">
+                <div class="lbl">22 Fee reimbursement / bank details</div>
+                <div class="val muted">Stored in system or at institute level if applicable.</div>
+              </div>
             </div>
           </div>
-          <div class="row3">
-            <div class="box">
-              <div class="lbl">21 Eligibility Certificate issued</div>
-              <div class="val">{{ a().eligibilityCertIssued === null || a().eligibilityCertIssued === undefined ? '—' : (a().eligibilityCertIssued ? 'Yes' : 'No') }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">21 Eligibility Certificate No</div>
-              <div class="val">{{ a().eligibilityCertNo || '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">22 Fee reimbursement (see institute)</div>
-              <div class="val muted">Stored in system (if applicable).</div>
-            </div>
-          </div>
-        </div>
+        }
 
         <div class="footerGrid">
           <div class="sig">
@@ -278,7 +274,7 @@ import { API_BASE_URL } from '../../../core/api';
         margin: 0 auto;
         background: white;
         color: #111;
-        padding: 8mm;
+        padding: 6mm;
         box-sizing: border-box;
       }
       .header {
@@ -401,6 +397,51 @@ export class StudentFormPrintComponent implements OnInit {
 
   s() {
     return this.application()?.student ?? {};
+  }
+
+  indexNoValue() {
+    return this.a().indexNo || this.a().institute?.code || '—';
+  }
+
+  udiseNoValue() {
+    return this.a().udiseNo || this.a().institute?.udiseNo || '—';
+  }
+
+  studentSaralIdValue() {
+    return this.a().studentSaralId || this.s().studentSaralId || this.s().apaarId || '—';
+  }
+
+  applicationSerialValue() {
+    return this.a().applSrNo || this.a().applicationNo || '—';
+  }
+
+  centreNoValue() {
+    return this.a().centreNo || this.a().institute?.collegeNo || '—';
+  }
+
+  candidateTypeLabel() {
+    const mapping: Record<string, string> = {
+      REGULAR: 'Fresh / Regular',
+      BACKLOG: 'Backlog',
+      REPEATER: 'Repeater',
+      ATKT: 'ATKT',
+      IMPROVEMENT: 'Improvement',
+      PRIVATE: 'Private'
+    };
+    return mapping[this.a().candidateType] || this.a().candidateType || '—';
+  }
+
+  isBacklogCandidate() {
+    return ['BACKLOG', 'ATKT', 'REPEATER', 'IMPROVEMENT'].includes(this.a().candidateType);
+  }
+
+  isPrivateCandidate() {
+    return this.a().candidateType === 'PRIVATE';
+  }
+
+  hasOtherDetails() {
+    const app = this.a();
+    return this.isPrivateCandidate() || this.isBacklogCandidate() || !!app.eligibilityCertNo || app.eligibilityCertIssued !== null && app.eligibilityCertIssued !== undefined;
   }
 
   print() {

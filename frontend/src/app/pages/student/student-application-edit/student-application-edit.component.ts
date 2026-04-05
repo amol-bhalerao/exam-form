@@ -120,27 +120,35 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                 <mat-divider class="my-24"></mat-divider>
 
                 <h3 class="step-title">Reference Fields</h3>
+                <mat-card class="info-card">
+                  <mat-icon class="info-icon">verified</mat-icon>
+                  <div>
+                    <strong>Auto-filled by institute / board</strong>
+                    <p>Index No, UDISE No, application serial number, and centre details should normally be set by the institute or system and are kept read-only for students.</p>
+                  </div>
+                </mat-card>
+
                 <form [formGroup]="form">
                   <div class="form-grid">
                     <mat-form-field appearance="outline" class="w100">
                       <mat-label>Index No (1a)</mat-label>
-                      <input matInput formControlName="indexNo" />
+                      <input matInput formControlName="indexNo" [readonly]="true" />
                     </mat-form-field>
                     <mat-form-field appearance="outline" class="w100">
                       <mat-label>UDISE No (1b)</mat-label>
-                      <input matInput formControlName="udiseNo" />
+                      <input matInput formControlName="udiseNo" [readonly]="true" />
                     </mat-form-field>
                     <mat-form-field appearance="outline" class="w100">
                       <mat-label>Student Saral ID (1c)</mat-label>
-                      <input matInput formControlName="studentSaralId" />
+                      <input matInput formControlName="studentSaralId" [readonly]="true" />
                     </mat-form-field>
                     <mat-form-field appearance="outline" class="w100">
                       <mat-label>Appl.Sr.No (2a)</mat-label>
-                      <input matInput formControlName="applSrNo" />
+                      <input matInput formControlName="applSrNo" [readonly]="true" />
                     </mat-form-field>
                     <mat-form-field appearance="outline" class="w100">
                       <mat-label>Centre No (2b)</mat-label>
-                      <input matInput formControlName="centreNo" />
+                      <input matInput formControlName="centreNo" [readonly]="true" />
                     </mat-form-field>
                   </div>
                 </form>
@@ -1120,6 +1128,7 @@ export class StudentApplicationEditComponent implements OnInit {
   readonly selectedInstitute = signal<any | null>(null);
   readonly lastSaved = signal<string | null>(null);
   readonly examType = signal<'fresh' | 'backlog'>('fresh');
+  readonly candidateType = signal('REGULAR');
   readonly subjectSource = signal<'institute' | 'stream' | 'all'>('all');
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
@@ -1256,12 +1265,26 @@ export class StudentApplicationEditComponent implements OnInit {
 
   selectInstitute(inst: any) {
     this.selectedInstitute.set(inst);
+    this.applyInstituteDefaults(inst);
     this.form.patchValue({
-      centreNo: inst.code ?? '',
-      address: inst.address ?? ''
+      personGroup: {
+        ...(this.form.get('personGroup')?.value ?? {}),
+        address: this.form.get('personGroup.address')?.value || inst.address || ''
+      }
     });
     this.refreshSubjectOptions(this.form.get('academicGroup.streamCode')?.value, inst.id);
     this.showInstitutePicker.set(false);
+  }
+
+  private applyInstituteDefaults(inst: any) {
+    if (!inst) return;
+    const existing = this.form.getRawValue();
+    this.form.patchValue({
+      indexNo: existing.indexNo || inst.code || '',
+      udiseNo: existing.udiseNo || inst.udiseNo || '',
+      centreNo: existing.centreNo || inst.collegeNo || '',
+      applSrNo: existing.applSrNo || this.application()?.applicationNo || ''
+    }, { emitEvent: false });
   }
 
   getSubjectName(subjectId: number): string {
@@ -1382,10 +1405,11 @@ export class StudentApplicationEditComponent implements OnInit {
 
   private buildApplicationPayload() {
     const raw: any = this.form.getRawValue();
-    const candidateType = raw.examType === 'backlog' ? 'BACKLOG' : 'REGULAR';
+    const candidateType = this.candidateType() || (raw.examType === 'backlog' ? 'BACKLOG' : 'REGULAR');
+    const isBacklogFlow = ['BACKLOG', 'ATKT', 'REPEATER', 'IMPROVEMENT'].includes(candidateType);
     const selectedSubjects = (raw.subjects ?? []).filter((s: any) => !!s.subjectId);
 
-    const exemptedSubjects = candidateType === 'BACKLOG'
+    const exemptedSubjects = isBacklogFlow
       ? selectedSubjects.map((s: any) => {
           const subjectMeta = this.masterSubjects().find((subject: any) => subject.id === s.subjectId);
           return {
@@ -1430,7 +1454,7 @@ export class StudentApplicationEditComponent implements OnInit {
       subjects: selectedSubjects.map((s: any) => ({
         subjectId: s.subjectId,
         langOfAnsCode: s.langOfAnsCode || this.getMappedLanguage(s.subjectId) || undefined,
-        isExemptedClaim: candidateType === 'BACKLOG'
+        isExemptedClaim: isBacklogFlow
       })),
       exemptedSubjects
     };
@@ -1509,9 +1533,10 @@ export class StudentApplicationEditComponent implements OnInit {
 
   private patchFromApplication(a: any) {
     const student = a.student ?? {};
-    const derivedExamType = ['BACKLOG', 'ATKT', 'REPEATER'].includes(a.candidateType) ? 'backlog' : 'fresh';
+    const derivedExamType = ['BACKLOG', 'ATKT', 'REPEATER', 'IMPROVEMENT'].includes(a.candidateType) ? 'backlog' : 'fresh';
 
     this.examType.set(derivedExamType as 'fresh' | 'backlog');
+    this.candidateType.set(a.candidateType ?? (derivedExamType === 'backlog' ? 'BACKLOG' : 'REGULAR'));
 
     // Patch existing form instead of recreating it
     this.form.patchValue({
@@ -1549,6 +1574,7 @@ export class StudentApplicationEditComponent implements OnInit {
     });
 
     this.selectedInstitute.set(a.institute ?? null);
+    this.applyInstituteDefaults(a.institute ?? null);
     this.refreshSubjectOptions(student.streamCode ?? a.exam?.stream?.name ?? null, a.institute?.id ?? a.instituteId ?? student.instituteId ?? null);
 
     const subjects = this.form.get('subjects') as FormArray;
@@ -1581,6 +1607,7 @@ export class StudentApplicationEditComponent implements OnInit {
   private patchFromProfile(student: any) {
     // Initialize empty form for new application
     this.examType.set('fresh');
+    this.candidateType.set('REGULAR');
     
     // Patch existing form instead of recreating it
     this.form.patchValue({

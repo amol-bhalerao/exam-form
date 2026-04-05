@@ -514,6 +514,7 @@ studentsRouter.patch('/me/bank-details', requireAuth, async (req, res) => {
         data: {
           studentId: student.id,
           accountHolder: data.accountHolder || null,
+          accountHolderRelation: data.accountHolderRelation || null,
           ifscCode: normalizedIfsc,
           accountNo: data.accountNumber || null,
           revenueCircleAndVillage: null
@@ -524,6 +525,7 @@ studentsRouter.patch('/me/bank-details', requireAuth, async (req, res) => {
         where: { id: bankDetails.id },
         data: {
           accountHolder: data.accountHolder || null,
+          accountHolderRelation: data.accountHolderRelation || null,
           ifscCode: normalizedIfsc,
           accountNo: data.accountNumber || null
         }
@@ -532,7 +534,10 @@ studentsRouter.patch('/me/bank-details', requireAuth, async (req, res) => {
 
     return res.json({
       ok: true,
-      bankDetails,
+      bankDetails: {
+        ...bankDetails,
+        accountNumber: bankDetails.accountNo ?? null
+      },
       message: 'Bank details saved successfully'
     });
   } catch (err) {

@@ -53,7 +53,7 @@ import { HealthService, HealthCheckResult, ApiHealthCheck } from '../../../servi
           <p>{{ getStatusMessage() }}</p>
         </div>
         <div class="status-time">
-          Last checked: {{ lastCheckTime() | date: 'short' ?? 'Never' }}
+          Last checked: {{ lastCheckTime() ? (lastCheckTime() | date: 'short') : 'Never' }}
         </div>
       </div>
 

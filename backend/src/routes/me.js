@@ -20,7 +20,8 @@ meRouter.get('/', requireAuth, async (req, res) => {
       where: { userId: userId },
       include: { 
         institute: true,
-        previousExams: true
+        previousExams: true,
+        feeReimbursement: true
       }
     });
   }
@@ -63,7 +64,17 @@ meRouter.get('/', requireAuth, async (req, res) => {
       categoryCode: student.categoryCode,
       divyangCode: student.divyangCode,
       mediumCode: student.mediumCode,
-      previousExams: student.previousExams
+      previousExams: student.previousExams,
+      bankDetails: student.feeReimbursement
+        ? {
+            id: student.feeReimbursement.id,
+            accountHolder: student.feeReimbursement.accountHolder,
+            accountHolderRelation: student.feeReimbursement.accountHolderRelation,
+            ifscCode: student.feeReimbursement.ifscCode,
+            accountNo: student.feeReimbursement.accountNo,
+            accountNumber: student.feeReimbursement.accountNo
+          }
+        : null
     } : null
   });
 });

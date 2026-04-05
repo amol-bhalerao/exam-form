@@ -44,9 +44,9 @@ type MappingRow = {
           <mat-label>Stream search</mat-label>
           <input matInput [ngModel]="streamSearch()" (ngModelChange)="streamSearch.set($event)" placeholder="Search stream" />
         </mat-form-field>
-        <mat-form-field appearance="outline" class="field">
-          <mat-label>Subject search</mat-label>
-          <input matInput [ngModel]="subjectSearch()" (ngModelChange)="subjectSearch.set($event)" placeholder="Search subjects" />
+        <mat-form-field appearance="outline" class="field field-wide">
+          <mat-label>Search in subject list</mat-label>
+          <input matInput [ngModel]="subjectSearch()" (ngModelChange)="subjectSearch.set($event)" placeholder="Type subject name, code, or category" />
         </mat-form-field>
       </div>
 
@@ -61,10 +61,12 @@ type MappingRow = {
         <mat-form-field appearance="outline" class="field field-wide">
           <mat-label>Subjects</mat-label>
           <mat-select [multiple]="!editingMappingId()" [(ngModel)]="selectedSubjectIds">
+            <mat-option *ngIf="filteredSubjects.length === 0" disabled>No subjects match the current search.</mat-option>
             <mat-option *ngFor="let s of filteredSubjects" [value]="s.id">
               {{ s.name }} ({{ s.code }}) - {{ s.category || 'General' }}
             </mat-option>
           </mat-select>
+          <mat-hint>{{ filteredSubjects.length }} of {{ subjects().length }} subjects shown</mat-hint>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="field">
@@ -220,7 +222,8 @@ export class InstituteStreamSubjectsComponent implements OnInit {
         },
         error: (e) => {
           console.error('Failed to load stream-subject settings', e);
-          this.error.set('Unable to load existing mappings.');
+          const message = e?.error?.message || e?.error?.error || 'Unable to load existing mappings.';
+          this.error.set(message);
           this.mappings.set([]);
         }
       });

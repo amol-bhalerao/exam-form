@@ -42,6 +42,13 @@ export interface StudentProfile {
   
   // Subject Marks
   subjects: SubjectMarks[];
+  bankDetails?: {
+    accountHolder?: string;
+    accountHolderRelation?: string;
+    ifscCode?: string;
+    accountNo?: string;
+    accountNumber?: string;
+  } | null;
   
   // Timestamps
   createdAt?: string;
@@ -168,7 +175,8 @@ export class StudentProfileService {
             const mergedStudent = {
               ...student,
               email: student.email || user?.email || '',
-              mobile: student.mobile || user?.mobile || ''
+              mobile: student.mobile || user?.mobile || '',
+              bankDetails: student.bankDetails || null
             };
 
             // Student profile exists in database - use it  
@@ -177,7 +185,7 @@ export class StudentProfileService {
             this.profileCompletionPercentage.set(completionPercentage);
             this.isLoading.set(false);
             console.log('Resolved student profile:', { instituteId: student.instituteId, streamCode: student.streamCode });
-            resolve(student);
+            resolve(mergedStudent);
           } else {
             // Student record doesn't exist yet - create empty profile for student to fill
             const emptyProfile: any = {
@@ -433,6 +441,14 @@ export class StudentProfileService {
     this.http.patch<{ ok: boolean; bankDetails: any }>(`${API_BASE_URL}/students/me/bank-details`, bankData).subscribe({
       next: (response: any) => {
         console.log('Bank details saved:', response);
+        const current = this.studentProfile();
+        if (current) {
+          const updatedProfile = {
+            ...current,
+            bankDetails: response.bankDetails || null
+          };
+          this.studentProfile.set(updatedProfile);
+        }
         this.isLoading.set(false);
       },
       error: (err: any) => {

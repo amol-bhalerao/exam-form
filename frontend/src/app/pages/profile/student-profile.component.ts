@@ -1976,6 +1976,14 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           });
         }
 
+        // Bind bank details form
+        this.bankDetailsForm.patchValue({
+          accountHolder: profile.bankDetails?.accountHolder || '',
+          accountHolderRelation: profile.bankDetails?.accountHolderRelation || '',
+          ifscCode: profile.bankDetails?.ifscCode || '',
+          accountNumber: profile.bankDetails?.accountNumber || profile.bankDetails?.accountNo || ''
+        });
+
         // Calculate profile completion
         this.calculateProfileCompletion(profile);
 
@@ -2344,6 +2352,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       setTimeout(() => {
         this.savingBank = false;
         this.snackBar.open('✓ Bank details saved successfully', '', { duration: 3000 });
+        this.loadProfile();
         this.goToNextTab(4);
       }, 1500);
     }
