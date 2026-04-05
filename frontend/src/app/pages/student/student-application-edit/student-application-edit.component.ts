@@ -1280,9 +1280,9 @@ export class StudentApplicationEditComponent implements OnInit {
     if (!inst) return;
     const existing = this.form.getRawValue();
     this.form.patchValue({
-      indexNo: existing.indexNo || inst.code || '',
+      indexNo: existing.indexNo || inst.collegeNo || inst.code || '',
       udiseNo: existing.udiseNo || inst.udiseNo || '',
-      centreNo: existing.centreNo || inst.collegeNo || '',
+      centreNo: existing.centreNo || inst.code || inst.collegeNo || '',
       applSrNo: existing.applSrNo || this.application()?.applicationNo || ''
     }, { emitEvent: false });
   }

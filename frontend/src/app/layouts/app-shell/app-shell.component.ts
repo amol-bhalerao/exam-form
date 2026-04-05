@@ -81,6 +81,7 @@ import { API_BASE_URL } from '../../core/api';
               <div class="section-indicator"></div>
             </div>
             <a mat-list-item routerLink="/app/institute/settings" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">domain</mat-icon><span class="label">Institute Details</span></a>
+            <a mat-list-item routerLink="/app/institute/exam-capacity" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">grid_view</mat-icon><span class="label">Exam Capacity</span></a>
             <a mat-list-item routerLink="/app/institute/teachers" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">people</mat-icon><span class="label">Teachers & Staff</span></a>
             <a mat-list-item routerLink="/app/institute/stream-subjects" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">category</mat-icon><span class="label">Stream Subjects</span></a>
           }

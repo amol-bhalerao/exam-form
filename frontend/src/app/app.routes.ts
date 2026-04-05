@@ -12,6 +12,7 @@ import { LandingEnhancedComponent } from './pages/landing/landing-enhanced.compo
 import { InstituteRegisterComponent } from './pages/institute-register/institute-register.component';
 import { InstituteActivateComponent } from './pages/institute-activate/institute-activate.component';
 import { InstituteSettingsComponent } from './pages/institute/institute-settings/institute-settings.component';
+import { InstituteExamCapacityPageComponent } from './pages/institute/institute-exam-capacity/institute-exam-capacity.component';
 import { InstituteAddTeacherComponent } from './pages/institute/institute-add-teacher/institute-add-teacher.component';
 import { InstituteStreamSubjectsComponent } from './pages/institute/institute-stream-subjects/institute-stream-subjects.component';
 import { AppShellComponent } from './layouts/app-shell/app-shell.component';
@@ -95,6 +96,7 @@ export const routes: Routes = [
       // INSTITUTE
       { path: 'institute/applications', component: InstituteApplicationsComponent, canActivate: [roleGuard(['INSTITUTE'])] },
       { path: 'institute/settings', component: InstituteSettingsComponent, canActivate: [roleGuard(['INSTITUTE'])] },
+      { path: 'institute/exam-capacity', component: InstituteExamCapacityPageComponent, canActivate: [roleGuard(['INSTITUTE'])] },
       { path: 'institute/teachers', component: InstituteAddTeacherComponent, canActivate: [roleGuard(['INSTITUTE'])] },
       { path: 'institute/stream-subjects', component: InstituteStreamSubjectsComponent, canActivate: [roleGuard(['INSTITUTE'])] },
 

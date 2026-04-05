@@ -236,8 +236,8 @@ export class SuperInstituteUsersComponent implements OnInit {
     { field: 'status', headerName: 'User Status', minWidth: 120 },
     { headerName: 'Institute', valueGetter: (params: any) => params.data?.institute?.name ?? '-', minWidth: 200 },
     { headerName: 'Institute Status', valueGetter: (params: any) => params.data?.institute?.status ?? '-', minWidth: 130 },
-    { headerName: 'Index No', valueGetter: (params: any) => params.data?.institute?.code ?? '-', minWidth: 120 },
-    { headerName: 'College No', valueGetter: (params: any) => params.data?.institute?.collegeNo ?? '-', minWidth: 120 },
+    { headerName: 'Center No', valueGetter: (params: any) => params.data?.institute?.code ?? '-', minWidth: 120 },
+    { headerName: 'College No (Unique)', valueGetter: (params: any) => params.data?.institute?.collegeNo ?? '-', minWidth: 140 },
     { headerName: 'UDISE', valueGetter: (params: any) => params.data?.institute?.udiseNo ?? '-', minWidth: 140 },
     {
       headerName: 'Actions',

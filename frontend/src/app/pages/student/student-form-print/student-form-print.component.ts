@@ -400,7 +400,7 @@ export class StudentFormPrintComponent implements OnInit {
   }
 
   indexNoValue() {
-    return this.a().indexNo || this.a().institute?.code || '—';
+    return this.a().indexNo || this.a().institute?.collegeNo || this.a().institute?.code || '—';
   }
 
   udiseNoValue() {
@@ -416,7 +416,7 @@ export class StudentFormPrintComponent implements OnInit {
   }
 
   centreNoValue() {
-    return this.a().centreNo || this.a().institute?.collegeNo || '—';
+    return this.a().centreNo || this.a().institute?.code || this.a().institute?.collegeNo || '—';
   }
 
   candidateTypeLabel() {

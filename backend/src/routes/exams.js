@@ -3,6 +3,27 @@ import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
 
+const STUDENT_STREAM_CODE_LOOKUP = {
+  '1': 'Science',
+  '2': 'Arts',
+  '3': 'Commerce',
+  '4': 'Vocational',
+  '5': 'Technology'
+};
+
+function resolveStreamIdFromStudentCode(streamCode, streams = [], fallbackStreamId = null) {
+  if (streamCode === undefined || streamCode === null || streamCode === '') return fallbackStreamId;
+
+  const normalized = String(streamCode).trim().toLowerCase();
+  const requested = String(STUDENT_STREAM_CODE_LOOKUP[normalized] || normalized).toLowerCase();
+  const matched = streams.find((stream) => {
+    const name = String(stream?.name || '').toLowerCase();
+    return name === requested || name.includes(requested) || requested.includes(name);
+  });
+
+  return matched?.id ?? fallbackStreamId;
+}
+
 export const examsRouter = Router();
 
 examsRouter.get('/', requireAuth, async (req, res) => {
@@ -44,33 +65,71 @@ examsRouter.get('/', requireAuth, async (req, res) => {
   });
 
   let instituteId = null;
+  let studentStreamId = null;
   if (req.auth?.role === 'INSTITUTE') {
     instituteId = req.auth.instituteId ?? null;
   } else if (req.auth?.role === 'STUDENT') {
-    const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
+    const [student, streams] = await Promise.all([
+      prisma.student.findUnique({ where: { userId: req.auth.userId } }),
+      prisma.stream.findMany({ orderBy: { name: 'asc' } })
+    ]);
     instituteId = student?.instituteId ?? null;
+    studentStreamId = resolveStreamIdFromStudentCode(student?.streamCode, streams, null);
   }
 
   let examsWithCapacity = exams;
   if (instituteId && exams.length > 0) {
     const examIds = exams.map((exam) => exam.id);
-    const [capacityRows, usageRows] = await Promise.all([
+    const [capacityRows, applications, streams] = await Promise.all([
       prisma.instituteExamCapacity.findMany({
         where: { instituteId, examId: { in: examIds } }
       }),
-      prisma.examApplication.groupBy({
-        by: ['examId'],
+      prisma.examApplication.findMany({
         where: { instituteId, examId: { in: examIds } },
-        _count: { _all: true }
-      })
+        select: {
+          examId: true,
+          student: {
+            select: { streamCode: true }
+          }
+        }
+      }),
+      prisma.stream.findMany({ orderBy: { name: 'asc' } })
     ]);
 
-    const capacityMap = new Map(capacityRows.map((row) => [row.examId, row.totalStudents]));
-    const usageMap = new Map(usageRows.map((row) => [row.examId, row._count._all]));
+    const capacityMap = new Map(capacityRows.map((row) => [`${row.examId}:${row.streamId}`, row.totalStudents]));
+    const usageMap = new Map();
+
+    for (const app of applications) {
+      const exam = exams.find((item) => item.id === app.examId);
+      const streamId = resolveStreamIdFromStudentCode(app.student?.streamCode, streams, exam?.streamId ?? null);
+      if (!streamId) continue;
+      const key = `${app.examId}:${streamId}`;
+      usageMap.set(key, (usageMap.get(key) ?? 0) + 1);
+    }
 
     examsWithCapacity = exams.map((exam) => {
-      const totalStudents = capacityMap.has(exam.id) ? capacityMap.get(exam.id) : null;
-      const applicationsUsed = usageMap.get(exam.id) ?? 0;
+      if (req.auth?.role === 'STUDENT') {
+        const targetStreamId = studentStreamId ?? exam.streamId;
+        const key = `${exam.id}:${targetStreamId}`;
+        const totalStudents = capacityMap.has(key) ? capacityMap.get(key) : null;
+        const applicationsUsed = usageMap.get(key) ?? 0;
+        const remainingApplications = totalStudents === null ? null : Math.max(totalStudents - applicationsUsed, 0);
+        return {
+          ...exam,
+          totalStudents,
+          applicationsUsed,
+          remainingApplications,
+          isCapacityReached: totalStudents === null ? false : applicationsUsed >= totalStudents
+        };
+      }
+
+      const examCapacityRows = capacityRows.filter((row) => row.examId === exam.id);
+      const totalStudents = examCapacityRows.length
+        ? examCapacityRows.reduce((sum, row) => sum + (row.totalStudents ?? 0), 0)
+        : null;
+      const applicationsUsed = Array.from(usageMap.entries())
+        .filter(([key]) => key.startsWith(`${exam.id}:`))
+        .reduce((sum, [, count]) => sum + count, 0);
       const remainingApplications = totalStudents === null ? null : Math.max(totalStudents - applicationsUsed, 0);
       return {
         ...exam,

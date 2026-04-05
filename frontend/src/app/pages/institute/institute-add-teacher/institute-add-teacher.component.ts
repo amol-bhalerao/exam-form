@@ -11,51 +11,95 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTabsModule } from '@angular/material/tabs';
 import { AgGridModule } from 'ag-grid-angular';
 import type { ColDef } from 'ag-grid-community';
 import { API_BASE_URL } from '../../../core/api';
 
 const CASTE_OPTIONS = ['General', 'OBC', 'SC', 'ST', 'VJNT', 'SBC', 'EWS', 'Other'];
-const TEACHER_TYPE_OPTIONS = ['Government', 'Contract', 'Adhoc', 'Temporary'];
+const TEACHER_TYPE_OPTIONS = ['Aided', 'Partially Aided 80', 'Partially Aided 60', 'Partially Aided 40', 'Partially Aided 20', 'Unaided', 'Permanent Unaided', 'Self Financed'];
 const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
 
 @Component({
   selector: 'app-institute-add-teacher',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, MatCardModule, MatFormFieldModule, MatInputModule, MatDatepickerModule, MatNativeDateModule, MatSelectModule, MatButtonModule, MatIconModule, MatSnackBarModule, AgGridModule, NgIf, NgFor],
+  imports: [ReactiveFormsModule, DatePipe, MatCardModule, MatFormFieldModule, MatInputModule, MatDatepickerModule, MatNativeDateModule, MatSelectModule, MatButtonModule, MatIconModule, MatSnackBarModule, MatTabsModule, AgGridModule, NgIf, NgFor],
   template: `
     <mat-card class="card">
       <div class="h">Teachers & Staff</div>
-      <p class="p">Register staff using Aadhar first, reuse prior institute details when available, and manage records from the grid below.</p>
+      <p class="p">Register staff using Aadhar first, reuse prior institute details when available, and capture examiner / moderator details for the board panel.</p>
 
-      <form [formGroup]="form" (ngSubmit)="save()" class="grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Aadhar Number</mat-label>
-          <input matInput formControlName="governmentId" maxlength="20" inputmode="numeric" (input)="normalizeGovernmentId()" (blur)="onAadharLookup()" />
-        </mat-form-field>
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <mat-tab-group class="teacher-tabs" animationDuration="0ms">
+          <mat-tab label="1. Identity">
+            <div class="grid tab-content">
+              <mat-form-field appearance="outline">
+                <mat-label>Aadhar Number</mat-label>
+                <input matInput formControlName="governmentId" maxlength="20" inputmode="numeric" (input)="normalizeGovernmentId()" (blur)="onAadharLookup()" />
+              </mat-form-field>
 
-        <div class="inline-action">
-          <button mat-stroked-button color="primary" type="button" (click)="onAadharLookup()">Lookup Aadhar</button>
+              <div class="inline-action">
+                <button mat-stroked-button color="primary" type="button" (click)="onAadharLookup()">Lookup Aadhar</button>
+              </div>
+
+              <mat-form-field appearance="outline"><mat-label>Full Name</mat-label><input matInput formControlName="fullName" [readonly]="isReadonly()" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Date of Birth</mat-label><input matInput [matDatepicker]="dobPicker" formControlName="dob" [readonly]="isReadonly()" /><mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle><mat-datepicker #dobPicker></mat-datepicker></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Gender</mat-label><mat-select formControlName="gender" [disabled]="isReadonly()"><mat-option value="Male">Male</mat-option><mat-option value="Female">Female</mat-option><mat-option value="Other">Other</mat-option></mat-select></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Qualification</mat-label><input matInput formControlName="qualification" [readonly]="isReadonly()" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Caste Category</mat-label><mat-select formControlName="casteCategory"><mat-option value="">Not specified</mat-option><mat-option *ngFor="let caste of casteOptions" [value]="caste">{{ caste }}</mat-option></mat-select></mat-form-field>
+            </div>
+          </mat-tab>
+
+          <mat-tab label="2. Service & Contact">
+            <div class="grid tab-content">
+              <mat-form-field appearance="outline"><mat-label>Designation</mat-label><input matInput formControlName="designation" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Subject Specialization</mat-label><input matInput formControlName="subjectSpecialization" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Teacher Type</mat-label><mat-select formControlName="teacherType"><mat-option *ngFor="let type of teacherTypeOptions" [value]="type">{{ type }}</mat-option></mat-select></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Joining Date of this institute</mat-label><input matInput [matDatepicker]="dojPicker" formControlName="appointmentDate" /><mat-datepicker-toggle matSuffix [for]="dojPicker"></mat-datepicker-toggle><mat-datepicker #dojPicker></mat-datepicker></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Service Start Date</mat-label><input matInput [matDatepicker]="serviceStartPicker" formControlName="serviceStartDate" /><mat-datepicker-toggle matSuffix [for]="serviceStartPicker"></mat-datepicker-toggle><mat-datepicker #serviceStartPicker></mat-datepicker></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput formControlName="email" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput formControlName="mobile" maxlength="10" inputmode="numeric" (input)="normalizeMobile()" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select formControlName="active"><mat-option [value]="true">Active</mat-option><mat-option [value]="false">Inactive</mat-option></mat-select></mat-form-field>
+              <mat-form-field appearance="outline" class="span-2"><mat-label>Certificate Details</mat-label><input matInput formControlName="certificates" placeholder="B.Ed, TET, MSCIT etc." /></mat-form-field>
+            </div>
+          </mat-tab>
+
+          <mat-tab label="3. Board Duty">
+            <div class="grid tab-content">
+              <mat-form-field appearance="outline"><mat-label>Examiner experience (years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="examinerExperienceYears" /><mat-hint>Enter 0 if no examiner experience</mat-hint></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Previous Examiner Appointment No.</mat-label><input matInput formControlName="previousExaminerAppointmentNo" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Moderator experience (years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="moderatorExperienceYears" /><mat-hint>Enter 0 if no moderator experience</mat-hint></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Last Exam Moderator Name</mat-label><input matInput formControlName="lastModeratorName" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Last Moderator Appointment No.</mat-label><input matInput formControlName="lastModeratorAppointmentNo" /></mat-form-field>
+              <mat-form-field appearance="outline" class="span-2"><mat-label>Last Moderator College Name</mat-label><input matInput formControlName="lastModeratorCollegeName" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Chief Moderator experience (years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="chiefModeratorExperienceYears" /><mat-hint>Optional board panel history</mat-hint></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Last Chief Moderator Name</mat-label><input matInput formControlName="lastChiefModeratorName" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Last Chief Moderator Appointment No.</mat-label><input matInput formControlName="lastChiefModeratorAppointmentNo" /></mat-form-field>
+              <mat-form-field appearance="outline" class="span-2"><mat-label>Last Chief Moderator College Name</mat-label><input matInput formControlName="lastChiefModeratorCollegeName" /></mat-form-field>
+            </div>
+          </mat-tab>
+        </mat-tab-group>
+
+        <div class="calc-grid">
+          <div class="calc-tile">
+            <div class="calc-label">Total Experience</div>
+            <div class="calc-value">{{ experience() || 'Will auto-calculate after service start date' }}</div>
+          </div>
+          <div class="calc-tile">
+            <div class="calc-label">Retirement Date</div>
+            <div class="calc-value">{{ retirementDateDisplay() || ('Auto-set at age ' + maharashtraRetirementAge) }}</div>
+          </div>
+          <div class="calc-tile">
+            <div class="calc-label">Senior Pay Grade</div>
+            <div class="calc-value">{{ seniorPayGradeStatus() }}</div>
+          </div>
+          <div class="calc-tile">
+            <div class="calc-label">Selection Pay Grade</div>
+            <div class="calc-value">{{ selectionPayGradeStatus() }}</div>
+          </div>
         </div>
 
-        <mat-form-field appearance="outline"><mat-label>Full Name</mat-label><input matInput formControlName="fullName" [readonly]="isReadonly()" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Designation</mat-label><input matInput formControlName="designation" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Subject Specialization</mat-label><input matInput formControlName="subjectSpecialization" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Qualification</mat-label><input matInput formControlName="qualification" [readonly]="isReadonly()" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Date of Birth</mat-label><input matInput [matDatepicker]="dobPicker" formControlName="dob" [readonly]="isReadonly()" /><mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle><mat-datepicker #dobPicker></mat-datepicker></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Retirement Date</mat-label><input matInput [value]="retirementDateDisplay()" readonly /><mat-hint>Last day of retirement month at age {{ maharashtraRetirementAge }}</mat-hint></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Date of Joining</mat-label><input matInput [matDatepicker]="dojPicker" formControlName="appointmentDate" /><mat-datepicker-toggle matSuffix [for]="dojPicker"></mat-datepicker-toggle><mat-datepicker #dojPicker></mat-datepicker></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Service Start Date</mat-label><input matInput [matDatepicker]="serviceStartPicker" formControlName="serviceStartDate" /><mat-datepicker-toggle matSuffix [for]="serviceStartPicker"></mat-datepicker-toggle><mat-datepicker #serviceStartPicker></mat-datepicker></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Total Experience</mat-label><input matInput [value]="experience()" readonly /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Teacher Type</mat-label><mat-select formControlName="teacherType"><mat-option *ngFor="let type of teacherTypeOptions" [value]="type">{{ type }}</mat-option></mat-select></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Caste Category</mat-label><mat-select formControlName="casteCategory"><mat-option value="">Not specified</mat-option><mat-option *ngFor="let caste of casteOptions" [value]="caste">{{ caste }}</mat-option></mat-select></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Gender</mat-label><mat-select formControlName="gender" [disabled]="isReadonly()"><mat-option value="Male">Male</mat-option><mat-option value="Female">Female</mat-option><mat-option value="Other">Other</mat-option></mat-select></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput formControlName="email" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput formControlName="mobile" maxlength="10" inputmode="numeric" (input)="normalizeMobile()" /></mat-form-field>
-        <mat-form-field appearance="outline" class="span-2"><mat-label>Certificate Details</mat-label><input matInput formControlName="certificates" placeholder="B.Ed, TET, MSCIT etc." /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select formControlName="active"><mat-option [value]="true">Active</mat-option><mat-option [value]="false">Inactive</mat-option></mat-select></mat-form-field>
-
-        <div class="form-actions span-2">
+        <div class="form-actions">
           <button mat-flat-button color="primary" [disabled]="form.invalid || loading()">{{ loading() ? 'Saving…' : selectedTeacherId() ? 'Update Teacher' : 'Add Teacher' }}</button>
           <button mat-stroked-button type="button" *ngIf="selectedTeacherId()" (click)="resetForm()">Cancel Edit</button>
         </div>
@@ -105,6 +149,11 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
           <div><strong>Retirement Date:</strong> {{ viewingTeacher()?.retirementDate | date:'dd-MM-yyyy' }}</div>
           <div><strong>Experience:</strong> {{ viewingTeacher()?.totalYearsService || 0 }} years</div>
           <div><strong>Teacher Type:</strong> {{ viewingTeacher()?.teacherType }}</div>
+          <div><strong>Examiner Details:</strong> {{ viewingTeacher()?.examinerExperienceYears ? (viewingTeacher()?.examinerExperienceYears + ' years • Appointment No: ' + (viewingTeacher()?.previousExaminerAppointmentNo || 'Not added')) : 'No examiner experience added' }}</div>
+          <div><strong>Moderator Details:</strong> {{ viewingTeacher()?.moderatorExperienceYears ? (viewingTeacher()?.moderatorExperienceYears + ' years • ' + (viewingTeacher()?.lastModeratorName || 'Name not added') + ' • ' + (viewingTeacher()?.lastModeratorAppointmentNo || 'Appointment no not added')) : 'No moderator experience added' }}</div>
+          <div><strong>Chief Moderator Details:</strong> {{ viewingTeacher()?.chiefModeratorExperienceYears ? (viewingTeacher()?.chiefModeratorExperienceYears + ' years • ' + (viewingTeacher()?.lastChiefModeratorName || 'Name not added') + ' • ' + (viewingTeacher()?.lastChiefModeratorAppointmentNo || 'Appointment no not added')) : 'No chief moderator experience added' }}</div>
+          <div><strong>Senior Pay Grade Training:</strong> {{ viewingTeacher()?.seniorPayGradeEligible ? 'Eligible' : 'Not yet eligible' }}</div>
+          <div><strong>Selection Pay Grade Training:</strong> {{ viewingTeacher()?.selectionPayGradeEligible ? 'Eligible' : 'Not yet eligible' }}</div>
           <div><strong>Caste Category:</strong> {{ viewingTeacher()?.casteCategory }}</div>
           <div><strong>Aadhar:</strong> {{ viewingTeacher()?.governmentId }}</div>
           <div><strong>Email:</strong> {{ viewingTeacher()?.email }}</div>
@@ -118,12 +167,18 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
   `,
   styles: [`
     .card { margin-bottom: 14px; padding: 16px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .tab-content { padding: 14px 4px 8px; margin-bottom: 4px; }
     .h { font-weight: 800; }
     .p { color: #6b7280; margin-top: 4px; line-height: 1.45; }
-    .inline-action { display: flex; align-items: center; }
+    .teacher-tabs { margin-top: 12px; }
+    .inline-action { display: flex; align-items: center; min-height: 56px; }
     .span-2 { grid-column: span 2; }
-    .form-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 14px 0; }
+    .calc-tile { border: 1px solid #dbeafe; border-radius: 10px; padding: 10px 12px; background: #f8fbff; }
+    .calc-label { font-size: 12px; color: #1d4ed8; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .02em; }
+    .calc-value { color: #0f172a; font-weight: 600; line-height: 1.4; }
+    .form-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
     .history-box { background: #f8fafc; border: 1px solid #dbeafe; border-radius: 8px; padding: 12px; margin: 8px 0 14px; }
     .history-title { font-weight: 700; color: #1d4ed8; margin-bottom: 6px; }
     .history-item { color: #334155; margin-bottom: 4px; }
@@ -151,11 +206,21 @@ export class InstituteAddTeacherComponent implements OnInit {
     appointmentDate: new FormControl<Date | null>(null),
     serviceStartDate: new FormControl<Date | null>(null),
     gender: new FormControl('Male', { nonNullable: true }),
-    teacherType: new FormControl('Government', { nonNullable: true }),
+    teacherType: new FormControl(TEACHER_TYPE_OPTIONS[0], { nonNullable: true }),
     casteCategory: new FormControl('', { nonNullable: true }),
     email: new FormControl('', { nonNullable: true, validators: [Validators.email] }),
     mobile: new FormControl('', { nonNullable: true, validators: [Validators.pattern(/^\d{0,10}$/)] }),
     certificates: new FormControl('', { nonNullable: true }),
+    examinerExperienceYears: new FormControl<number | string>(0, { nonNullable: true }),
+    previousExaminerAppointmentNo: new FormControl('', { nonNullable: true }),
+    moderatorExperienceYears: new FormControl<number | string>(0, { nonNullable: true }),
+    lastModeratorName: new FormControl('', { nonNullable: true }),
+    lastModeratorAppointmentNo: new FormControl('', { nonNullable: true }),
+    lastModeratorCollegeName: new FormControl('', { nonNullable: true }),
+    chiefModeratorExperienceYears: new FormControl<number | string>(0, { nonNullable: true }),
+    lastChiefModeratorName: new FormControl('', { nonNullable: true }),
+    lastChiefModeratorAppointmentNo: new FormControl('', { nonNullable: true }),
+    lastChiefModeratorCollegeName: new FormControl('', { nonNullable: true }),
     active: new FormControl(true, { nonNullable: true })
   });
 
@@ -172,6 +237,8 @@ export class InstituteAddTeacherComponent implements OnInit {
   readonly maharashtraRetirementAge = MAHARASHTRA_TEACHER_RETIREMENT_AGE;
   readonly experience = signal('');
   readonly retirementDateDisplay = signal('');
+  readonly seniorPayGradeStatus = signal('Need service start date');
+  readonly selectionPayGradeStatus = signal('Need service start date');
 
   readonly filteredTeachers = computed(() => {
     const q = this.searchText().trim().toLowerCase();
@@ -192,17 +259,23 @@ export class InstituteAddTeacherComponent implements OnInit {
     );
   });
 
-  private calculateExperienceDisplay(serviceStartDate: Date | string | null | undefined): string {
-    if (!serviceStartDate) return '';
+  private calculateExperienceYears(serviceStartDate: Date | string | null | undefined): number | null {
+    if (!serviceStartDate) return null;
     const date = new Date(serviceStartDate);
-    if (Number.isNaN(date.getTime())) return '';
+    if (Number.isNaN(date.getTime())) return null;
 
     const diffMs = Date.now() - date.getTime();
-    if (diffMs <= 0) return '0 years 0 months';
+    if (diffMs <= 0) return 0;
 
-    const totalMonths = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30.44)));
-    const years = Math.floor(totalMonths / 12);
-    const months = totalMonths % 12;
+    return Number((diffMs / (1000 * 60 * 60 * 24 * 365.25)).toFixed(1));
+  }
+
+  private calculateExperienceDisplay(serviceStartDate: Date | string | null | undefined): string {
+    const numericYears = this.calculateExperienceYears(serviceStartDate);
+    if (numericYears === null) return '';
+
+    const years = Math.floor(numericYears);
+    const months = Math.max(0, Math.round((numericYears - years) * 12));
     return `${years} year${years === 1 ? '' : 's'} ${months} month${months === 1 ? '' : 's'}`;
   }
 
@@ -217,7 +290,15 @@ export class InstituteAddTeacherComponent implements OnInit {
   private refreshDerivedValues() {
     const serviceStartDate = this.form.controls.serviceStartDate.value;
     const dob = this.form.controls.dob.value;
+    const totalYears = this.calculateExperienceYears(serviceStartDate);
+
     this.experience.set(this.calculateExperienceDisplay(serviceStartDate));
+    this.seniorPayGradeStatus.set(
+      totalYears === null ? 'Need service start date' : totalYears >= 12 ? `Eligible (${totalYears} years)` : `Not yet eligible (${totalYears} years)`
+    );
+    this.selectionPayGradeStatus.set(
+      totalYears === null ? 'Need service start date' : totalYears >= 24 ? `Eligible (${totalYears} years)` : `Not yet eligible (${totalYears} years)`
+    );
 
     const retirementDate = this.calculateMaharashtraRetirementDate(dob);
     this.retirementDateDisplay.set(
@@ -232,8 +313,7 @@ export class InstituteAddTeacherComponent implements OnInit {
     { field: 'governmentId', headerName: 'Aadhar', flex: 1 },
     { field: 'designation', headerName: 'Designation', flex: 1 },
     { field: 'subjectSpecialization', headerName: 'Subject', flex: 1 },
-    { field: 'teacherType', headerName: 'Type', flex: 1 },
-    { field: 'casteCategory', headerName: 'Caste Category', flex: 1 },
+    { field: 'teacherType', headerName: 'Management Type', flex: 1.2 },
     {
       field: 'totalYearsService',
       headerName: 'Experience',
@@ -241,9 +321,33 @@ export class InstituteAddTeacherComponent implements OnInit {
       flex: 1
     },
     {
+      field: 'examinerExperienceYears',
+      headerName: 'Examiner',
+      valueGetter: (params: any) => params.data?.examinerExperienceYears ? `${params.data.examinerExperienceYears} yrs` : 'No',
+      flex: 1
+    },
+    {
+      field: 'moderatorExperienceYears',
+      headerName: 'Moderator',
+      valueGetter: (params: any) => params.data?.moderatorExperienceYears ? `${params.data.moderatorExperienceYears} yrs` : 'No',
+      flex: 1
+    },
+    {
       field: 'retirementDate',
       headerName: 'Retirement Date',
       valueGetter: (params: any) => params.data?.retirementDate ? new Date(params.data.retirementDate).toLocaleDateString('en-GB') : '-',
+      flex: 1
+    },
+    {
+      field: 'seniorPayGradeEligible',
+      headerName: 'Senior Grade',
+      valueGetter: (params: any) => params.data?.seniorPayGradeEligible ? 'Eligible' : 'Pending',
+      flex: 1
+    },
+    {
+      field: 'selectionPayGradeEligible',
+      headerName: 'Selection Grade',
+      valueGetter: (params: any) => params.data?.selectionPayGradeEligible ? 'Eligible' : 'Pending',
       flex: 1
     },
     { headerName: 'College', valueGetter: (params: any) => params.data?.institute?.name ?? '-', flex: 1.4 },
@@ -329,11 +433,21 @@ export class InstituteAddTeacherComponent implements OnInit {
           appointmentDate: existing.appointmentDate ? new Date(existing.appointmentDate) : null,
           serviceStartDate: existing.serviceStartDate ? new Date(existing.serviceStartDate) : null,
           gender: existing.gender || 'Male',
-          teacherType: existing.teacherType || 'Government',
+          teacherType: existing.teacherType || TEACHER_TYPE_OPTIONS[0],
           casteCategory: existing.casteCategory || existing.casterCategory || '',
           email: existing.email || '',
           mobile: existing.mobile || '',
           certificates: existing.certificates || '',
+          examinerExperienceYears: existing.examinerExperienceYears ?? 0,
+          previousExaminerAppointmentNo: existing.previousExaminerAppointmentNo || '',
+          moderatorExperienceYears: existing.moderatorExperienceYears ?? 0,
+          lastModeratorName: existing.lastModeratorName || '',
+          lastModeratorAppointmentNo: existing.lastModeratorAppointmentNo || '',
+          lastModeratorCollegeName: existing.lastModeratorCollegeName || '',
+          chiefModeratorExperienceYears: existing.chiefModeratorExperienceYears ?? 0,
+          lastChiefModeratorName: existing.lastChiefModeratorName || '',
+          lastChiefModeratorAppointmentNo: existing.lastChiefModeratorAppointmentNo || '',
+          lastChiefModeratorCollegeName: existing.lastChiefModeratorCollegeName || '',
           active: true
         });
         this.snackBar.open('Previous institute history loaded', 'Close', { duration: 2000 });
@@ -368,6 +482,16 @@ export class InstituteAddTeacherComponent implements OnInit {
       mobile: this.form.value.mobile || undefined,
       certificates: this.form.value.certificates || undefined,
       certifications: this.form.value.certificates || undefined,
+      examinerExperienceYears: this.toNumberOrUndefined(this.form.value.examinerExperienceYears),
+      previousExaminerAppointmentNo: this.form.value.previousExaminerAppointmentNo || undefined,
+      moderatorExperienceYears: this.toNumberOrUndefined(this.form.value.moderatorExperienceYears),
+      lastModeratorName: this.form.value.lastModeratorName || undefined,
+      lastModeratorAppointmentNo: this.form.value.lastModeratorAppointmentNo || undefined,
+      lastModeratorCollegeName: this.form.value.lastModeratorCollegeName || undefined,
+      chiefModeratorExperienceYears: this.toNumberOrUndefined(this.form.value.chiefModeratorExperienceYears),
+      lastChiefModeratorName: this.form.value.lastChiefModeratorName || undefined,
+      lastChiefModeratorAppointmentNo: this.form.value.lastChiefModeratorAppointmentNo || undefined,
+      lastChiefModeratorCollegeName: this.form.value.lastChiefModeratorCollegeName || undefined,
       active: this.form.value.active
     };
 
@@ -403,11 +527,21 @@ export class InstituteAddTeacherComponent implements OnInit {
       appointmentDate: null,
       serviceStartDate: null,
       gender: 'Male',
-      teacherType: 'Government',
+      teacherType: TEACHER_TYPE_OPTIONS[0],
       casteCategory: '',
       email: '',
       mobile: '',
       certificates: '',
+      examinerExperienceYears: 0,
+      previousExaminerAppointmentNo: '',
+      moderatorExperienceYears: 0,
+      lastModeratorName: '',
+      lastModeratorAppointmentNo: '',
+      lastModeratorCollegeName: '',
+      chiefModeratorExperienceYears: 0,
+      lastChiefModeratorName: '',
+      lastChiefModeratorAppointmentNo: '',
+      lastChiefModeratorCollegeName: '',
       active: true
     });
   }
@@ -436,11 +570,21 @@ export class InstituteAddTeacherComponent implements OnInit {
         appointmentDate: teacher.appointmentDate ? new Date(teacher.appointmentDate) : null,
         serviceStartDate: teacher.serviceStartDate ? new Date(teacher.serviceStartDate) : null,
         gender: teacher.gender ?? 'Male',
-        teacherType: teacher.teacherType ?? 'Government',
+        teacherType: teacher.teacherType ?? TEACHER_TYPE_OPTIONS[0],
         casteCategory: teacher.casteCategory ?? teacher.casterCategory ?? '',
         email: teacher.email ?? '',
         mobile: teacher.mobile ?? '',
         certificates: teacher.certificates ?? '',
+        examinerExperienceYears: teacher.examinerExperienceYears ?? 0,
+        previousExaminerAppointmentNo: teacher.previousExaminerAppointmentNo ?? '',
+        moderatorExperienceYears: teacher.moderatorExperienceYears ?? 0,
+        lastModeratorName: teacher.lastModeratorName ?? '',
+        lastModeratorAppointmentNo: teacher.lastModeratorAppointmentNo ?? '',
+        lastModeratorCollegeName: teacher.lastModeratorCollegeName ?? '',
+        chiefModeratorExperienceYears: teacher.chiefModeratorExperienceYears ?? 0,
+        lastChiefModeratorName: teacher.lastChiefModeratorName ?? '',
+        lastChiefModeratorAppointmentNo: teacher.lastChiefModeratorAppointmentNo ?? '',
+        lastChiefModeratorCollegeName: teacher.lastChiefModeratorCollegeName ?? '',
         active: teacher.active ?? true
       });
       return;
@@ -477,6 +621,12 @@ export class InstituteAddTeacherComponent implements OnInit {
     const message = err?.error?.message || err?.error?.issues?.[0]?.message || err?.error?.error || fallback;
     this.error.set(message);
     this.snackBar.open(message, 'Close', { duration: 3500 });
+  }
+
+  private toNumberOrUndefined(value: unknown): number | undefined {
+    if (value === undefined || value === null || value === '') return undefined;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
   }
 
   private formatDate(date: Date | string): string {

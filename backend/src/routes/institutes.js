@@ -20,6 +20,17 @@ const instituteDetailsSchema = z.object({
   contactMobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional()
 });
 
+const TEACHER_TYPE_OPTIONS = [
+  'Aided',
+  'Partially Aided 80',
+  'Partially Aided 60',
+  'Partially Aided 40',
+  'Partially Aided 20',
+  'Unaided',
+  'Permanent Unaided',
+  'Self Financed'
+];
+
 const teacherPayloadSchema = z.object({
   fullName: z.string().min(2).max(150),
   designation: z.string().max(100).optional(),
@@ -35,7 +46,17 @@ const teacherPayloadSchema = z.object({
   leavingNote: z.string().optional(),
   certificates: z.string().optional(),
   certifications: z.string().optional(),
-  teacherType: z.enum(['Government', 'Contract', 'Adhoc', 'Temporary']).optional(),
+  teacherType: z.enum(TEACHER_TYPE_OPTIONS).optional(),
+  examinerExperienceYears: z.coerce.number().min(0).max(80).optional(),
+  previousExaminerAppointmentNo: z.string().max(100).optional(),
+  moderatorExperienceYears: z.coerce.number().min(0).max(80).optional(),
+  lastModeratorName: z.string().max(150).optional(),
+  lastModeratorAppointmentNo: z.string().max(100).optional(),
+  lastModeratorCollegeName: z.string().max(200).optional(),
+  chiefModeratorExperienceYears: z.coerce.number().min(0).max(80).optional(),
+  lastChiefModeratorName: z.string().max(150).optional(),
+  lastChiefModeratorAppointmentNo: z.string().max(100).optional(),
+  lastChiefModeratorCollegeName: z.string().max(200).optional(),
   email: z.string().email().optional(),
   mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
   active: z.boolean().optional().default(true)
@@ -45,6 +66,42 @@ function parseOptionalDate(value) {
   if (!value) return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function normalizeOptionalText(value) {
+  if (value === undefined || value === null) return null;
+  const text = String(value).trim();
+  return text ? text : null;
+}
+
+function parseOptionalNumber(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  return Number(Math.max(parsed, 0).toFixed(1));
+}
+
+const STUDENT_STREAM_CODE_LOOKUP = {
+  '1': 'Science',
+  '2': 'Arts',
+  '3': 'Commerce',
+  '4': 'Vocational',
+  '5': 'Technology'
+};
+
+function resolveStreamIdFromValue(streamValue, streams = [], fallbackStreamId = null) {
+  if (streamValue === undefined || streamValue === null || streamValue === '') {
+    return fallbackStreamId;
+  }
+
+  const normalized = String(streamValue).trim().toLowerCase();
+  const requested = String(STUDENT_STREAM_CODE_LOOKUP[normalized] || normalized).toLowerCase();
+  const matched = streams.find((stream) => {
+    const name = String(stream?.name || '').toLowerCase();
+    return name === requested || name.includes(requested) || requested.includes(name);
+  });
+
+  return matched?.id ?? fallbackStreamId;
 }
 
 function calculateTotalYearsService(serviceStartDate) {
@@ -84,8 +141,24 @@ function toTeacherDto(teacher) {
     institute,
     casteCategory: teacher.casterCategory ?? teacher.casteCategory ?? null,
     casterCategory: teacher.casterCategory ?? teacher.casteCategory ?? null,
+    joiningDate: teacher.appointmentDate ?? teacher.serviceStartDate ?? null,
     totalYearsService,
     retirementDate,
+    examinerExperienceYears: teacher.examinerExperienceYears ?? 0,
+    previousExaminerAppointmentNo: teacher.previousExaminerAppointmentNo ?? null,
+    hasExaminerExperience: (teacher.examinerExperienceYears ?? 0) > 0,
+    moderatorExperienceYears: teacher.moderatorExperienceYears ?? 0,
+    lastModeratorName: teacher.lastModeratorName ?? null,
+    lastModeratorAppointmentNo: teacher.lastModeratorAppointmentNo ?? null,
+    lastModeratorCollegeName: teacher.lastModeratorCollegeName ?? null,
+    hasModeratorExperience: (teacher.moderatorExperienceYears ?? 0) > 0,
+    chiefModeratorExperienceYears: teacher.chiefModeratorExperienceYears ?? 0,
+    lastChiefModeratorName: teacher.lastChiefModeratorName ?? null,
+    lastChiefModeratorAppointmentNo: teacher.lastChiefModeratorAppointmentNo ?? null,
+    lastChiefModeratorCollegeName: teacher.lastChiefModeratorCollegeName ?? null,
+    hasChiefModeratorExperience: (teacher.chiefModeratorExperienceYears ?? 0) > 0,
+    seniorPayGradeEligible: typeof totalYearsService === 'number' && totalYearsService >= 12,
+    selectionPayGradeEligible: typeof totalYearsService === 'number' && totalYearsService >= 24,
     retirementAge: retirementDate
       ? Math.max(0, retirementDate.getFullYear() - new Date().getFullYear())
       : null
@@ -97,6 +170,26 @@ async function getInstituteUserWithInstitute(userId) {
     where: { id: userId },
     include: { institute: true }
   });
+}
+
+function toInstituteDetailsDto(institute) {
+  return {
+    id: institute.id,
+    name: institute.name,
+    code: institute.code,
+    centerNo: institute.code,
+    collegeNo: institute.collegeNo,
+    uniqueNo: institute.collegeNo,
+    udiseNo: institute.udiseNo,
+    address: institute.address,
+    district: institute.district,
+    taluka: institute.taluka,
+    pincode: institute.pincode,
+    contactEmail: institute.contactEmail,
+    contactMobile: institute.contactMobile,
+    status: institute.status,
+    createdAt: institute.createdAt
+  };
 }
 
 async function handleInstituteDetailsUpdate(req, res) {
@@ -112,18 +205,19 @@ async function handleInstituteDetailsUpdate(req, res) {
     if (body.code !== undefined) {
       const normalizedCode = String(body.code).trim().toUpperCase();
       if (!normalizedCode) {
-        return res.status(422).json({ error: 'VALIDATION_ERROR', message: 'Index No cannot be empty' });
-      }
-      const existingInstitute = await prisma.institute.findFirst({
-        where: {
-          code: normalizedCode,
-          NOT: { id: user.institute.id }
+        updateData.code = null;
+      } else {
+        const existingInstitute = await prisma.institute.findFirst({
+          where: {
+            code: normalizedCode,
+            NOT: { id: user.institute.id }
+          }
+        });
+        if (existingInstitute) {
+          return res.status(409).json({ error: 'CENTER_NO_ALREADY_EXISTS', message: 'This Center No is already used by another institute.' });
         }
-      });
-      if (existingInstitute) {
-        return res.status(409).json({ error: 'INDEX_NO_ALREADY_EXISTS', message: 'This Index No is already used by another institute.' });
+        updateData.code = normalizedCode;
       }
-      updateData.code = normalizedCode;
     }
     if (body.name !== undefined) updateData.name = body.name;
     if (body.address !== undefined) updateData.address = body.address;
@@ -142,25 +236,7 @@ async function handleInstituteDetailsUpdate(req, res) {
 
     return res.json({
       ok: true,
-      institute: {
-        id: updated.id,
-        name: updated.name,
-        code: updated.code,
-        collegeNo: updated.collegeNo,
-        udiseNo: updated.udiseNo,
-        address: updated.address,
-        district: updated.district,
-        taluka: updated.taluka,
-        city: updated.city,
-        pincode: updated.pincode,
-        contactPerson: updated.contactPerson,
-        contactEmail: updated.contactEmail,
-        contactMobile: updated.contactMobile,
-        status: updated.status,
-        acceptingApplications: updated.acceptingApplications,
-        examApplicationLimit: updated.examApplicationLimit,
-        createdAt: updated.createdAt
-      }
+      institute: toInstituteDetailsDto(updated)
     });
   } catch (err) {
     if (err.name === 'ZodError') {
@@ -200,42 +276,71 @@ async function getInstituteExamCapacityRows(instituteId, { openOnly = false } = 
   }
 
   const examIds = exams.map((exam) => exam.id);
-  const [capacityRows, usageRows] = await Promise.all([
-    prisma.instituteExamCapacity.findMany({
-      where: { instituteId, examId: { in: examIds } }
+  const [mappedStreamRows, allStreams, capacityRows, applications] = await Promise.all([
+    prisma.instituteStreamSubject.findMany({
+      where: { instituteId },
+      distinct: ['streamId'],
+      include: { stream: true }
     }),
-    prisma.examApplication.groupBy({
-      by: ['examId'],
+    prisma.stream.findMany({ orderBy: { name: 'asc' } }),
+    prisma.instituteExamCapacity.findMany({
       where: { instituteId, examId: { in: examIds } },
-      _count: { _all: true }
+      include: { stream: true }
+    }),
+    prisma.examApplication.findMany({
+      where: { instituteId, examId: { in: examIds } },
+      select: {
+        examId: true,
+        student: {
+          select: { streamCode: true }
+        }
+      }
     })
   ]);
 
-  const capacityMap = new Map(capacityRows.map((row) => [row.examId, row]));
-  const usageMap = new Map(usageRows.map((row) => [row.examId, row._count._all]));
+  const streamCandidates = [
+    ...mappedStreamRows.map((row) => row.stream).filter(Boolean),
+    ...exams.map((exam) => exam.stream).filter(Boolean),
+    ...allStreams
+  ];
+  const streams = Array.from(new Map(streamCandidates.map((stream) => [stream.id, stream])).values());
+  const examsById = new Map(exams.map((exam) => [exam.id, exam]));
+  const capacityMap = new Map(capacityRows.map((row) => [`${row.examId}:${row.streamId}`, row]));
+  const usageMap = new Map();
 
-  return exams.map((exam) => {
-    const configured = capacityMap.get(exam.id);
-    const totalStudents = configured?.totalStudents ?? null;
-    const applicationsUsed = usageMap.get(exam.id) ?? 0;
-    const remainingApplications = totalStudents === null ? null : Math.max(totalStudents - applicationsUsed, 0);
+  for (const app of applications) {
+    const exam = examsById.get(app.examId);
+    const streamId = resolveStreamIdFromValue(app.student?.streamCode, streams, exam?.streamId ?? null);
+    if (!streamId) continue;
+    const key = `${app.examId}:${streamId}`;
+    usageMap.set(key, (usageMap.get(key) ?? 0) + 1);
+  }
 
-    return {
-      examId: exam.id,
-      examName: exam.name,
-      academicYear: exam.academicYear,
-      session: exam.session,
-      streamId: exam.streamId,
-      streamName: exam.stream?.name ?? '',
-      applicationOpen: exam.applicationOpen,
-      applicationClose: exam.applicationClose,
-      totalStudents,
-      applicationsUsed,
-      remainingApplications,
-      isConfigured: totalStudents !== null,
-      isCapacityReached: totalStudents !== null ? applicationsUsed >= totalStudents : false
-    };
-  });
+  return exams.flatMap((exam) =>
+    streams.map((stream) => {
+      const key = `${exam.id}:${stream.id}`;
+      const configured = capacityMap.get(key);
+      const totalStudents = configured?.totalStudents ?? null;
+      const applicationsUsed = usageMap.get(key) ?? 0;
+      const remainingApplications = totalStudents === null ? null : Math.max(totalStudents - applicationsUsed, 0);
+
+      return {
+        examId: exam.id,
+        examName: exam.name,
+        academicYear: exam.academicYear,
+        session: exam.session,
+        streamId: stream.id,
+        streamName: stream.name ?? '',
+        applicationOpen: exam.applicationOpen,
+        applicationClose: exam.applicationClose,
+        totalStudents,
+        applicationsUsed,
+        remainingApplications,
+        isConfigured: totalStudents !== null,
+        isCapacityReached: totalStudents !== null ? applicationsUsed >= totalStudents : false
+      };
+    })
+  );
 }
 
 /**
@@ -817,6 +922,101 @@ institutesRouter.patch('/users/:id/status', requireAuth, requireRole(['SUPER_ADM
   }
 });
 
+function getTeacherMergeKey(teacher) {
+  const governmentId = normalizeOptionalText(teacher.governmentId);
+  if (governmentId) return `gov:${governmentId}`;
+
+  const fullName = normalizeOptionalText(teacher.fullName)?.toLowerCase() ?? 'unknown';
+  const dob = teacher.dob ? new Date(teacher.dob).toISOString().slice(0, 10) : 'nodob';
+  return `name:${fullName}|${dob}`;
+}
+
+function mergeTeacherRecordsForBoard(teachersRaw) {
+  const merged = new Map();
+
+  for (const teacher of teachersRaw.map(toTeacherDto)) {
+    const key = getTeacherMergeKey(teacher);
+    const instituteEntry = teacher.institute
+      ? {
+          id: teacher.institute.id,
+          name: teacher.institute.name,
+          code: teacher.institute.code,
+          district: teacher.institute.district,
+          fullAddress: teacher.institute.fullAddress || teacher.institute.address || '',
+          active: teacher.active,
+          teacherType: teacher.teacherType ?? '',
+          designation: teacher.designation ?? ''
+        }
+      : null;
+
+    if (!merged.has(key)) {
+      merged.set(key, {
+        ...teacher,
+        sourceTeacherIds: [teacher.id],
+        institutes: instituteEntry ? [instituteEntry] : [],
+        instituteCount: instituteEntry ? 1 : 0,
+        instituteNames: instituteEntry?.name ?? ''
+      });
+      continue;
+    }
+
+    const existing = merged.get(key);
+    existing.sourceTeacherIds = Array.from(new Set([...(existing.sourceTeacherIds || []), teacher.id]));
+    existing.active = existing.active || !!teacher.active;
+    existing.dob = existing.dob || teacher.dob;
+    existing.email = existing.email || teacher.email;
+    existing.mobile = existing.mobile || teacher.mobile;
+    existing.subjectSpecialization = Array.from(new Set([existing.subjectSpecialization, teacher.subjectSpecialization].filter(Boolean))).join(', ');
+    existing.designation = Array.from(new Set([existing.designation, teacher.designation].filter(Boolean))).join(', ');
+    existing.teacherType = Array.from(new Set([existing.teacherType, teacher.teacherType].filter(Boolean))).join(', ');
+
+    const existingJoinDate = parseOptionalDate(existing.joiningDate ?? existing.serviceStartDate ?? existing.appointmentDate);
+    const nextJoinDate = parseOptionalDate(teacher.joiningDate ?? teacher.serviceStartDate ?? teacher.appointmentDate);
+    if (!existingJoinDate || (nextJoinDate && nextJoinDate < existingJoinDate)) {
+      existing.joiningDate = teacher.joiningDate ?? teacher.serviceStartDate ?? teacher.appointmentDate ?? existing.joiningDate;
+      existing.serviceStartDate = teacher.serviceStartDate ?? existing.serviceStartDate;
+      existing.appointmentDate = teacher.appointmentDate ?? existing.appointmentDate;
+    }
+
+    const derivedTotalYears = calculateTotalYearsService(existing.serviceStartDate ?? existing.joiningDate);
+    existing.totalYearsService = derivedTotalYears ?? Math.max(existing.totalYearsService ?? 0, teacher.totalYearsService ?? 0);
+    existing.retirementDate = existing.retirementDate ?? teacher.retirementDate;
+
+    if ((teacher.examinerExperienceYears ?? 0) >= (existing.examinerExperienceYears ?? 0)) {
+      existing.examinerExperienceYears = teacher.examinerExperienceYears ?? 0;
+      existing.previousExaminerAppointmentNo = teacher.previousExaminerAppointmentNo ?? existing.previousExaminerAppointmentNo ?? null;
+    }
+
+    if ((teacher.moderatorExperienceYears ?? 0) >= (existing.moderatorExperienceYears ?? 0)) {
+      existing.moderatorExperienceYears = teacher.moderatorExperienceYears ?? 0;
+      existing.lastModeratorName = teacher.lastModeratorName ?? existing.lastModeratorName ?? null;
+      existing.lastModeratorAppointmentNo = teacher.lastModeratorAppointmentNo ?? existing.lastModeratorAppointmentNo ?? null;
+      existing.lastModeratorCollegeName = teacher.lastModeratorCollegeName ?? existing.lastModeratorCollegeName ?? null;
+    }
+
+    if ((teacher.chiefModeratorExperienceYears ?? 0) >= (existing.chiefModeratorExperienceYears ?? 0)) {
+      existing.chiefModeratorExperienceYears = teacher.chiefModeratorExperienceYears ?? 0;
+      existing.lastChiefModeratorName = teacher.lastChiefModeratorName ?? existing.lastChiefModeratorName ?? null;
+      existing.lastChiefModeratorAppointmentNo = teacher.lastChiefModeratorAppointmentNo ?? existing.lastChiefModeratorAppointmentNo ?? null;
+      existing.lastChiefModeratorCollegeName = teacher.lastChiefModeratorCollegeName ?? existing.lastChiefModeratorCollegeName ?? null;
+    }
+
+    if (instituteEntry && !existing.institutes.some((item) => item.id === instituteEntry.id)) {
+      existing.institutes.push(instituteEntry);
+      existing.instituteCount = existing.institutes.length;
+      existing.instituteNames = existing.institutes.map((item) => item.name).filter(Boolean).join(', ');
+    }
+  }
+
+  return Array.from(merged.values())
+    .map((teacher) => ({
+      ...teacher,
+      seniorPayGradeEligible: typeof teacher.totalYearsService === 'number' && teacher.totalYearsService >= 12,
+      selectionPayGradeEligible: typeof teacher.totalYearsService === 'number' && teacher.totalYearsService >= 24
+    }))
+    .sort((a, b) => String(a.fullName || '').localeCompare(String(b.fullName || '')));
+}
+
 // Board: list teachers across institutes (for board dashboards)
 institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), async (req, res) => {
   try {
@@ -825,6 +1025,9 @@ institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), asy
         search: z.string().optional(),
         active: z.string().optional(),
         institute: z.string().optional(),
+        dutyType: z.enum(['EXAMINER', 'MODERATOR', 'CHIEF_MODERATOR', 'ANY_BOARD_DUTY', 'NONE']).optional(),
+        eligibility: z.enum(['SENIOR', 'SELECTION']).optional(),
+        multiInstitute: z.string().optional(),
         page: z.coerce.number().int().min(1).optional(),
         limit: z.coerce.number().int().min(1).max(200).optional()
       })
@@ -854,7 +1057,6 @@ institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), asy
 
     const page = q.page ?? 1;
     const limit = q.limit ?? 20;
-    const total = await prisma.teacher.count({ where });
     const teachersRaw = await prisma.teacher.findMany({
       where,
       include: {
@@ -862,14 +1064,60 @@ institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), asy
           select: { id: true, name: true, code: true, address: true, district: true, city: true }
         }
       },
-      orderBy: [{ serviceStartDate: 'desc' }, { createdAt: 'desc' }],
-      skip: (page - 1) * limit,
-      take: limit
+      orderBy: [{ serviceStartDate: 'desc' }, { createdAt: 'desc' }]
     });
-    const teachers = teachersRaw.map(toTeacherDto);
 
-    const activeCount = await prisma.teacher.count({ where: { ...where, active: true } });
-    const inactiveCount = await prisma.teacher.count({ where: { ...where, active: false } });
+    let mergedTeachers = mergeTeacherRecordsForBoard(teachersRaw);
+
+    if (q.search) {
+      const searchTerm = q.search.trim().toLowerCase();
+      mergedTeachers = mergedTeachers.filter((teacher) =>
+        [
+          teacher.fullName,
+          teacher.governmentId,
+          teacher.designation,
+          teacher.subjectSpecialization,
+          teacher.teacherType,
+          teacher.email,
+          teacher.mobile,
+          teacher.instituteNames
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(searchTerm)
+      );
+    }
+
+    if (q.dutyType === 'EXAMINER') {
+      mergedTeachers = mergedTeachers.filter((teacher) => (teacher.examinerExperienceYears ?? 0) > 0);
+    } else if (q.dutyType === 'MODERATOR') {
+      mergedTeachers = mergedTeachers.filter((teacher) => (teacher.moderatorExperienceYears ?? 0) > 0);
+    } else if (q.dutyType === 'CHIEF_MODERATOR') {
+      mergedTeachers = mergedTeachers.filter((teacher) => (teacher.chiefModeratorExperienceYears ?? 0) > 0);
+    } else if (q.dutyType === 'ANY_BOARD_DUTY') {
+      mergedTeachers = mergedTeachers.filter((teacher) => (teacher.examinerExperienceYears ?? 0) > 0 || (teacher.moderatorExperienceYears ?? 0) > 0 || (teacher.chiefModeratorExperienceYears ?? 0) > 0);
+    } else if (q.dutyType === 'NONE') {
+      mergedTeachers = mergedTeachers.filter((teacher) => (teacher.examinerExperienceYears ?? 0) <= 0 && (teacher.moderatorExperienceYears ?? 0) <= 0 && (teacher.chiefModeratorExperienceYears ?? 0) <= 0);
+    }
+
+    if (q.eligibility === 'SENIOR') {
+      mergedTeachers = mergedTeachers.filter((teacher) => teacher.seniorPayGradeEligible);
+    } else if (q.eligibility === 'SELECTION') {
+      mergedTeachers = mergedTeachers.filter((teacher) => teacher.selectionPayGradeEligible);
+    }
+
+    if (q.multiInstitute === 'true') {
+      mergedTeachers = mergedTeachers.filter((teacher) => (teacher.instituteCount ?? 0) > 1);
+    } else if (q.multiInstitute === 'false') {
+      mergedTeachers = mergedTeachers.filter((teacher) => (teacher.instituteCount ?? 0) <= 1);
+    }
+
+    const total = mergedTeachers.length;
+    const activeCount = mergedTeachers.filter((teacher) => teacher.active).length;
+    const inactiveCount = total - activeCount;
+    const multiInstituteCount = mergedTeachers.filter((teacher) => (teacher.instituteCount ?? 0) > 1).length;
+    const teachers = mergedTeachers.slice((page - 1) * limit, page * limit);
 
     return res.json({
       teachers,
@@ -878,7 +1126,8 @@ institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), asy
         limit,
         total,
         activeCount,
-        inactiveCount
+        inactiveCount,
+        multiInstituteCount
       }
     });
   } catch (err) {
@@ -891,17 +1140,22 @@ institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), asy
 institutesRouter.patch('/board/teachers/:id', requireAuth, requireRole(['BOARD']), async (req, res) => {
   try {
     const teacherId = z.coerce.number().int().positive().parse(req.params.id);
-    const body = z.object({ active: z.boolean() }).parse(req.body);
+    const body = z.object({
+      active: z.boolean(),
+      teacherIds: z.array(z.coerce.number().int().positive()).optional()
+    }).parse(req.body);
 
-    const teacher = await prisma.teacher.findUnique({ where: { id: teacherId } });
-    if (!teacher) return res.status(404).json({ error: 'TEACHER_NOT_FOUND' });
-
-    const updated = await prisma.teacher.update({
-      where: { id: teacherId },
+    const targetIds = Array.from(new Set([teacherId, ...(body.teacherIds || [])]));
+    const updated = await prisma.teacher.updateMany({
+      where: { id: { in: targetIds } },
       data: { active: body.active }
     });
 
-    return res.json({ teacher: updated });
+    if (!updated.count) {
+      return res.status(404).json({ error: 'TEACHER_NOT_FOUND' });
+    }
+
+    return res.json({ ok: true, updatedCount: updated.count, teacherIds: targetIds, active: body.active });
   } catch (err) {
     console.error('Error updating teacher:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
@@ -1014,9 +1268,19 @@ institutesRouter.post('/me/teachers', requireAuth, requireRole(['INSTITUTE']), a
         leavingNote: body.leavingNote,
         certificates: body.certificates ?? body.certifications,
         certifications: body.certifications,
-        teacherType: body.teacherType ?? 'Government',
+        teacherType: body.teacherType ?? TEACHER_TYPE_OPTIONS[0],
         email: body.email,
         mobile: body.mobile,
+        examinerExperienceYears: parseOptionalNumber(body.examinerExperienceYears),
+        previousExaminerAppointmentNo: normalizeOptionalText(body.previousExaminerAppointmentNo),
+        moderatorExperienceYears: parseOptionalNumber(body.moderatorExperienceYears),
+        lastModeratorName: normalizeOptionalText(body.lastModeratorName),
+        lastModeratorAppointmentNo: normalizeOptionalText(body.lastModeratorAppointmentNo),
+        lastModeratorCollegeName: normalizeOptionalText(body.lastModeratorCollegeName),
+        chiefModeratorExperienceYears: parseOptionalNumber(body.chiefModeratorExperienceYears),
+        lastChiefModeratorName: normalizeOptionalText(body.lastChiefModeratorName),
+        lastChiefModeratorAppointmentNo: normalizeOptionalText(body.lastChiefModeratorAppointmentNo),
+        lastChiefModeratorCollegeName: normalizeOptionalText(body.lastChiefModeratorCollegeName),
         active: body.active ?? true,
         totalYearsService: calculateTotalYearsService(serviceStartDate),
         instituteId: user.institute.id
@@ -1095,6 +1359,16 @@ institutesRouter.put('/me/teachers/:id', requireAuth, requireRole(['INSTITUTE'])
     if (body.teacherType !== undefined) updateData.teacherType = body.teacherType;
     if (body.email !== undefined) updateData.email = body.email;
     if (body.mobile !== undefined) updateData.mobile = body.mobile;
+    if (body.examinerExperienceYears !== undefined) updateData.examinerExperienceYears = parseOptionalNumber(body.examinerExperienceYears);
+    if (body.previousExaminerAppointmentNo !== undefined) updateData.previousExaminerAppointmentNo = normalizeOptionalText(body.previousExaminerAppointmentNo);
+    if (body.moderatorExperienceYears !== undefined) updateData.moderatorExperienceYears = parseOptionalNumber(body.moderatorExperienceYears);
+    if (body.lastModeratorName !== undefined) updateData.lastModeratorName = normalizeOptionalText(body.lastModeratorName);
+    if (body.lastModeratorAppointmentNo !== undefined) updateData.lastModeratorAppointmentNo = normalizeOptionalText(body.lastModeratorAppointmentNo);
+    if (body.lastModeratorCollegeName !== undefined) updateData.lastModeratorCollegeName = normalizeOptionalText(body.lastModeratorCollegeName);
+    if (body.chiefModeratorExperienceYears !== undefined) updateData.chiefModeratorExperienceYears = parseOptionalNumber(body.chiefModeratorExperienceYears);
+    if (body.lastChiefModeratorName !== undefined) updateData.lastChiefModeratorName = normalizeOptionalText(body.lastChiefModeratorName);
+    if (body.lastChiefModeratorAppointmentNo !== undefined) updateData.lastChiefModeratorAppointmentNo = normalizeOptionalText(body.lastChiefModeratorAppointmentNo);
+    if (body.lastChiefModeratorCollegeName !== undefined) updateData.lastChiefModeratorCollegeName = normalizeOptionalText(body.lastChiefModeratorCollegeName);
     if (body.active !== undefined) {
       updateData.active = body.active;
       if (body.active) {
@@ -1666,6 +1940,7 @@ institutesRouter.put('/me/exam-capacities/:examId', requireAuth, requireRole(['I
   try {
     const examId = z.coerce.number().int().positive().parse(req.params.examId);
     const body = z.object({
+      streamId: z.coerce.number().int().positive(),
       totalStudents: z.coerce.number().int().min(0).max(100000)
     }).parse(req.body);
 
@@ -1674,16 +1949,24 @@ institutesRouter.put('/me/exam-capacities/:examId', requireAuth, requireRole(['I
       return res.status(403).json({ error: 'FORBIDDEN', message: 'Not associated with an institute' });
     }
 
-    const exam = await prisma.exam.findUnique({ where: { id: examId }, include: { stream: true } });
+    const [exam, stream, allStreams] = await Promise.all([
+      prisma.exam.findUnique({ where: { id: examId }, include: { stream: true } }),
+      prisma.stream.findUnique({ where: { id: body.streamId } }),
+      prisma.stream.findMany({ orderBy: { name: 'asc' } })
+    ]);
     if (!exam) {
       return res.status(404).json({ error: 'EXAM_NOT_FOUND' });
+    }
+    if (!stream) {
+      return res.status(404).json({ error: 'STREAM_NOT_FOUND' });
     }
 
     const saved = await prisma.instituteExamCapacity.upsert({
       where: {
-        instituteId_examId: {
+        instituteId_examId_streamId: {
           instituteId: user.institute.id,
-          examId
+          examId,
+          streamId: body.streamId
         }
       },
       update: {
@@ -1692,23 +1975,35 @@ institutesRouter.put('/me/exam-capacities/:examId', requireAuth, requireRole(['I
       create: {
         instituteId: user.institute.id,
         examId,
+        streamId: body.streamId,
         totalStudents: body.totalStudents
       }
     });
 
-    const applicationsUsed = await prisma.examApplication.count({
+    const applications = await prisma.examApplication.findMany({
       where: {
         instituteId: user.institute.id,
         examId
+      },
+      select: {
+        student: {
+          select: { streamCode: true }
+        }
       }
     });
+
+    const applicationsUsed = applications.reduce((count, app) => {
+      const resolvedStreamId = resolveStreamIdFromValue(app.student?.streamCode, allStreams, exam.streamId ?? null);
+      return resolvedStreamId === body.streamId ? count + 1 : count;
+    }, 0);
 
     return res.json({
       ok: true,
       exam: {
         examId: exam.id,
         examName: exam.name,
-        streamName: exam.stream?.name ?? '',
+        streamId: stream.id,
+        streamName: stream.name ?? exam.stream?.name ?? '',
         totalStudents: saved.totalStudents,
         applicationsUsed,
         remainingApplications: Math.max(saved.totalStudents - applicationsUsed, 0),
@@ -1739,12 +2034,11 @@ institutesRouter.get('/me/status', requireAuth, requireRole(['INSTITUTE']), asyn
 
     const institute = user.institute;
 
-    // Check if all required fields are filled
+    // Check if the required institute fields used by the current UI are filled.
     const isProfileComplete = !![
       institute.address,
       institute.district,
-      institute.city,
-      institute.contactPerson,
+      institute.taluka,
       institute.contactEmail,
       institute.contactMobile
     ].every(v => v && String(v).trim().length > 0);
@@ -1756,7 +2050,9 @@ institutesRouter.get('/me/status', requireAuth, requireRole(['INSTITUTE']), asyn
         id: institute.id,
         name: institute.name,
         code: institute.code,
+        centerNo: institute.code,
         collegeNo: institute.collegeNo,
+        uniqueNo: institute.collegeNo,
         udiseNo: institute.udiseNo,
         status: institute.status
       }
@@ -1783,25 +2079,7 @@ institutesRouter.get('/me', requireAuth, requireRole(['INSTITUTE']), async (req,
 
     return res.json({
       ok: true,
-      institute: {
-        id: institute.id,
-        name: institute.name,
-        code: institute.code,
-        collegeNo: institute.collegeNo,
-        udiseNo: institute.udiseNo,
-        address: institute.address,
-        district: institute.district,
-        taluka: institute.taluka,
-        city: institute.city,
-        pincode: institute.pincode,
-        contactPerson: institute.contactPerson,
-        contactEmail: institute.contactEmail,
-        contactMobile: institute.contactMobile,
-        status: institute.status,
-        acceptingApplications: institute.acceptingApplications,
-        examApplicationLimit: institute.examApplicationLimit,
-        createdAt: institute.createdAt
-      }
+      institute: toInstituteDetailsDto(institute)
     });
   } catch (err) {
     console.error('Error fetching institute details:', err);

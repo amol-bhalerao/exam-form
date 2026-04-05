@@ -3,6 +3,27 @@ import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
 
+const STUDENT_STREAM_CODE_LOOKUP = {
+  '1': 'Science',
+  '2': 'Arts',
+  '3': 'Commerce',
+  '4': 'Vocational',
+  '5': 'Technology'
+};
+
+function resolveStreamIdFromStudentCode(streamCode, streams = [], fallbackStreamId = null) {
+  if (streamCode === undefined || streamCode === null || streamCode === '') return fallbackStreamId;
+
+  const normalized = String(streamCode).trim().toLowerCase();
+  const requested = String(STUDENT_STREAM_CODE_LOOKUP[normalized] || normalized).toLowerCase();
+  const matched = streams.find((stream) => {
+    const name = String(stream?.name || '').toLowerCase();
+    return name === requested || name.includes(requested) || requested.includes(name);
+  });
+
+  return matched?.id ?? fallbackStreamId;
+}
+
 export const applicationsRouter = Router();
 
 function now() {
@@ -110,22 +131,41 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
     const institute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
     if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
 
-    const examCapacity = await prisma.instituteExamCapacity.findUnique({
+    const streams = await prisma.stream.findMany({ orderBy: { name: 'asc' } });
+    const studentStreamId = resolveStreamIdFromStudentCode(student.streamCode, streams, exam.streamId ?? null);
+
+    const examCapacity = studentStreamId
+      ? await prisma.instituteExamCapacity.findUnique({
+          where: {
+            instituteId_examId_streamId: {
+              instituteId: student.instituteId,
+              examId: exam.id,
+              streamId: studentStreamId
+            }
+          }
+        })
+      : null;
+
+    const applications = await prisma.examApplication.findMany({
       where: {
-        instituteId_examId: {
-          instituteId: student.instituteId,
-          examId: exam.id
+        instituteId: student.instituteId,
+        examId: exam.id
+      },
+      select: {
+        student: {
+          select: { streamCode: true }
         }
       }
     });
 
+    const applicationsUsed = studentStreamId
+      ? applications.reduce((count, app) => {
+          const appStreamId = resolveStreamIdFromStudentCode(app.student?.streamCode, streams, exam.streamId ?? null);
+          return appStreamId === studentStreamId ? count + 1 : count;
+        }, 0)
+      : applications.length;
+
     const totalStudentsAllowed = examCapacity?.totalStudents ?? institute.examApplicationLimit ?? null;
-    const applicationsUsed = await prisma.examApplication.count({
-      where: {
-        instituteId: student.instituteId,
-        examId: exam.id
-      }
-    });
 
     if (typeof totalStudentsAllowed === 'number' && applicationsUsed >= totalStudentsAllowed) {
       return res.status(409).json({
@@ -162,7 +202,8 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
         applicationsUsed: applicationsUsed + 1,
         remainingApplications: typeof totalStudentsAllowed === 'number'
           ? Math.max(totalStudentsAllowed - (applicationsUsed + 1), 0)
-          : null
+          : null,
+        streamId: studentStreamId
       }
     });
   } catch (err) {
