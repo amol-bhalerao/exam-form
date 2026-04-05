@@ -30,7 +30,7 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
       <p class="p">Register staff using Aadhar first, reuse prior institute details when available, and capture examiner / moderator details for the board panel.</p>
 
       <form [formGroup]="form" (ngSubmit)="save()">
-        <mat-tab-group class="teacher-tabs" animationDuration="0ms">
+        <mat-tab-group class="teacher-tabs" animationDuration="0ms" [selectedIndex]="activeTab()" (selectedIndexChange)="activeTab.set($event)">
           <mat-tab label="1. Identity">
             <div class="grid tab-content">
               <mat-form-field appearance="outline">
@@ -67,15 +67,17 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
           <mat-tab label="3. Board Duty">
             <div class="grid tab-content">
               <mat-form-field appearance="outline"><mat-label>Examiner experience (years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="examinerExperienceYears" /><mat-hint>Enter 0 if no examiner experience</mat-hint></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Previous Examiner Appointment No.</mat-label><input matInput formControlName="previousExaminerAppointmentNo" /></mat-form-field>
+              <mat-form-field appearance="outline" *ngIf="hasExaminerExperience()"><mat-label>Previous Examiner Appointment No.</mat-label><input matInput formControlName="previousExaminerAppointmentNo" /></mat-form-field>
+
               <mat-form-field appearance="outline"><mat-label>Moderator experience (years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="moderatorExperienceYears" /><mat-hint>Enter 0 if no moderator experience</mat-hint></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Last Exam Moderator Name</mat-label><input matInput formControlName="lastModeratorName" /></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Last Moderator Appointment No.</mat-label><input matInput formControlName="lastModeratorAppointmentNo" /></mat-form-field>
-              <mat-form-field appearance="outline" class="span-2"><mat-label>Last Moderator College Name</mat-label><input matInput formControlName="lastModeratorCollegeName" /></mat-form-field>
+              <mat-form-field appearance="outline" *ngIf="hasModeratorExperience()"><mat-label>Last Exam Moderator Name</mat-label><input matInput formControlName="lastModeratorName" /></mat-form-field>
+              <mat-form-field appearance="outline" *ngIf="hasModeratorExperience()"><mat-label>Last Moderator Appointment No.</mat-label><input matInput formControlName="lastModeratorAppointmentNo" /></mat-form-field>
+              <mat-form-field appearance="outline" class="span-2" *ngIf="hasModeratorExperience()"><mat-label>Last Moderator College Name</mat-label><input matInput formControlName="lastModeratorCollegeName" /></mat-form-field>
+
               <mat-form-field appearance="outline"><mat-label>Chief Moderator experience (years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="chiefModeratorExperienceYears" /><mat-hint>Optional board panel history</mat-hint></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Last Chief Moderator Name</mat-label><input matInput formControlName="lastChiefModeratorName" /></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Last Chief Moderator Appointment No.</mat-label><input matInput formControlName="lastChiefModeratorAppointmentNo" /></mat-form-field>
-              <mat-form-field appearance="outline" class="span-2"><mat-label>Last Chief Moderator College Name</mat-label><input matInput formControlName="lastChiefModeratorCollegeName" /></mat-form-field>
+              <mat-form-field appearance="outline" *ngIf="hasChiefModeratorExperience()"><mat-label>Last Chief Moderator Name</mat-label><input matInput formControlName="lastChiefModeratorName" /></mat-form-field>
+              <mat-form-field appearance="outline" *ngIf="hasChiefModeratorExperience()"><mat-label>Last Chief Moderator Appointment No.</mat-label><input matInput formControlName="lastChiefModeratorAppointmentNo" /></mat-form-field>
+              <mat-form-field appearance="outline" class="span-2" *ngIf="hasChiefModeratorExperience()"><mat-label>Last Chief Moderator College Name</mat-label><input matInput formControlName="lastChiefModeratorCollegeName" /></mat-form-field>
             </div>
           </mat-tab>
         </mat-tab-group>
@@ -100,7 +102,10 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
         </div>
 
         <div class="form-actions">
-          <button mat-flat-button color="primary" [disabled]="form.invalid || loading()">{{ loading() ? 'Saving…' : selectedTeacherId() ? 'Update Teacher' : 'Add Teacher' }}</button>
+          <button mat-stroked-button type="button" *ngIf="activeTab() > 0" (click)="prevStep()">Back</button>
+          <span class="action-spacer"></span>
+          <button mat-stroked-button color="primary" type="button" *ngIf="activeTab() < 2" (click)="nextStep()">Next</button>
+          <button mat-flat-button color="primary" type="submit" *ngIf="activeTab() === 2" [disabled]="form.invalid || loading()">{{ loading() ? 'Saving…' : selectedTeacherId() ? 'Update Teacher' : 'Add Teacher' }}</button>
           <button mat-stroked-button type="button" *ngIf="selectedTeacherId()" (click)="resetForm()">Cancel Edit</button>
         </div>
       </form>
@@ -179,6 +184,7 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
     .calc-label { font-size: 12px; color: #1d4ed8; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .02em; }
     .calc-value { color: #0f172a; font-weight: 600; line-height: 1.4; }
     .form-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
+    .action-spacer { flex: 1 1 auto; }
     .history-box { background: #f8fafc; border: 1px solid #dbeafe; border-radius: 8px; padding: 12px; margin: 8px 0 14px; }
     .history-title { font-weight: 700; color: #1d4ed8; margin-bottom: 6px; }
     .history-item { color: #334155; margin-bottom: 4px; }
@@ -239,6 +245,7 @@ export class InstituteAddTeacherComponent implements OnInit {
   readonly retirementDateDisplay = signal('');
   readonly seniorPayGradeStatus = signal('Need service start date');
   readonly selectionPayGradeStatus = signal('Need service start date');
+  readonly activeTab = signal(0);
 
   readonly filteredTeachers = computed(() => {
     const q = this.searchText().trim().toLowerCase();
@@ -258,6 +265,26 @@ export class InstituteAddTeacherComponent implements OnInit {
         .includes(q)
     );
   });
+
+  hasExaminerExperience(): boolean {
+    return (this.toNumberOrUndefined(this.form.controls.examinerExperienceYears.value) ?? 0) > 0;
+  }
+
+  hasModeratorExperience(): boolean {
+    return (this.toNumberOrUndefined(this.form.controls.moderatorExperienceYears.value) ?? 0) > 0;
+  }
+
+  hasChiefModeratorExperience(): boolean {
+    return (this.toNumberOrUndefined(this.form.controls.chiefModeratorExperienceYears.value) ?? 0) > 0;
+  }
+
+  nextStep() {
+    this.activeTab.update((current) => Math.min(current + 1, 2));
+  }
+
+  prevStep() {
+    this.activeTab.update((current) => Math.max(current - 1, 0));
+  }
 
   private calculateExperienceYears(serviceStartDate: Date | string | null | undefined): number | null {
     if (!serviceStartDate) return null;
@@ -285,6 +312,28 @@ export class InstituteAddTeacherComponent implements OnInit {
     if (Number.isNaN(date.getTime())) return null;
 
     return new Date(date.getFullYear() + MAHARASHTRA_TEACHER_RETIREMENT_AGE, date.getMonth() + 1, 0);
+  }
+
+  private refreshBoardDutyVisibility() {
+    if (!this.hasExaminerExperience()) {
+      this.form.controls.previousExaminerAppointmentNo.setValue('', { emitEvent: false });
+    }
+
+    if (!this.hasModeratorExperience()) {
+      this.form.patchValue({
+        lastModeratorName: '',
+        lastModeratorAppointmentNo: '',
+        lastModeratorCollegeName: ''
+      }, { emitEvent: false });
+    }
+
+    if (!this.hasChiefModeratorExperience()) {
+      this.form.patchValue({
+        lastChiefModeratorName: '',
+        lastChiefModeratorAppointmentNo: '',
+        lastChiefModeratorCollegeName: ''
+      }, { emitEvent: false });
+    }
   }
 
   private refreshDerivedValues() {
@@ -381,7 +430,11 @@ export class InstituteAddTeacherComponent implements OnInit {
   ngOnInit() {
     this.form.controls.dob.valueChanges.subscribe(() => this.refreshDerivedValues());
     this.form.controls.serviceStartDate.valueChanges.subscribe(() => this.refreshDerivedValues());
+    this.form.controls.examinerExperienceYears.valueChanges.subscribe(() => this.refreshBoardDutyVisibility());
+    this.form.controls.moderatorExperienceYears.valueChanges.subscribe(() => this.refreshBoardDutyVisibility());
+    this.form.controls.chiefModeratorExperienceYears.valueChanges.subscribe(() => this.refreshBoardDutyVisibility());
     this.refreshDerivedValues();
+    this.refreshBoardDutyVisibility();
     this.load();
   }
 
@@ -466,6 +519,10 @@ export class InstituteAddTeacherComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
+    const examinerExperienceYears = this.toNumberOrUndefined(this.form.value.examinerExperienceYears);
+    const moderatorExperienceYears = this.toNumberOrUndefined(this.form.value.moderatorExperienceYears);
+    const chiefModeratorExperienceYears = this.toNumberOrUndefined(this.form.value.chiefModeratorExperienceYears);
+
     const payload: any = {
       fullName: this.form.value.fullName,
       designation: this.form.value.designation,
@@ -482,16 +539,16 @@ export class InstituteAddTeacherComponent implements OnInit {
       mobile: this.form.value.mobile || undefined,
       certificates: this.form.value.certificates || undefined,
       certifications: this.form.value.certificates || undefined,
-      examinerExperienceYears: this.toNumberOrUndefined(this.form.value.examinerExperienceYears),
-      previousExaminerAppointmentNo: this.form.value.previousExaminerAppointmentNo || undefined,
-      moderatorExperienceYears: this.toNumberOrUndefined(this.form.value.moderatorExperienceYears),
-      lastModeratorName: this.form.value.lastModeratorName || undefined,
-      lastModeratorAppointmentNo: this.form.value.lastModeratorAppointmentNo || undefined,
-      lastModeratorCollegeName: this.form.value.lastModeratorCollegeName || undefined,
-      chiefModeratorExperienceYears: this.toNumberOrUndefined(this.form.value.chiefModeratorExperienceYears),
-      lastChiefModeratorName: this.form.value.lastChiefModeratorName || undefined,
-      lastChiefModeratorAppointmentNo: this.form.value.lastChiefModeratorAppointmentNo || undefined,
-      lastChiefModeratorCollegeName: this.form.value.lastChiefModeratorCollegeName || undefined,
+      examinerExperienceYears,
+      previousExaminerAppointmentNo: (examinerExperienceYears ?? 0) > 0 ? (this.form.value.previousExaminerAppointmentNo || undefined) : undefined,
+      moderatorExperienceYears,
+      lastModeratorName: (moderatorExperienceYears ?? 0) > 0 ? (this.form.value.lastModeratorName || undefined) : undefined,
+      lastModeratorAppointmentNo: (moderatorExperienceYears ?? 0) > 0 ? (this.form.value.lastModeratorAppointmentNo || undefined) : undefined,
+      lastModeratorCollegeName: (moderatorExperienceYears ?? 0) > 0 ? (this.form.value.lastModeratorCollegeName || undefined) : undefined,
+      chiefModeratorExperienceYears,
+      lastChiefModeratorName: (chiefModeratorExperienceYears ?? 0) > 0 ? (this.form.value.lastChiefModeratorName || undefined) : undefined,
+      lastChiefModeratorAppointmentNo: (chiefModeratorExperienceYears ?? 0) > 0 ? (this.form.value.lastChiefModeratorAppointmentNo || undefined) : undefined,
+      lastChiefModeratorCollegeName: (chiefModeratorExperienceYears ?? 0) > 0 ? (this.form.value.lastChiefModeratorCollegeName || undefined) : undefined,
       active: this.form.value.active
     };
 
@@ -517,6 +574,7 @@ export class InstituteAddTeacherComponent implements OnInit {
     this.selectedTeacherId.set(null);
     this.isReadonly.set(false);
     this.historyTeachers.set([]);
+    this.activeTab.set(0);
     this.form.reset({
       governmentId: '',
       fullName: '',

@@ -110,12 +110,6 @@ export class InstituteExamCapacityGridComponent implements OnInit {
       valueFormatter: (params: any) => params.value ?? 'Not set'
     },
     {
-      field: 'isCapacityReached',
-      headerName: 'Status',
-      minWidth: 120,
-      valueFormatter: (params: any) => (params.value ? 'Full' : 'Open')
-    },
-    {
       field: 'saveAction',
       headerName: 'Action',
       sortable: false,
