@@ -177,12 +177,15 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
       });
     }
 
+    const generatedApplicationNo = `APP-${Date.now()}`;
     const app = await prisma.examApplication.create({
       data: {
         instituteId: student.instituteId,
         studentId: student.id,
         examId: exam.id,
-        applicationNo: `APP-${Date.now()}`,
+        applicationNo: generatedApplicationNo,
+        applSrNo: generatedApplicationNo,
+        studentSaralId: student.studentSaralId ?? null,
         candidateType: body.candidateType,
         status: 'DRAFT'
       }
@@ -273,6 +276,7 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
           dob: z.string().datetime().optional(),
           gender: z.string().optional(),
           aadhaar: z.string().optional(),
+          studentSaralId: z.string().optional(),
           address: z.string().optional(),
           pinCode: z.string().optional(),
           mobile: z.string().optional(),
@@ -351,8 +355,15 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
     }
 
     if (effectiveCandidateType !== 'BACKLOG') {
-      const selectedCategories = [...new Set(validStream.map((m) => m.subject.category))];
-      if (!selectedCategories.includes('language') || !selectedCategories.includes('Compulsory')) {
+      const selectedCategories = [...new Set(
+        validStream
+          .map((m) => String(m.subject?.category || '').trim().toLowerCase())
+          .filter(Boolean)
+      )];
+      const hasLanguage = selectedCategories.some((category) => category === 'language' || category.includes('lang'));
+      const hasCompulsory = selectedCategories.some((category) => category === 'compulsory' || category.includes('compulsory'));
+
+      if (!hasLanguage || !hasCompulsory) {
         return res.status(400).json({
           error: 'INVALID_SUBJECT_CATEGORY',
           message: 'You must select at least one language and one compulsory subject.'
@@ -367,6 +378,7 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
         where: { id: student.id },
         data: {
           ...body.student,
+          studentSaralId: body.student.studentSaralId ? body.student.studentSaralId.toUpperCase() : undefined,
           dob: body.student.dob ? new Date(body.student.dob) : undefined
         }
       });
@@ -409,8 +421,8 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
         candidateType: body.candidateType,
         indexNo: body.indexNo,
         udiseNo: body.udiseNo,
-        studentSaralId: body.studentSaralId,
-        applSrNo: body.applSrNo,
+        studentSaralId: body.studentSaralId ?? body.student?.studentSaralId ?? app.studentSaralId ?? student.studentSaralId ?? app.applicationNo,
+        applSrNo: body.applSrNo ?? app.applSrNo ?? app.applicationNo,
         centreNo: body.centreNo,
         typeA: body.typeA,
         typeB: body.typeB,

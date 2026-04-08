@@ -52,6 +52,7 @@ meRouter.get('/', requireAuth, async (req, res) => {
       gender: student.gender,
       aadhaar: student.aadhaar,
       apaarId: student.apaarId,
+      studentSaralId: student.studentSaralId,
       email: user.email,
       address: student.address,
       district: student.district,

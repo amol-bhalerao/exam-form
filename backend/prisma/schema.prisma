@@ -220,6 +220,7 @@ model Student {
   gender       String?  @db.VarChar(20)
   aadhaar      String?  @db.VarChar(20)
   apaarId      String?  @db.VarChar(20)
+  studentSaralId String? @db.VarChar(50)
   address      String?  @db.Text
   district     String?  @db.VarChar(100)
   taluka       String?  @db.VarChar(100)

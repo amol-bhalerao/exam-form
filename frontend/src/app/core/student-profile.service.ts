@@ -28,6 +28,7 @@ export interface StudentProfile {
   pincode?: string;
   aadharNumber?: string;
   apaarId?: string; // Automated Permanent Academic Account Registry
+  studentSaralId?: string;
   rollNumber?: string;
   
   // College Information
@@ -111,10 +112,10 @@ export class StudentProfileService {
     // Check previous exams (at least two years)
     const previousExams = profile.previousExams || [];
     const hasSSCYear = previousExams.some((e: any) => e.examType === 'SSC' && e.year);
-    const hasXIIYear = previousExams.some((e: any) => e.examType === 'XII' && e.year);
+    const hasXIYear = previousExams.some((e: any) => ['XI', '11TH', '11'].includes(String(e.examType || '').toUpperCase()) && e.year);
     
     if (hasSSCYear) completedCount++;
-    if (hasXIIYear) completedCount++;
+    if (hasXIYear) completedCount++;
 
     const TOTAL_FIELDS = 11;
     const percentage = Math.round((completedCount / TOTAL_FIELDS) * 100);
@@ -288,6 +289,7 @@ export class StudentProfileService {
       'aadharNumber': 'aadhaar',
       'aadhaar': 'aadhaar',
       'apaarId': 'apaarId',
+      'studentSaralId': 'studentSaralId',
       'addressLineOne': 'address',
       'address': 'address',
       'addressLineTwo': null,

@@ -297,6 +297,13 @@ import { API_BASE_URL } from '../../core/api';
                     <input matInput formControlName="apaarId" placeholder="e.g., APAAR123456" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'apaarId') }}</mat-error>
                   </mat-form-field>
+
+                  <mat-form-field class="form-field">
+                    <mat-label>Student Saral ID</mat-label>
+                    <mat-icon matPrefix>badge</mat-icon>
+                    <input matInput formControlName="studentSaralId" placeholder="Enter Student Saral ID" />
+                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'studentSaralId') }}</mat-error>
+                  </mat-form-field>
                 </div>
 
                 <div class="form-grid-2">
@@ -703,6 +710,10 @@ import { API_BASE_URL } from '../../core/api';
                         <div class="summary-item">
                           <label>APAAR ID:</label>
                           <span>{{ profile.apaarId || '-' }}</span>
+                        </div>
+                        <div class="summary-item">
+                          <label>Student Saral ID:</label>
+                          <span>{{ profile.studentSaralId || '-' }}</span>
                         </div>
                       </div>
                     </div>
@@ -1578,7 +1589,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   // Profile completion tracking
   profileCompletionPercentage = 0;
   profileCompletionCount = 0;
-  totalProfileFields = 11; // firstName, lastName, dob, gender, aadhaar, address, pinCode, mobile, email, sscYear, xithYear
+  totalProfileFields = 11; // firstName, lastName, dob, gender, aadhaar, address, pinCode, mobile, email, sscYear, xiYear
 
   // Active tab index for auto-navigation after save
   selectedTabIndex = 0;
@@ -1642,6 +1653,11 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         Validators.minLength(12),
         Validators.maxLength(12),
         Validators.pattern(/^[0-9A-Za-z]*$/)
+      ]],
+
+      studentSaralId: ['', [
+        Validators.maxLength(50),
+        Validators.pattern(/^[0-9A-Za-z-]*$/)
       ]],
 
       // Mobile - exactly 10 digits, starts with 6-9
@@ -1943,6 +1959,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           gender: profile.gender || '',
           aadharNumber: profile.aadhaar || '',
           apaarId: profile.apaarId || '',
+          studentSaralId: profile.studentSaralId || '',
           addressLineOne: profile.address || '',
           pincode: profile.pinCode || '',
           mobile: profile.mobile || '',
@@ -2034,28 +2051,25 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       'aadhaar',
       'address',
       'pinCode',
-      'mobile'
+      'mobile',
+      'email'
     ];
 
     let completedCount = 0;
 
-    // Check personal details
     requiredFields.forEach(field => {
-      const value = profile[field];
+      const value = field === 'email' ? (profile.email || this.profile?.email) : profile[field];
       if (value && value !== null && value !== '') {
         completedCount++;
       }
     });
 
-    // Check previous exams (at least one exam year)
-    const hasPreviousExams = profile.previousExams &&
-      profile.previousExams.some((e: any) => e.year);
-    if (hasPreviousExams) {
-      completedCount++;
-    }
+    const previousExams = profile.previousExams || [];
+    const hasSSCYear = previousExams.some((e: any) => e.examType === 'SSC' && e.year);
+    const hasXIYear = previousExams.some((e: any) => ['XI', '11TH', '11'].includes(String(e.examType || '').toUpperCase()) && e.year);
 
-    // Check mobile from user data
-    const hasMobile = profile.mobile || this.profile?.mobile;
+    if (hasSSCYear) completedCount++;
+    if (hasXIYear) completedCount++;
 
     this.profileCompletionCount = completedCount;
     this.profileCompletionPercentage = Math.round((completedCount / this.totalProfileFields) * 100);
@@ -2305,6 +2319,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         middleName: formData.middleName?.toUpperCase() || '',
         motherName: formData.motherName?.toUpperCase() || '',
         apaarId: formData.apaarId?.toUpperCase() || null,
+        studentSaralId: formData.studentSaralId?.toUpperCase() || null,
         // Ensure optional fields aren't undefined
         gender: formData.gender || null,
         email: formData.email || '',
