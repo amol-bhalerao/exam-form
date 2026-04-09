@@ -378,7 +378,7 @@ import { API_BASE_URL } from '../../core/api';
 
     .menu-toggle {
       display: none;
-      color: white;
+      color: black;
     }
 
     @media (max-width: 960px) {

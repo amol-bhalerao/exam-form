@@ -78,18 +78,6 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
   ],
   template: `
     <div class="student-profile-container">
-      <div class="profile-header mobile-app-header">
-        <div class="header-main">
-          <span class="hero-badge">विद्यार्थी प्रोफाइल</span>
-          <h1>माहिती भरा / Student Profile</h1>
-          <p class="form-info">मोबाईलवरून सहज माहिती भरा. अधिक माहिती पाहण्यासाठी <strong>i</strong> बटण वापरा.</p>
-        </div>
-        <button mat-stroked-button type="button" class="header-help-btn" (click)="openInstructionsPopup()">
-          <mat-icon>info</mat-icon>
-          सूचना
-        </button>
-      </div>
-
       <div class="profile-progress-strip">
         <div class="progress-strip-top">
           <div>
@@ -209,7 +197,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>school</mat-icon>
-              <span class="tab-title">महाविद्यालय</span>
+              <span class="tab-title">महाविद्यालय निवडा</span>
             </ng-template>
 
             <div class="form-section">
@@ -223,7 +211,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
                 <div class="form-grid-2">
                   <mat-form-field class="example-full-width">
-                    <mat-label>महाविद्यालय</mat-label>
+                    <mat-label>महाविद्यालय निवडा</mat-label>
                     <input 
                     type="text" 
                     matInput 
@@ -243,7 +231,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>शाखा *</mat-label>
+                    <mat-label>शाखा निवडा*</mat-label>
                     <mat-icon matPrefix>layers</mat-icon>
                     <mat-select [(ngModel)]="selectedStreamCode" required panelClass="student-profile-select-panel">
                       <mat-option value="">- शाखा निवडा -</mat-option>
@@ -269,10 +257,10 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     <mat-icon>arrow_forward</mat-icon>
                   </button>
                   
-                  <div class="institute-info" *ngIf="profile?.instituteId">
+                  <!-- <div class="institute-info" *ngIf="profile?.instituteId">
                     <mat-icon>check_circle</mat-icon>
                     <span>सध्याची निवड: {{ getInstituteLabel(profile.instituteId) }} • {{ profile.streamCode }}</span>
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </div>
