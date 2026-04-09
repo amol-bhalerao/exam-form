@@ -23,7 +23,9 @@ interface Institute {
   name: string;
   district: string;
   city: string;
-  code: string;
+  code?: string;
+  collegeNo?: string;
+  udiseNo?: string;
 }
 
 interface Stream {
@@ -138,7 +140,7 @@ interface Stream {
                     @if (selectedInstitute) {
                       <div class="selected-trigger">
                         <span class="trigger-name">{{ selectedInstitute.name }}</span>
-                        <span class="trigger-meta">{{ selectedInstitute.code || 'No code' }} • {{ selectedInstitute.city || selectedInstitute.district || 'Location not available' }}</span>
+                        <span class="trigger-meta">{{ getInstituteCode(selectedInstitute) || 'No code' }} • {{ selectedInstitute.city || selectedInstitute.district || 'Location not available' }}</span>
                       </div>
                     } @else {
                       <span class="placeholder-trigger">Select institute / organisation</span>
@@ -154,7 +156,7 @@ interface Stream {
                       <div class="option-content">
                         <span class="option-name">{{ institute.name }}</span>
                         <span class="option-meta">{{ institute.city || 'City not available' }}{{ institute.district ? ' • ' + institute.district : '' }}</span>
-                        <span class="option-code">Institute Code: {{ institute.code || 'N/A' }}</span>
+                        <span class="option-code">Institute Code: {{ getInstituteCode(institute) || 'N/A' }}</span>
                       </div>
                     </mat-option>
                   </mat-optgroup>
@@ -172,7 +174,7 @@ interface Stream {
               <div class="card-body">
                 <div class="info-row">
                   <span class="label">Institute Code:</span>
-                  <span class="value code-badge">{{ selectedInstitute.code }}</span>
+                  <span class="value code-badge">{{ getInstituteCode(selectedInstitute) || 'N/A' }}</span>
                 </div>
                 <div class="info-row">
                   <span class="label">Location:</span>
@@ -1273,7 +1275,7 @@ export class InstituteSelectComponent implements OnInit {
       const search = this.searchText.toLowerCase();
       this.filteredInstitutes = this.institutes.filter(inst =>
         (inst.name?.toLowerCase() || '').includes(search) ||
-        (inst.code?.toLowerCase() || '').includes(search) ||
+        this.getInstituteCode(inst).toLowerCase().includes(search) ||
         (inst.district?.toLowerCase() || '').includes(search) ||
         (inst.city?.toLowerCase() || '').includes(search)
       );
@@ -1307,10 +1309,15 @@ export class InstituteSelectComponent implements OnInit {
     return this.institutes.find(i => i.id === this.selectedInstituteId);
   }
 
+  getInstituteCode(inst: Institute | null | undefined): string {
+    return String(inst?.code || inst?.collegeNo || inst?.udiseNo || '').trim();
+  }
+
   getInstituteLabel(id: number | null): string {
     if (!id) return '';
     const inst = this.institutes.find(i => i.id === id);
-    return inst ? `${inst.name} (${inst.code})` : '';
+    const code = this.getInstituteCode(inst);
+    return inst ? `${inst.name}${code ? ` (${code})` : ''}` : '';
   }
 
   onSubmit() {

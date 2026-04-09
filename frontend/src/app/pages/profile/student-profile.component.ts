@@ -223,7 +223,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                         <mat-option [value]="inst" class="institute-option">
                           <div class="institute-option-content">
                             <div class="institute-option-title">{{ inst.name }}</div>
-                            <div class="institute-option-meta">{{ inst.code || 'Code N/A' }}<span *ngIf="inst.city"> • {{ inst.city }}</span></div>
+                            <div class="institute-option-meta">{{ getInstituteCode(inst) || 'Code N/A' }}<span *ngIf="inst.city"> • {{ inst.city }}</span></div>
                           </div>
                         </mat-option>
                       }
@@ -277,7 +277,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
               <div class="profile-assets-grid">
                 <app-student-image-upload
                   title="Photograph / छायाचित्र"
-                  hint="Upload a passport-style vertical photo for hall-ticket scanning. Use the crop guide and keep it below 50 KB."
+                  
                   type="photo"
                   [imageUrl]="profile?.photoUrl || null"
                   [saving]="savingPhoto"
@@ -287,7 +287,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
                 <app-student-image-upload
                   title="Student Signature / सही"
-                  hint="Upload a wide signature strip on a plain white background. Use the crop guide for the best print result."
+                  
                   type="signature"
                   [imageUrl]="profile?.signatureUrl || null"
                   [saving]="savingSignature"
@@ -499,7 +499,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       <mat-option value="ST">ST</mat-option>
                       <mat-option value="NT">NT</mat-option>
                     </mat-select>
-                    <mat-hint>Select your social category</mat-hint>
+                    
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
@@ -514,7 +514,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       <mat-option value="PARSI">Parsi</mat-option>
                       <mat-option value="JEWISH">Jewish</mat-option>
                     </mat-select>
-                    <mat-hint>Select minority religion if applicable</mat-hint>
+                  
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
@@ -527,7 +527,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       <mat-option value="ENGLISH">English</mat-option>
                       <mat-option value="URDU">Urdu</mat-option>
                     </mat-select>
-                    <mat-hint>Select the language medium you studied in</mat-hint>
+                    
                   </mat-form-field>
                 </div>
               </div>
@@ -966,8 +966,11 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
     .student-profile-container {
       min-height: 100vh;
+      width: 100%;
+      max-width: none;
+      margin: 0;
       background: var(--bg-light);
-      padding: var(--spacing-sm);
+      padding: 0;
       font-family: 'Segoe UI', Arial, sans-serif;
       display: flex;
       flex-direction: column;
@@ -976,12 +979,12 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     /* Header */
     .profile-header {
       width: 100%;
-      max-width: 1000px;
-      margin: 0 auto var(--spacing-md);
+      max-width: none;
+      margin: 0 0 var(--spacing-md);
       text-align: center;
       background: white;
       padding: var(--spacing-sm);
-      border-radius: var(--border-radius);
+      border-radius: 0;
       box-shadow: 0 8px 24px rgba(102, 126, 234, 0.14);
       animation: fadeInUp 0.45s ease-out;
     }
@@ -1083,14 +1086,14 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
     .error-banner {
       width: 100%;
-      max-width: 900px;
-      margin: 0 auto var(--spacing-md);
+      max-width: none;
+      margin: 0 0 var(--spacing-md);
       display: flex;
       gap: var(--spacing-sm);
       padding: var(--spacing-md);
       background: white;
       border-left: 5px solid #f44336;
-      border-radius: var(--border-radius-sm);
+      border-radius: 0;
       flex-wrap: wrap;
       align-items: flex-start;
     }
@@ -1125,11 +1128,11 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     /* Profile Content */
     .profile-content {
       width: 100%;
-      max-width: 1000px;
-      margin: 0 auto;
-      background: white;
-      border-radius: var(--border-radius);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      max-width: none;
+      margin: 0;
+      background: transparent;
+      border-radius: 0;
+      box-shadow: none;
       overflow: hidden;
     }
 
@@ -1161,16 +1164,16 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     }
     /* Form Sections */
     .form-section {
-      padding: var(--spacing-md);
+      
       width: 100%;
     }
 
     .form-card {
-      margin-bottom: var(--spacing-md);
+      margin-bottom: 12px;
       padding: var(--spacing-md);
       background: linear-gradient(180deg, #ffffff 0%, var(--bg-lighter) 100%);
       border: 1px solid var(--border-color);
-      border-radius: var(--border-radius);
+      border-radius: 0;
       border-left: 4px solid var(--primary-color);
       box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
       transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1309,7 +1312,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
     /* Summary Section */
     .summary-content {
-      padding: var(--spacing-md);
+      padding: 0;
       width: 100%;
     }
 
@@ -1558,7 +1561,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       }
 
       .student-profile-container {
-        padding: var(--spacing-sm);
+        padding: 0;
       }
 
       .profile-header {
@@ -1567,7 +1570,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
       .form-section,
       .summary-content {
-        padding: var(--spacing-lg);
+        padding: 0;
       }
 
       .form-card,
@@ -1707,7 +1710,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       }
 
       .form-card {
-        border-radius: var(--border-radius-sm);
+        border-radius: 0;
       }
 
       .card-title-row {
@@ -1805,7 +1808,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     /* Large Desktop: 1400px+ */
     @media (min-width: 1400px) {
       .student-profile-container {
-        padding: 2rem;
+        padding: 0;
       }
 
       .profile-header {
@@ -1814,7 +1817,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
       .form-section,
       .summary-content {
-        padding: 3rem;
+        padding: 0;
       }
     }
   `]
@@ -2149,8 +2152,16 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
   private withAssetCacheBust(url?: string | null): string | null {
     if (!url) return null;
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}v=${Date.now()}`;
+
+    try {
+      const parsedUrl = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+      parsedUrl.searchParams.set('v', String(Date.now()));
+      return parsedUrl.toString();
+    } catch {
+      const cleanedUrl = String(url).replace(/([?&])v=\d+/g, '$1').replace(/[?&]$/, '');
+      const separator = cleanedUrl.includes('?') ? '&' : '?';
+      return `${cleanedUrl}${separator}v=${Date.now()}`;
+    }
   }
 
   /**
@@ -2429,7 +2440,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     }
     return this.institutes.filter(inst =>
       inst.name?.toLowerCase().includes(term) ||
-      inst.code?.toLowerCase().includes(term)
+      this.getInstituteCode(inst).toLowerCase().includes(term)
     );
   }
 
@@ -2446,18 +2457,18 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   displayInstituteName(value: any): string {
     // Handle if value is an institute object
     if (value && typeof value === 'object' && value.id) {
-      // Build display string with available properties
       const name = value.name || 'Unknown Institute';
-      const code = value.code ? ` (${value.code})` : '';
-      const display = `${name}${code}`;
-      return display;
+      const codeValue = this.getInstituteCode(value);
+      const code = codeValue ? ` (${codeValue})` : '';
+      return `${name}${code}`;
     }
     // Handle if it's a number (ID) - look up from map
     if (typeof value === 'number') {
       const institute = this.institutesMap.get(value);
       if (institute) {
         const name = institute.name || 'Unknown Institute';
-        const code = institute.code ? ` (${institute.code})` : '';
+        const codeValue = this.getInstituteCode(institute);
+        const code = codeValue ? ` (${codeValue})` : '';
         return `${name}${code}`;
       }
       return '';
@@ -2578,12 +2589,18 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     });
   }
 
+  getInstituteCode(institute: any): string {
+    return String(institute?.code || institute?.collegeNo || institute?.centerNo || institute?.udiseNo || '').trim();
+  }
+
   /**
    * Get institute label by id
    */
   getInstituteLabel(instituteId: number): string {
     const institute = this.institutesMap.get(instituteId);
-    return institute ? `${institute.name} (${institute.code})` : 'Unknown Institute';
+    if (!institute) return 'Unknown Institute';
+    const code = this.getInstituteCode(institute);
+    return code ? `${institute.name} (${code})` : institute.name;
   }
 
   getCategoryLabel(code?: string | null): string {

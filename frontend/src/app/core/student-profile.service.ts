@@ -376,6 +376,20 @@ export class StudentProfileService {
     });
   }
 
+  private withCacheBust(url?: string | null): string {
+    if (!url) return '';
+
+    try {
+      const parsedUrl = new URL(url, typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+      parsedUrl.searchParams.set('v', String(Date.now()));
+      return parsedUrl.toString();
+    } catch {
+      const cleanedUrl = String(url).replace(/([?&])v=\d+/g, '$1').replace(/[?&]$/, '');
+      const separator = cleanedUrl.includes('?') ? '&' : '?';
+      return `${cleanedUrl}${separator}v=${Date.now()}`;
+    }
+  }
+
   uploadProfileAsset(type: 'photo' | 'signature', dataUrl: string): Promise<{ ok: boolean; url: string; student: StudentProfile; sizeKB: number }> {
     this.isLoading.set(true);
     this.error.set(null);
@@ -384,7 +398,7 @@ export class StudentProfileService {
       this.http.post<{ ok: boolean; type: string; url: string; sizeKB: number; student: StudentProfile }>(`${API_BASE_URL}/students/me/assets/${type}`, { dataUrl }).subscribe({
         next: (response) => {
           const current = this.studentProfile() || ({} as StudentProfile);
-          const cacheBustedUrl = `${response.url}${response.url.includes('?') ? '&' : '?'}v=${Date.now()}`;
+          const cacheBustedUrl = this.withCacheBust(response.url);
           const updatedProfile = {
             ...current,
             ...response.student,

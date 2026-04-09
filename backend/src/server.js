@@ -58,7 +58,8 @@ app.use(
       }
     },
     crossOriginEmbedderPolicy: false, // needed for Google Sign-In
-    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' } // Allow Google OAuth popup
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, // Allow Google OAuth popup
+    crossOriginResourcePolicy: { policy: 'cross-origin' } // Allow uploaded student assets to be embedded from the frontend domain
   })
 );
 

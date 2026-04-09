@@ -105,7 +105,6 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
               <div class="profile-assets-grid">
                 <app-student-image-upload
                   title="Photograph / छायाचित्र"
-                  hint="Upload a passport-style vertical photo. Use the crop guide and keep it under 50 KB."
                   type="photo"
                   [imageUrl]="profile?.photoUrl || null"
                   [saving]="savingPhoto"
@@ -115,7 +114,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
 
                 <app-student-image-upload
                   title="Student Signature / सही"
-                  hint="Upload a wide signature strip on a plain white background. Use the crop guide for best hall-ticket output."
+                  
                   type="signature"
                   [imageUrl]="profile?.signatureUrl || null"
                   [saving]="savingSignature"

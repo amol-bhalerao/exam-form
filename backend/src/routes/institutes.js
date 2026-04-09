@@ -172,12 +172,24 @@ async function getInstituteUserWithInstitute(userId) {
   });
 }
 
+function getInstituteDisplayCode(institute) {
+  return institute?.code || institute?.collegeNo || institute?.udiseNo || null;
+}
+
+function withInstituteDisplayCode(institute) {
+  return {
+    ...institute,
+    code: getInstituteDisplayCode(institute),
+    centerNo: getInstituteDisplayCode(institute) ?? institute?.centerNo ?? null
+  };
+}
+
 function toInstituteDetailsDto(institute) {
   return {
     id: institute.id,
     name: institute.name,
-    code: institute.code,
-    centerNo: institute.code,
+    code: getInstituteDisplayCode(institute),
+    centerNo: getInstituteDisplayCode(institute),
     collegeNo: institute.collegeNo,
     uniqueNo: institute.collegeNo,
     udiseNo: institute.udiseNo,
@@ -403,7 +415,7 @@ institutesRouter.get('/all', requireAuth, requireRole(['SUPER_ADMIN']), async (r
         createdAt: true
       }
     });
-    return res.json({ institutes });
+    return res.json({ institutes: institutes.map(withInstituteDisplayCode) });
   } catch (err) {
     console.error('Error fetching all institutes:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
@@ -479,7 +491,8 @@ institutesRouter.get('/', async (req, res) => {
         acceptingApplications: true
       }
     });
-    return res.json({ institutes, total: institutes.length });
+    const normalizedInstitutes = institutes.map(withInstituteDisplayCode);
+    return res.json({ institutes: normalizedInstitutes, total: normalizedInstitutes.length });
   } catch (err) {
     console.error('Error fetching institutes:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
@@ -1195,6 +1208,8 @@ institutesRouter.get('/search', requireAuth, async (req, res) => {
         OR: [
           { name: { contains: searchTerm, mode: 'insensitive' } },
           { code: { contains: searchTerm, mode: 'insensitive' } },
+          { collegeNo: { contains: searchTerm, mode: 'insensitive' } },
+          { udiseNo: { contains: searchTerm, mode: 'insensitive' } },
           { district: { contains: searchTerm, mode: 'insensitive' } },
           { city: { contains: searchTerm, mode: 'insensitive' } }
         ]
@@ -1203,6 +1218,8 @@ institutesRouter.get('/search', requireAuth, async (req, res) => {
         id: true,
         name: true,
         code: true,
+        collegeNo: true,
+        udiseNo: true,
         district: true,
         city: true,
         status: true
@@ -1210,7 +1227,7 @@ institutesRouter.get('/search', requireAuth, async (req, res) => {
       take: 20
     });
 
-    return res.json({ institutes });
+    return res.json({ institutes: institutes.map(withInstituteDisplayCode) });
   } catch (err) {
     console.error('Error searching institutes:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });

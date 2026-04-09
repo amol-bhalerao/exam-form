@@ -101,8 +101,8 @@ import { API_BASE_URL } from '../../core/api';
         </mat-nav-list>
       </mat-sidenav>
 
-      <mat-sidenav-content>
-        <mat-toolbar class="toolbar">
+      <mat-sidenav-content [class.student-mobile-shell]="role() === 'STUDENT' && isMobile()">
+        <mat-toolbar class="toolbar" [class.mobile-toolbar]="isMobile()" [class.student-toolbar]="role() === 'STUDENT'">
           <button mat-icon-button (click)="toggle()" aria-label="Toggle menu" class="menu-toggle"><mat-icon>menu</mat-icon></button>
           <span class="center-title">{{ centerTitle() }}</span>
           <span class="spacer"></span>
@@ -116,7 +116,7 @@ import { API_BASE_URL } from '../../core/api';
           <button mat-icon-button (click)="logout()" aria-label="Logout" class="logout-btn"><mat-icon>logout</mat-icon></button>
         </mat-toolbar>
 
-        <div class="content"><router-outlet /></div>
+        <div class="content" [class.student-content]="role() === 'STUDENT'"><router-outlet /></div>
       </mat-sidenav-content>
     </mat-sidenav-container>
   `,
@@ -367,6 +367,17 @@ import { API_BASE_URL } from '../../core/api';
       align-items: center;
       gap: 1rem;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+
+    .student-toolbar {
+      background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 100%);
+    }
+
+    .mobile-toolbar {
+      gap: 0.5rem;
     }
 
     @media (max-width: 480px) {
@@ -378,7 +389,8 @@ import { API_BASE_URL } from '../../core/api';
 
     .menu-toggle {
       display: none;
-      color: black;
+      color: white;
+      background: rgba(255, 255, 255, 0.12);
     }
 
     @media (max-width: 960px) {
@@ -392,6 +404,9 @@ import { API_BASE_URL } from '../../core/api';
       font-weight: 600;
       flex: 1;
       text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     @media (max-width: 600px) {
@@ -471,7 +486,32 @@ import { API_BASE_URL } from '../../core/api';
     .content {
       flex: 1;
       overflow-y: auto;
-      background: #f5f5f5;
+      background: linear-gradient(180deg, #f4f7fb 0%, #eef4ff 100%);
+      padding: 16px;
+    }
+
+    .student-content {
+      padding: 0 0 78px;
+    }
+
+    .student-mobile-shell {
+      background: linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+    }
+
+    @media (min-width: 961px) {
+      .student-content {
+        padding: 0;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        padding: 10px;
+      }
+
+      .student-content {
+        padding: 0 0 82px;
+      }
     }
 
     /* Ensure mat-list items are properly styled */
@@ -485,8 +525,8 @@ import { API_BASE_URL } from '../../core/api';
   `]
 })
 export class AppShellComponent {
-  readonly opened = signal(true);
-  readonly isMobile = signal(window.innerWidth <= 960); // Detect mobile on init
+  readonly isMobile = signal(typeof window !== 'undefined' ? window.innerWidth <= 960 : false);
+  readonly opened = signal(typeof window !== 'undefined' ? window.innerWidth > 960 : true);
 
   readonly role = computed(() => this.auth.user()?.role ?? null);
   readonly username = computed(() => this.auth.user()?.username ?? '');
@@ -512,7 +552,7 @@ export class AppShellComponent {
   private syncMobile() {
     const mobile = window.matchMedia('(max-width: 960px)').matches;
     this.isMobile.set(mobile);
-    if (!mobile) this.opened.set(true);
+    this.opened.set(!mobile);
   }
 
   private loadProfile() {

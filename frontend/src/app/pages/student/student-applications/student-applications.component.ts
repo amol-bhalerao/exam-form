@@ -277,6 +277,27 @@ type Application = { id: number; applicationNo: string; status: string; candidat
         color: #2563eb;
         text-decoration: none;
       }
+
+      @media (max-width: 768px) {
+        .card {
+          padding: 14px;
+          border-radius: 16px;
+        }
+
+        .tile-header,
+        .tile-meta-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .tile-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .tile-actions button {
+          flex: 1 1 100%;
+        }
+      }
     `
   ]
 })

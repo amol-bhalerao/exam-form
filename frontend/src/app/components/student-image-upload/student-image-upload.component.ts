@@ -35,7 +35,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       </ng-template>
 
       <div class="asset-guidelines">
-        <span>{{ type === 'photo' ? 'Portrait crop • face centered' : 'Wide crop • full sign visible' }}</span>
         <span>{{ type === 'photo' ? 'Plain light background' : 'Dark ink on white background' }}</span>
       </div>
 
@@ -87,7 +86,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         </div>
 
         <p class="crop-note">
-          Follow the guide frame while adjusting the image. It will be saved in the correct hall-ticket shape and compressed automatically.
+          Follow the guide frame while adjusting the image. It will be resized to the correct hall-ticket shape and optimized automatically below {{ maxSizeKB }} KB.
         </p>
 
         <div class="editor-actions">
@@ -338,7 +337,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 export class StudentImageUploadComponent implements OnChanges {
   @Input() type: 'photo' | 'signature' = 'photo';
   @Input() title = 'Student Photo';
-  @Input() hint = 'Upload a recent clear image';
+  @Input() hint = '50KB पेक्षा कमी आकाराचे फोटो अपलोड करा';
   @Input() imageUrl: string | null = null;
   @Input() maxSizeKB = 50;
   @Input() saving = false;
@@ -382,8 +381,8 @@ export class StudentImageUploadComponent implements OnChanges {
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      this.error.set('Please upload an image smaller than 5 MB before optimization.');
+    if (file.size > 12 * 1024 * 1024) {
+      this.error.set('Please upload an image smaller than 12 MB before optimization.');
       return;
     }
 
@@ -391,15 +390,6 @@ export class StudentImageUploadComponent implements OnChanges {
     reader.onload = () => {
       const image = new Image();
       image.onload = () => {
-        const { width: minWidth, height: minHeight } = this.getMinimumDimensions();
-        if (image.width < minWidth || image.height < minHeight) {
-          this.error.set(`Please upload a clearer ${this.type === 'photo' ? 'photo' : 'signature'} of at least ${minWidth}×${minHeight} pixels.`);
-          if (this.fileInput?.nativeElement) {
-            this.fileInput.nativeElement.value = '';
-          }
-          return;
-        }
-
         this.sourceImage = image;
         this.zoom = 1;
         this.offsetX = 0;
@@ -479,12 +469,6 @@ export class StudentImageUploadComponent implements OnChanges {
     this.editorOpen.set(false);
     this.sourceImage = null;
     this.removed.emit(this.type);
-  }
-
-  private getMinimumDimensions(): { width: number; height: number } {
-    return this.type === 'photo'
-      ? { width: 180, height: 220 }
-      : { width: 240, height: 80 };
   }
 
   private async exportCompressedImage(): Promise<{ dataUrl: string; sizeKB: number }> {
