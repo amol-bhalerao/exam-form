@@ -21,48 +21,33 @@ import { BrandingService } from '../../../core/branding.service';
       <div class="page">
         <div class="document-shell official-sheet">
           <header class="document-header">
-            <div class="board-head">
-              <div class="logo-box">
-                <img [src]="branding.getLogoUrl()" alt="Board logo" />
-              </div>
+            <div class="board-head compact-head">
               <div class="head-copy">
                 <div class="board-name">MAHARASHTRA HSC EXAMINATION PORTAL</div>
                 <div class="board-name mr">महाराष्ट्र उच्च माध्यमिक परीक्षा पोर्टल</div>
-                <h1>HIGHER SECONDARY CERTIFICATE EXAMINATION APPLICATION FORM</h1>
-                <h2>उच्च माध्यमिक प्रमाणपत्र परीक्षेसाठी अर्ज</h2>
+                <h1>HIGHER SECONDARY CERTIFICATE EXAMINATION APPLICATION FORM / उच्च माध्यमिक प्रमाणपत्र परीक्षेसाठी अर्ज</h1>
                 <div class="exam-line">{{ examDisplayTitle() }}</div>
                 <div class="exam-subline">Institute / महाविद्यालय: {{ instituteName() }}</div>
               </div>
             </div>
-
-            <div class="header-side">
-              <div class="photo-box top-photo">
-                <span>PHOTO / छायाचित्र</span>
-              </div>
-              <div class="meta-table">
-                <div class="meta-row"><span>App. No / अर्ज क्र.</span><strong>{{ a().applicationNo || '—' }}</strong></div>
-                <div class="meta-row"><span>Status / स्थिती</span><strong class="status-chip" [attr.data-tone]="statusTone()">{{ statusLabel() }}</strong></div>
-                <div class="meta-row"><span>Printed / मुद्रित</span><strong>{{ printedAt | date:'dd/MM/yyyy' }}</strong></div>
-              </div>
-            </div>
           </header>
 
-          <section class="section-card summary-strip">
+          <section class="section-card summary-strip meta-strip">
             <div class="summary-item">
-              <span>Exam / परीक्षा</span>
-              <strong>{{ a().exam?.name || 'HSC Examination' }}</strong>
+              <span>Application No / अर्ज क्र.</span>
+              <strong>{{ a().applicationNo || '—' }}</strong>
             </div>
             <div class="summary-item">
-              <span>Session / सत्र</span>
-              <strong>{{ valueOrDash(a().exam?.session) }}</strong>
+              <span>Status / स्थिती</span>
+              <strong class="status-chip" [attr.data-tone]="statusTone()">{{ statusLabel() }}</strong>
+            </div>
+            <div class="summary-item">
+              <span>Printed / मुद्रित</span>
+              <strong>{{ printedAt | date:'dd/MM/yyyy' }}</strong>
             </div>
             <div class="summary-item">
               <span>Candidate Type / उमेदवार प्रकार</span>
               <strong>{{ candidateTypeLabel() }}</strong>
-            </div>
-            <div class="summary-item">
-              <span>Subjects / विषय</span>
-              <strong>{{ (a().subjects?.length ?? 0) || 0 }}</strong>
             </div>
           </section>
 
@@ -85,15 +70,19 @@ import { BrandingService } from '../../../core/branding.service';
                 <label>Centre No / केंद्र क्रमांक</label>
                 <div>{{ centreNoValue() }}</div>
               </div>
-              <div class="detail-item span-2">
+              <div class="detail-item">
                 <label>Application Serial No / अर्ज अनुक्रमांक</label>
                 <div>{{ applicationSerialValue() }}</div>
               </div>
-              <div class="detail-item span-2">
+              <div class="detail-item">
+                <label>Institute Code / महाविद्यालय कोड</label>
+                <div>{{ a().institute?.code || a().institute?.collegeNo || '—' }}</div>
+              </div>
+              <div class="detail-item">
                 <label>Institute Name / महाविद्यालयाचे नाव</label>
                 <div>{{ instituteName() }}</div>
               </div>
-              <div class="detail-item span-4">
+              <div class="detail-item">
                 <label>Institute Address / महाविद्यालयाचा पत्ता</label>
                 <div>{{ instituteAddress() }}</div>
               </div>
@@ -120,7 +109,7 @@ import { BrandingService } from '../../../core/branding.service';
                 <div>{{ valueOrDash(s().motherName) }}</div>
               </div>
 
-              <div class="detail-item span-2">
+              <div class="detail-item">
                 <label>Residential Address / निवासी पत्ता</label>
                 <div>{{ valueOrDash(s().address) }}</div>
               </div>
@@ -132,6 +121,10 @@ import { BrandingService } from '../../../core/branding.service';
                 <label>Mobile No / मोबाईल क्रमांक</label>
                 <div>{{ valueOrDash(s().mobile) }}</div>
               </div>
+              <div class="detail-item">
+                <label>Aadhaar No / आधार क्रमांक</label>
+                <div>{{ valueOrDash(s().aadhaar) }}</div>
+              </div>
 
               <div class="detail-item">
                 <label>Date of Birth / जन्मतारीख</label>
@@ -141,9 +134,13 @@ import { BrandingService } from '../../../core/branding.service';
                 <label>Gender / लिंग</label>
                 <div>{{ genderLabel() }}</div>
               </div>
-              <div class="detail-item span-2">
-                <label>Aadhaar No / आधार क्रमांक</label>
-                <div>{{ valueOrDash(s().aadhaar) }}</div>
+              <div class="detail-item">
+                <label>Application No / अर्ज क्र.</label>
+                <div>{{ a().applicationNo || '—' }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Candidate Type / उमेदवार प्रकार</label>
+                <div>{{ candidateTypeLabel() }}</div>
               </div>
             </div>
           </section>
@@ -220,7 +217,7 @@ import { BrandingService } from '../../../core/branding.service';
           @if (hasOtherDetails()) {
             <section class="section-card">
               <div class="section-title">5. Additional Information / अतिरिक्त माहिती</div>
-              <div class="detail-grid grid-3 compact-grid">
+              <div class="detail-grid grid-4 compact-grid">
                 <div class="detail-item">
                   <label>Exemptions Claimed / सूट विषय</label>
                   <div>{{ a().totalExemptionsClaimed ?? ((a().exemptedSubjects?.length ?? 0) || 0) }}</div>
@@ -232,6 +229,10 @@ import { BrandingService } from '../../../core/branding.service';
                 <div class="detail-item">
                   <label>Enrollment Cert / नावनोंदणी प्रमाणपत्र</label>
                   <div>{{ valueOrDash(a().enrollmentCertMonth, '—') }} / {{ valueOrDash(a().enrollmentCertYear, '—') }} / {{ valueOrDash(a().enrollmentNo, '—') }}</div>
+                </div>
+                <div class="detail-item">
+                  <label>Special Remark / विशेष नोंद</label>
+                  <div>{{ isBacklogCandidate() ? 'Backlog / Repeater candidate' : 'Regular / Fresh candidate' }}</div>
                 </div>
               </div>
 
@@ -282,9 +283,10 @@ import { BrandingService } from '../../../core/branding.service';
             </div>
 
             <div class="photo-sign-wrap">
-              <div class="sign-box"><span>Candidate Signature / उमेदवाराची सही</span></div>
-              <div class="sign-box"><span>Class Teacher / वर्गशिक्षक सही</span></div>
-              <div class="sign-box"><span>Principal Seal & Signature / मुख्याध्यापक शिक्का व सही</span></div>
+              <div class="photo-box signature-cell"><span>PHOTO / छायाचित्र</span></div>
+              <div class="sign-box signature-cell"><span>Candidate Signature / उमेदवाराची सही</span></div>
+              <div class="sign-box signature-cell"><span>Class Teacher / वर्गशिक्षक सही</span></div>
+              <div class="sign-box signature-cell"><span>Principal Seal & Signature / मुख्याध्यापक शिक्का व सही</span></div>
             </div>
           </section>
 
@@ -320,7 +322,7 @@ import { BrandingService } from '../../../core/branding.service';
         margin: 8px auto 20px;
         background: #fff;
         color: #000;
-        padding: 6mm;
+        padding: 4.5mm;
         box-sizing: border-box;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
       }
@@ -329,18 +331,18 @@ import { BrandingService } from '../../../core/branding.service';
         min-height: 100%;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 3px;
       }
 
       .official-sheet {
         border: 1.5px solid #000;
-        padding: 4px;
+        padding: 3px;
       }
 
       .document-header {
         display: grid;
-        grid-template-columns: 1.85fr 0.95fr;
-        gap: 5px;
+        grid-template-columns: 1fr;
+        gap: 4px;
         align-items: stretch;
       }
 
@@ -357,10 +359,14 @@ import { BrandingService } from '../../../core/branding.service';
 
       .board-head {
         display: grid;
-        grid-template-columns: 48px 1fr;
-        gap: 8px;
-        padding: 6px 8px;
+        grid-template-columns: 1fr;
+        gap: 4px;
+        padding: 4px 6px;
         align-items: start;
+      }
+
+      .compact-head {
+        min-height: auto;
       }
 
       .logo-box {
@@ -399,25 +405,25 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       .head-copy h1 {
-        font-size: 15px;
-        line-height: 1.2;
+        font-size: 13px;
+        line-height: 1.15;
+        margin: 1px 0;
       }
 
       .head-copy h2 {
-        font-size: 12px;
-        line-height: 1.15;
+        font-size: 11px;
+        line-height: 1.1;
       }
 
       .exam-line,
       .exam-subline {
-        font-size: 10px;
+        font-size: 9px;
         text-align: center;
-        margin-top: 2px;
+        margin-top: 1px;
       }
 
       .header-side {
-        display: grid;
-        grid-template-rows: auto 1fr;
+        display: none;
       }
 
       .top-photo {
@@ -471,8 +477,12 @@ import { BrandingService } from '../../../core/branding.service';
         grid-template-columns: repeat(4, 1fr);
       }
 
+      .meta-strip {
+        margin-top: 1px;
+      }
+
       .summary-item {
-        padding: 5px 6px;
+        padding: 4px 5px;
         border-right: 1px solid #000;
       }
 
@@ -498,8 +508,8 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       .section-title {
-        padding: 4px 6px;
-        font-size: 10px;
+        padding: 3px 5px;
+        font-size: 9px;
         font-weight: 700;
         text-transform: uppercase;
         border-bottom: 1px solid #000;
@@ -524,8 +534,8 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       .detail-item {
-        padding: 4px 6px;
-        min-height: 34px;
+        padding: 3px 5px;
+        min-height: 28px;
         border-right: 1px solid #000;
         border-bottom: 1px solid #000;
       }
@@ -547,27 +557,24 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       .detail-item div {
-        font-size: 10px;
-        line-height: 1.28;
+        font-size: 9px;
+        line-height: 1.22;
         word-break: break-word;
-      }
-
-      .span-2 {
-        grid-column: span 2;
       }
 
       .subject-table {
         width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
-        font-size: 9px;
+        font-size: 8.2px;
       }
 
       .subject-table th,
       .subject-table td {
         border: 1px solid #000;
-        padding: 4px 5px;
+        padding: 3px 4px;
         vertical-align: top;
+        line-height: 1.2;
       }
 
       .subject-table thead th {
@@ -582,12 +589,12 @@ import { BrandingService } from '../../../core/branding.service';
 
       .bottom-grid {
         display: grid;
-        grid-template-columns: 1.5fr 1fr;
+        grid-template-columns: 1.35fr 1.65fr;
         gap: 4px;
       }
 
       .declaration-box {
-        padding: 6px;
+        padding: 5px 6px;
       }
 
       .declaration-box p {
@@ -603,6 +610,7 @@ import { BrandingService } from '../../../core/branding.service';
 
       .photo-sign-wrap {
         display: grid;
+        grid-template-columns: repeat(2, 1fr);
         gap: 4px;
       }
 
@@ -612,13 +620,17 @@ import { BrandingService } from '../../../core/branding.service';
         align-items: flex-end;
         justify-content: center;
         padding: 5px;
-        font-size: 9px;
+        font-size: 8.5px;
         font-weight: 700;
         text-align: center;
       }
 
+      .signature-cell {
+        min-height: 14mm;
+      }
+
       .sign-box {
-        min-height: 15mm;
+        min-height: 14mm;
       }
 
       .document-footer {
@@ -647,7 +659,55 @@ import { BrandingService } from '../../../core/branding.service';
 
       @page {
         size: A4 portrait;
-        margin: 6mm;
+        margin: 5mm;
+      }
+
+      @media (max-width: 900px) {
+        .page {
+          width: 100%;
+          min-height: auto;
+          margin: 0;
+          padding: 10px;
+        }
+
+        .grid-4,
+        .summary-strip,
+        .photo-sign-wrap {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
+        .bottom-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .page {
+          padding: 8px;
+        }
+
+        .grid-4,
+        .grid-3,
+        .summary-strip,
+        .photo-sign-wrap {
+          grid-template-columns: 1fr;
+        }
+
+        .detail-item,
+        .grid-3 .detail-item,
+        .detail-item:nth-child(4n),
+        .grid-3 .detail-item:nth-child(3n) {
+          border-right: 0;
+        }
+
+        .summary-item {
+          border-right: 0;
+          border-bottom: 1px solid #000;
+        }
+
+        .summary-item:last-child {
+          border-bottom: 0;
+        }
       }
 
       @media print {
