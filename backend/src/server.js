@@ -47,11 +47,12 @@ app.use(
           "'self'",
           'https://accounts.google.com',
           'https://apis.google.com',
+          'https://sdk.cashfree.com',
           "'unsafe-inline'" // Angular requires this in dev
         ],
-        frameSrc: ["'self'", 'https://accounts.google.com'],
+        frameSrc: ["'self'", 'https://accounts.google.com', 'https://sdk.cashfree.com', 'https://sandbox.cashfree.com', 'https://api.cashfree.com'],
         imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", 'https://accounts.google.com', 'https://sandbox.cashfree.com', 'https://api.cashfree.com'],
+        connectSrc: ["'self'", 'https://accounts.google.com', 'https://sdk.cashfree.com', 'https://sandbox.cashfree.com', 'https://api.cashfree.com'],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:']
       }

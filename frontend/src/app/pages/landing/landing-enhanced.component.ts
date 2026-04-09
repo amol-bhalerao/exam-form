@@ -282,6 +282,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
             <ul>
               <li><a (click)="scrollToFeatures()">{{ i18n.t('features') }}</a></li>
               <li><a routerLink="/google-login">{{ i18n.t('login') }}</a></li>
+              <li><a routerLink="/terms-and-conditions">Terms & Conditions</a></li>
+              <li><a routerLink="/refund-policy">Refund Policy</a></li>
               <li><a href="mailto:{{ branding.getEmail() }}">{{ i18n.t('contact') }}</a></li>
             </ul>
           </div>
@@ -296,7 +298,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
             <h4>{{ selectedLanguage() === 'mr' ? 'समर्थन' : 'Support' }}</h4>
             <ul>
               <li><a href="{{ branding.getWebsite() }}" target="_blank">{{ i18n.t('about') }}</a></li>
-              <li><a href="#">FAQ</a></li>
+              <li><a routerLink="/contact-us">Contact Us</a></li>
+              <li><a routerLink="/refund-policy">Refund Policy</a></li>
               <li><a href="mailto:{{ branding.getEmail() }}">{{ i18n.t('contact') }}</a></li>
             </ul>
           </div>

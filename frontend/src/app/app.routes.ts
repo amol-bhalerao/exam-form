@@ -19,9 +19,13 @@ import { AppShellComponent } from './layouts/app-shell/app-shell.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { StudentApplicationsComponent } from './pages/student/student-applications/student-applications.component';
 import { StudentApplicationEditComponent } from './pages/student/student-application-edit/student-application-edit.component';
+import { StudentApplicationPaymentComponent } from './pages/student/student-application-payment/student-application-payment.component';
 import { StudentFormPrintComponent } from './pages/student/student-form-print/student-form-print.component';
 import { StudentProfileComponent } from './pages/profile/student-profile.component';
 import { StudentExamScheduleComponent } from './pages/student/student-exam-schedule/student-exam-schedule.component';
+import { ContactUsComponent } from './pages/public/contact-us/contact-us.component';
+import { TermsAndConditionsComponent } from './pages/public/terms-and-conditions/terms-and-conditions.component';
+import { RefundPolicyComponent } from './pages/public/refund-policy/refund-policy.component';
 import { SuperInstitutesComponent } from './pages/super/super-institutes/super-institutes.component';
 import { SuperInstituteUsersComponent } from './pages/super/super-institute-users/super-institute-users.component';
 import { SuperMastersComponent } from './pages/super/super-masters/super-masters.component';
@@ -43,6 +47,9 @@ export const routes: Routes = [
   
   // Public Health Check (no auth required)
   { path: 'health', component: HealthCheckComponent, data: { title: 'System Health Monitor' } },
+  { path: 'contact-us', component: ContactUsComponent, data: { title: 'Contact Us' } },
+  { path: 'terms-and-conditions', component: TermsAndConditionsComponent, data: { title: 'Terms and Conditions' } },
+  { path: 'refund-policy', component: RefundPolicyComponent, data: { title: 'Refund Policy' } },
   
   // Admin Status Dashboard (MUST come before catch-all)
   { path: 'admin/status', component: AdminStatusDashboardComponent, data: { title: 'API Status Dashboard' } },
@@ -105,6 +112,7 @@ export const routes: Routes = [
       // Allow exam form at 70% profile completion
       { path: 'student/applications', component: StudentApplicationsComponent, canActivate: [roleGuard(['STUDENT']), applicationGuard] },
       { path: 'student/applications/:id', component: StudentApplicationEditComponent, canActivate: [roleGuard(['STUDENT']), applicationGuard] },
+      { path: 'student/applications/:id/payment', component: StudentApplicationPaymentComponent, canActivate: [roleGuard(['STUDENT']), applicationGuard] },
       { path: 'student/exam-schedule', component: StudentExamScheduleComponent, canActivate: [roleGuard(['STUDENT'])] },
       { path: 'student/forms/:id/print', component: StudentFormPrintComponent, canActivate: [roleGuard(['STUDENT', 'INSTITUTE', 'BOARD', 'SUPER_ADMIN'])] }
     ]

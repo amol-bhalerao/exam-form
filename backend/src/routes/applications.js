@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
+import { env } from '../env.js';
 
 const STUDENT_STREAM_CODE_LOOKUP = {
   '1': 'Science',
@@ -480,6 +481,25 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
         error: 'INVALID_SUBJECT_CATEGORY',
         message: 'Please select at least one language and one compulsory subject before submitting.',
         selectedCategories
+      });
+    }
+  }
+
+  if (Number(env.EXAM_FEE_PAISE ?? 0) > 0) {
+    const latestPayment = await prisma.payment.findFirst({
+      where: { applicationId },
+      orderBy: { id: 'desc' }
+    });
+
+    const paymentCompleted = !!latestPayment
+      && !!latestPayment.receivedAt
+      && new Date(latestPayment.receivedAt).getTime() > 1000
+      && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
+
+    if (!paymentCompleted) {
+      return res.status(402).json({
+        error: 'PAYMENT_REQUIRED',
+        message: 'Please complete the payment before final submission.'
       });
     }
   }

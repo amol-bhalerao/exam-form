@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, signal, inject } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgClass, DatePipe } from '@angular/common';
@@ -738,9 +738,9 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                     <mat-icon>arrow_back</mat-icon> Back to Edit
                   </button>
                   @if (isEditable()) {
-                    <button mat-flat-button color="accent" (click)="submit()" [disabled]="submitting() || !form.valid">
-                      <mat-icon>{{ submitting() ? 'hourglass_empty' : 'check' }}</mat-icon>
-                      {{ submitting() ? 'Submitting…' : 'Submit Application' }}
+                    <button mat-flat-button color="accent" (click)="submit()" [disabled]="submitting()">
+                      <mat-icon>{{ submitting() ? 'hourglass_empty' : 'payments' }}</mat-icon>
+                      {{ submitting() ? 'Validating…' : 'Proceed to Payment' }}
                     </button>
                   } @else {
                     <div class="already-submitted">
@@ -1337,6 +1337,7 @@ export class StudentApplicationEditComponent implements OnInit {
   private subjectWatcherInitialized = false;
 
   private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
 
   constructor() {
@@ -1797,30 +1798,42 @@ export class StudentApplicationEditComponent implements OnInit {
   submit() {
     const app = this.application();
     if (!app) return;
-    this.submitting.set(true);
+
+    this.form.markAllAsTouched();
+    this.form.updateValueAndValidity();
     this.error.set(null);
+
+    if (!this.selectedInstitute()) {
+      this.error.set('Please select your institute before continuing to payment.');
+      return;
+    }
+
+    const selectedSubjectCount = this.subjects().controls.filter((group) => !!group.get('subjectId')?.value).length;
+    if (!selectedSubjectCount) {
+      this.error.set('Please select at least one subject before continuing to payment.');
+      return;
+    }
+
+    if (this.form.invalid) {
+      this.error.set('Please complete all required fields before continuing to payment.');
+      return;
+    }
+
+    this.submitting.set(true);
 
     const payload = this.buildApplicationPayload();
 
     this.http.put(`${API_BASE_URL}/applications/${app.id}`, payload).subscribe({
       next: () => {
-        this.http.post(`${API_BASE_URL}/applications/${app.id}/submit`, {}).subscribe({
-          next: () => {
-            this.submitting.set(false);
-            this.error.set(null);
-            this.reload(app.id);
-          },
-          error: (err: any) => {
-            const errorMsg = err?.error?.error || err?.error?.message || 'Failed to submit application';
-            console.error('Failed to submit application:', errorMsg);
-            this.error.set(errorMsg);
-            this.submitting.set(false);
-          }
-        });
+        this.lastSaved.set(new Date().toLocaleTimeString());
+        this.submitting.set(false);
+        this.error.set(null);
+        this.form.markAsPristine();
+        this.router.navigate(['/app/student/applications', app.id, 'payment']);
       },
       error: (err: any) => {
-        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to save application before submission';
-        console.error('Failed to save application before submission:', errorMsg);
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to validate and save the application before payment';
+        console.error('Failed to prepare application for payment:', errorMsg);
         this.error.set(errorMsg);
         this.submitting.set(false);
       }

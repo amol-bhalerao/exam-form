@@ -11,6 +11,21 @@ const CASHFREE_SANDBOX_URL = 'https://sandbox.cashfree.com/pg';
 const CASHFREE_PROD_URL = 'https://api.cashfree.com/pg';
 
 const CASHFREE_BASE = env.NODE_ENV === 'production' ? CASHFREE_PROD_URL : CASHFREE_SANDBOX_URL;
+const PENDING_PAYMENT_DATE = new Date(0);
+
+function isPaymentSuccessful(payment) {
+  return !!payment
+    && !!payment.receivedAt
+    && new Date(payment.receivedAt).getTime() > PENDING_PAYMENT_DATE.getTime()
+    && !String(payment.method || '').toUpperCase().includes('PENDING');
+}
+
+function getPaymentStatus(payment) {
+  if (!payment) return 'NOT_INITIATED';
+  if (isPaymentSuccessful(payment)) return 'SUCCESS';
+  if (String(payment.method || '').toUpperCase().includes('FAIL')) return 'FAILED';
+  return 'PENDING';
+}
 
 /** Create a Cashfree order via REST API (using Node 22 native fetch) */
 async function createCashfreeOrder({ orderId, amountPaise, customerName, customerEmail, customerPhone, returnUrl }) {
@@ -53,7 +68,7 @@ async function createCashfreeOrder({ orderId, amountPaise, customerName, custome
 
 /**
  * POST /api/payments/initiate/:applicationId
- * Student initiates payment for a DRAFT application before submission.
+ * Student validates the draft and starts the payment flow.
  */
 paymentsRouter.post('/initiate/:applicationId', requireAuth, requireRole(['STUDENT']), async (req, res) => {
   const applicationId = z.coerce.number().int().positive().parse(req.params.applicationId);
@@ -69,17 +84,22 @@ paymentsRouter.post('/initiate/:applicationId', requireAuth, requireRole(['STUDE
     include: { exam: true }
   });
   if (!application) return res.status(404).json({ error: 'APPLICATION_NOT_FOUND' });
-  if (application.status !== 'DRAFT') return res.status(400).json({ error: 'APPLICATION_NOT_IN_DRAFT' });
+  if (!['DRAFT', 'SUBMITTED'].includes(application.status)) {
+    return res.status(400).json({ error: 'PAYMENT_NOT_ALLOWED_FOR_STATUS' });
+  }
 
-  // Idempotent – return existing pending payment if already created
   const existingPayment = await prisma.payment.findFirst({
-    where: { applicationId }
+    where: { applicationId },
+    orderBy: { id: 'desc' }
   });
-  if (existingPayment?.referenceNo && !existingPayment.referenceNo.startsWith('SANDBOX')) {
+
+  if (isPaymentSuccessful(existingPayment)) {
     return res.json({
-      alreadyInitiated: true,
+      alreadyPaid: true,
       referenceNo: existingPayment.referenceNo,
-      amountPaise: existingPayment.amountPaise
+      amountPaise: existingPayment.amountPaise,
+      amountRupees: Number(existingPayment.amountPaise || 0) / 100,
+      status: 'SUCCESS'
     });
   }
 
@@ -93,14 +113,28 @@ paymentsRouter.post('/initiate/:applicationId', requireAuth, requireRole(['STUDE
       customerName: `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim() || 'Student',
       customerEmail: student.user?.email ?? 'noreply@hsc.msbshse.ac.in',
       customerPhone: student.mobile ?? '9999999999',
-      returnUrl: `${env.FRONTEND_URL}/app/student/applications/${applicationId}?payment_status={order_status}&order_id=${orderId}`
+      returnUrl: `${env.FRONTEND_URL}/app/student/applications/${applicationId}/payment?payment_status={order_status}&order_id={order_id}`
     });
 
-    const payment = await prisma.payment.upsert({
-      where: existingPayment ? { id: existingPayment.id } : { id: 0 },
-      update: { referenceNo: orderId, amountPaise: feeAmount, method: 'CASHFREE' },
-      create: { applicationId, amountPaise: feeAmount, method: 'CASHFREE', referenceNo: orderId }
-    });
+    const payment = existingPayment
+      ? await prisma.payment.update({
+          where: { id: existingPayment.id },
+          data: {
+            referenceNo: orderId,
+            amountPaise: feeAmount,
+            method: 'CASHFREE_PENDING',
+            receivedAt: PENDING_PAYMENT_DATE
+          }
+        })
+      : await prisma.payment.create({
+          data: {
+            applicationId,
+            amountPaise: feeAmount,
+            method: 'CASHFREE_PENDING',
+            referenceNo: orderId,
+            receivedAt: PENDING_PAYMENT_DATE
+          }
+        });
 
     await writeAuditLog({
       actorUserId: req.auth.userId,
@@ -115,18 +149,32 @@ paymentsRouter.post('/initiate/:applicationId', requireAuth, requireRole(['STUDE
       orderId,
       amountPaise: feeAmount,
       amountRupees: feeAmount / 100,
-      environment: env.NODE_ENV === 'production' ? 'production' : 'sandbox'
+      environment: env.NODE_ENV === 'production' ? 'production' : 'sandbox',
+      status: 'PENDING'
     });
   } catch (err) {
     console.error('[payments] Cashfree error (falling back to sandbox):', err.message);
 
-    // Sandbox fallback for development
     const sandboxOrderId = `SANDBOX-${orderId}`;
-    await prisma.payment.upsert({
-      where: existingPayment ? { id: existingPayment.id } : { id: 0 },
-      update: { referenceNo: sandboxOrderId, amountPaise: feeAmount, method: 'SANDBOX' },
-      create: { applicationId, amountPaise: feeAmount, method: 'SANDBOX', referenceNo: sandboxOrderId }
-    });
+    await (existingPayment
+      ? prisma.payment.update({
+          where: { id: existingPayment.id },
+          data: {
+            referenceNo: sandboxOrderId,
+            amountPaise: feeAmount,
+            method: 'SANDBOX_PENDING',
+            receivedAt: PENDING_PAYMENT_DATE
+          }
+        })
+      : prisma.payment.create({
+          data: {
+            applicationId,
+            amountPaise: feeAmount,
+            method: 'SANDBOX_PENDING',
+            referenceNo: sandboxOrderId,
+            receivedAt: PENDING_PAYMENT_DATE
+          }
+        }));
 
     return res.json({
       paymentSessionId: `test_session_${Date.now()}`,
@@ -135,6 +183,7 @@ paymentsRouter.post('/initiate/:applicationId', requireAuth, requireRole(['STUDE
       amountRupees: feeAmount / 100,
       environment: 'sandbox',
       sandbox: true,
+      status: 'PENDING',
       message: 'Cashfree sandbox mode. Use the sandbox complete endpoint in dev.'
     });
   }
@@ -165,10 +214,10 @@ paymentsRouter.post('/webhook', async (req, res) => {
 
     if ((body.type === 'PAYMENT_SUCCESS_WEBHOOK' || orderStatus === 'PAID') && orderId) {
       const payment = await prisma.payment.findFirst({ where: { referenceNo: orderId } });
-      if (payment && !payment.receivedAt) {
+      if (payment && !isPaymentSuccessful(payment)) {
         await prisma.payment.update({
           where: { id: payment.id },
-          data: { receivedAt: new Date() }
+          data: { receivedAt: new Date(), method: 'CASHFREE_SUCCESS' }
         });
       }
     }
@@ -181,6 +230,57 @@ paymentsRouter.post('/webhook', async (req, res) => {
 });
 
 /**
+ * POST /api/payments/confirm/:applicationId
+ * Confirm the return from Cashfree and mark the latest payment successful.
+ */
+paymentsRouter.post('/confirm/:applicationId', requireAuth, requireRole(['STUDENT']), async (req, res) => {
+  const applicationId = z.coerce.number().int().positive().parse(req.params.applicationId);
+  const body = z.object({
+    orderId: z.string().optional(),
+    paymentStatus: z.string().optional()
+  }).parse(req.body ?? {});
+
+  const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
+  if (!student) return res.status(404).json({ error: 'STUDENT_PROFILE_MISSING' });
+
+  const application = await prisma.examApplication.findFirst({
+    where: { id: applicationId, studentId: student.id }
+  });
+  if (!application) return res.status(404).json({ error: 'APPLICATION_NOT_FOUND' });
+
+  const payment = await prisma.payment.findFirst({
+    where: { applicationId },
+    orderBy: { id: 'desc' }
+  });
+  if (!payment) return res.status(404).json({ error: 'PAYMENT_NOT_FOUND' });
+
+  const normalizedStatus = String(body.paymentStatus || '').trim().toUpperCase();
+  const isPaid = ['PAID', 'SUCCESS', 'COMPLETED'].includes(normalizedStatus) || isPaymentSuccessful(payment);
+
+  const updated = await prisma.payment.update({
+    where: { id: payment.id },
+    data: isPaid
+      ? {
+          referenceNo: body.orderId || payment.referenceNo,
+          method: String(payment.method || '').toUpperCase().includes('SANDBOX') ? 'SANDBOX_COMPLETE' : 'CASHFREE_SUCCESS',
+          receivedAt: new Date()
+        }
+      : {
+          referenceNo: body.orderId || payment.referenceNo,
+          method: 'CASHFREE_FAILED',
+          receivedAt: PENDING_PAYMENT_DATE
+        }
+  });
+
+  return res.json({
+    ok: true,
+    isPaid,
+    status: getPaymentStatus(updated),
+    payment: updated
+  });
+});
+
+/**
  * GET /api/payments/status/:applicationId
  * Get latest payment status for an application.
  */
@@ -189,10 +289,14 @@ paymentsRouter.get('/status/:applicationId', requireAuth, async (req, res) => {
 
   const payment = await prisma.payment.findFirst({
     where: { applicationId },
-    orderBy: { receivedAt: 'desc' }
+    orderBy: { id: 'desc' }
   });
 
-  return res.json({ payment });
+  return res.json({
+    payment,
+    status: getPaymentStatus(payment),
+    isPaid: isPaymentSuccessful(payment)
+  });
 });
 
 /**
@@ -206,7 +310,7 @@ paymentsRouter.post('/sandbox/complete/:applicationId', requireAuth, requireRole
 
   const applicationId = z.coerce.number().int().positive().parse(req.params.applicationId);
 
-  const payment = await prisma.payment.findFirst({ where: { applicationId } });
+  const payment = await prisma.payment.findFirst({ where: { applicationId }, orderBy: { id: 'desc' } });
   if (!payment) return res.status(404).json({ error: 'PAYMENT_NOT_FOUND' });
 
   const updated = await prisma.payment.update({

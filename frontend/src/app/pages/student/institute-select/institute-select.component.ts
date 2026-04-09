@@ -7,7 +7,7 @@ import { MatCard } from '@angular/material/card';
 import { MatButton } from '@angular/material/button';
 import { MatIcon } from '@angular/material/icon';
 import { MatFormField, MatLabel, MatHint } from '@angular/material/form-field';
-import { MatSelect } from '@angular/material/select';
+import { MatSelect, MatSelectTrigger } from '@angular/material/select';
 import { MatOption } from '@angular/material/core';
 import { MatProgressSpinner } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -42,6 +42,7 @@ interface Stream {
     MatFormField,
     MatLabel,
     MatSelect,
+    MatSelectTrigger,
     MatOption,
     MatProgressSpinner,
     MatHint,
@@ -131,7 +132,19 @@ interface Stream {
                   required 
                   (selectionChange)="onInstituteSelected()"
                   class="institute-select"
+                  panelClass="student-institute-panel"
                 >
+                  <mat-select-trigger>
+                    @if (selectedInstitute) {
+                      <div class="selected-trigger">
+                        <span class="trigger-name">{{ selectedInstitute.name }}</span>
+                        <span class="trigger-meta">{{ selectedInstitute.code || 'No code' }} • {{ selectedInstitute.city || selectedInstitute.district || 'Location not available' }}</span>
+                      </div>
+                    } @else {
+                      <span class="placeholder-trigger">Select institute / organisation</span>
+                    }
+                  </mat-select-trigger>
+
                   <mat-optgroup *ngFor="let group of groupedInstitutes" [label]="group.district" class="district-group">
                     <mat-option 
                       *ngFor="let institute of group.institutes" 
@@ -140,11 +153,13 @@ interface Stream {
                     >
                       <div class="option-content">
                         <span class="option-name">{{ institute.name }}</span>
-                        <span class="option-code">{{ institute.code }}</span>
+                        <span class="option-meta">{{ institute.city || 'City not available' }}{{ institute.district ? ' • ' + institute.district : '' }}</span>
+                        <span class="option-code">Institute Code: {{ institute.code || 'N/A' }}</span>
                       </div>
                     </mat-option>
                   </mat-optgroup>
                 </mat-select>
+                <mat-hint class="select-hint">Grouped by district for easier selection on mobile and desktop</mat-hint>
               </mat-form-field>
             </div>
 
@@ -528,6 +543,104 @@ interface Stream {
     mat-form-field {
       width: 100%;
       display: block;
+    }
+
+    .selected-trigger {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      min-width: 0;
+      padding: 0.15rem 0;
+    }
+
+    .trigger-name {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #1f2937;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .trigger-meta,
+    .placeholder-trigger {
+      font-size: 0.78rem;
+      color: #64748b;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .option-content {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.15rem;
+      width: 100%;
+      min-width: 0;
+      padding-right: 0.5rem;
+    }
+
+    .option-name {
+      display: block;
+      font-weight: 600;
+      font-size: 0.95rem;
+      line-height: 1.35;
+      color: #111827;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .option-meta,
+    .option-code {
+      display: block;
+      font-size: 0.78rem;
+      line-height: 1.35;
+      color: #64748b;
+      white-space: normal;
+      word-break: break-word;
+    }
+
+    .select-hint {
+      font-size: 0.78rem;
+      color: #64748b;
+    }
+
+    :host ::ng-deep .student-institute-panel {
+      max-width: min(720px, calc(100vw - 16px)) !important;
+      max-height: min(70vh, 460px) !important;
+      border-radius: 14px !important;
+      padding: 0.3rem 0 !important;
+    }
+
+    :host ::ng-deep .student-institute-panel .mat-mdc-optgroup-label {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border-bottom: 1px solid #dbeafe;
+    }
+
+    :host ::ng-deep .student-institute-panel .mat-mdc-option {
+      min-height: 74px !important;
+      height: auto !important;
+      padding-top: 0.6rem !important;
+      padding-bottom: 0.6rem !important;
+      align-items: flex-start !important;
+    }
+
+    :host ::ng-deep .student-institute-panel .mdc-list-item__primary-text {
+      white-space: normal !important;
+      line-height: 1.3 !important;
+      width: 100%;
+    }
+
+    :host ::ng-deep .student-institute-panel .mat-pseudo-checkbox {
+      margin-top: 0.35rem;
     }
 
     /* Selected Card */
@@ -984,21 +1097,31 @@ interface Stream {
         margin-top: 1.5rem;
       }
 
-      .option-content {
-        display: flex;
-        flex-direction: column;
+      .selected-trigger {
+        padding-right: 0.35rem;
+      }
+
+      .trigger-name {
+        font-size: 0.9rem;
+      }
+
+      .trigger-meta,
+      .placeholder-trigger,
+      .option-meta,
+      .option-code {
+        font-size: 0.74rem;
       }
 
       .option-name {
-        display: block;
-        font-weight: 500;
+        font-size: 0.9rem;
       }
 
-      .option-code {
-        display: block;
-        font-size: 0.85rem;
-        color: #666;
-        margin-top: 0.2rem;
+      :host ::ng-deep .student-institute-panel {
+        max-width: calc(100vw - 12px) !important;
+      }
+
+      :host ::ng-deep .student-institute-panel .mat-mdc-option {
+        min-height: 84px !important;
       }
     }
 

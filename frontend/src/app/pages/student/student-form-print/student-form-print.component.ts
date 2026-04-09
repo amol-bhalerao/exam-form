@@ -5,6 +5,7 @@ import { HttpClient } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
 
 import { API_BASE_URL } from '../../../core/api';
+import { BrandingService } from '../../../core/branding.service';
 
 @Component({
   selector: 'app-student-form-print',
@@ -12,368 +13,662 @@ import { API_BASE_URL } from '../../../core/api';
   imports: [DatePipe, MatButtonModule],
   template: `
     <div class="no-print actions">
-      <button mat-flat-button color="primary" (click)="print()">Print</button>
+      <button mat-stroked-button type="button" onclick="window.history.back()">Back</button>
+      <button mat-flat-button color="primary" (click)="print()">Print Form</button>
     </div>
 
     @if (application()) {
       <div class="page">
-        <div class="header">
-          <div class="title">
-            HSC EXAM MANAGEMENT SYSTEM - POWERED BY HISOFT IT SOLUTIONS
-          </div>
-          <div class="sub">
-            APPLICATION FORM FOR H.S.C. EXAMINATION OF {{ application()!.exam.session }}
-            {{ application()!.exam.academicYear }}
-          </div>
-        </div>
+        <div class="document-shell official-sheet">
+          <header class="document-header">
+            <div class="board-head">
+              <div class="logo-box">
+                <img [src]="branding.getLogoUrl()" alt="Board logo" />
+              </div>
+              <div class="head-copy">
+                <div class="board-name">MAHARASHTRA HSC EXAMINATION PORTAL</div>
+                <div class="board-name mr">महाराष्ट्र उच्च माध्यमिक परीक्षा पोर्टल</div>
+                <h1>HIGHER SECONDARY CERTIFICATE EXAMINATION APPLICATION FORM</h1>
+                <h2>उच्च माध्यमिक प्रमाणपत्र परीक्षेसाठी अर्ज</h2>
+                <div class="exam-line">{{ examDisplayTitle() }}</div>
+                <div class="exam-subline">Institute / महाविद्यालय: {{ instituteName() }}</div>
+              </div>
+            </div>
 
-        <div class="grid2">
-          <div class="box">
-            <div class="lbl">1a Index No</div>
-            <div class="val">{{ indexNoValue() }}</div>
-          </div>
-          <div class="box">
-            <div class="lbl">1b UDISE No</div>
-            <div class="val">{{ udiseNoValue() }}</div>
-          </div>
-          <div class="box">
-            <div class="lbl">1c Student Saral ID</div>
-            <div class="val">{{ studentSaralIdValue() }}</div>
-          </div>
-          <div class="box">
-            <div class="lbl">2a Appl.Sr.No</div>
-            <div class="val">{{ applicationSerialValue() }}</div>
-          </div>
-          <div class="box">
-            <div class="lbl">2b Centre No</div>
-            <div class="val">{{ centreNoValue() }}</div>
-          </div>
-        </div>
+            <div class="header-side">
+              <div class="photo-box top-photo">
+                <span>PHOTO / छायाचित्र</span>
+              </div>
+              <div class="meta-table">
+                <div class="meta-row"><span>App. No / अर्ज क्र.</span><strong>{{ a().applicationNo || '—' }}</strong></div>
+                <div class="meta-row"><span>Status / स्थिती</span><strong class="status-chip" [attr.data-tone]="statusTone()">{{ statusLabel() }}</strong></div>
+                <div class="meta-row"><span>Printed / मुद्रित</span><strong>{{ printedAt | date:'dd/MM/yyyy' }}</strong></div>
+              </div>
+            </div>
+          </header>
 
-        <div class="section">
-          <div class="row3">
-            <div class="box">
-              <div class="lbl">3a Last name / Surname</div>
-              <div class="val">{{ s().lastName || '—' }}</div>
+          <section class="section-card summary-strip">
+            <div class="summary-item">
+              <span>Exam / परीक्षा</span>
+              <strong>{{ a().exam?.name || 'HSC Examination' }}</strong>
             </div>
-            <div class="box">
-              <div class="lbl">3b Candidate’s Name</div>
-              <div class="val">{{ s().firstName || '—' }}</div>
+            <div class="summary-item">
+              <span>Session / सत्र</span>
+              <strong>{{ valueOrDash(a().exam?.session) }}</strong>
             </div>
-            <div class="box">
-              <div class="lbl">3c Middle/Father’s Name</div>
-              <div class="val">{{ s().middleName || '—' }}</div>
+            <div class="summary-item">
+              <span>Candidate Type / उमेदवार प्रकार</span>
+              <strong>{{ candidateTypeLabel() }}</strong>
             </div>
-          </div>
-          <div class="row3">
-            <div class="box">
-              <div class="lbl">3d Mother’s Name</div>
-              <div class="val">{{ s().motherName || '—' }}</div>
+            <div class="summary-item">
+              <span>Subjects / विषय</span>
+              <strong>{{ (a().subjects?.length ?? 0) || 0 }}</strong>
             </div>
-            <div class="box span2">
-              <div class="lbl">4 Residential Address</div>
-              <div class="val">{{ s().address || '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">Pin Code</div>
-              <div class="val">{{ s().pinCode || '—' }}</div>
-            </div>
-          </div>
-          <div class="row3">
-            <div class="box">
-              <div class="lbl">5 Mobile No</div>
-              <div class="val">{{ s().mobile || '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">6 Date Of Birth</div>
-              <div class="val">{{ s().dob ? (s().dob | date : 'dd/MM/yyyy') : '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">7 Aadhar No</div>
-              <div class="val">{{ s().aadhaar || '—' }}</div>
-            </div>
-          </div>
-        </div>
+          </section>
 
-        <div class="section">
-          <div class="row4">
-            <div class="box">
-              <div class="lbl">8 Stream (code)</div>
-              <div class="val">{{ s().streamCode || '—' }}</div>
+          <section class="section-card">
+            <div class="section-title">1. Reference & Institute Details / संदर्भ व महाविद्यालय तपशील</div>
+            <div class="detail-grid grid-4 compact-grid">
+              <div class="detail-item">
+                <label>Index No / अनुक्रमांक</label>
+                <div>{{ indexNoValue() }}</div>
+              </div>
+              <div class="detail-item">
+                <label>UDISE No / यूडाइस क्रमांक</label>
+                <div>{{ udiseNoValue() }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Student Saral ID / विद्यार्थी सरल आयडी</label>
+                <div>{{ studentSaralIdValue() }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Centre No / केंद्र क्रमांक</label>
+                <div>{{ centreNoValue() }}</div>
+              </div>
+              <div class="detail-item span-2">
+                <label>Application Serial No / अर्ज अनुक्रमांक</label>
+                <div>{{ applicationSerialValue() }}</div>
+              </div>
+              <div class="detail-item span-2">
+                <label>Institute Name / महाविद्यालयाचे नाव</label>
+                <div>{{ instituteName() }}</div>
+              </div>
+              <div class="detail-item span-4">
+                <label>Institute Address / महाविद्यालयाचा पत्ता</label>
+                <div>{{ instituteAddress() }}</div>
+              </div>
             </div>
-            <div class="box">
-              <div class="lbl">9 Gender</div>
-              <div class="val">{{ s().gender || '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">10 Minority Religion (code)</div>
-              <div class="val">{{ s().minorityReligionCode || '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">11 Category (code)</div>
-              <div class="val">{{ s().categoryCode || '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">12 Divyang (code)</div>
-              <div class="val">{{ s().divyangCode || '—' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">13 Medium (code)</div>
-              <div class="val">{{ s().mediumCode || '—' }}</div>
-            </div>
-          </div>
-        </div>
+          </section>
 
-        <div class="section">
-          <div class="h">14 Type of Candidate</div>
-          <div class="row3">
-            <div class="box">
-              <div class="lbl">Candidate Type</div>
-              <div class="val">{{ candidateTypeLabel() }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">Exemption Status</div>
-              <div class="val">{{ isBacklogCandidate() ? 'Applicable if claimed' : 'Not applicable' }}</div>
-            </div>
-            <div class="box">
-              <div class="lbl">16 Total exemptions claimed</div>
-              <div class="val">{{ a().totalExemptionsClaimed ?? ((a().exemptedSubjects?.length ?? 0) || '0') }}</div>
-            </div>
-          </div>
-        </div>
+          <section class="section-card">
+            <div class="section-title">2. Candidate Personal Particulars / उमेदवाराची वैयक्तिक माहिती</div>
+            <div class="detail-grid grid-4">
+              <div class="detail-item">
+                <label>Surname / आडनाव</label>
+                <div>{{ valueOrDash(s().lastName) }}</div>
+              </div>
+              <div class="detail-item">
+                <label>First Name / नाव</label>
+                <div>{{ valueOrDash(s().firstName) }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Middle Name / वडिलांचे नाव</label>
+                <div>{{ valueOrDash(s().middleName) }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Mother Name / आईचे नाव</label>
+                <div>{{ valueOrDash(s().motherName) }}</div>
+              </div>
 
-        <div class="section">
-          <div class="h">15 Subject Details</div>
-          <table class="tbl">
-            <thead>
-              <tr>
-                <th>Sr</th>
-                <th>Subject</th>
-                <th>Lang of Ans code</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (sub of (a().subjects ?? []); track sub.id) {
-                <tr>
-                  <td>{{ $index + 1 }}</td>
-                  <td>{{ sub.subject?.name || '—' }} ({{ sub.subject?.code || '' }})</td>
-                  <td>{{ sub.langOfAnsCode || '—' }}</td>
-                </tr>
-              }
-              @if (!(a().subjects?.length)) {
-                <tr>
-                  <td colspan="3" class="muted">No subjects selected yet.</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
+              <div class="detail-item span-2">
+                <label>Residential Address / निवासी पत्ता</label>
+                <div>{{ valueOrDash(s().address) }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Pin Code / पिन कोड</label>
+                <div>{{ valueOrDash(s().pinCode) }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Mobile No / मोबाईल क्रमांक</label>
+                <div>{{ valueOrDash(s().mobile) }}</div>
+              </div>
 
-        @if (isBacklogCandidate()) {
-          <div class="section">
-            <div class="h">Exempted Subject Information (if any)</div>
-            <table class="tbl">
+              <div class="detail-item">
+                <label>Date of Birth / जन्मतारीख</label>
+                <div>{{ s().dob ? (s().dob | date:'dd/MM/yyyy') : '—' }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Gender / लिंग</label>
+                <div>{{ genderLabel() }}</div>
+              </div>
+              <div class="detail-item span-2">
+                <label>Aadhaar No / आधार क्रमांक</label>
+                <div>{{ valueOrDash(s().aadhaar) }}</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="section-title">3. Academic & Reservation Details / शैक्षणिक व आरक्षण तपशील</div>
+            <div class="detail-grid grid-4 compact-grid">
+              <div class="detail-item">
+                <label>Stream / प्रवाह</label>
+                <div>{{ streamLabel() }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Minority Religion / अल्पसंख्याक धर्म</label>
+                <div>{{ religionLabel() }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Category / प्रवर्ग</label>
+                <div>{{ categoryLabel() }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Medium / माध्यम</label>
+                <div>{{ mediumLabel() }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Divyang Code / दिव्यांग कोड</label>
+                <div>{{ s().divyangCode ? s().divyangCode : 'No / नाही' }}</div>
+              </div>
+              <div class="detail-item">
+                <label>SSC from Maharashtra / महाराष्ट्रातून SSC</label>
+                <div>{{ yesNoOrDash(a().sscPassedFromMaharashtra) }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Eligibility Certificate / पात्रता प्रमाणपत्र</label>
+                <div>{{ yesNoOrDash(a().eligibilityCertIssued) }}</div>
+              </div>
+              <div class="detail-item">
+                <label>Certificate No / प्रमाणपत्र क्र.</label>
+                <div>{{ valueOrDash(a().eligibilityCertNo) }}</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="section-title">4. Subject Details / विषय तपशील</div>
+            <table class="subject-table">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Name</th>
-                  <th>Code</th>
-                  <th>Seat No</th>
-                  <th>Month</th>
-                  <th>Year</th>
-                  <th>Marks Obt</th>
+                  <th style="width: 7%;">Sr / क्र.</th>
+                  <th style="width: 12%;">Code / कोड</th>
+                  <th>Subject Name / विषयाचे नाव</th>
+                  <th style="width: 20%;">Category / प्रकार</th>
+                  <th style="width: 15%;">Ans. Lang / उत्तर माध्यम</th>
                 </tr>
               </thead>
               <tbody>
-                @for (e of (a().exemptedSubjects ?? []); track e.id) {
+                @for (sub of (a().subjects ?? []); track sub.id) {
                   <tr>
                     <td>{{ $index + 1 }}</td>
-                    <td>{{ e.subjectName || '—' }}</td>
-                    <td>{{ e.subjectCode || '—' }}</td>
-                    <td>{{ e.seatNo || '—' }}</td>
-                    <td>{{ e.month || '—' }}</td>
-                    <td>{{ e.year || '—' }}</td>
-                    <td>{{ e.marksObt || '—' }}</td>
+                    <td>{{ valueOrDash(sub.subject?.code) }}</td>
+                    <td>{{ valueOrDash(sub.subject?.name) }}</td>
+                    <td>{{ valueOrDash(sub.subject?.category, 'General / सामान्य') }}</td>
+                    <td>{{ valueOrDash(sub.langOfAnsCode) }}</td>
                   </tr>
                 }
-                @if (!(a().exemptedSubjects?.length)) {
+                @if (!(a().subjects?.length)) {
                   <tr>
-                    <td colspan="7" class="muted">No exemptions.</td>
+                    <td colspan="5" class="muted center">No subjects selected yet / विषय निवडलेले नाहीत.</td>
                   </tr>
                 }
               </tbody>
             </table>
-          </div>
-        }
+          </section>
 
-        @if (hasOtherDetails()) {
-          <div class="section">
-            <div class="h">17–22 Other Details</div>
-            <div class="row3">
-              @if (isPrivateCandidate()) {
-                <div class="box">
-                  <div class="lbl">17 Enrollment Cert (Private): Month/Year/No</div>
-                  <div class="val">{{ a().enrollmentCertMonth || '—' }}/{{ a().enrollmentCertYear || '—' }}/{{ a().enrollmentNo || '—' }}</div>
+          @if (hasOtherDetails()) {
+            <section class="section-card">
+              <div class="section-title">5. Additional Information / अतिरिक्त माहिती</div>
+              <div class="detail-grid grid-3 compact-grid">
+                <div class="detail-item">
+                  <label>Exemptions Claimed / सूट विषय</label>
+                  <div>{{ a().totalExemptionsClaimed ?? ((a().exemptedSubjects?.length ?? 0) || 0) }}</div>
                 </div>
-              }
+                <div class="detail-item">
+                  <label>Previous Attempt / मागील परीक्षा तपशील</label>
+                  <div>{{ valueOrDash(a().lastExamMonth) }} {{ valueOrDash(a().lastExamYear, '') }} / {{ valueOrDash(a().lastExamSeatNo, 'No seat no') }}</div>
+                </div>
+                <div class="detail-item">
+                  <label>Enrollment Cert / नावनोंदणी प्रमाणपत्र</label>
+                  <div>{{ valueOrDash(a().enrollmentCertMonth, '—') }} / {{ valueOrDash(a().enrollmentCertYear, '—') }} / {{ valueOrDash(a().enrollmentNo, '—') }}</div>
+                </div>
+              </div>
+
               @if (isBacklogCandidate()) {
-                <div class="box">
-                  <div class="lbl">19 Last Exam Seat (Repeaters/Backlog)</div>
-                  <div class="val">{{ a().lastExamMonth || '—' }} {{ a().lastExamYear || '—' }} / {{ a().lastExamSeatNo || '—' }}</div>
-                </div>
+                <table class="subject-table mini-table">
+                  <thead>
+                    <tr>
+                      <th>Subject / विषय</th>
+                      <th>Code / कोड</th>
+                      <th>Seat No / बैठक क्र.</th>
+                      <th>Month / महिना</th>
+                      <th>Year / वर्ष</th>
+                      <th>Marks / गुण</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (e of (a().exemptedSubjects ?? []); track e.id) {
+                      <tr>
+                        <td>{{ valueOrDash(e.subjectName) }}</td>
+                        <td>{{ valueOrDash(e.subjectCode) }}</td>
+                        <td>{{ valueOrDash(e.seatNo) }}</td>
+                        <td>{{ valueOrDash(e.month) }}</td>
+                        <td>{{ valueOrDash(e.year) }}</td>
+                        <td>{{ valueOrDash(e.marksObt) }}</td>
+                      </tr>
+                    }
+                    @if (!(a().exemptedSubjects?.length)) {
+                      <tr>
+                        <td colspan="6" class="muted center">No exempted subject details provided / सूट माहिती उपलब्ध नाही.</td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
               }
-              <div class="box">
-                <div class="lbl">20 Previous Education Board</div>
-                <div class="val">{{ a().sscPassedFromMaharashtra === null || a().sscPassedFromMaharashtra === undefined ? '—' : (a().sscPassedFromMaharashtra ? 'Yes' : 'No') }}</div>
-              </div>
-            </div>
-            <div class="row3">
-              <div class="box">
-                <div class="lbl">21 Eligibility Certificate issued</div>
-                <div class="val">{{ a().eligibilityCertIssued === null || a().eligibilityCertIssued === undefined ? '—' : (a().eligibilityCertIssued ? 'Yes' : 'No') }}</div>
-              </div>
-              <div class="box">
-                <div class="lbl">21 Eligibility Certificate No</div>
-                <div class="val">{{ a().eligibilityCertNo || '—' }}</div>
-              </div>
-              <div class="box">
-                <div class="lbl">22 Fee reimbursement / bank details</div>
-                <div class="val muted">Stored in system or at institute level if applicable.</div>
-              </div>
-            </div>
-          </div>
-        }
+            </section>
+          }
 
-        <div class="footerGrid">
-          <div class="sig">
-            <div class="lbl">CANDIDATE’S SIGNATURE</div>
-            <div class="line"></div>
-          </div>
-          <div class="photo">
-            <div class="lbl">CANDIDATE’S PHOTO</div>
-            <div class="photoBox"></div>
-          </div>
-          <div class="qr">
-            <div class="lbl">QR / Reference</div>
-            <div class="val small">{{ a().applicationNo }}</div>
-          </div>
+          <section class="bottom-grid">
+            <div class="declaration-box">
+              <div class="section-title small-title">6. Declaration / घोषणा</div>
+              <p>
+                I hereby declare that the information furnished by me in this form is true and correct to the best of my knowledge.
+                मी या अर्जातील सर्व माहिती माझ्या माहितीनुसार खरी व अचूक असल्याचे जाहीर करतो/करते.
+              </p>
+              <div class="note-line">
+                Reference / संदर्भ: <strong>{{ a().applicationNo || applicationSerialValue() }}</strong>
+              </div>
+            </div>
+
+            <div class="photo-sign-wrap">
+              <div class="sign-box"><span>Candidate Signature / उमेदवाराची सही</span></div>
+              <div class="sign-box"><span>Class Teacher / वर्गशिक्षक सही</span></div>
+              <div class="sign-box"><span>Principal Seal & Signature / मुख्याध्यापक शिक्का व सही</span></div>
+            </div>
+          </section>
+
+          <footer class="document-footer">
+            <span>This is a system-generated official print view for A4 paper / ही A4 साठी प्रणालीद्वारे तयार केलेली प्रत आहे.</span>
+            <span>{{ branding.getWebsite() }}</span>
+          </footer>
         </div>
       </div>
     } @else {
-      <div class="page">Loading…</div>
+      <div class="page loading-page">Loading printable exam form…</div>
     }
   `,
   styles: [
     `
-      .actions {
-        padding: 12px;
+      :host {
+        display: block;
+        background: #e9edf2;
+        font-family: 'Times New Roman', Georgia, serif;
       }
+
+      .actions {
+        width: 210mm;
+        margin: 12px auto 0;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
       .page {
         width: 210mm;
         min-height: 297mm;
-        margin: 0 auto;
-        background: white;
-        color: #111;
+        margin: 8px auto 20px;
+        background: #fff;
+        color: #000;
         padding: 6mm;
         box-sizing: border-box;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
       }
-      .header {
-        text-align: center;
-        border: 1px solid #111;
-        padding: 6px;
-      }
-      .title {
-        font-weight: 800;
-        font-size: 12px;
-      }
-      .sub {
-        margin-top: 4px;
-        font-size: 11px;
-      }
-      .grid2 {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 4px;
-        margin-top: 6px;
-      }
-      .row3 {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
+
+      .document-shell {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
         gap: 4px;
       }
-      .row4 {
+
+      .official-sheet {
+        border: 1.5px solid #000;
+        padding: 4px;
+      }
+
+      .document-header {
         display: grid;
-        grid-template-columns: repeat(6, 1fr);
-        gap: 4px;
+        grid-template-columns: 1.85fr 0.95fr;
+        gap: 5px;
+        align-items: stretch;
       }
-      .section {
-        margin-top: 6px;
+
+      .board-head,
+      .header-side,
+      .section-card,
+      .declaration-box,
+      .sign-box,
+      .photo-box,
+      .summary-strip {
+        border: 1px solid #000;
+        background: #fff;
       }
-      .box {
-        border: 1px solid #111;
-        padding: 4px 6px;
-        min-height: 20px;
+
+      .board-head {
+        display: grid;
+        grid-template-columns: 48px 1fr;
+        gap: 8px;
+        padding: 6px 8px;
+        align-items: start;
       }
-      .lbl {
-        font-size: 9px;
+
+      .logo-box {
+        width: 48px;
+        height: 48px;
+        border: 1px solid #000;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+      }
+
+      .logo-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .board-name {
+        font-size: 10px;
         font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+      }
+
+      .board-name.mr {
+        margin-top: 1px;
+        letter-spacing: 0;
         text-transform: none;
       }
-      .val {
-        margin-top: 2px;
-        font-size: 11px;
-        min-height: 14px;
+
+      .head-copy h1,
+      .head-copy h2 {
+        margin: 2px 0;
+        text-align: center;
+        font-weight: 700;
       }
-      .small {
+
+      .head-copy h1 {
+        font-size: 15px;
+        line-height: 1.2;
+      }
+
+      .head-copy h2 {
+        font-size: 12px;
+        line-height: 1.15;
+      }
+
+      .exam-line,
+      .exam-subline {
+        font-size: 10px;
+        text-align: center;
+        margin-top: 2px;
+      }
+
+      .header-side {
+        display: grid;
+        grid-template-rows: auto 1fr;
+      }
+
+      .top-photo {
+        min-height: 28mm;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 4px;
+        font-size: 9px;
+        font-weight: 700;
+        text-align: center;
+        border-bottom: 1px solid #000;
+      }
+
+      .meta-table {
+        display: grid;
+      }
+
+      .meta-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        padding: 5px 6px;
+        border-top: 1px solid #000;
+        font-size: 9px;
+      }
+
+      .meta-row:first-child {
+        border-top: 0;
+      }
+
+      .meta-row span {
+        font-weight: 700;
+      }
+
+      .meta-row strong {
+        text-align: right;
+      }
+
+      .status-chip {
+        display: inline-block;
+        padding: 1px 6px;
+        border: 1px solid #000;
+        font-size: 8px;
+        text-transform: uppercase;
+        background: #f3f4f6;
+      }
+
+      .summary-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .summary-item {
+        padding: 5px 6px;
+        border-right: 1px solid #000;
+      }
+
+      .summary-item:last-child {
+        border-right: 0;
+      }
+
+      .summary-item span,
+      .detail-item label {
+        display: block;
+        font-size: 8px;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+      }
+
+      .summary-item strong {
         font-size: 10px;
       }
-      .span2 {
+
+      .section-card {
+        padding: 0;
+      }
+
+      .section-title {
+        padding: 4px 6px;
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        border-bottom: 1px solid #000;
+        background: #f3f4f6;
+      }
+
+      .small-title {
+        margin: 0;
+      }
+
+      .detail-grid {
+        display: grid;
+        gap: 0;
+      }
+
+      .grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .detail-item {
+        padding: 4px 6px;
+        min-height: 34px;
+        border-right: 1px solid #000;
+        border-bottom: 1px solid #000;
+      }
+
+      .detail-grid .detail-item:nth-last-child(-n + 4) {
+        border-bottom: 0;
+      }
+
+      .grid-3 .detail-item:nth-last-child(-n + 3) {
+        border-bottom: 0;
+      }
+
+      .detail-item:nth-child(4n) {
+        border-right: 0;
+      }
+
+      .grid-3 .detail-item:nth-child(3n) {
+        border-right: 0;
+      }
+
+      .detail-item div {
+        font-size: 10px;
+        line-height: 1.28;
+        word-break: break-word;
+      }
+
+      .span-2 {
         grid-column: span 2;
       }
-      .h {
-        font-size: 10px;
-        font-weight: 800;
-        margin-bottom: 4px;
-      }
-      .tbl {
+
+      .subject-table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 10px;
+        table-layout: fixed;
+        font-size: 9px;
       }
-      .tbl th,
-      .tbl td {
-        border: 1px solid #111;
-        padding: 3px 4px;
+
+      .subject-table th,
+      .subject-table td {
+        border: 1px solid #000;
+        padding: 4px 5px;
         vertical-align: top;
       }
-      .muted {
-        color: #555;
+
+      .subject-table thead th {
+        background: #f3f4f6;
+        font-weight: 700;
       }
-      .footerGrid {
+
+      .mini-table {
+        margin-top: 0;
+        border-top: 0;
+      }
+
+      .bottom-grid {
         display: grid;
-        grid-template-columns: 2fr 1fr 1fr;
-        gap: 6px;
-        margin-top: 8px;
-        align-items: end;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 4px;
       }
-      .sig .line {
-        border-bottom: 1px solid #111;
-        height: 22px;
+
+      .declaration-box {
+        padding: 6px;
       }
-      .photoBox {
-        border: 1px solid #111;
-        height: 44mm;
+
+      .declaration-box p {
+        margin: 0;
+        font-size: 9px;
+        line-height: 1.45;
       }
+
+      .note-line {
+        margin-top: 6px;
+        font-size: 9px;
+      }
+
+      .photo-sign-wrap {
+        display: grid;
+        gap: 4px;
+      }
+
+      .sign-box,
+      .photo-box {
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 5px;
+        font-size: 9px;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .sign-box {
+        min-height: 15mm;
+      }
+
+      .document-footer {
+        margin-top: auto;
+        display: flex;
+        justify-content: space-between;
+        gap: 8px;
+        border-top: 1px solid #000;
+        padding-top: 4px;
+        font-size: 8px;
+      }
+
+      .center {
+        text-align: center;
+      }
+
+      .muted {
+        color: #444;
+      }
+
+      .loading-page {
+        display: grid;
+        place-items: center;
+        font-weight: 600;
+      }
+
+      @page {
+        size: A4 portrait;
+        margin: 6mm;
+      }
+
       @media print {
+        :host {
+          background: #fff;
+        }
+
         .no-print {
           display: none !important;
         }
-        body {
-          background: white;
-        }
+
         .page {
           margin: 0;
+          min-height: auto;
+          padding: 0;
           box-shadow: none;
+        }
+
+        .official-sheet {
+          border: 0;
+          padding: 0;
         }
       }
     `
@@ -381,10 +676,11 @@ import { API_BASE_URL } from '../../../core/api';
 })
 export class StudentFormPrintComponent implements OnInit {
   readonly application = signal<any | null>(null);
+  readonly printedAt = new Date();
+  readonly branding = inject(BrandingService);
+
   private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
-
-  constructor() {}
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
@@ -397,6 +693,11 @@ export class StudentFormPrintComponent implements OnInit {
 
   s() {
     return this.application()?.student ?? {};
+  }
+
+  valueOrDash(value: unknown, fallback = '—') {
+    if (value === null || value === undefined || value === '') return fallback;
+    return String(value);
   }
 
   indexNoValue() {
@@ -419,6 +720,31 @@ export class StudentFormPrintComponent implements OnInit {
     return this.a().centreNo || this.a().institute?.code || this.a().institute?.collegeNo || '—';
   }
 
+  instituteName() {
+    return this.a().institute?.name || 'Institute not assigned';
+  }
+
+  instituteAddress() {
+    const institute = this.a().institute || {};
+    return [institute.address, institute.city, institute.district, institute.state].filter(Boolean).join(', ') || '—';
+  }
+
+  examDisplayTitle() {
+    const exam = this.a().exam || {};
+    return [exam.name || 'HSC Examination', exam.session, exam.academicYear].filter(Boolean).join(' • ');
+  }
+
+  statusLabel() {
+    return String(this.a().status || 'DRAFT').replaceAll('_', ' ');
+  }
+
+  statusTone() {
+    const status = String(this.a().status || '').toUpperCase();
+    if (['SUBMITTED', 'BOARD_APPROVED', 'INSTITUTE_VERIFIED'].includes(status)) return 'success';
+    if (['REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD'].includes(status)) return 'warning';
+    return 'progress';
+  }
+
   candidateTypeLabel() {
     const mapping: Record<string, string> = {
       REGULAR: 'Fresh / Regular',
@@ -431,6 +757,80 @@ export class StudentFormPrintComponent implements OnInit {
     return mapping[this.a().candidateType] || this.a().candidateType || '—';
   }
 
+  streamLabel() {
+    const mapping: Record<string, string> = {
+      '1': 'Science',
+      '2': 'Arts',
+      '3': 'Commerce',
+      '4': 'Vocational',
+      '5': 'Technology Science',
+      SCIENCE: 'Science',
+      ARTS: 'Arts',
+      COMMERCE: 'Commerce',
+      VOCATIONAL: 'Vocational',
+      TECHNOLOGY: 'Technology Science'
+    };
+    const value = String(this.s().streamCode || '').toUpperCase();
+    return mapping[value] || this.valueOrDash(this.s().streamCode);
+  }
+
+  genderLabel() {
+    const value = String(this.s().gender || '').toUpperCase();
+    const mapping: Record<string, string> = {
+      MALE: 'Male',
+      FEMALE: 'Female',
+      OTHER: 'Other',
+      TRANSGENDER: 'Other'
+    };
+    return mapping[value] || this.valueOrDash(this.s().gender);
+  }
+
+  religionLabel() {
+    const value = String(this.s().minorityReligionCode || '').toUpperCase();
+    const mapping: Record<string, string> = {
+      HINDU: 'Hindu',
+      MUSLIM: 'Muslim',
+      CHRISTIAN: 'Christian',
+      BUDDHIST: 'Buddhist',
+      SIKH: 'Sikh',
+      JAIN: 'Jain',
+      PARSI: 'Parsi',
+      OTHER: 'Other'
+    };
+    return mapping[value] || this.valueOrDash(this.s().minorityReligionCode);
+  }
+
+  categoryLabel() {
+    const value = String(this.s().categoryCode || '').toUpperCase();
+    const mapping: Record<string, string> = {
+      OPEN: 'Open',
+      SC: 'SC',
+      ST: 'ST',
+      OBC: 'OBC',
+      SBC: 'SBC',
+      VJ: 'VJ',
+      NT: 'NT',
+      EWS: 'EWS'
+    };
+    return mapping[value] || this.valueOrDash(this.s().categoryCode);
+  }
+
+  mediumLabel() {
+    const value = String(this.s().mediumCode || '').toUpperCase();
+    const mapping: Record<string, string> = {
+      MARATHI: 'Marathi',
+      HINDI: 'Hindi',
+      ENGLISH: 'English',
+      URDU: 'Urdu'
+    };
+    return mapping[value] || this.valueOrDash(this.s().mediumCode);
+  }
+
+  yesNoOrDash(value: unknown) {
+    if (value === null || value === undefined || value === '') return '—';
+    return value ? 'Yes' : 'No';
+  }
+
   isBacklogCandidate() {
     return ['BACKLOG', 'ATKT', 'REPEATER', 'IMPROVEMENT'].includes(this.a().candidateType);
   }
@@ -441,7 +841,7 @@ export class StudentFormPrintComponent implements OnInit {
 
   hasOtherDetails() {
     const app = this.a();
-    return this.isPrivateCandidate() || this.isBacklogCandidate() || !!app.eligibilityCertNo || app.eligibilityCertIssued !== null && app.eligibilityCertIssued !== undefined;
+    return this.isPrivateCandidate() || this.isBacklogCandidate() || !!app.eligibilityCertNo || (app.eligibilityCertIssued !== null && app.eligibilityCertIssued !== undefined);
   }
 
   print() {
