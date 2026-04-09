@@ -66,50 +66,57 @@ import { API_BASE_URL } from '../../core/api';
   ],
   template: `
     <div class="student-profile-container">
-      <!-- Header Section -->
-      <div class="profile-header">
-        <div class="board-header">
-          <h2>HSC Exam Management System</h2>
-          <h3 id="divisional-board">{{ examPortalName }}</h3>
-        </div>
-        <h1>HSC Exam Application Form</h1>
-        <p class="form-info">Complete all marked (*) fields to create your exam application</p>
-        
-        <!-- Instructions -->
-        <div class="instructions-card">
-          <mat-icon>info</mat-icon>
-          <div class="instructions-content">
-            <p><strong>Important Instructions:</strong></p>
-            <ul>
-              <li>All name fields must be entered in <strong>ENGLISH CAPITAL LETTERS ONLY</strong> (e.g., AMOL, RATHOD)</li>
-              <li>Do not use special characters, numbers, or lowercase letters in name fields</li>
-              <li>All personal information must match your official documents (Aadhar, SSC Certificate, etc.)</li>
-              <li>Verify spelling carefully - Name once submitted cannot be changed without approval</li>
-              <li>Mobile number should be current - you may receive important exam notifications</li>
-            </ul>
+      <div class="profile-progress-strip">
+        <div class="progress-strip-top">
+          <div>
+            <div class="progress-strip-label">Student Profile Status</div>
+            <div class="progress-strip-meta">
+              <span>{{ profileCompletionCount }}/{{ totalProfileFields }} fields completed</span>
+              <strong>{{ profileCompletionPercentage }}%</strong>
+            </div>
           </div>
+
+          <button mat-stroked-button type="button" class="instructions-trigger" (click)="openInstructionsPopup()">
+            <mat-icon>info</mat-icon>
+            How to Fill
+          </button>
         </div>
 
-        <!-- Profile Completion Progress -->
-        <div class="profile-completion-card">
-          <div class="completion-header">
-            <mat-icon>task_alt</mat-icon>
-            <h3>Profile Completion</h3>
-          </div>
-          <div class="progress-info">
-            <div class="progress-stats">
-              <span class="completion-text">{{ profileCompletionCount }}/{{ totalProfileFields }} fields completed</span>
-              <span class="completion-percentage">{{ profileCompletionPercentage }}%</span>
+        <mat-progress-bar mode="determinate" [value]="profileCompletionPercentage" color="accent"></mat-progress-bar>
+
+        <p class="progress-strip-note" *ngIf="profileCompletionPercentage < 100">
+          Complete the remaining details to make exam application submission smoother.
+        </p>
+        <p class="progress-strip-note success" *ngIf="profileCompletionPercentage === 100">
+          Your profile is complete and ready for exam application.
+        </p>
+      </div>
+
+      <div class="instructions-popup-backdrop" *ngIf="showInstructionsPopup">
+        <div class="instructions-popup" role="dialog" aria-modal="true" aria-labelledby="profileInstructionsTitle">
+          <div class="popup-header">
+            <div>
+              <h2 id="profileInstructionsTitle">Before filling the student profile</h2>
+              <p>Read these points once, then continue with your form.</p>
             </div>
-            <mat-progress-bar mode="determinate" [value]="profileCompletionPercentage" color="accent"></mat-progress-bar>
-            <p class="completion-message" *ngIf="profileCompletionPercentage < 100">
-              <mat-icon>warning</mat-icon>
-              Complete your profile to enable exam application creation
-            </p>
-            <p class="completion-message success" *ngIf="profileCompletionPercentage === 100">
-              <mat-icon>check_circle</mat-icon>
-              Your profile is complete! You can now create an exam application.
-            </p>
+            <button mat-icon-button type="button" (click)="closeInstructionsPopup()" aria-label="Close instructions popup">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          <div class="popup-body">
+            <ul>
+              <li>Enter all name fields in <strong>ENGLISH CAPITAL LETTERS ONLY</strong>.</li>
+              <li>Make sure your details match Aadhaar, SSC certificate, and other official records.</li>
+              <li>Check spellings carefully before saving.</li>
+              <li>Use an active mobile number for exam-related updates.</li>
+              <li>Keep institute, stream, and previous exam details ready before starting.</li>
+            </ul>
+          </div>
+
+          <div class="popup-actions">
+            <button mat-stroked-button type="button" (click)="closeInstructionsPopup(true)">Don't show again</button>
+            <button mat-raised-button color="primary" type="button" (click)="closeInstructionsPopup()">Continue</button>
           </div>
         </div>
       </div>
@@ -1177,99 +1184,120 @@ import { API_BASE_URL } from '../../core/api';
       margin: 0 auto var(--spacing-sm);
     }
 
-    /* Profile Completion Progress */
-    .profile-completion-card {
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-      border-radius: var(--border-radius);
-      padding: var(--spacing-md);
-      margin: var(--spacing-md) 0;
-      color: white;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    /* Compact profile progress strip */
+    .profile-progress-strip {
+      border-top: 4px solid var(--primary-color);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+      padding: 10px 0 12px;
+      margin-bottom: var(--spacing-md);
+      background: linear-gradient(180deg, rgba(239, 246, 255, 0.9) 0%, rgba(255, 255, 255, 0.98) 100%);
     }
 
-    .completion-header {
+    .progress-strip-top {
       display: flex;
       align-items: center;
-      gap: var(--spacing-xs);
-      margin-bottom: var(--spacing-md);
+      justify-content: space-between;
+      gap: var(--spacing-sm);
+      margin-bottom: 8px;
       flex-wrap: wrap;
     }
 
-    .completion-header h3 {
-      margin: 0;
-      font-size: var(--heading-3-size);
+    .progress-strip-label {
+      font-size: 0.8rem;
       font-weight: 700;
-      flex: 1;
-      min-width: 150px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
     }
 
-    .completion-header mat-icon {
-      font-size: 28px;
-      width: 28px;
-      height: 28px;
-      flex-shrink: 0;
-    }
-
-    .progress-info {
+    .progress-strip-meta {
       display: flex;
-      flex-direction: column;
-      gap: var(--spacing-sm);
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--text-primary);
+      font-size: var(--font-size-sm);
     }
 
-    .progress-stats {
+    .progress-strip-meta strong {
+      font-size: 1rem;
+      color: var(--primary-dark);
+    }
+
+    .instructions-trigger {
+      white-space: nowrap;
+    }
+
+    ::ng-deep .profile-progress-strip .mat-progress-bar {
+      height: 4px;
+      border-radius: 999px;
+    }
+
+    .progress-strip-note {
+      margin: 8px 0 0;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .progress-strip-note.success {
+      color: #166534;
+      font-weight: 600;
+    }
+
+    .instructions-popup-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 1200;
+    }
+
+    .instructions-popup {
+      width: min(680px, 100%);
+      background: #fff;
+      border-radius: var(--border-radius);
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.22);
+      padding: 18px;
+    }
+
+    .popup-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: var(--spacing-sm);
-    }
-
-    .completion-text {
-      font-size: var(--font-size-sm);
-      font-weight: 500;
-      flex: 1;
-      min-width: 150px;
-    }
-
-    .completion-percentage {
-      font-size: clamp(1.2rem, 4vw, 1.8rem);
-      font-weight: 800;
-      background: rgba(255, 255, 255, 0.2);
-      padding: var(--spacing-xs) var(--spacing-sm);
-      border-radius: var(--border-radius-sm);
-      min-width: 70px;
-      text-align: center;
-    }
-
-    ::ng-deep .profile-completion-card .mat-progress-bar {
-      height: 8px;
-      border-radius: 4px;
-    }
-
-    .completion-message {
-      display: flex;
+      gap: 12px;
       align-items: flex-start;
-      gap: var(--spacing-sm);
+      margin-bottom: 12px;
+    }
+
+    .popup-header h2 {
+      margin: 0 0 4px;
+      font-size: 1.2rem;
+      color: var(--text-primary);
+    }
+
+    .popup-header p {
       margin: 0;
-      padding: var(--spacing-sm);
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: var(--border-radius-sm);
-      font-size: var(--font-size-sm);
-      font-weight: 500;
-      line-height: 1.5;
+      color: var(--text-secondary);
+      font-size: 0.92rem;
     }
 
-    .completion-message mat-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      flex-shrink: 0;
-      margin-top: 2px;
+    .popup-body ul {
+      margin: 0;
+      padding-left: 20px;
+      display: grid;
+      gap: 8px;
+      color: var(--text-primary);
     }
 
-    .completion-message.success {
-      background: rgba(76, 175, 80, 0.3);
-      color: #c8e6c9;
+    .popup-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
     }
 
     /* Instructions Card */
@@ -1593,6 +1621,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
   // Active tab index for auto-navigation after save
   selectedTabIndex = 0;
+  showInstructionsPopup = false;
 
   // Pincode lookup properties
   pincodeOptions: PostalLocation[] = [];
@@ -1841,6 +1870,23 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     });
   }
 
+  openInstructionsPopup() {
+    this.showInstructionsPopup = true;
+  }
+
+  closeInstructionsPopup(rememberChoice = false) {
+    this.showInstructionsPopup = false;
+    if (rememberChoice && typeof window !== 'undefined') {
+      window.localStorage.setItem('studentProfileInstructionsDismissed', 'true');
+    }
+  }
+
+  private showInstructionsPopupIfNeeded() {
+    if (typeof window === 'undefined') return;
+    const dismissed = window.localStorage.getItem('studentProfileInstructionsDismissed') === 'true';
+    this.showInstructionsPopup = !dismissed;
+  }
+
   /**
    * Setup uppercase transformation for name fields
    * Converts input to uppercase as user types
@@ -2003,6 +2049,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
         // Calculate profile completion
         this.calculateProfileCompletion(profile);
+        this.showInstructionsPopupIfNeeded();
 
         this.isLoading = false;
       })

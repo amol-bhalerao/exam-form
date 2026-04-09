@@ -259,6 +259,26 @@ function sendAnswerLanguageMigrationError(res) {
   });
 }
 
+function getFallbackSubjectCategoriesForStream(streamName) {
+  const normalized = String(streamName || '').trim().toUpperCase();
+  const commonCategories = ['Language', 'Compulsory', 'Optional Subjects', 'LANGUAGE', 'ELECTIVE'];
+
+  if (normalized.includes('SCIENCE') || normalized.includes('TECHNOLOGY')) {
+    return [...commonCategories, 'SCIENCE', 'Bifocal Subjects'];
+  }
+  if (normalized.includes('COMMERCE')) {
+    return [...commonCategories, 'COMMERCE', 'Bifocal Subjects'];
+  }
+  if (normalized.includes('ART')) {
+    return [...commonCategories, 'ARTS'];
+  }
+  if (normalized.includes('VOC')) {
+    return ['Language', 'Compulsory', 'Vocational Subjects', 'HSC.VOC', 'LANGUAGE', 'ELECTIVE'];
+  }
+
+  return commonCategories;
+}
+
 async function getInstituteExamCapacityRows(instituteId, { openOnly = false } = {}) {
   const now = new Date();
   const examWhere = openOnly
@@ -1522,6 +1542,7 @@ institutesRouter.get('/subject-options', requireAuth, async (req, res) => {
     }
 
     let streamId = q.streamId;
+    let resolvedStreamName = '';
     if (!streamId && q.streamCode) {
       const streamCodeLookup = {
         '1': 'Science',
@@ -1538,6 +1559,12 @@ institutesRouter.get('/subject-options', requireAuth, async (req, res) => {
         return streamName === requested || streamName.includes(requested) || requested.includes(streamName);
       });
       streamId = matchedStream?.id;
+      resolvedStreamName = matchedStream?.name || String(requestedStream || '');
+    }
+
+    if (!resolvedStreamName && streamId) {
+      const streamRecord = await prisma.stream.findUnique({ where: { id: streamId }, select: { name: true } });
+      resolvedStreamName = streamRecord?.name || q.streamCode || '';
     }
 
     if (!streamId) {
@@ -1564,19 +1591,38 @@ institutesRouter.get('/subject-options', requireAuth, async (req, res) => {
       });
 
       if (mappedSubjects.length > 0) {
+        const mappedSubjectIds = mappedSubjects.map((mapping) => mapping.subject.id);
+        const supplementalCategories = getFallbackSubjectCategoriesForStream(resolvedStreamName || q.streamCode || '');
+        const supplementalSubjects = await prisma.subject.findMany({
+          where: {
+            category: { in: supplementalCategories },
+            id: { notIn: mappedSubjectIds }
+          },
+          orderBy: [{ category: 'asc' }, { name: 'asc' }]
+        });
+
         return res.json({
           ok: true,
           source: 'institute',
           instituteId,
           streamId,
-          subjects: mappedSubjects.map((mapping) => ({
-            id: mapping.subject.id,
-            mappingId: mapping.id,
-            name: mapping.subject.name,
-            code: mapping.subject.code,
-            category: mapping.subject.category,
-            answerLanguageCode: mapping.answerLanguageCode ?? null
-          }))
+          subjects: [
+            ...mappedSubjects.map((mapping) => ({
+              id: mapping.subject.id,
+              mappingId: mapping.id,
+              name: mapping.subject.name,
+              code: mapping.subject.code,
+              category: mapping.subject.category,
+              answerLanguageCode: mapping.answerLanguageCode ?? null
+            })),
+            ...supplementalSubjects.map((subject) => ({
+              id: subject.id,
+              name: subject.name,
+              code: subject.code,
+              category: subject.category,
+              answerLanguageCode: null
+            }))
+          ]
         });
       }
     }
@@ -1603,10 +1649,15 @@ institutesRouter.get('/subject-options', requireAuth, async (req, res) => {
       });
     }
 
-    const subjects = await prisma.subject.findMany({ orderBy: { name: 'asc' } });
+    const fallbackCategories = getFallbackSubjectCategoriesForStream(resolvedStreamName || q.streamCode || '');
+    const subjects = await prisma.subject.findMany({
+      where: fallbackCategories.length ? { category: { in: fallbackCategories } } : undefined,
+      orderBy: [{ category: 'asc' }, { name: 'asc' }]
+    });
+
     return res.json({
       ok: true,
-      source: 'all',
+      source: 'stream',
       instituteId: instituteId ?? null,
       streamId,
       subjects: subjects.map((subject) => ({

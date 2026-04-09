@@ -9,6 +9,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/auth.service';
+import { StudentProfileService } from '../../core/student-profile.service';
 import { API_BASE_URL } from '../../core/api';
 
 // Chart.js tree-shakable imports
@@ -85,6 +86,28 @@ interface StatCard {
             </a>
           }
         </div>
+      }
+
+      @if (user()?.role === 'STUDENT') {
+        <mat-card class="student-progress-card">
+          <div class="student-progress-header">
+            <div>
+              <div class="chart-title">Profile Completion</div>
+              <div class="chart-sub">Keep your student profile updated before applying for exams.</div>
+            </div>
+            <a mat-flat-button color="primary" routerLink="/app/student/profile">
+              <mat-icon>edit</mat-icon>
+              Update Profile
+            </a>
+          </div>
+
+          <div class="student-progress-stats">
+            <span>{{ studentProfileCompletion() }}% complete</span>
+            <strong>{{ studentProfileCompletion() >= 100 ? 'Completed' : (studentProfileCompletion() >= 70 ? 'Application-ready' : 'Needs update') }}</strong>
+          </div>
+
+          <mat-progress-bar mode="determinate" [value]="studentProfileCompletion()" color="accent"></mat-progress-bar>
+        </mat-card>
       }
 
       <!-- Charts row -->
@@ -292,6 +315,38 @@ interface StatCard {
         width: 100%;
         flex-shrink: 1;
       }
+    }
+
+    .student-progress-card {
+      border: 1px solid #dbeafe;
+      border-top: 4px solid #2563eb;
+      border-radius: var(--border-radius);
+      padding: var(--spacing-md);
+      background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+    }
+
+    .student-progress-header {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--spacing-sm);
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .student-progress-stats {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: var(--font-size-sm);
+      color: #0f172a;
+      flex-wrap: wrap;
+    }
+
+    .student-progress-stats strong {
+      color: #1d4ed8;
     }
 
     /* ============================================================
@@ -688,6 +743,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   readonly user = computed(() => this.auth.user());
   readonly loading = signal(true);
 
+  private readonly profileService = inject(StudentProfileService);
+  readonly studentProfileCompletion = this.profileService.completionPercentage$;
+
   readonly statCards = signal<StatCard[]>([]);
   readonly doughnutLegend = signal<{ label: string; value: number; color: string }[]>([]);
 
@@ -830,6 +888,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         }
       });
     } else if (role === 'STUDENT') {
+      this.profileService.loadProfile().catch(() => undefined);
       // FIX: Proper error handling for student dashboard
       this.http.get<{ applications: any[] }>(`${API_BASE_URL}/applications/my`).subscribe({
         next: (r) => {

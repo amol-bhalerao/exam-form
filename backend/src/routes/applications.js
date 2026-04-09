@@ -319,7 +319,6 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
   const institute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
   if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
 
-  const effectiveCandidateType = body.candidateType ?? app.candidateType;
   if (body.subjects && body.subjects.length > 0) {
     const subjectIds = body.subjects.map((s) => s.subjectId);
     const instituteMappedSubjects = await prisma.instituteStreamSubject.findMany({
@@ -354,22 +353,8 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
       });
     }
 
-    if (effectiveCandidateType !== 'BACKLOG') {
-      const selectedCategories = [...new Set(
-        validStream
-          .map((m) => String(m.subject?.category || '').trim().toLowerCase())
-          .filter(Boolean)
-      )];
-      const hasLanguage = selectedCategories.some((category) => category === 'language' || category.includes('lang'));
-      const hasCompulsory = selectedCategories.some((category) => category === 'compulsory' || category.includes('compulsory'));
-
-      if (!hasLanguage || !hasCompulsory) {
-        return res.status(400).json({
-          error: 'INVALID_SUBJECT_CATEGORY',
-          message: 'You must select at least one language and one compulsory subject.'
-        });
-      }
-    }
+    // Draft save is allowed even when the final Language/Compulsory combination is not complete yet.
+    // The final category mix is validated again at submit time.
   }
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -464,9 +449,40 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
       });
     }
 
-  const app = await prisma.examApplication.findFirst({ where: { id: applicationId, studentId: student.id } });
+  const app = await prisma.examApplication.findFirst({
+    where: { id: applicationId, studentId: student.id },
+    include: {
+      subjects: { include: { subject: true } }
+    }
+  });
   if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
   if (app.status !== 'DRAFT') return res.status(400).json({ error: 'INVALID_STATE' });
+
+  if (!app.subjects?.length) {
+    return res.status(400).json({
+      error: 'SUBJECTS_REQUIRED',
+      message: 'Please select at least one subject before submitting the application.'
+    });
+  }
+
+  const isBacklogStyleCandidate = ['BACKLOG', 'ATKT', 'REPEATER', 'IMPROVEMENT'].includes(app.candidateType);
+  if (!isBacklogStyleCandidate) {
+    const selectedCategories = [...new Set(
+      app.subjects
+        .map((entry) => String(entry.subject?.category || '').trim().toLowerCase())
+        .filter(Boolean)
+    )];
+    const hasLanguage = selectedCategories.some((category) => category === 'language' || category.includes('lang'));
+    const hasCompulsory = selectedCategories.some((category) => category === 'compulsory' || category.includes('compulsory'));
+
+    if (!hasLanguage || !hasCompulsory) {
+      return res.status(400).json({
+        error: 'INVALID_SUBJECT_CATEGORY',
+        message: 'Please select at least one language and one compulsory subject before submitting.',
+        selectedCategories
+      });
+    }
+  }
 
   const updated = await prisma.$transaction(async (tx) => {
     const updatedApp = await tx.examApplication.update({

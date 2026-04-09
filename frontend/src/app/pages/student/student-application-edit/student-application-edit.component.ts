@@ -14,6 +14,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatStepperModule } from '@angular/material/stepper';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { InstituteSearchModalComponent } from '../../../components/institute-search-modal/institute-search-modal.component';
 
 import { API_BASE_URL } from '../../../core/api';
@@ -38,6 +39,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
     MatStepperModule,
     MatIconModule,
     MatProgressBarModule,
+    MatTooltipModule,
     DatePipe,
     InstituteSearchModalComponent
   ],
@@ -82,7 +84,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
 
         <!-- Multi-Step Form -->
         <mat-card class="form-card">
-          <p class="stepper-help">Complete each step below for institute, exam, personal details, academic details, and subjects before submitting.</p>
+          <p class="stepper-help">Complete each step below for institute, personal details, academic details, and subjects before submitting. Hover over fields to see quick help tooltips.</p>
           <mat-stepper #stepper [linear]="false" class="application-stepper">
             <!-- Step 1: Institute & Reference -->
             <mat-step [editable]="isEditable()">
@@ -136,7 +138,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                         <strong>{{ displayValue('indexNo') }}</strong>
                       </div>
                     } @else {
-                      <mat-form-field appearance="outline" class="w100">
+                      <mat-form-field appearance="outline" class="w100" matTooltip="Enter the board index number only if it was not already filled by the institute." matTooltipPosition="above">
                         <mat-label>Index No (1a)</mat-label>
                         <input matInput formControlName="indexNo" placeholder="Enter index number if institute has not filled it" />
                       </mat-form-field>
@@ -148,7 +150,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                         <strong>{{ displayValue('udiseNo') }}</strong>
                       </div>
                     } @else {
-                      <mat-form-field appearance="outline" class="w100">
+                      <mat-form-field appearance="outline" class="w100" matTooltip="Enter the institute UDISE number only when it is not auto-filled." matTooltipPosition="above">
                         <mat-label>UDISE No (1b)</mat-label>
                         <input matInput formControlName="udiseNo" placeholder="Enter UDISE number if unavailable" />
                       </mat-form-field>
@@ -161,7 +163,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                         <small>Synced from your student profile</small>
                       </div>
                     } @else {
-                      <mat-form-field appearance="outline" class="w100">
+                      <mat-form-field appearance="outline" class="w100" matTooltip="Enter your student Saral ID if it is available in your school record." matTooltipPosition="above">
                         <mat-label>Student Saral ID (1c)</mat-label>
                         <input matInput formControlName="studentSaralId" placeholder="Enter your Student Saral ID" />
                         <mat-hint>Saved to your student profile automatically</mat-hint>
@@ -180,7 +182,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                         <strong>{{ displayValue('centreNo') }}</strong>
                       </div>
                     } @else {
-                      <mat-form-field appearance="outline" class="w100">
+                      <mat-form-field appearance="outline" class="w100" matTooltip="Fill the centre number only if your institute instructed you to do so." matTooltipPosition="above">
                         <mat-label>Centre No (2b)</mat-label>
                         <input matInput formControlName="centreNo" placeholder="Enter centre number if needed" />
                       </mat-form-field>
@@ -190,128 +192,71 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
 
                 <div class="step-actions">
                   <button mat-button matStepperNext>
-                    Next: Select Exam
+                    Next: Review Setup
                     <mat-icon>arrow_forward</mat-icon>
                   </button>
                 </div>
               </div>
             </mat-step>
 
-            <!-- Step 2: Exam Selection -->
-            <mat-step [editable]="isEditable()">
+            <!-- Step 2: Application Setup Summary -->
+            <mat-step [editable]="false">
               <ng-template matStepLabel>
                 <span class="step-label">
                   <mat-icon>assignment</mat-icon>
-                  Exam
+                  Setup
                 </span>
               </ng-template>
 
               <div class="step-content">
-                <h3 class="step-title">Select Exam</h3>
-                <p class="step-desc">Choose which exam you want to apply for.</p>
+                <h3 class="step-title">Selected Exam & Application Type</h3>
+                <p class="step-desc">These details were already selected when you started the application, so no re-selection is needed here.</p>
 
-                <form [formGroup]="form" class="form-grid">
-                  @if (exams().length > 0) {
-                    <mat-form-field appearance="outline" class="w100">
-                      <mat-label>Exam</mat-label>
-                      <mat-select formControlName="examId" required>
-                        <mat-option value="">-- Select Exam --</mat-option>
-                        @for (exam of exams(); track exam.id) {
-                          <mat-option [value]="exam.id">
-                            {{ exam.name }} ({{ exam.examType }})
-                          </mat-option>
-                        }
+                <mat-card class="info-card">
+                  <mat-icon class="info-icon">info</mat-icon>
+                  <div>
+                    <strong>Application setup locked</strong>
+                    <p>Review the chosen exam and type below, then continue filling the remaining information.</p>
+                  </div>
+                </mat-card>
+
+                <div class="readonly-grid">
+                  <div class="readonly-field" matTooltip="The exam was selected in the previous step while creating this draft application." matTooltipPosition="above">
+                    <label>Exam</label>
+                    <strong>{{ getExamName(form.get('examId')?.value) }}</strong>
+                  </div>
+                  <div class="readonly-field" matTooltip="The application type comes from the option you selected before opening this form." matTooltipPosition="above">
+                    <label>Application Type</label>
+                    <strong>{{ examType() === 'fresh' ? 'Fresh / Regular' : 'Backlog / Repeater' }}</strong>
+                  </div>
+                </div>
+
+                @if (examType() === 'backlog') {
+                  <div class="form-grid backlog-grid" [formGroup]="form">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter the month of your previous HSC exam attempt for backlog reference." matTooltipPosition="above">
+                      <mat-label>Previous Exam Month</mat-label>
+                      <mat-select formControlName="lastExamMonth">
+                        <mat-option value="">-- Select Month --</mat-option>
+                        <mat-option value="FEB">February</mat-option>
+                        <mat-option value="MAR">March</mat-option>
+                        <mat-option value="JUN">June</mat-option>
+                        <mat-option value="JUL">July</mat-option>
+                        <mat-option value="AUG">August</mat-option>
+                        <mat-option value="OCT">October</mat-option>
                       </mat-select>
                     </mat-form-field>
-                  } @else {
-                    <mat-card class="info-card">
-                      <mat-icon class="info-icon">info</mat-icon>
-                      <div>
-                        <strong>No Exams Available</strong>
-                        <p>There are currently no exams available for registration. Please check back later.</p>
-                      </div>
-                    </mat-card>
-                  }
-                </form>
 
-                <div class="step-actions">
-                  <button mat-button matStepperPrevious>
-                    <mat-icon>arrow_back</mat-icon> Back
-                  </button>
-                  <button mat-button matStepperNext [disabled]="!form.get('examId')?.value">
-                    Next: Exam Type
-                    <mat-icon>arrow_forward</mat-icon>
-                  </button>
-                </div>
-              </div>
-            </mat-step>
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter the year of your previous HSC attempt." matTooltipPosition="above">
+                      <mat-label>Previous Exam Year</mat-label>
+                      <input matInput type="number" formControlName="lastExamYear" min="1990" max="2100" />
+                    </mat-form-field>
 
-            <!-- Step 3: Exam Type Selection -->
-            <mat-step [editable]="isEditable()">
-              <ng-template matStepLabel>
-                <span class="step-label">
-                  <mat-icon>task_alt</mat-icon>
-                  Exam Type
-                </span>
-              </ng-template>
-
-              <div class="step-content">
-                <h3 class="step-title">Select Exam Type</h3>
-                <p class="step-desc">Choose whether this is a fresh exam or backlog attempt.</p>
-
-                <form [formGroup]="form" class="exam-type-container">
-                  <div class="exam-type-options">
-                    <label class="exam-type-option">
-                      <input type="radio" formControlName="examType" value="fresh" />
-                      <span class="option-label">
-                        <strong>Fresh Exam</strong>
-                        <span class="option-desc">New exam with all subjects</span>
-                      </span>
-                    </label>
-                    <label class="exam-type-option">
-                      <input type="radio" formControlName="examType" value="backlog" />
-                      <span class="option-label">
-                        <strong>Backlog Exam</strong>
-                        <span class="option-desc">Re-attempt failed subjects from previous exam</span>
-                      </span>
-                    </label>
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter the previous seat number only if this is a backlog or repeater application." matTooltipPosition="above">
+                      <mat-label>Previous Exam Seat No</mat-label>
+                      <input matInput formControlName="lastExamSeatNo" />
+                    </mat-form-field>
                   </div>
-
-                  @if (examType() === 'backlog') {
-                    <mat-card class="info-card">
-                      <mat-icon class="info-icon">info</mat-icon>
-                      <div>
-                        <strong>Previous Exam Details</strong>
-                        <p>You can now enter your previous exam month, year, seat number, and subject-wise marks for reference.</p>
-                      </div>
-                    </mat-card>
-
-                    <div class="form-grid backlog-grid">
-                      <mat-form-field appearance="outline" class="w100">
-                        <mat-label>Previous Exam Month</mat-label>
-                        <mat-select formControlName="lastExamMonth">
-                          <mat-option value="">-- Select Month --</mat-option>
-                          <mat-option value="FEB">February</mat-option>
-                          <mat-option value="MAR">March</mat-option>
-                          <mat-option value="JUN">June</mat-option>
-                          <mat-option value="JUL">July</mat-option>
-                          <mat-option value="AUG">August</mat-option>
-                          <mat-option value="OCT">October</mat-option>
-                        </mat-select>
-                      </mat-form-field>
-
-                      <mat-form-field appearance="outline" class="w100">
-                        <mat-label>Previous Exam Year</mat-label>
-                        <input matInput type="number" formControlName="lastExamYear" min="1990" max="2100" />
-                      </mat-form-field>
-
-                      <mat-form-field appearance="outline" class="w100">
-                        <mat-label>Previous Exam Seat No</mat-label>
-                        <input matInput formControlName="lastExamSeatNo" />
-                      </mat-form-field>
-                    </div>
-                  }
-                </form>
+                }
 
                 <div class="step-actions">
                   <button mat-button matStepperPrevious>
@@ -325,7 +270,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
               </div>
             </mat-step>
 
-            <!-- Step 4: Personal Details -->
+            <!-- Step 3: Personal Details -->
             <mat-step [stepControl]="personFormGroup()" [editable]="isEditable()">
               <ng-template matStepLabel>
                 <span class="step-label">
@@ -410,49 +355,49 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
 
                 <form [formGroup]="personFormGroup()" class="form-grid">
                   @if (!hasValue('personGroup.lastName')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter your surname exactly as it appears in official school records." matTooltipPosition="above">
                       <mat-label>Last Name / आडनाव (3a)</mat-label>
                       <input matInput formControlName="lastName" required />
                     </mat-form-field>
                   }
                   @if (!hasValue('personGroup.firstName')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter your first name in English capital letters." matTooltipPosition="above">
                       <mat-label>First Name / नाव (3b)</mat-label>
                       <input matInput formControlName="firstName" required />
                     </mat-form-field>
                   }
                   @if (!hasValue('personGroup.middleName')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="If used in your records, enter your middle name; otherwise leave it blank." matTooltipPosition="above">
                       <mat-label>Middle Name (3c)</mat-label>
                       <input matInput formControlName="middleName" />
                     </mat-form-field>
                   }
                   @if (!hasValue('personGroup.motherName')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter your mother's name exactly as per certificate or school record." matTooltipPosition="above">
                       <mat-label>Mother's Name / आईचे नाव (3d)</mat-label>
                       <input matInput formControlName="motherName" />
                     </mat-form-field>
                   }
                   @if (!hasValue('personGroup.address')) {
-                    <mat-form-field appearance="outline" class="w200">
+                    <mat-form-field appearance="outline" class="w200" matTooltip="Enter your current full postal address for communication." matTooltipPosition="above">
                       <mat-label>Address / पत्ता (4)</mat-label>
                       <input matInput formControlName="address" />
                     </mat-form-field>
                   }
                   @if (!hasValue('personGroup.pinCode')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter a valid 6-digit pincode for your current address." matTooltipPosition="above">
                       <mat-label>Pin Code / पिनकोड</mat-label>
                       <input matInput formControlName="pinCode" />
                     </mat-form-field>
                   }
                   @if (!hasValue('personGroup.mobile')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Use an active mobile number to receive exam-related messages." matTooltipPosition="above">
                       <mat-label>Mobile / मोबाईल (5)</mat-label>
                       <input matInput formControlName="mobile" />
                     </mat-form-field>
                   }
                   @if (!hasValue('personGroup.dob')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Select your date of birth exactly as mentioned in official records." matTooltipPosition="above">
                       <mat-label>Date of Birth / जन्मतारीख</mat-label>
                       <input matInput [matDatepicker]="dobPicker" formControlName="dob" />
                       <mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle>
@@ -460,13 +405,13 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                     </mat-form-field>
                   }
                   @if (!hasValue('personGroup.aadhaar')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter the 12-digit Aadhaar number only if available and correct." matTooltipPosition="above">
                       <mat-label>Aadhaar / आधार (7)</mat-label>
                       <input matInput formControlName="aadhaar" />
                     </mat-form-field>
                   }
                   @if (!hasValue('personGroup.gender')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Select the gender shown in your official documents." matTooltipPosition="above">
                       <mat-label>Gender / लिंग (9)</mat-label>
                       <mat-select formControlName="gender">
                         <mat-option value="Male">Male</mat-option>
@@ -539,7 +484,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
 
                 <form [formGroup]="academicFormGroup()" class="form-grid">
                   @if (!hasValue('academicGroup.streamCode')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Choose the stream for which this exam application is being filled." matTooltipPosition="above">
                       <mat-label>Stream / प्रवाह (8)</mat-label>
                       <mat-select formControlName="streamCode">
                         <mat-option value="1">1) Science</mat-option>
@@ -551,25 +496,34 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                     </mat-form-field>
                   }
                   @if (!hasValue('academicGroup.minorityReligionCode')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Fill this only if a minority religion code applies to you." matTooltipPosition="above">
                       <mat-label>Minority Religion Code (10)</mat-label>
                       <input matInput formControlName="minorityReligionCode" />
                     </mat-form-field>
                   }
                   @if (!hasValue('academicGroup.categoryCode')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter your category code as per admission or school records." matTooltipPosition="above">
                       <mat-label>Category / जात प्रवर्ग (11)</mat-label>
                       <input matInput formControlName="categoryCode" />
                     </mat-form-field>
                   }
-                  @if (!hasValue('academicGroup.divyangCode')) {
-                    <mat-form-field appearance="outline" class="w100">
+
+                  <mat-form-field appearance="outline" class="w100" matTooltip="Select Yes only if the student is Divyang / handicapped." matTooltipPosition="above">
+                    <mat-label>Is the student Divyang / Handicapped?</mat-label>
+                    <mat-select formControlName="isDivyang">
+                      <mat-option value="NO">No</mat-option>
+                      <mat-option value="YES">Yes</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  @if (!hasValue('academicGroup.divyangCode') && academicFormGroup().get('isDivyang')?.value === 'YES') {
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter the Divyang code only when the student is actually applicable under this category." matTooltipPosition="above">
                       <mat-label>Divyang Code (12)</mat-label>
                       <input matInput formControlName="divyangCode" />
                     </mat-form-field>
                   }
                   @if (!hasValue('academicGroup.mediumCode')) {
-                    <mat-form-field appearance="outline" class="w100">
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter the medium/language of instruction used for your studies." matTooltipPosition="above">
                       <mat-label>Medium / माध्यम (13)</mat-label>
                       <input matInput formControlName="mediumCode" />
                     </mat-form-field>
@@ -601,12 +555,22 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                 <h3 class="step-title">{{ examType() === 'backlog' ? 'Selected Subjects & Previous Marks / मागील गुण' : 'Subject Selection / विषय निवड' }}</h3>
                 <p class="step-desc">{{ examType() === 'backlog' ? 'Select your failed subjects and enter marks from previous exam (optional).' : 'Select your subjects. If your institute has already mapped subjects for your stream, only those subjects are shown here.' }}</p>
 
+                @if (examType() !== 'backlog') {
+                  <mat-card class="info-card requirement-card">
+                    <mat-icon class="info-icon">tips_and_updates</mat-icon>
+                    <div>
+                      <strong>Required subject mix</strong>
+                      <p>For regular applications, choose at least one <strong>Language</strong> and one <strong>Compulsory</strong> subject. The category is shown with each option.</p>
+                    </div>
+                  </mat-card>
+                }
+
                 @if (subjectSource() === 'institute') {
                   <mat-card class="info-card">
                     <mat-icon class="info-icon">verified</mat-icon>
                     <div>
                       <strong>Institute mapped subjects loaded</strong>
-                      <p>Only the subjects configured by your institute for this stream are shown. The answer language is auto-filled wherever the institute has already set it.</p>
+                      <p>The subjects configured by your institute are shown first, and any required common subjects for this stream are also available. Answer language is auto-filled wherever the institute has already set it.</p>
                     </div>
                   </mat-card>
                 } @else if (subjectSource() === 'stream') {
@@ -628,7 +592,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                 }
 
                 @if (subjectSource() !== 'institute') {
-                  <mat-form-field appearance="outline" class="subject-search">
+                  <mat-form-field appearance="outline" class="subject-search" matTooltip="Search only within the subjects available for the selected stream." matTooltipPosition="above">
                     <mat-label>Search Subject by name or code</mat-label>
                     <input matInput [value]="subjectSearch()" (input)="onSubjectSearch($event)" placeholder="e.g. English, PHY, Marathi" />
                   </mat-form-field>
@@ -638,22 +602,25 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                   <div class="subject-item-grid">
                     @for (idx of getSubjectIndices(); track idx) {
                       <div class="subject-input-group" [formGroup]="getSubjectFormGroup(idx)">
-                        <mat-form-field appearance="outline" class="flex-1">
+                        <mat-form-field appearance="outline" class="flex-1" matTooltip="Only subjects relevant to the selected stream are shown here." matTooltipPosition="above">
                           <mat-label>Subject / विषय (15)</mat-label>
                           <mat-select formControlName="subjectId" required (selectionChange)="onSubjectSelectionChange(idx)">
                             <mat-option value="">-- None --</mat-option>
-                            @for (s of filteredSubjects(); track s.id) {
-                              <mat-option [value]="s.id">{{ s.code }} - {{ s.name }}</mat-option>
+                            @for (s of getAvailableSubjectsForIndex(idx); track s.id) {
+                              <mat-option [value]="s.id">{{ s.code }} - {{ s.name }} ({{ s.category || 'General' }})</mat-option>
                             }
                           </mat-select>
+                          @if (getSubjectCategory(getSubjectFormGroup(idx).get('subjectId')?.value)) {
+                            <mat-hint>Category: {{ getSubjectCategory(getSubjectFormGroup(idx).get('subjectId')?.value) }}</mat-hint>
+                          }
                         </mat-form-field>
                         @if (examType() === 'backlog') {
-                          <mat-form-field appearance="outline" class="marks-field">
+                          <mat-form-field appearance="outline" class="marks-field" matTooltip="For backlog entries, type the marks obtained in the previous attempt." matTooltipPosition="above">
                             <mat-label>Prev. Marks / मागील गुण</mat-label>
                             <input matInput type="number" formControlName="marks" min="0" max="100" />
                           </mat-form-field>
                         } @else {
-                          <mat-form-field appearance="outline" class="w120">
+                          <mat-form-field appearance="outline" class="w120" matTooltip="Set the answer language only when it is not already locked by institute mapping." matTooltipPosition="above">
                             <mat-label>Answer Language / उत्तर भाषा</mat-label>
                             <input matInput formControlName="langOfAnsCode" [readonly]="isLanguageLocked(getSubjectFormGroup(idx).get('subjectId')?.value)" placeholder="Auto from institute" />
                             @if (isLanguageLocked(getSubjectFormGroup(idx).get('subjectId')?.value)) {
@@ -669,7 +636,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                   </div>
                 </div>
 
-                <button mat-stroked-button type="button" (click)="addSubject()" [disabled]="subjects().length >= 9 || !isEditable()" class="add-subject">
+                <button mat-stroked-button type="button" (click)="addSubject()" [disabled]="subjects().length >= 9 || !isEditable()" class="add-subject" matTooltip="Add another subject from the same stream list. Maximum 9 subjects." matTooltipPosition="above">
                   <mat-icon>add</mat-icon> Add Subject
                 </button>
 
@@ -749,6 +716,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                       @if (getSubjectFormGroup(idx).get('subjectId')?.value) {
                         <div class="subject-review-item">
                           <div class="subject-name">{{ getSubjectName(getSubjectFormGroup(idx).get('subjectId')?.value) }}</div>
+                          <div class="subject-category-text">{{ getSubjectCategory(getSubjectFormGroup(idx).get('subjectId')?.value) || 'General' }}</div>
                           @if (examType() === 'backlog' && getSubjectFormGroup(idx).get('marks')?.value) {
                             <div class="subject-marks">Previous Marks: {{ getSubjectFormGroup(idx).get('marks')?.value }}</div>
                           }
@@ -1079,6 +1047,12 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
       color: #0f172a;
     }
 
+    .subject-category-text {
+      font-size: 0.8rem;
+      color: #475569;
+      margin-top: 4px;
+    }
+
     .warning-card {
       background: #fef3c7;
       border-left: 4px solid #f59e0b;
@@ -1380,6 +1354,11 @@ export class StudentApplicationEditComponent implements OnInit {
       this.form.get('academicGroup.streamCode')?.valueChanges.subscribe((value: any) => {
         this.refreshSubjectOptions(value);
       });
+      this.form.get('academicGroup.isDivyang')?.valueChanges.subscribe((value: any) => {
+        if (value !== 'YES') {
+          this.form.get('academicGroup.divyangCode')?.setValue('', { emitEvent: false });
+        }
+      });
     }
 
     // Load exams list
@@ -1602,6 +1581,23 @@ export class StudentApplicationEditComponent implements OnInit {
     });
   }
 
+  getAvailableSubjectsForIndex(index: number): Subject[] {
+    const currentSubjectId = this.getSubjectFormGroup(index).get('subjectId')?.value;
+    const selectedIds = new Set(
+      this.getSubjectIndices()
+        .filter((idx) => idx !== index)
+        .map((idx) => this.getSubjectFormGroup(idx).get('subjectId')?.value)
+        .filter((id): id is number => typeof id === 'number' && id > 0)
+    );
+
+    return this.filteredSubjects().filter((subject) => subject.id === currentSubjectId || !selectedIds.has(subject.id));
+  }
+
+  getSubjectCategory(subjectId: number | null | undefined): string {
+    if (!subjectId) return '';
+    return this.masterSubjects().find((subject: Subject) => subject.id === subjectId)?.category || '';
+  }
+
   onSubjectSearch(event: Event) {
     const value = (event.target as HTMLInputElement | null)?.value ?? '';
     this.subjectSearch.set(value);
@@ -1691,6 +1687,7 @@ export class StudentApplicationEditComponent implements OnInit {
         streamCode: new FormControl(''),
         minorityReligionCode: new FormControl(''),
         categoryCode: new FormControl(''),
+        isDivyang: new FormControl('NO'),
         divyangCode: new FormControl(''),
         mediumCode: new FormControl('')
       }),
@@ -1761,7 +1758,7 @@ export class StudentApplicationEditComponent implements OnInit {
         gender: raw.personGroup.gender || undefined,
         minorityReligionCode: raw.academicGroup.minorityReligionCode || undefined,
         categoryCode: raw.academicGroup.categoryCode || undefined,
-        divyangCode: raw.academicGroup.divyangCode || undefined,
+        divyangCode: raw.academicGroup.isDivyang === 'YES' ? (raw.academicGroup.divyangCode || undefined) : undefined,
         mediumCode: raw.academicGroup.mediumCode || undefined
       },
       subjects: selectedSubjects.map((s: any) => ({
@@ -1881,6 +1878,7 @@ export class StudentApplicationEditComponent implements OnInit {
         streamCode: student.streamCode ?? '',
         minorityReligionCode: student.minorityReligionCode ?? '',
         categoryCode: student.categoryCode ?? '',
+        isDivyang: student.divyangCode ? 'YES' : 'NO',
         divyangCode: student.divyangCode ?? '',
         mediumCode: student.mediumCode ?? ''
       }
@@ -1948,6 +1946,7 @@ export class StudentApplicationEditComponent implements OnInit {
         streamCode: student?.streamCode ?? '',
         minorityReligionCode: student?.minorityReligionCode ?? '',
         categoryCode: student?.categoryCode ?? '',
+        isDivyang: student?.divyangCode ? 'YES' : 'NO',
         divyangCode: student?.divyangCode ?? '',
         mediumCode: student?.mediumCode ?? ''
       }
