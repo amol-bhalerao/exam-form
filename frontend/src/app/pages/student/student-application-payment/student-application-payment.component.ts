@@ -303,10 +303,10 @@ export class StudentApplicationPaymentComponent implements OnInit {
           return;
         }
 
-        if (response?.sandbox) {
+        if (response?.sandbox || response?.environment === 'sandbox') {
           this.loading.set(false);
           this.sandboxMode.set(true);
-          this.infoMessage.set(response?.message || 'Sandbox mode is active. Use the button below to simulate payment success.');
+          this.infoMessage.set(response?.message || 'Test payment mode is active. Use the button below to simulate payment success.');
           return;
         }
 

@@ -155,7 +155,11 @@ paymentsRouter.post('/initiate/:applicationId', requireAuth, requireRole(['STUDE
       amountPaise: feeAmount,
       amountRupees: feeAmount / 100,
       environment: CASHFREE_ENVIRONMENT,
-      status: 'PENDING'
+      sandbox: CASHFREE_ENVIRONMENT === 'sandbox',
+      status: 'PENDING',
+      message: CASHFREE_ENVIRONMENT === 'sandbox'
+        ? 'Test payment mode is active. Use Simulate Success to continue this sandbox flow.'
+        : undefined
     });
   } catch (err) {
     console.error('[payments] Cashfree error (falling back to sandbox):', err.message);
@@ -322,11 +326,14 @@ paymentsRouter.post('/sandbox/complete/:applicationId', requireAuth, requireRole
   const payment = await prisma.payment.findFirst({ where: { applicationId }, orderBy: { id: 'desc' } });
   if (!payment) return res.status(404).json({ error: 'PAYMENT_NOT_FOUND' });
 
-  const isSandboxPayment = String(payment.method || '').toUpperCase().includes('SANDBOX');
-  if (!isSandboxPayment) {
+  const paymentMethod = String(payment.method || '').toUpperCase();
+  const isSandboxPayment = paymentMethod.includes('SANDBOX');
+  const isSandboxEnvironment = CASHFREE_ENVIRONMENT === 'sandbox';
+
+  if (!isSandboxPayment && !isSandboxEnvironment) {
     return res.status(409).json({
       error: 'SANDBOX_NOT_AVAILABLE',
-      message: 'Simulated completion is only available for sandbox fallback payments.'
+      message: 'Simulated completion is only available when sandbox/test payment mode is enabled.'
     });
   }
 

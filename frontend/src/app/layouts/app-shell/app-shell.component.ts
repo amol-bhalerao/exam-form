@@ -449,8 +449,9 @@ import { API_BASE_URL } from '../../core/api';
 
     .mobile-toolbar .menu-toggle,
     .mobile-toolbar .logout-btn {
-      color: #1f2937;
-      background: #e0e7ff;
+      color: #000000;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
       border-radius: 10px;
     }
 
