@@ -285,22 +285,22 @@ import { BrandingService } from '../../../core/branding.service';
             </div>
 
             <div class="photo-sign-wrap">
-              <div class="photo-box signature-cell">
+              <div class="photo-box signature-cell candidate-photo-box">
                 @if (s().photoUrl) {
                   <img [src]="s().photoUrl" alt="Student photograph" class="asset-image photo-image" />
                 } @else {
-                  <span>PHOTO / छायाचित्र</span>
+                  <span class="placeholder-label">Student Photo / छायाचित्र</span>
                 }
               </div>
-              <div class="sign-box signature-cell">
+              <div class="sign-box signature-cell candidate-sign-box">
                 @if (s().signatureUrl) {
                   <img [src]="s().signatureUrl" alt="Student signature" class="asset-image signature-image" />
                 } @else {
-                  <span>Candidate Signature / उमेदवाराची सही</span>
+                  <span class="placeholder-label">Candidate Signature / उमेदवाराची सही</span>
                 }
               </div>
-              <div class="sign-box signature-cell"><span>Class Teacher / वर्गशिक्षक सही</span></div>
-              <div class="sign-box signature-cell"><span>Principal Seal & Signature / मुख्याध्यापक शिक्का व सही</span></div>
+              <div class="sign-box signature-cell teacher-sign-box"><span class="placeholder-label">Class Teacher / वर्गशिक्षक सही</span></div>
+              <div class="sign-box signature-cell principal-sign-box"><span class="placeholder-label">Principal Seal & Signature / मुख्याध्यापक शिक्का व सही</span></div>
             </div>
           </section>
 
@@ -333,24 +333,26 @@ import { BrandingService } from '../../../core/branding.service';
       .page {
         width: 210mm;
         min-height: 297mm;
-        margin: 8px auto 20px;
+        margin: 6px auto 14px;
         background: #fff;
         color: #000;
-        padding: 4.5mm;
+        padding: 3mm;
         box-sizing: border-box;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        overflow: visible;
       }
 
       .document-shell {
         min-height: 100%;
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 2px;
       }
 
       .official-sheet {
         border: 1.5px solid #000;
-        padding: 3px;
+        padding: 2.5mm;
+        box-sizing: border-box;
       }
 
       .document-header {
@@ -520,6 +522,8 @@ import { BrandingService } from '../../../core/branding.service';
 
       .section-card {
         padding: 0;
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
 
       .section-title {
@@ -646,8 +650,10 @@ import { BrandingService } from '../../../core/branding.service';
 
       .bottom-grid {
         display: grid;
-        grid-template-columns: 1.35fr 1.65fr;
+        grid-template-columns: 1.45fr 1.25fr;
         gap: 4px;
+        break-inside: avoid;
+        page-break-inside: avoid;
       }
 
       .declaration-box {
@@ -656,19 +662,41 @@ import { BrandingService } from '../../../core/branding.service';
 
       .declaration-box p {
         margin: 0;
-        font-size: 9px;
-        line-height: 1.45;
+        font-size: 8.7px;
+        line-height: 1.38;
       }
 
       .note-line {
         margin-top: 6px;
-        font-size: 9px;
+        font-size: 8.7px;
       }
 
       .photo-sign-wrap {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: 34mm 1fr 1fr;
+        grid-template-areas:
+          'photo candidate candidate'
+          'photo teacher principal';
         gap: 4px;
+        align-items: stretch;
+      }
+
+      .candidate-photo-box {
+        grid-area: photo;
+        min-height: 35mm;
+        align-items: center;
+      }
+
+      .candidate-sign-box {
+        grid-area: candidate;
+      }
+
+      .teacher-sign-box {
+        grid-area: teacher;
+      }
+
+      .principal-sign-box {
+        grid-area: principal;
       }
 
       .sign-box,
@@ -676,11 +704,22 @@ import { BrandingService } from '../../../core/branding.service';
         display: flex;
         align-items: flex-end;
         justify-content: center;
-        padding: 5px;
-        font-size: 8.5px;
+        padding: 4px;
+        font-size: 8px;
         font-weight: 700;
         text-align: center;
         overflow: hidden;
+        background: #fff;
+      }
+
+      .placeholder-label {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        padding: 2px;
+        line-height: 1.2;
       }
 
       .asset-image {
@@ -700,11 +739,11 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       .signature-cell {
-        min-height: 14mm;
+        min-height: 15mm;
       }
 
       .sign-box {
-        min-height: 14mm;
+        min-height: 15mm;
       }
 
       .document-footer {
@@ -745,9 +784,15 @@ import { BrandingService } from '../../../core/branding.service';
         }
 
         .grid-4,
-        .summary-strip,
+        .summary-strip {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
         .photo-sign-wrap {
           grid-template-columns: repeat(2, 1fr);
+          grid-template-areas:
+            'photo candidate'
+            'teacher principal';
         }
 
         .bottom-grid {
@@ -765,6 +810,14 @@ import { BrandingService } from '../../../core/branding.service';
         .summary-strip,
         .photo-sign-wrap {
           grid-template-columns: 1fr;
+        }
+
+        .photo-sign-wrap {
+          grid-template-areas:
+            'photo'
+            'candidate'
+            'teacher'
+            'principal';
         }
 
         .detail-item,
@@ -787,6 +840,7 @@ import { BrandingService } from '../../../core/branding.service';
       @media print {
         :host {
           background: #fff;
+          display: block;
         }
 
         .no-print {
@@ -794,15 +848,52 @@ import { BrandingService } from '../../../core/branding.service';
         }
 
         .page {
-          margin: 0;
+          width: 100%;
           min-height: auto;
+          margin: 0;
           padding: 0;
           box-shadow: none;
         }
 
         .official-sheet {
-          border: 0;
-          padding: 0;
+          border: 1.5px solid #000;
+          padding: 2.5mm;
+        }
+
+        .summary-strip {
+          grid-template-columns: repeat(4, 1fr) !important;
+        }
+
+        .grid-4 {
+          grid-template-columns: repeat(4, 1fr) !important;
+        }
+
+        .grid-3 {
+          grid-template-columns: repeat(3, 1fr) !important;
+        }
+
+        .bottom-grid {
+          grid-template-columns: 1.45fr 1.25fr !important;
+        }
+
+        .photo-sign-wrap {
+          grid-template-columns: 34mm 1fr 1fr !important;
+          grid-template-areas:
+            'photo candidate candidate'
+            'photo teacher principal' !important;
+        }
+
+        .section-card,
+        .summary-strip,
+        .bottom-grid,
+        .declaration-box,
+        .photo-sign-wrap,
+        .document-footer,
+        .subject-table tr,
+        .subject-table td,
+        .subject-table th {
+          break-inside: avoid;
+          page-break-inside: avoid;
         }
       }
     `

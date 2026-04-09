@@ -21,7 +21,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
       <div class="asset-preview" [class.signature-preview]="type === 'signature'">
         <ng-container *ngIf="previewUrl(); else placeholderTpl">
-          <img [src]="previewUrl()!" [alt]="title" />
+          <img [src]="previewUrl()!" [alt]="title" [class.signature-image]="type === 'signature'" />
         </ng-container>
         <ng-template #placeholderTpl>
           <div class="placeholder-state">
@@ -29,6 +29,11 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
             <span>{{ type === 'photo' ? 'Upload passport-size photo' : 'Upload clean signature' }}</span>
           </div>
         </ng-template>
+      </div>
+
+      <div class="asset-guidelines">
+        <span>{{ type === 'photo' ? 'Portrait crop • face centered' : 'Wide crop • full sign visible' }}</span>
+        <span>{{ type === 'photo' ? 'Plain light background' : 'Dark ink on white background' }}</span>
       </div>
 
       <div class="asset-meta" *ngIf="sizeLabel()">
@@ -60,6 +65,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       <div class="crop-panel" *ngIf="editorOpen()">
         <div class="crop-stage" [class.signature-stage]="type === 'signature'">
           <canvas #editorCanvas></canvas>
+          <div class="guide-frame" [class.signature-guide]="type === 'signature'"></div>
         </div>
 
         <div class="control-grid">
@@ -78,7 +84,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         </div>
 
         <p class="crop-note">
-          The image will be cropped and compressed automatically for hall-ticket use and disk-space saving.
+          Follow the guide frame while adjusting the image. It will be saved in the correct hall-ticket shape and compressed automatically.
         </p>
 
         <div class="editor-actions">
@@ -157,6 +163,28 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       display: block;
     }
 
+    .signature-image {
+      object-fit: contain !important;
+      padding: 0.35rem;
+      background: #fff;
+    }
+
+    .asset-guidelines {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.6rem;
+    }
+
+    .asset-guidelines span {
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      background: #eef4ff;
+      color: #334155;
+      font-size: 0.74rem;
+      font-weight: 600;
+    }
+
     .placeholder-state {
       display: flex;
       flex-direction: column;
@@ -204,6 +232,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     }
 
     .crop-stage {
+      position: relative;
       width: 100%;
       height: 240px;
       border-radius: 12px;
@@ -222,6 +251,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       width: 100%;
       height: 100%;
       display: block;
+    }
+
+    .guide-frame {
+      position: absolute;
+      inset: 14px;
+      border: 2px solid rgba(37, 99, 235, 0.6);
+      border-radius: 14px;
+      box-shadow: 0 0 0 999px rgba(15, 23, 42, 0.08);
+      pointer-events: none;
+    }
+
+    .signature-guide {
+      inset: 26px 18px;
+      border-radius: 10px;
     }
 
     .control-grid {
@@ -331,6 +374,15 @@ export class StudentImageUploadComponent implements OnChanges {
     reader.onload = () => {
       const image = new Image();
       image.onload = () => {
+        const { width: minWidth, height: minHeight } = this.getMinimumDimensions();
+        if (image.width < minWidth || image.height < minHeight) {
+          this.error.set(`Please upload a clearer ${this.type === 'photo' ? 'photo' : 'signature'} of at least ${minWidth}×${minHeight} pixels.`);
+          if (this.fileInput?.nativeElement) {
+            this.fileInput.nativeElement.value = '';
+          }
+          return;
+        }
+
         this.sourceImage = image;
         this.zoom = 1;
         this.offsetX = 0;
@@ -406,7 +458,15 @@ export class StudentImageUploadComponent implements OnChanges {
     this.previewUrl.set(null);
     this.sizeLabel.set('');
     this.error.set(null);
+    this.editorOpen.set(false);
+    this.sourceImage = null;
     this.removed.emit(this.type);
+  }
+
+  private getMinimumDimensions(): { width: number; height: number } {
+    return this.type === 'photo'
+      ? { width: 180, height: 220 }
+      : { width: 240, height: 80 };
   }
 
   private async exportCompressedImage(): Promise<{ dataUrl: string; sizeKB: number }> {
