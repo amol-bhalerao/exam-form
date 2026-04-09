@@ -384,15 +384,16 @@ export class StudentProfileService {
       this.http.post<{ ok: boolean; type: string; url: string; sizeKB: number; student: StudentProfile }>(`${API_BASE_URL}/students/me/assets/${type}`, { dataUrl }).subscribe({
         next: (response) => {
           const current = this.studentProfile() || ({} as StudentProfile);
+          const cacheBustedUrl = `${response.url}${response.url.includes('?') ? '&' : '?'}v=${Date.now()}`;
           const updatedProfile = {
             ...current,
             ...response.student,
-            photoUrl: type === 'photo' ? response.url : (response.student?.photoUrl ?? current.photoUrl ?? null),
-            signatureUrl: type === 'signature' ? response.url : (response.student?.signatureUrl ?? current.signatureUrl ?? null)
+            photoUrl: type === 'photo' ? cacheBustedUrl : (response.student?.photoUrl ?? current.photoUrl ?? null),
+            signatureUrl: type === 'signature' ? cacheBustedUrl : (response.student?.signatureUrl ?? current.signatureUrl ?? null)
           } as StudentProfile;
           this.studentProfile.set(updatedProfile);
           this.isLoading.set(false);
-          resolve({ ok: true, url: response.url, student: updatedProfile, sizeKB: response.sizeKB });
+          resolve({ ok: true, url: cacheBustedUrl, student: updatedProfile, sizeKB: response.sizeKB });
         },
         error: (err: any) => {
           const errorMsg = err?.error?.error || err?.error?.message || `Failed to upload ${type}. Please try again.`;

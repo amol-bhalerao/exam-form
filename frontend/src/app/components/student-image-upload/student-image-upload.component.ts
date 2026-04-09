@@ -19,17 +19,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
         <span class="size-badge">≤ {{ maxSizeKB }} KB</span>
       </div>
 
-      <div class="asset-preview" [class.signature-preview]="type === 'signature'">
-        <ng-container *ngIf="previewUrl(); else placeholderTpl">
+      <ng-container *ngIf="previewUrl(); else uploadHintTpl">
+        <div class="asset-preview" [class.signature-preview]="type === 'signature'">
           <img [src]="previewUrl()!" [alt]="title" [class.signature-image]="type === 'signature'" />
-        </ng-container>
-        <ng-template #placeholderTpl>
+        </div>
+      </ng-container>
+
+      <ng-template #uploadHintTpl>
+        <div class="upload-empty-state" [class.signature-empty-state]="type === 'signature'">
           <div class="placeholder-state">
             <mat-icon>{{ type === 'photo' ? 'account_box' : 'draw' }}</mat-icon>
-            <span>{{ type === 'photo' ? 'Upload passport-size photo' : 'Upload clean signature' }}</span>
+            <span>{{ type === 'photo' ? 'फोटो अपलोड झाल्यावर येथे दिसेल' : 'स्वाक्षरी अपलोड झाल्यावर येथे दिसेल' }}</span>
           </div>
-        </ng-template>
-      </div>
+        </div>
+      </ng-template>
 
       <div class="asset-guidelines">
         <span>{{ type === 'photo' ? 'Portrait crop • face centered' : 'Wide crop • full sign visible' }}</span>
@@ -51,12 +54,12 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
         <button mat-raised-button color="primary" type="button" (click)="openPicker()" [disabled]="processing() || saving">
           <mat-icon>{{ previewUrl() ? 'edit' : 'upload' }}</mat-icon>
-          {{ previewUrl() ? 'Edit' : 'Upload' }}
+          {{ previewUrl() ? 'बदला' : 'अपलोड करा' }}
         </button>
 
         <button mat-stroked-button type="button" *ngIf="previewUrl()" (click)="removeExisting()" [disabled]="processing() || saving">
           <mat-icon>delete</mat-icon>
-          Remove
+          काढा
         </button>
       </div>
 
@@ -154,6 +157,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
     .signature-preview {
       height: 110px;
+    }
+
+    .upload-empty-state {
+      min-height: 132px;
+      border: 1.5px dashed #bfd5ff;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%);
+      display: grid;
+      place-items: center;
+      padding: 0.75rem;
+    }
+
+    .signature-empty-state {
+      min-height: 92px;
     }
 
     .asset-preview img {
@@ -346,7 +363,7 @@ export class StudentImageUploadComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['imageUrl']) {
-      this.previewUrl.set(this.imageUrl || null);
+      this.previewUrl.set(this.imageUrl || this.previewUrl() || null);
     }
   }
 
@@ -443,6 +460,7 @@ export class StudentImageUploadComponent implements OnChanges {
       this.previewUrl.set(result.dataUrl);
       this.sizeLabel.set(`${result.sizeKB.toFixed(1)} KB`);
       this.editorOpen.set(false);
+      this.sourceImage = null;
       this.saved.emit({ type: this.type, dataUrl: result.dataUrl, sizeKB: result.sizeKB });
     } catch (error: any) {
       this.error.set(error?.message || 'Unable to optimize this image. Please try a different file.');

@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, FormControl } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors, FormControl, FormGroupDirective, NgForm } from '@angular/forms';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -9,7 +9,7 @@ import { MatFormFieldModule, MAT_FORM_FIELD_DEFAULT_OPTIONS } from '@angular/mat
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { MatNativeDateModule, ErrorStateMatcher } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -32,6 +32,12 @@ import { AuthService } from '../../core/auth.service';
 import { API_BASE_URL } from '../../core/api';
 import { StudentImageUploadComponent } from '../../components/student-image-upload/student-image-upload.component';
 
+class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
+  isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
+    return !!(control && control.invalid && (control.touched || control.dirty));
+  }
+}
+
 @Component({
   selector: 'app-student-profile',
   standalone: true,
@@ -39,6 +45,10 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
     {
       provide: MAT_FORM_FIELD_DEFAULT_OPTIONS,
       useValue: { appearance: 'outline', floatLabel: 'always' }
+    },
+    {
+      provide: ErrorStateMatcher,
+      useValue: new TouchedOnlyErrorStateMatcher()
     }
   ],
   imports: [
@@ -68,29 +78,41 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
   ],
   template: `
     <div class="student-profile-container">
+      <div class="profile-header mobile-app-header">
+        <div class="header-main">
+          <span class="hero-badge">विद्यार्थी प्रोफाइल</span>
+          <h1>माहिती भरा / Student Profile</h1>
+          <p class="form-info">मोबाईलवरून सहज माहिती भरा. अधिक माहिती पाहण्यासाठी <strong>i</strong> बटण वापरा.</p>
+        </div>
+        <button mat-stroked-button type="button" class="header-help-btn" (click)="openInstructionsPopup()">
+          <mat-icon>info</mat-icon>
+          सूचना
+        </button>
+      </div>
+
       <div class="profile-progress-strip">
         <div class="progress-strip-top">
           <div>
-            <div class="progress-strip-label">Student Profile Status</div>
+            <div class="progress-strip-label">विद्यार्थी प्रोफाइल स्थिती</div>
             <div class="progress-strip-meta">
-              <span>{{ profileCompletionCount }}/{{ totalProfileFields }} fields completed</span>
+              <span>{{ profileCompletionCount }}/{{ totalProfileFields }} माहिती पूर्ण</span>
               <strong>{{ profileCompletionPercentage }}%</strong>
             </div>
           </div>
 
           <button mat-stroked-button type="button" class="instructions-trigger" (click)="openInstructionsPopup()">
             <mat-icon>info</mat-icon>
-            How to Fill
+            कसे भरावे
           </button>
         </div>
 
         <mat-progress-bar mode="determinate" [value]="profileCompletionPercentage" color="accent"></mat-progress-bar>
 
         <p class="progress-strip-note" *ngIf="profileCompletionPercentage < 100">
-          Complete the remaining details to make exam application submission smoother.
+          उरलेली माहिती पूर्ण केल्यास अर्ज भरणे अधिक सोपे होईल.
         </p>
         <p class="progress-strip-note success" *ngIf="profileCompletionPercentage === 100">
-          Your profile is complete and ready for exam application.
+          तुमची प्रोफाइल पूर्ण झाली आहे. आता तुम्ही अर्ज भरू शकता.
         </p>
       </div>
 
@@ -98,8 +120,8 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
         <div class="instructions-popup" role="dialog" aria-modal="true" aria-labelledby="profileInstructionsTitle">
           <div class="popup-header">
             <div>
-              <h2 id="profileInstructionsTitle">Before filling the student profile</h2>
-              <p>Read these points once, then continue with your form.</p>
+              <h2 id="profileInstructionsTitle">प्रोफाइल भरण्यापूर्वी सूचना</h2>
+              <p>खालील मुद्दे एकदा वाचा आणि मगच माहिती भरा.</p>
             </div>
             <button mat-icon-button type="button" (click)="closeInstructionsPopup()" aria-label="Close instructions popup">
               <mat-icon>close</mat-icon>
@@ -108,17 +130,36 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
 
           <div class="popup-body">
             <ul>
-              <li>Enter all name fields in <strong>ENGLISH CAPITAL LETTERS ONLY</strong>.</li>
-              <li>Make sure your details match Aadhaar, SSC certificate, and other official records.</li>
-              <li>Check spellings carefully before saving.</li>
-              <li>Use an active mobile number for exam-related updates.</li>
-              <li>Keep institute, stream, and previous exam details ready before starting.</li>
+              <li>नावाची सर्व माहिती <strong>ENGLISH CAPITAL LETTERS</strong> मध्ये भरा.</li>
+              <li>आधार, SSC प्रमाणपत्र आणि इतर कागदपत्रांप्रमाणेच माहिती भरा.</li>
+              <li>माहिती जतन करण्यापूर्वी स्पेलिंग आणि क्रमांक तपासा.</li>
+              <li>सक्रिय मोबाईल क्रमांक वापरा.</li>
+              <li>महाविद्यालय, शाखा आणि मागील परीक्षेची माहिती जवळ ठेवा.</li>
             </ul>
           </div>
 
           <div class="popup-actions">
-            <button mat-stroked-button type="button" (click)="closeInstructionsPopup(true)">Don't show again</button>
-            <button mat-raised-button color="primary" type="button" (click)="closeInstructionsPopup()">Continue</button>
+            <button mat-stroked-button type="button" (click)="closeInstructionsPopup(true)">पुन्हा दाखवू नका</button>
+            <button mat-raised-button color="primary" type="button" (click)="closeInstructionsPopup()">ठीक आहे</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="instructions-popup-backdrop" *ngIf="showInfoPopup">
+        <div class="instructions-popup info-popup" role="dialog" aria-modal="true" aria-labelledby="sectionInfoTitle">
+          <div class="popup-header">
+            <div>
+              <h2 id="sectionInfoTitle">{{ infoPopupTitle }}</h2>
+            </div>
+            <button mat-icon-button type="button" (click)="closeInfoPopup()" aria-label="Close info popup">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          <div class="popup-body info-popup-body">{{ infoPopupText }}</div>
+
+          <div class="popup-actions">
+            <button mat-raised-button color="primary" type="button" (click)="closeInfoPopup()">समजले</button>
           </div>
         </div>
       </div>
@@ -127,7 +168,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
       <div class="loading-overlay" *ngIf="isLoading">
         <div class="spinner-wrapper">
           <mat-spinner diameter="50"></mat-spinner>
-          <p>Loading your profile...</p>
+          <p>तुमची प्रोफाइल लोड होत आहे...</p>
         </div>
       </div>
 
@@ -135,11 +176,11 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
       <div class="error-banner" *ngIf="error && error.includes('institute') && !isLoading" style="background-color: #fff3cd; border-left-color: #ff9800;">
         <mat-icon style="color: #ff9800;">info</mat-icon>
         <div class="error-content">
-          <h3 style="color: #ff9800;">Institute Selection Required</h3>
+          <h3 style="color: #ff9800;">महाविद्यालय निवड आवश्यक</h3>
           <p>{{ error }}</p>
           <button mat-raised-button color="primary" routerLink="/student/select-institute">
             <mat-icon>school</mat-icon>
-            Select Institute & Stream
+            महाविद्यालय व शाखा निवडा
           </button>
         </div>
       </div>
@@ -148,11 +189,11 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
       <div class="error-banner" *ngIf="error && !error.includes('institute') && !isLoading">
         <mat-icon>error_outline</mat-icon>
         <div class="error-content">
-          <h3>Unable to Load Profile</h3>
+          <h3>प्रोफाइल लोड करता आली नाही</h3>
           <p>{{ error }}</p>
           <button mat-stroked-button (click)="retryLoadProfile()">
             <mat-icon>refresh</mat-icon>
-            Retry
+            पुन्हा प्रयत्न करा
           </button>
         </div>
       </div>
@@ -168,34 +209,44 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>school</mat-icon>
-              <span>Institute & Stream</span>
+              <span class="tab-title">महाविद्यालय</span>
             </ng-template>
 
             <div class="form-section">
               <div class="form-card">
-                <h3 class="card-title">Institute & Stream Selection</h3>
-                <p class="card-subtitle">Select your institute and academic stream</p>
+                <div class="card-title-row">
+                  <h3 class="card-title">महाविद्यालय व शाखा निवड</h3>
+                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('महाविद्यालय व शाखा निवड', 'आपले महाविद्यालय शोधून निवडा. त्यानंतर योग्य शाखा निवडून जतन करा.')">
+                    <mat-icon>info_outline</mat-icon>
+                  </button>
+                </div>
 
                 <div class="form-grid-2">
                   <mat-form-field class="example-full-width">
-                    <mat-label>Institute</mat-label>
+                    <mat-label>महाविद्यालय</mat-label>
                     <input 
                     type="text" 
                     matInput 
                     [formControl]="selectedInstitute" 
-                    [matAutocomplete]="instituteAuto">
-                    <mat-autocomplete #instituteAuto="matAutocomplete" [displayWith]="displayInstituteName.bind(this)" (optionSelected)="onInstituteAutocompleteSelected($event)">
+                    [matAutocomplete]="instituteAuto"
+                    placeholder="महाविद्यालयाचे नाव टाइप करा">
+                    <mat-autocomplete class="student-institute-autocomplete" #instituteAuto="matAutocomplete" [displayWith]="displayInstituteName.bind(this)" (optionSelected)="onInstituteAutocompleteSelected($event)">
                       @for (inst of getFilteredInstitutes() | async; track inst) {
-                        <mat-option [value]="inst">{{inst.name}}</mat-option>
+                        <mat-option [value]="inst" class="institute-option">
+                          <div class="institute-option-content">
+                            <div class="institute-option-title">{{ inst.name }}</div>
+                            <div class="institute-option-meta">{{ inst.code || 'Code N/A' }}<span *ngIf="inst.city"> • {{ inst.city }}</span></div>
+                          </div>
+                        </mat-option>
                       }
                     </mat-autocomplete>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Stream *</mat-label>
+                    <mat-label>शाखा *</mat-label>
                     <mat-icon matPrefix>layers</mat-icon>
-                    <mat-select [(ngModel)]="selectedStreamCode" required>
-                      <mat-option value="">- Select Stream -</mat-option>
+                    <mat-select [(ngModel)]="selectedStreamCode" required panelClass="student-profile-select-panel">
+                      <mat-option value="">- शाखा निवडा -</mat-option>
                       <mat-option *ngFor="let stream of streams" [value]="stream.name">
                         {{ stream.name }}
                       </mat-option>
@@ -209,18 +260,18 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
                           [disabled]="!selectedInstituteId || !selectedStreamCode || savingInstitute">
                     <mat-icon *ngIf="!savingInstitute">check_circle</mat-icon>
                     <mat-spinner *ngIf="savingInstitute" diameter="20"></mat-spinner>
-                    <span *ngIf="!savingInstitute">{{ profile?.instituteId ? 'Update' : 'Save' }} Institute & Stream</span>
-                    <span *ngIf="savingInstitute">Saving...</span>
+                    <span *ngIf="!savingInstitute">{{ profile?.instituteId ? 'महाविद्यालय अद्यतनित करा' : 'महाविद्यालय जतन करा' }}</span>
+                    <span *ngIf="savingInstitute">जतन करत आहे...</span>
                   </button>
 
                   <button mat-stroked-button type="button" (click)="goToNextTab(1)" [disabled]="!profile?.instituteId && !selectedInstituteId">
-                    Next
+                    पुढे
                     <mat-icon>arrow_forward</mat-icon>
                   </button>
                   
                   <div class="institute-info" *ngIf="profile?.instituteId">
                     <mat-icon>check_circle</mat-icon>
-                    <span>Current: {{ getInstituteLabel(profile.instituteId) }} • {{ profile.streamCode }}</span>
+                    <span>सध्याची निवड: {{ getInstituteLabel(profile.instituteId) }} • {{ profile.streamCode }}</span>
                   </div>
                 </div>
               </div>
@@ -231,7 +282,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>person</mat-icon>
-              <span>Personal Details</span>
+              <span class="tab-title">वैयक्तिक माहिती</span>
             </ng-template>
 
             <form [formGroup]="personalDetailsForm" class="form-section">
@@ -259,24 +310,29 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
 
               <!-- CANDIDATE IDENTIFICATION -->
               <div class="form-card">
-                <h3 class="card-title">Candidate Identification</h3>
+                <div class="card-title-row">
+                  <h3 class="card-title">विद्यार्थ्याची ओळख माहिती</h3>
+                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('विद्यार्थ्याची ओळख माहिती', 'नाव, आईचे नाव, जन्मतारीख, लिंग आणि मोबाईल क्रमांक शैक्षणिक कागदपत्रांप्रमाणे भरा.')">
+                    <mat-icon>info_outline</mat-icon>
+                  </button>
+                </div>
                 <div class="form-grid-3">
                   <mat-form-field class="form-field">
-                    <mat-label>Last Name / Surname *</mat-label>
+                    <mat-label>आडनाव / Surname *</mat-label>
                     <mat-icon matPrefix>person</mat-icon>
                     <input matInput formControlName="lastName" required />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'lastName') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Candidate's Name (First Name) *</mat-label>
+                    <mat-label>विद्यार्थ्याचे नाव / First Name *</mat-label>
                     <mat-icon matPrefix>person</mat-icon>
                     <input matInput formControlName="firstName" required />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'firstName') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Middle / Father's Name</mat-label>
+                    <mat-label>वडिलांचे / मधले नाव</mat-label>
                     <mat-icon matPrefix>person</mat-icon>
                     <input matInput formControlName="middleName" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'middleName') }}</mat-error>
@@ -285,14 +341,14 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
 
                 <div class="form-grid-2">
                   <mat-form-field class="form-field">
-                    <mat-label>Mother's Name *</mat-label>
+                    <mat-label>आईचे नाव *</mat-label>
                     <mat-icon matPrefix>family_restroom</mat-icon>
                     <input matInput formControlName="motherName" required />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'motherName') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Date of Birth (DD/MM/YYYY) *</mat-label>
+                    <mat-label>जन्मतारीख (DD/MM/YYYY) *</mat-label>
                     <mat-icon matPrefix>cake</mat-icon>
                     <input matInput formControlName="dateOfBirth" [matDatepicker]="picker" />
                     <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
@@ -303,10 +359,10 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
 
                 <div class="form-grid-2">
                   <mat-form-field class="form-field">
-                    <mat-label>Gender *</mat-label>
+                    <mat-label>लिंग *</mat-label>
                     <mat-icon matPrefix>wc</mat-icon>
                     <mat-select formControlName="gender" required>
-                      <mat-option value="">- Select Gender -</mat-option>
+                      <mat-option value="">- लिंग निवडा -</mat-option>
                       <mat-option value="Male">Male</mat-option>
                       <mat-option value="Female">Female</mat-option>
                       <mat-option value="Other">Other</mat-option>
@@ -316,21 +372,21 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Aadhar Number</mat-label>
+                    <mat-label>आधार क्रमांक</mat-label>
                     <mat-icon matPrefix>badge</mat-icon>
                     <input matInput formControlName="aadharNumber" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'aadharNumber') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>APAAR ID (12-digit)</mat-label>
+                    <mat-label>APAAR आयडी (12 अंकी)</mat-label>
                     <mat-icon matPrefix>verified_user</mat-icon>
                     <input matInput formControlName="apaarId" placeholder="e.g., APAAR123456" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'apaarId') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Student Saral ID</mat-label>
+                    <mat-label>विद्यार्थी सरल आयडी</mat-label>
                     <mat-icon matPrefix>badge</mat-icon>
                     <input matInput formControlName="studentSaralId" placeholder="Enter Student Saral ID" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'studentSaralId') }}</mat-error>
@@ -339,36 +395,41 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
 
                 <div class="form-grid-2">
                   <mat-form-field class="form-field">
-                    <mat-label>Mobile Number *</mat-label>
+                    <mat-label>मोबाईल क्रमांक *</mat-label>
                     <mat-icon matPrefix>phone</mat-icon>
                     <input matInput formControlName="mobile" required />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'mobile') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Login Email (Google)</mat-label>
+                    <mat-label>लॉगिन ईमेल (Google)</mat-label>
                     <mat-icon matPrefix>email</mat-icon>
                     <input matInput [value]="profile?.email || auth.user()?.username || ''" readonly />
-                    <mat-hint>This email is automatically taken from your Google sign-in.</mat-hint>
+                    <mat-hint>हा ईमेल तुमच्या Google लॉगिनमधून आपोआप घेतला जातो.</mat-hint>
                   </mat-form-field>
                 </div>
               </div>
 
               <!-- ADDRESS DETAILS -->
               <div class="form-card">
-                <h3 class="card-title">Address Details</h3>
+                <div class="card-title-row">
+                  <h3 class="card-title">पत्ता माहिती</h3>
+                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('पत्ता माहिती', 'पूर्ण पत्ता, पिनकोड, जिल्हा, तालुका आणि गावाची माहिती अचूक भरा. पिनकोड टाकल्यास काही माहिती आपोआप भरेल.')">
+                    <mat-icon>info_outline</mat-icon>
+                  </button>
+                </div>
                 
                 <mat-form-field class="form-field-full">
-                  <mat-label>Complete Address *</mat-label>
+                  <mat-label>संपूर्ण पत्ता *</mat-label>
                   <mat-icon matPrefix>location_on</mat-icon>
                   <textarea matInput formControlName="addressLineOne" rows="3" required></textarea>
-                  <mat-hint>Enter full address in one field.</mat-hint>
+                  <mat-hint>पूर्ण पत्ता एका ठिकाणी भरा.</mat-hint>
                   <mat-error>{{ getErrorMessage(personalDetailsForm, 'addressLineOne') }}</mat-error>
                 </mat-form-field>
 
                 <div class="form-grid-4">
                   <mat-form-field class="form-field">
-                    <mat-label>Pincode *</mat-label>
+                    <mat-label>पिनकोड *</mat-label>
                     <mat-icon matPrefix>location_on</mat-icon>
                     <input matInput 
                            formControlName="pincode" 
@@ -400,28 +461,28 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>District</mat-label>
+                    <mat-label>जिल्हा</mat-label>
                     <mat-icon matPrefix>public</mat-icon>
                     <input matInput formControlName="district" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'district') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Taluka</mat-label>
+                    <mat-label>तालुका</mat-label>
                     <mat-icon matPrefix>public</mat-icon>
                     <input matInput formControlName="taluka" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'taluka') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Revenue Circle</mat-label>
+                    <mat-label>महसूल मंडळ</mat-label>
                     <mat-icon matPrefix>public</mat-icon>
                     <input matInput formControlName="revenueCircle" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'revenueCircle') }}</mat-error>
                   </mat-form-field>
 
                   <mat-form-field class="form-field form-full-width">
-                    <mat-label>Village</mat-label>
+                    <mat-label>गाव</mat-label>
                     <mat-icon matPrefix>public</mat-icon>
                     <input matInput formControlName="village" />
                     <mat-error>{{ getErrorMessage(personalDetailsForm, 'village') }}</mat-error>
@@ -431,12 +492,16 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
 
               <!-- DEMOGRAPHICS & PERSONAL INFORMATION -->
               <div class="form-card">
-                <h3 class="card-title">Demographics & Personal Information</h3>
-                <p class="card-subtitle">Category, Minority Religion, Medium of Study</p>
+                <div class="card-title-row">
+                  <h3 class="card-title">वैयक्तिक व सामाजिक माहिती</h3>
+                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('वैयक्तिक व सामाजिक माहिती', 'प्रवर्ग, अल्पसंख्याक धर्म आणि शिक्षणाचे माध्यम लागू असल्यासच निवडा.')">
+                    <mat-icon>info_outline</mat-icon>
+                  </button>
+                </div>
                 
                 <div class="form-grid-3">
                   <mat-form-field class="form-field">
-                    <mat-label>Category</mat-label>
+                    <mat-label>प्रवर्ग</mat-label>
                     <mat-icon matPrefix>group</mat-icon>
                     <mat-select formControlName="categoryCode">
                       <mat-option value="">-- Select Category --</mat-option>
@@ -450,7 +515,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Minority Religion</mat-label>
+                    <mat-label>अल्पसंख्याक धर्म</mat-label>
                     <mat-icon matPrefix>people</mat-icon>
                     <mat-select formControlName="minorityReligionCode">
                       <mat-option value="">-- Select Minority Religion --</mat-option>
@@ -465,7 +530,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
                   </mat-form-field>
 
                   <mat-form-field class="form-field">
-                    <mat-label>Medium of Study</mat-label>
+                    <mat-label>शिक्षणाचे माध्यम</mat-label>
                     <mat-icon matPrefix>language</mat-icon>
                     <mat-select formControlName="mediumCode">
                       <mat-option value="">-- Select Medium of Study --</mat-option>
@@ -487,8 +552,8 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
                 <button mat-raised-button color="primary" (click)="savePersonalDetails()" [disabled]="personalDetailsForm.invalid || savingPersonal">
                   <mat-icon *ngIf="!savingPersonal">save</mat-icon>
                   <mat-spinner *ngIf="savingPersonal" diameter="20"></mat-spinner>
-                  <span *ngIf="!savingPersonal">Save / Update Personal Details</span>
-                  <span *ngIf="savingPersonal">Saving...</span>
+                  <span *ngIf="!savingPersonal">वैयक्तिक माहिती जतन करा</span>
+                  <span *ngIf="savingPersonal">जतन करत आहे...</span>
                 </button>
                 <button mat-stroked-button type="button" (click)="goToNextTab(2)">
                   Next
@@ -502,14 +567,18 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>history</mat-icon>
-              <span>Previous Exams</span>
+              <span class="tab-title">मागील परीक्षा</span>
             </ng-template>
 
             <form [formGroup]="previousExamForm" class="form-section">
               <!-- SSC EXAMINATION -->
               <div class="form-card">
-                <h3 class="card-title">SSC Examination Details</h3>
-                <p class="card-subtitle">Fill details of your last SSC exam attempt</p>
+                <div class="card-title-row">
+                  <h3 class="card-title">SSC परीक्षा तपशील</h3>
+                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('SSC परीक्षा तपशील', 'तुमच्या शेवटच्या SSC परीक्षेचे आसन क्रमांक, महिना, वर्ष आणि बोर्ड तपशील येथे भरा.')">
+                    <mat-icon>info_outline</mat-icon>
+                  </button>
+                </div>
 
                 <div class="form-grid-4">
                   <mat-form-field class="form-field">
@@ -556,8 +625,12 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
 
               <!-- XIth EXAMINATION -->
               <div class="form-card">
-                <h3 class="card-title">XIth Examination Details</h3>
-                <p class="card-subtitle">Fill details of your XIth exam (if applicable)</p>
+                <div class="card-title-row">
+                  <h3 class="card-title">इयत्ता ११ वी परीक्षा तपशील</h3>
+                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('इयत्ता ११ वी परीक्षा तपशील', '११ वी संबंधित माहिती लागू असल्यास येथे भरा. ही माहिती अर्ज पडताळणीसाठी उपयुक्त ठरते.')">
+                    <mat-icon>info_outline</mat-icon>
+                  </button>
+                </div>
 
                 <div class="form-grid-4">
                   <mat-form-field class="form-field">
@@ -610,8 +683,8 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
                 <button mat-raised-button color="primary" (click)="savePreviousExams()" [disabled]="savingPrevious">
                   <mat-icon *ngIf="!savingPrevious">save</mat-icon>
                   <mat-spinner *ngIf="savingPrevious" diameter="20"></mat-spinner>
-                  <span *ngIf="!savingPrevious">Save / Update Previous Exams</span>
-                  <span *ngIf="savingPrevious">Saving...</span>
+                  <span *ngIf="!savingPrevious">मागील परीक्षा तपशील जतन करा</span>
+                  <span *ngIf="savingPrevious">जतन करत आहे...</span>
                 </button>
                 <button mat-stroked-button type="button" (click)="goToNextTab(3)">
                   Next
@@ -625,14 +698,18 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>account_balance</mat-icon>
-              <span>Bank Details</span>
+              <span class="tab-title">बँक तपशील</span>
             </ng-template>
 
             <form [formGroup]="bankDetailsForm" class="form-section">
               <!-- BANK ACCOUNT DETAILS -->
               <div class="form-card">
-                <h3 class="card-title">Bank Account Information</h3>
-                <p class="card-subtitle">For exam fee payment if applicable</p>
+                <div class="card-title-row">
+                  <h3 class="card-title">बँक खाते माहिती</h3>
+                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('बँक खाते माहिती', 'परीक्षा शुल्क परतावा किंवा संबंधित प्रक्रियेसाठी आवश्यक असल्यास खातेधारक, IFSC आणि खाते क्रमांक भरा.')">
+                    <mat-icon>info_outline</mat-icon>
+                  </button>
+                </div>
                 
                 <div class="form-grid-2">
                   <mat-form-field class="form-field">
@@ -680,8 +757,8 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
                 <button mat-raised-button color="primary" (click)="saveBankDetails()" [disabled]="bankDetailsForm.invalid || savingBank">
                   <mat-icon *ngIf="!savingBank">save</mat-icon>
                   <mat-spinner *ngIf="savingBank" diameter="20"></mat-spinner>
-                  <span *ngIf="!savingBank">Save / Update Bank Details</span>
-                  <span *ngIf="savingBank">Saving...</span>
+                  <span *ngIf="!savingBank">बँक तपशील जतन करा</span>
+                  <span *ngIf="savingBank">जतन करत आहे...</span>
                 </button>
                 <button mat-stroked-button type="button" (click)="goToNextTab(4)">
                   Next
@@ -695,7 +772,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
           <mat-tab>
             <ng-template mat-tab-label>
               <mat-icon>summarize</mat-icon>
-              <span>Summary</span>
+              <span class="tab-title">सारांश</span>
             </ng-template>
 
             <div class="summary-content">
@@ -852,7 +929,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
 
                   <div class="summary-actions">
                     <mat-icon class="success-icon">check_circle</mat-icon>
-                    <p class="summary-message">Your profile is complete and ready for exam application submission.</p>
+                    <p class="summary-message">तुमची प्रोफाइल पूर्ण झाली आहे आणि अर्ज सादर करण्यासाठी तयार आहे.</p>
                   </div>
                 </mat-card-content>
               </mat-card>
@@ -917,9 +994,41 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
       background: white;
       padding: var(--spacing-sm);
       border-radius: var(--border-radius);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.14);
+      animation: fadeInUp 0.45s ease-out;
     }
 
+    .mobile-app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: var(--spacing-sm);
+      text-align: left;
+      background: linear-gradient(135deg, #ffffff 0%, #f3f7ff 100%);
+      border: 1px solid rgba(102, 126, 234, 0.15);
+    }
+
+    .header-main {
+      min-width: 0;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(102, 126, 234, 0.12);
+      color: var(--primary-color);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      margin-bottom: 0.55rem;
+    }
+
+    .header-help-btn {
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
     .board-header {
       border-bottom: 2px solid var(--primary-color);
       padding-bottom: var(--spacing-sm);
@@ -1050,6 +1159,18 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
       font-size: clamp(0.75rem, 2vw, 0.95rem) !important;
     }
 
+    ::ng-deep .profile-tabs .mdc-tab__content {
+      gap: 0.45rem;
+    }
+
+    ::ng-deep .profile-tabs .mat-mdc-tab {
+      min-width: fit-content;
+      padding: 0 0.4rem;
+    }
+
+    .tab-title {
+      white-space: nowrap;
+    }
     /* Form Sections */
     .form-section {
       padding: var(--spacing-md);
@@ -1059,27 +1180,54 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
     .form-card {
       margin-bottom: var(--spacing-md);
       padding: var(--spacing-md);
-      background: var(--bg-lighter);
+      background: linear-gradient(180deg, #ffffff 0%, var(--bg-lighter) 100%);
       border: 1px solid var(--border-color);
       border-radius: var(--border-radius);
       border-left: 4px solid var(--primary-color);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      animation: fadeInUp 0.35s ease-out;
+    }
+
+    .form-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .card-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.65rem;
+      margin-bottom: var(--spacing-sm);
     }
 
     .card-title {
       font-size: var(--heading-3-size);
       font-weight: 700;
       color: var(--text-primary);
-      margin: 0 0 var(--spacing-sm) 0;
+      margin: 0;
+    }
+
+    .section-help-btn {
+      flex-shrink: 0;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(102, 126, 234, 0.08);
+      color: var(--primary-color);
     }
 
     .card-subtitle {
-      font-size: var(--font-size-sm);
-      color: var(--text-secondary);
-      margin: var(--spacing-xs) 0 var(--spacing-sm) 0;
-      font-style: italic;
-      line-height: 1.5;
+      display: none;
     }
 
+    .info-popup-body {
+      white-space: pre-line;
+      line-height: 1.6;
+      color: var(--text-primary);
+      font-size: var(--font-size-sm);
+    }
     /* Form Grids - Mobile-first, progressive enhancement */
     .form-grid-2,
     .form-grid-3,
@@ -1111,6 +1259,46 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
       color: var(--text-primary);
     }
 
+    ::ng-deep .student-institute-autocomplete.mat-mdc-autocomplete-panel {
+      padding: 6px 0;
+      max-height: min(320px, 70vh);
+      border-radius: 14px;
+    }
+
+    ::ng-deep .student-institute-autocomplete .mat-mdc-option {
+      min-height: 62px;
+      align-items: flex-start;
+      padding-top: 8px;
+      padding-bottom: 8px;
+      white-space: normal;
+    }
+
+    ::ng-deep .student-profile-select-panel .mat-mdc-option {
+      min-height: 52px;
+      white-space: normal;
+      line-height: 1.35;
+    }
+
+    .institute-option-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0.18rem;
+      width: 100%;
+    }
+
+    .institute-option-title {
+      font-size: clamp(0.88rem, 2.8vw, 0.98rem);
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.35;
+      white-space: normal;
+    }
+
+    .institute-option-meta {
+      font-size: clamp(0.74rem, 2.2vw, 0.82rem);
+      color: var(--text-secondary);
+      line-height: 1.35;
+    }
     /* Form Actions - Stack on mobile, row on desktop */
     .form-actions {
       display: flex;
@@ -1507,8 +1695,22 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
         margin-right: 0;
       }
 
+      .mobile-app-header {
+        padding: 0.9rem;
+        align-items: flex-start;
+      }
+
+      .header-help-btn {
+        min-width: 0;
+        padding-inline: 0.75rem;
+      }
+
       .profile-header {
         margin-bottom: var(--spacing-md);
+      }
+
+      .profile-progress-strip {
+        display: none;
       }
 
       .board-header {
@@ -1520,8 +1722,29 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
         border-radius: var(--border-radius-sm);
       }
 
+      .card-title-row {
+        align-items: center;
+      }
+
+      ::ng-deep .profile-tabs .mat-mdc-tab-header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+      }
+
       ::ng-deep .profile-tabs .mdc-tab__text-label {
-        padding: 0 8px !important;
+        padding: 0 4px !important;
+        font-size: 0.72rem !important;
+      }
+
+      .form-actions {
+        position: sticky;
+        bottom: 0;
+        z-index: 15;
+        background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, #ffffff 100%);
+        padding: 0.8rem;
+        margin: 1rem -0.8rem -0.8rem;
+        box-shadow: 0 -10px 24px rgba(15, 23, 42, 0.08);
       }
 
       .instructions-card {
@@ -1648,6 +1871,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   // Active tab index for auto-navigation after save
   selectedTabIndex = 0;
   showInstructionsPopup = false;
+  showInfoPopup = false;
+  infoPopupTitle = '';
+  infoPopupText = '';
 
   // Pincode lookup properties
   pincodeOptions: PostalLocation[] = [];
@@ -1907,10 +2133,36 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     }
   }
 
+  openInfoPopup(title: string, text: string) {
+    this.infoPopupTitle = title;
+    this.infoPopupText = text;
+    this.showInfoPopup = true;
+  }
+
+  closeInfoPopup() {
+    this.showInfoPopup = false;
+  }
+
   private showInstructionsPopupIfNeeded() {
-    if (typeof window === 'undefined') return;
-    const dismissed = window.localStorage.getItem('studentProfileInstructionsDismissed') === 'true';
-    this.showInstructionsPopup = !dismissed;
+    this.showInstructionsPopup = false;
+  }
+
+  private resetFormVisualState() {
+    [this.personalDetailsForm, this.previousExamForm, this.bankDetailsForm].forEach((form) => {
+      form.markAsPristine();
+      form.markAsUntouched();
+      Object.values(form.controls).forEach((control) => {
+        control.markAsPristine();
+        control.markAsUntouched();
+      });
+      form.updateValueAndValidity({ emitEvent: false });
+    });
+  }
+
+  private withAssetCacheBust(url?: string | null): string | null {
+    if (!url) return null;
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${Date.now()}`;
   }
 
   /**
@@ -1983,17 +2235,17 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
             this.pincodeOptions = locations;
             this.pincodeLookupLoading = false;
             if (locations.length === 0) {
-              this.pincodeError = 'No results found for this pincode';
+              this.pincodeError = 'या पिनकोडसाठी माहिती मिळाली नाही';
             }
           },
           error: (err) => {
-            this.pincodeError = 'Unable to fetch pincode details. Please try again.';
+            this.pincodeError = 'पिनकोड माहिती मिळवताना अडचण आली. कृपया पुन्हा प्रयत्न करा.';
             this.pincodeLookupLoading = false;
           }
         });
       } else if (pincode.length > 0) {
         this.pincodeOptions = [];
-        this.pincodeError = 'Please enter a valid 6-digit pincode';
+        this.pincodeError = 'कृपया योग्य 6 अंकी पिनकोड भरा';
       } else {
         this.pincodeOptions = [];
         this.pincodeError = null;
@@ -2007,7 +2259,11 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
     this.profileService.loadProfile()
       .then((profile: any) => {
-        this.profile = profile as StudentProfile;
+        this.profile = {
+          ...(profile as StudentProfile),
+          photoUrl: this.withAssetCacheBust(profile?.photoUrl),
+          signatureUrl: this.withAssetCacheBust(profile?.signatureUrl)
+        } as StudentProfile;
 
         // Pre-populate institute and stream selections if already set
         if (profile.instituteId) {
@@ -2075,6 +2331,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
         // Calculate profile completion
         this.calculateProfileCompletion(profile);
+        this.resetFormVisualState();
         this.showInstructionsPopupIfNeeded();
 
         this.isLoading = false;
@@ -2086,7 +2343,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         const serverMessage = err?.error?.message || err?.message || '';
 
         // Determine the error type and appropriate message
-        let errorMsg = 'Failed to load profile. Please try again.';
+        let errorMsg = 'प्रोफाइल लोड करण्यात अडचण आली. कृपया पुन्हा प्रयत्न करा.';
         let isInstituteError = false;
 
         // Check if this is specifically an institute not selected error
@@ -2103,7 +2360,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           errorMsg = 'Please select your institute and stream first before completing your profile.';
         } else {
           // Generic error
-          errorMsg = err?.error?.message || 'Failed to load profile. Please try again.';
+          errorMsg = err?.error?.message || 'प्रोफाइल लोड करण्यात अडचण आली. कृपया पुन्हा प्रयत्न करा.';
         }
 
         this.error = errorMsg;
@@ -2296,7 +2553,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   saveInstituteSelection() {
     if (!this.selectedInstituteId || !this.selectedStreamCode) {
-      this.snackBar.open('Please select both institute and stream', 'Close', { duration: 3000 });
+      this.snackBar.open('कृपया महाविद्यालय आणि शाखा दोन्ही निवडा', 'बंद', { duration: 3000 });
       return;
     }
 
@@ -2312,7 +2569,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           this.auth.updateAccessToken(response.accessToken);
         }
 
-        this.snackBar.open('\u2713 Institute and Stream saved successfully!', 'Close', { duration: 3000 });
+        this.snackBar.open('\u2713 महाविद्यालय आणि शाखा यशस्वीरीत्या जतन झाली!', 'बंद', { duration: 3000 });
         this.savingInstitute = false;
 
         // Move to next tab after successful save
@@ -2325,9 +2582,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         this.savingInstitute = false;
 
         if (err.status === 409) {
-          this.snackBar.open('Institute already selected. Cannot change.', 'Close', { duration: 3000 });
+          this.snackBar.open('महाविद्यालय आधीच निवडले आहे. बदल करता येणार नाही.', 'बंद', { duration: 3000 });
         } else {
-          this.snackBar.open('Failed to save institute selection. Please try again.', 'Close', { duration: 3000 });
+          this.snackBar.open('महाविद्यालय जतन करण्यात अडचण आली. पुन्हा प्रयत्न करा.', 'बंद', { duration: 3000 });
         }
       }
     });
@@ -2387,11 +2644,13 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       this.profile = {
         ...(this.profile || {}),
         ...response.student,
-        [isPhoto ? 'photoUrl' : 'signatureUrl']: response.url
+        [isPhoto ? 'photoUrl' : 'signatureUrl']: this.withAssetCacheBust(response.url)
       } as StudentProfile;
-      this.snackBar.open(`✓ ${isPhoto ? 'Photograph' : 'Signature'} saved (${event.sizeKB.toFixed(1)} KB)`, '', { duration: 3000 });
+      this.cdr.markForCheck();
+      this.cdr.detectChanges();
+      this.snackBar.open(`✓ ${isPhoto ? 'फोटो' : 'स्वाक्षरी'} जतन झाली (${event.sizeKB.toFixed(1)} KB)`, '', { duration: 3000 });
     } catch (err: any) {
-      this.snackBar.open(err?.error?.message || `Failed to save ${isPhoto ? 'photograph' : 'signature'}.`, '', { duration: 4000 });
+      this.snackBar.open(err?.error?.message || `${isPhoto ? 'फोटो' : 'स्वाक्षरी'} जतन करण्यात अडचण आली.`, '', { duration: 4000 });
     } finally {
       if (isPhoto) {
         this.savingPhoto = false;
@@ -2417,9 +2676,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           [isPhoto ? 'photoUrl' : 'signatureUrl']: null
         } as StudentProfile;
       }
-      this.snackBar.open(`✓ ${isPhoto ? 'Photograph' : 'Signature'} removed`, '', { duration: 2500 });
+      this.snackBar.open(`✓ ${isPhoto ? 'फोटो' : 'स्वाक्षरी'} काढली`, '', { duration: 2500 });
     } catch (err: any) {
-      this.snackBar.open(err?.error?.message || `Failed to remove ${isPhoto ? 'photograph' : 'signature'}.`, '', { duration: 4000 });
+      this.snackBar.open(err?.error?.message || `${isPhoto ? 'फोटो' : 'स्वाक्षरी'} काढण्यात अडचण आली.`, '', { duration: 4000 });
     } finally {
       if (isPhoto) {
         this.savingPhoto = false;
@@ -2462,13 +2721,13 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         if (this.profile) {
           this.calculateProfileCompletion(this.profile);
         }
-        this.snackBar.open('✓ Personal details saved', '', { duration: 3000 });
+        this.snackBar.open('✓ वैयक्तिक माहिती जतन झाली', '', { duration: 3000 });
         this.goToNextTab(2);
         // Reload profile to ensure all data is current
         this.loadProfile();
       }, 1500);
     } else {
-      this.snackBar.open('❌ Please fix all errors before saving', '', { duration: 3000 });
+      this.snackBar.open('❌ कृपया सर्व चुका दुरुस्त करून पुन्हा जतन करा', '', { duration: 3000 });
     }
   }
 
@@ -2477,7 +2736,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     this.profileService.updatePreviousExams(this.previousExamForm.value);
     setTimeout(() => {
       this.savingPrevious = false;
-      this.snackBar.open('✓ Previous exam details saved', '', { duration: 3000 });
+      this.snackBar.open('✓ मागील परीक्षेची माहिती जतन झाली', '', { duration: 3000 });
       this.goToNextTab(3);
     }, 1500);
   }
@@ -2494,7 +2753,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       this.profileService.updateBankDetails(bankData);
       setTimeout(() => {
         this.savingBank = false;
-        this.snackBar.open('✓ Bank details saved successfully', '', { duration: 3000 });
+        this.snackBar.open('✓ बँक तपशील यशस्वीरीत्या जतन झाले', '', { duration: 3000 });
         this.loadProfile();
         this.goToNextTab(4);
       }, 1500);
@@ -2548,7 +2807,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       this.pincodeOptions = [];
       this.pincodeError = null;
 
-      this.snackBar.open('✓ Address details auto-filled from pincode', '', { duration: 2000 });
+      this.snackBar.open('✓ पिनकोडवरून पत्ता माहिती भरली गेली', '', { duration: 2000 });
     }
   }
 
@@ -2557,25 +2816,25 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   getErrorMessage(form: FormGroup, fieldName: string): string {
     const control = form.get(fieldName);
-    if (!control || !control.errors) return '';
+    if (!control || !control.errors || !(control.touched || control.dirty)) return '';
 
     const errors = control.errors;
 
-    if (errors['required']) return `${this.getFieldLabel(fieldName)} is required`;
-    if (errors['minLength']) return `${this.getFieldLabel(fieldName)} must be at least ${errors['minLength'].requiredLength} characters`;
-    if (errors['maxLength']) return `${this.getFieldLabel(fieldName)} must not exceed ${errors['maxLength'].requiredLength} characters`;
-    if (errors['email']) return 'Invalid email format';
+    if (errors['required']) return `${this.getFieldLabel(fieldName)} आवश्यक आहे`;
+    if (errors['minLength']) return `${this.getFieldLabel(fieldName)} किमान ${errors['minLength'].requiredLength} अक्षरे असावी`;
+    if (errors['maxLength']) return `${this.getFieldLabel(fieldName)} ${errors['maxLength'].requiredLength} अक्षरांपेक्षा जास्त नसावे`;
+    if (errors['email']) return 'ईमेलचा नमुना योग्य नाही';
     if (errors['pattern']) {
-      if (fieldName.includes('mobile')) return 'Mobile number must be 10 digits and start with 6-9';
-      if (fieldName.includes('aadhar')) return 'Aadhar number must be exactly 12 digits';
-      if (fieldName.includes('pincode')) return 'Pincode must be exactly 6 digits';
-      if (fieldName.includes('Name')) return 'Can only contain letters, spaces, hyphens, and apostrophes';
-      if (fieldName.includes('Year')) return 'Year must be 4 digits';
-      return 'Invalid format';
+      if (fieldName.includes('mobile')) return 'मोबाईल क्रमांक 10 अंकी आणि 6-9 ने सुरू होणारा असावा';
+      if (fieldName.includes('aadhar')) return 'आधार क्रमांक 12 अंकी असावा';
+      if (fieldName.includes('pincode')) return 'पिनकोड 6 अंकी असावा';
+      if (fieldName.includes('Name')) return 'फक्त अक्षरे, स्पेस, हायफन आणि अपॉस्ट्रॉफ वापरा';
+      if (fieldName.includes('Year')) return 'वर्ष 4 अंकी असावे';
+      return 'कृपया योग्य नमुना वापरा';
     }
-    if (errors['invalidDate']) return 'Invalid date format';
-    if (errors['futureDate']) return 'Date of birth cannot be in the future';
-    if (errors['minimumAge']) return `Must be at least ${errors['minimumAge'].requiredAge} years old`;
+    if (errors['invalidDate']) return 'तारीख योग्य नाही';
+    if (errors['futureDate']) return 'जन्मतारीख भविष्यातील असू शकत नाही';
+    if (errors['minimumAge']) return `किमान वय ${errors['minimumAge'].requiredAge} वर्षे असावे`;
 
     return Object.keys(errors)[0];
   }
@@ -2585,21 +2844,21 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
    */
   getFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
-      firstName: 'First Name',
-      lastName: 'Last Name',
-      middleName: 'Middle Name',
-      motherName: 'Mother\'s Name',
-      dateOfBirth: 'Date of Birth',
-      aadharNumber: 'Aadhar Number',
-      mobile: 'Mobile Number',
-      email: 'Login Email',
-      addressLineOne: 'Complete Address',
-      addressLineTwo: 'Address Line 2',
-      addressLineThree: 'Address Line 3',
-      pincode: 'Pincode',
-      district: 'District',
-      taluka: 'Taluka',
-      village: 'Village'
+      firstName: 'नाव',
+      lastName: 'आडनाव',
+      middleName: 'मधले नाव',
+      motherName: 'आईचे नाव',
+      dateOfBirth: 'जन्मतारीख',
+      aadharNumber: 'आधार क्रमांक',
+      mobile: 'मोबाईल क्रमांक',
+      email: 'लॉगिन ईमेल',
+      addressLineOne: 'संपूर्ण पत्ता',
+      addressLineTwo: 'पत्ता ओळ २',
+      addressLineThree: 'पत्ता ओळ ३',
+      pincode: 'पिनकोड',
+      district: 'जिल्हा',
+      taluka: 'तालुका',
+      village: 'गाव'
     };
     return labels[fieldName] || fieldName;
   }

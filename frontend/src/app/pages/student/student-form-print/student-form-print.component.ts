@@ -320,6 +320,8 @@ import { BrandingService } from '../../../core/branding.service';
         display: block;
         background: #e9edf2;
         font-family: 'Times New Roman', Georgia, serif;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
 
       .actions {
@@ -579,6 +581,7 @@ import { BrandingService } from '../../../core/branding.service';
         font-size: 9px;
         line-height: 1.22;
         word-break: break-word;
+        overflow-wrap: anywhere;
       }
 
       .table-wrap {
@@ -600,6 +603,7 @@ import { BrandingService } from '../../../core/branding.service';
         padding: 2px 4px;
         vertical-align: middle;
         line-height: 1.15;
+        overflow-wrap: anywhere;
       }
 
       .subject-table tbody tr {
@@ -652,6 +656,7 @@ import { BrandingService } from '../../../core/branding.service';
         display: grid;
         grid-template-columns: 1.45fr 1.25fr;
         gap: 4px;
+        margin-top: auto;
         break-inside: avoid;
         page-break-inside: avoid;
       }
@@ -747,7 +752,7 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       .document-footer {
-        margin-top: auto;
+        margin-top: 3px;
         display: flex;
         justify-content: space-between;
         gap: 8px;
@@ -849,15 +854,17 @@ import { BrandingService } from '../../../core/branding.service';
 
         .page {
           width: 100%;
-          min-height: auto;
+          min-height: calc(297mm - 10mm);
           margin: 0;
           padding: 0;
           box-shadow: none;
+          display: block;
         }
 
         .official-sheet {
           border: 1.5px solid #000;
           padding: 2.5mm;
+          min-height: calc(297mm - 10mm);
         }
 
         .summary-strip {

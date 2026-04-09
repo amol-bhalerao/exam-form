@@ -530,6 +530,33 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                   }
                 </form>
 
+                <form [formGroup]="form" class="form-grid board-detail-grid">
+                  <mat-form-field appearance="outline" class="w100" matTooltip="Select Yes if your SSC examination was passed from Maharashtra State Board." matTooltipPosition="above">
+                    <mat-label>SSC from Maharashtra / महाराष्ट्रातून SSC (20)</mat-label>
+                    <mat-select formControlName="sscPassedFromMaharashtra">
+                      <mat-option [value]="null">-- Select --</mat-option>
+                      <mat-option [value]="true">Yes</mat-option>
+                      <mat-option [value]="false">No</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="w100" matTooltip="Select Yes only if an eligibility certificate has been issued by the divisional board." matTooltipPosition="above">
+                    <mat-label>Eligibility Certificate / पात्रता प्रमाणपत्र (21)</mat-label>
+                    <mat-select formControlName="eligibilityCertIssued">
+                      <mat-option [value]="null">-- Select --</mat-option>
+                      <mat-option [value]="true">Yes</mat-option>
+                      <mat-option [value]="false">No</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+
+                  @if (form.get('eligibilityCertIssued')?.value === true) {
+                    <mat-form-field appearance="outline" class="w100" matTooltip="Enter the certificate number exactly as printed on the eligibility certificate." matTooltipPosition="above">
+                      <mat-label>Certificate No / प्रमाणपत्र क्र.</mat-label>
+                      <input matInput formControlName="eligibilityCertNo" placeholder="Enter certificate number" />
+                    </mat-form-field>
+                  }
+                </form>
+
                 <div class="step-actions">
                   <button mat-button matStepperPrevious>
                     <mat-icon>arrow_back</mat-icon> Back
@@ -1670,6 +1697,9 @@ export class StudentApplicationEditComponent implements OnInit {
       lastExamMonth: new FormControl(''),
       lastExamYear: new FormControl<number | null>(null),
       lastExamSeatNo: new FormControl(''),
+      sscPassedFromMaharashtra: new FormControl<boolean | null>(null),
+      eligibilityCertIssued: new FormControl<boolean | null>(null),
+      eligibilityCertNo: new FormControl(''),
 
       personGroup: new FormGroup({
         lastName: new FormControl('', [Validators.required]),
@@ -1744,6 +1774,9 @@ export class StudentApplicationEditComponent implements OnInit {
       lastExamMonth: raw.lastExamMonth || undefined,
       lastExamYear: raw.lastExamYear ? Number(raw.lastExamYear) : undefined,
       lastExamSeatNo: raw.lastExamSeatNo || undefined,
+      sscPassedFromMaharashtra: raw.sscPassedFromMaharashtra === null || raw.sscPassedFromMaharashtra === '' ? undefined : !!raw.sscPassedFromMaharashtra,
+      eligibilityCertIssued: raw.eligibilityCertIssued === null || raw.eligibilityCertIssued === '' ? undefined : !!raw.eligibilityCertIssued,
+      eligibilityCertNo: raw.eligibilityCertIssued === true ? (raw.eligibilityCertNo || '') : '',
       student: {
         lastName: raw.personGroup.lastName || undefined,
         firstName: raw.personGroup.firstName || undefined,
@@ -1873,6 +1906,9 @@ export class StudentApplicationEditComponent implements OnInit {
       lastExamMonth: a.lastExamMonth ?? '',
       lastExamYear: a.lastExamYear ?? null,
       lastExamSeatNo: a.lastExamSeatNo ?? '',
+      sscPassedFromMaharashtra: a.sscPassedFromMaharashtra ?? null,
+      eligibilityCertIssued: a.eligibilityCertIssued ?? null,
+      eligibilityCertNo: a.eligibilityCertNo ?? '',
 
       personGroup: {
         lastName: student.lastName ?? '',
@@ -1941,6 +1977,9 @@ export class StudentApplicationEditComponent implements OnInit {
       studentSaralId: student?.studentSaralId ?? '',
       applSrNo: this.application()?.applSrNo || this.application()?.applicationNo || '',
       centreNo: institute?.code || institute?.collegeNo || '',
+      sscPassedFromMaharashtra: null,
+      eligibilityCertIssued: null,
+      eligibilityCertNo: '',
 
       personGroup: {
         lastName: student?.lastName ?? '',
