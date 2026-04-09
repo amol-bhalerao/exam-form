@@ -103,10 +103,21 @@ import { API_BASE_URL } from '../../core/api';
 
       <mat-sidenav-content [class.student-mobile-shell]="role() === 'STUDENT' && isMobile()">
         <mat-toolbar class="toolbar" [class.mobile-toolbar]="isMobile()" [class.student-toolbar]="role() === 'STUDENT'">
-          <button mat-icon-button (click)="toggle()" aria-label="Toggle menu" class="menu-toggle"><mat-icon>menu</mat-icon></button>
-          <span class="center-title">{{ centerTitle() }}</span>
-          <span class="spacer"></span>
-          <div class="user-info">
+          <button mat-icon-button (click)="toggle()" aria-label="Toggle menu" class="menu-toggle">
+            <mat-icon>menu</mat-icon>
+          </button>
+
+          @if (isMobile()) {
+            <div class="mobile-brand">
+              <div class="brand-title">HSC Exam</div>
+              <div class="brand-subtitle">{{ centerTitle() }}</div>
+            </div>
+          } @else {
+            <span class="center-title">{{ centerTitle() }}</span>
+            <span class="spacer"></span>
+          }
+
+          <div class="user-info" [class.mobile-user-info]="isMobile()">
             <div class="user-avatar">{{ username()?.[0]?.toUpperCase() }}</div>
             <div class="user-details">
               <div class="user-name">{{ username() }}</div>
@@ -377,7 +388,36 @@ import { API_BASE_URL } from '../../core/api';
     }
 
     .mobile-toolbar {
-      gap: 0.5rem;
+      gap: 0.55rem;
+      background: linear-gradient(135deg, #ffffff 0%, #eef4ff 100%);
+      color: #0f172a;
+      border-bottom: 1px solid #dbeafe;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+    }
+
+    .mobile-brand {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .brand-title {
+      font-size: 0.96rem;
+      font-weight: 800;
+      color: #0f172a;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    .brand-subtitle {
+      font-size: 0.72rem;
+      color: #475569;
+      line-height: 1.1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     @media (max-width: 480px) {
@@ -385,12 +425,37 @@ import { API_BASE_URL } from '../../core/api';
         padding: 0 0.5rem;
         height: 56px;
       }
+
+      .brand-title {
+        font-size: 0.9rem;
+      }
+
+      .brand-subtitle {
+        font-size: 0.68rem;
+      }
     }
 
     .menu-toggle {
       display: none;
-      color: white;
-      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    }
+
+    .menu-toggle mat-icon {
+      color: inherit !important;
+    }
+
+    .mobile-toolbar .menu-toggle,
+    .mobile-toolbar .logout-btn {
+      color: #1f2937;
+      background: #e0e7ff;
+      border-radius: 10px;
+    }
+
+    .mobile-toolbar .center-title {
+      color: #0f172a;
     }
 
     @media (max-width: 960px) {
@@ -426,6 +491,10 @@ import { API_BASE_URL } from '../../core/api';
       padding: 0.5rem 1rem;
       border-radius: 8px;
       background: rgba(255, 255, 255, 0.1);
+    }
+
+    .mobile-user-info {
+      display: none;
     }
 
     @media (max-width: 600px) {

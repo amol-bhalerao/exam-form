@@ -10,7 +10,12 @@ export const paymentsRouter = Router();
 const CASHFREE_SANDBOX_URL = 'https://sandbox.cashfree.com/pg';
 const CASHFREE_PROD_URL = 'https://api.cashfree.com/pg';
 
-const CASHFREE_BASE = env.NODE_ENV === 'production' ? CASHFREE_PROD_URL : CASHFREE_SANDBOX_URL;
+const isCashfreeTestMode = String(env.CASHFREE_APP_ID || '').startsWith('TEST')
+  || String(env.CASHFREE_SECRET_KEY || '').includes('_test_');
+const CASHFREE_ENVIRONMENT = isCashfreeTestMode
+  ? 'sandbox'
+  : (env.NODE_ENV === 'production' ? 'production' : 'sandbox');
+const CASHFREE_BASE = CASHFREE_ENVIRONMENT === 'production' ? CASHFREE_PROD_URL : CASHFREE_SANDBOX_URL;
 const PENDING_PAYMENT_DATE = new Date(0);
 
 function isPaymentSuccessful(payment) {
@@ -149,7 +154,7 @@ paymentsRouter.post('/initiate/:applicationId', requireAuth, requireRole(['STUDE
       orderId,
       amountPaise: feeAmount,
       amountRupees: feeAmount / 100,
-      environment: env.NODE_ENV === 'production' ? 'production' : 'sandbox',
+      environment: CASHFREE_ENVIRONMENT,
       status: 'PENDING'
     });
   } catch (err) {
@@ -184,7 +189,7 @@ paymentsRouter.post('/initiate/:applicationId', requireAuth, requireRole(['STUDE
       environment: 'sandbox',
       sandbox: true,
       status: 'PENDING',
-      message: 'Cashfree sandbox mode. Use the sandbox complete endpoint in dev.'
+      message: 'Live payment gateway is unavailable right now. You can use the Simulate Success option to continue this fallback flow.'
     });
   }
 });
@@ -304,14 +309,26 @@ paymentsRouter.get('/status/:applicationId', requireAuth, async (req, res) => {
  * Dev-only: mark a sandbox payment as complete so submission can proceed.
  */
 paymentsRouter.post('/sandbox/complete/:applicationId', requireAuth, requireRole(['STUDENT']), async (req, res) => {
-  if (env.NODE_ENV === 'production') {
-    return res.status(403).json({ error: 'FORBIDDEN_IN_PRODUCTION' });
-  }
-
   const applicationId = z.coerce.number().int().positive().parse(req.params.applicationId);
+
+  const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
+  if (!student) return res.status(404).json({ error: 'STUDENT_PROFILE_MISSING' });
+
+  const application = await prisma.examApplication.findFirst({
+    where: { id: applicationId, studentId: student.id }
+  });
+  if (!application) return res.status(404).json({ error: 'APPLICATION_NOT_FOUND' });
 
   const payment = await prisma.payment.findFirst({ where: { applicationId }, orderBy: { id: 'desc' } });
   if (!payment) return res.status(404).json({ error: 'PAYMENT_NOT_FOUND' });
+
+  const isSandboxPayment = String(payment.method || '').toUpperCase().includes('SANDBOX');
+  if (!isSandboxPayment) {
+    return res.status(409).json({
+      error: 'SANDBOX_NOT_AVAILABLE',
+      message: 'Simulated completion is only available for sandbox fallback payments.'
+    });
+  }
 
   const updated = await prisma.payment.update({
     where: { id: payment.id },

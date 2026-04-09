@@ -1140,10 +1140,25 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     ::ng-deep .profile-tabs .mat-mdc-tab-header {
       background: white;
       border-bottom: 2px solid var(--border-color);
+      overflow: hidden;
     }
 
-    ::ng-deep .profile-tabs .mat-mdc-tab-labels {
+    ::ng-deep .profile-tabs .mat-mdc-tab-label-container {
+      overflow-x: auto !important;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      touch-action: pan-x;
+      cursor: grab;
+    }
+
+    ::ng-deep .profile-tabs .mat-mdc-tab-label-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    ::ng-deep .profile-tabs .mat-mdc-tab-labels,
+    ::ng-deep .profile-tabs .mat-mdc-tab-list {
       background: white;
+      min-width: max-content;
     }
 
     ::ng-deep .profile-tabs .mdc-tab__text-label {
@@ -1157,6 +1172,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     ::ng-deep .profile-tabs .mat-mdc-tab {
       min-width: fit-content;
       padding: 0 0.4rem;
+      user-select: none;
     }
 
     .tab-title {
@@ -1236,6 +1252,20 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     .form-field-full {
       width: 100%;
       margin-bottom: var(--spacing-md);
+    }
+
+    ::ng-deep .student-profile-container .mat-mdc-form-field .mdc-floating-label,
+    ::ng-deep .student-profile-container .mat-mdc-form-field.mat-form-field-invalid .mdc-floating-label,
+    ::ng-deep .student-profile-container .mat-mdc-form-field-required-marker {
+      color: #64748b !important;
+    }
+
+    ::ng-deep .student-profile-container .mat-mdc-form-field.mat-focused .mdc-floating-label {
+      color: var(--primary-color) !important;
+    }
+
+    ::ng-deep .student-profile-container .mat-mdc-form-field .mat-mdc-form-field-error {
+      color: #dc2626 !important;
     }
 
     .form-checkbox-group {
@@ -1721,6 +1751,10 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
         position: sticky;
         top: 0;
         z-index: 20;
+      }
+
+      ::ng-deep .profile-tabs .mat-mdc-tab-header-pagination {
+        display: none !important;
       }
 
       ::ng-deep .profile-tabs .mdc-tab__text-label {
