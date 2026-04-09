@@ -185,33 +185,35 @@ import { BrandingService } from '../../../core/branding.service';
 
           <section class="section-card">
             <div class="section-title">4. Subject Details / विषय तपशील</div>
-            <table class="subject-table">
-              <thead>
-                <tr>
-                  <th style="width: 7%;">Sr / क्र.</th>
-                  <th style="width: 12%;">Code / कोड</th>
-                  <th>Subject Name / विषयाचे नाव</th>
-                  <th style="width: 20%;">Category / प्रकार</th>
-                  <th style="width: 15%;">Ans. Lang / उत्तर माध्यम</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (sub of (a().subjects ?? []); track sub.id) {
+            <div class="table-wrap">
+              <table class="subject-table">
+                <thead>
                   <tr>
-                    <td>{{ $index + 1 }}</td>
-                    <td>{{ valueOrDash(sub.subject?.code) }}</td>
-                    <td>{{ valueOrDash(sub.subject?.name) }}</td>
-                    <td>{{ valueOrDash(sub.subject?.category, 'General / सामान्य') }}</td>
-                    <td>{{ valueOrDash(sub.langOfAnsCode) }}</td>
+                    <th style="width: 7%;">Sr / क्र.</th>
+                    <th style="width: 12%;">Code / कोड</th>
+                    <th>Subject Name / विषयाचे नाव</th>
+                    <th style="width: 20%;">Category / प्रकार</th>
+                    <th style="width: 15%;">Ans. Lang / उत्तर माध्यम</th>
                   </tr>
-                }
-                @if (!(a().subjects?.length)) {
-                  <tr>
-                    <td colspan="5" class="muted center">No subjects selected yet / विषय निवडलेले नाहीत.</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  @for (sub of (a().subjects ?? []); track sub.id) {
+                    <tr>
+                      <td class="cell-center">{{ $index + 1 }}</td>
+                      <td><span class="subject-code-pill">{{ valueOrDash(sub.subject?.code) }}</span></td>
+                      <td class="subject-name-cell">{{ valueOrDash(sub.subject?.name) }}</td>
+                      <td>{{ valueOrDash(sub.subject?.category, 'General / सामान्य') }}</td>
+                      <td class="cell-center">{{ valueOrDash(sub.langOfAnsCode) }}</td>
+                    </tr>
+                  }
+                  @if (!(a().subjects?.length)) {
+                    <tr>
+                      <td colspan="5" class="muted center empty-table">No subjects selected yet / विषय निवडलेले नाहीत.</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
           </section>
 
           @if (hasOtherDetails()) {
@@ -389,6 +391,7 @@ import { BrandingService } from '../../../core/branding.service';
         font-weight: 700;
         letter-spacing: 0.05em;
         text-transform: uppercase;
+        text-align: center;
       }
 
       .board-name.mr {
@@ -562,24 +565,66 @@ import { BrandingService } from '../../../core/branding.service';
         word-break: break-word;
       }
 
+      .table-wrap {
+        width: 100%;
+        overflow: hidden;
+        border-top: 0;
+      }
+
       .subject-table {
         width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
-        font-size: 8.2px;
+        font-size: 8px;
       }
 
       .subject-table th,
       .subject-table td {
         border: 1px solid #000;
-        padding: 3px 4px;
-        vertical-align: top;
-        line-height: 1.2;
+        padding: 2px 4px;
+        vertical-align: middle;
+        line-height: 1.15;
+      }
+
+      .subject-table tbody tr {
+        height: 24px;
       }
 
       .subject-table thead th {
-        background: #f3f4f6;
+        background: linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
         font-weight: 700;
+        text-align: left;
+        letter-spacing: 0.01em;
+      }
+
+      .subject-table tbody tr:nth-child(even) {
+        background: #fafafa;
+      }
+
+      .subject-name-cell {
+        font-weight: 600;
+        color: #111827;
+        word-break: break-word;
+      }
+
+      .subject-code-pill {
+        display: inline-block;
+        padding: 1px 5px;
+        border: 1px solid #9ca3af;
+        border-radius: 999px;
+        background: #f9fafb;
+        font-size: 7.7px;
+        line-height: 1.1;
+      }
+
+      .cell-center {
+        text-align: center;
+        vertical-align: middle;
+      }
+
+      .empty-table {
+        padding: 8px 6px !important;
+        font-style: italic;
       }
 
       .mini-table {
