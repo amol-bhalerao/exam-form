@@ -570,7 +570,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                     <mat-icon class="info-icon">verified</mat-icon>
                     <div>
                       <strong>Institute mapped subjects loaded</strong>
-                      <p>The subjects configured by your institute are shown first, and any required common subjects for this stream are also available. Answer language is auto-filled wherever the institute has already set it.</p>
+                      <p>Showing {{ masterSubjects().length }} subjects mapped by your institute for this stream. Answer language is auto-filled wherever the institute has already set it.</p>
                     </div>
                   </mat-card>
                 } @else if (subjectSource() === 'stream') {

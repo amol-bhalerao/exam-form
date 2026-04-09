@@ -1591,38 +1591,19 @@ institutesRouter.get('/subject-options', requireAuth, async (req, res) => {
       });
 
       if (mappedSubjects.length > 0) {
-        const mappedSubjectIds = mappedSubjects.map((mapping) => mapping.subject.id);
-        const supplementalCategories = getFallbackSubjectCategoriesForStream(resolvedStreamName || q.streamCode || '');
-        const supplementalSubjects = await prisma.subject.findMany({
-          where: {
-            category: { in: supplementalCategories },
-            id: { notIn: mappedSubjectIds }
-          },
-          orderBy: [{ category: 'asc' }, { name: 'asc' }]
-        });
-
         return res.json({
           ok: true,
           source: 'institute',
           instituteId,
           streamId,
-          subjects: [
-            ...mappedSubjects.map((mapping) => ({
-              id: mapping.subject.id,
-              mappingId: mapping.id,
-              name: mapping.subject.name,
-              code: mapping.subject.code,
-              category: mapping.subject.category,
-              answerLanguageCode: mapping.answerLanguageCode ?? null
-            })),
-            ...supplementalSubjects.map((subject) => ({
-              id: subject.id,
-              name: subject.name,
-              code: subject.code,
-              category: subject.category,
-              answerLanguageCode: null
-            }))
-          ]
+          subjects: mappedSubjects.map((mapping) => ({
+            id: mapping.subject.id,
+            mappingId: mapping.id,
+            name: mapping.subject.name,
+            code: mapping.subject.code,
+            category: mapping.subject.category,
+            answerLanguageCode: mapping.answerLanguageCode ?? null
+          }))
         });
       }
     }
