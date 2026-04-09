@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import { requireAuth } from '../auth/middleware.js';
 import { prisma } from '../prisma.js';
+import { attachStudentAssets } from '../utils/student-assets.js';
 
 export const meRouter = Router();
 
@@ -16,7 +17,7 @@ meRouter.get('/', requireAuth, async (req, res) => {
   // Get student profile if STUDENT role
   let student = null;
   if (user.role.name === 'STUDENT') {
-    student = await prisma.student.findUnique({
+    const rawStudent = await prisma.student.findUnique({
       where: { userId: userId },
       include: { 
         institute: true,
@@ -24,6 +25,7 @@ meRouter.get('/', requireAuth, async (req, res) => {
         feeReimbursement: true
       }
     });
+    student = rawStudent ? await attachStudentAssets(rawStudent) : null;
   }
 
   return res.json({
@@ -75,7 +77,9 @@ meRouter.get('/', requireAuth, async (req, res) => {
             accountNo: student.feeReimbursement.accountNo,
             accountNumber: student.feeReimbursement.accountNo
           }
-        : null
+        : null,
+      photoUrl: student.photoUrl || null,
+      signatureUrl: student.signatureUrl || null
     } : null
   });
 });

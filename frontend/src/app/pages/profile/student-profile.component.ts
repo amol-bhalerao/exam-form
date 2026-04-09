@@ -30,6 +30,7 @@ import { I18nService } from '../../core/i18n.service';
 import { PincodeService, PostalLocation } from '../../core/pincode.service';
 import { AuthService } from '../../core/auth.service';
 import { API_BASE_URL } from '../../core/api';
+import { StudentImageUploadComponent } from '../../components/student-image-upload/student-image-upload.component';
 
 @Component({
   selector: 'app-student-profile',
@@ -62,7 +63,8 @@ import { API_BASE_URL } from '../../core/api';
     MatAutocompleteModule,
     MatRadioModule,
     MatProgressBarModule,
-    RouterModule
+    RouterModule,
+    StudentImageUploadComponent
   ],
   template: `
     <div class="student-profile-container">
@@ -233,6 +235,28 @@ import { API_BASE_URL } from '../../core/api';
             </ng-template>
 
             <form [formGroup]="personalDetailsForm" class="form-section">
+              <div class="profile-assets-grid">
+                <app-student-image-upload
+                  title="Photograph / छायाचित्र"
+                  hint="Upload a passport-style photo for hall-ticket scanning. The file is cropped and compressed below 50 KB."
+                  type="photo"
+                  [imageUrl]="profile?.photoUrl || null"
+                  [saving]="savingPhoto"
+                  (saved)="handleProfileImageSaved($event)"
+                  (removed)="handleProfileImageRemoved($event)">
+                </app-student-image-upload>
+
+                <app-student-image-upload
+                  title="Student Signature / सही"
+                  hint="Upload a clean signature on a light background. It will be optimized for storage and printing."
+                  type="signature"
+                  [imageUrl]="profile?.signatureUrl || null"
+                  [saving]="savingSignature"
+                  (saved)="handleProfileImageSaved($event)"
+                  (removed)="handleProfileImageRemoved($event)">
+                </app-student-image-upload>
+              </div>
+
               <!-- CANDIDATE IDENTIFICATION -->
               <div class="form-card">
                 <h3 class="card-title">Candidate Identification</h3>
@@ -1600,6 +1624,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   isLoading = true;
   error: string | null = null;
   savingPersonal = false;
+  savingPhoto = false;
+  savingSignature = false;
   savingExam = false;
   savingPrevious = false;
   savingBank = false;
@@ -2346,6 +2372,61 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       URDU: 'Urdu'
     };
     return code ? (labels[code] || code) : '-';
+  }
+
+  async handleProfileImageSaved(event: { type: 'photo' | 'signature'; dataUrl: string; sizeKB: number }) {
+    const isPhoto = event.type === 'photo';
+    if (isPhoto) {
+      this.savingPhoto = true;
+    } else {
+      this.savingSignature = true;
+    }
+
+    try {
+      const response = await this.profileService.uploadProfileAsset(event.type, event.dataUrl);
+      this.profile = {
+        ...(this.profile || {}),
+        ...response.student,
+        [isPhoto ? 'photoUrl' : 'signatureUrl']: response.url
+      } as StudentProfile;
+      this.snackBar.open(`✓ ${isPhoto ? 'Photograph' : 'Signature'} saved (${event.sizeKB.toFixed(1)} KB)`, '', { duration: 3000 });
+    } catch (err: any) {
+      this.snackBar.open(err?.error?.message || `Failed to save ${isPhoto ? 'photograph' : 'signature'}.`, '', { duration: 4000 });
+    } finally {
+      if (isPhoto) {
+        this.savingPhoto = false;
+      } else {
+        this.savingSignature = false;
+      }
+    }
+  }
+
+  async handleProfileImageRemoved(type: 'photo' | 'signature') {
+    const isPhoto = type === 'photo';
+    if (isPhoto) {
+      this.savingPhoto = true;
+    } else {
+      this.savingSignature = true;
+    }
+
+    try {
+      await this.profileService.removeProfileAsset(type);
+      if (this.profile) {
+        this.profile = {
+          ...this.profile,
+          [isPhoto ? 'photoUrl' : 'signatureUrl']: null
+        } as StudentProfile;
+      }
+      this.snackBar.open(`✓ ${isPhoto ? 'Photograph' : 'Signature'} removed`, '', { duration: 2500 });
+    } catch (err: any) {
+      this.snackBar.open(err?.error?.message || `Failed to remove ${isPhoto ? 'photograph' : 'signature'}.`, '', { duration: 4000 });
+    } finally {
+      if (isPhoto) {
+        this.savingPhoto = false;
+      } else {
+        this.savingSignature = false;
+      }
+    }
   }
 
   retryLoadProfile() {

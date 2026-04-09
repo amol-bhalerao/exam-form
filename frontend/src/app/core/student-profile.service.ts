@@ -50,6 +50,8 @@ export interface StudentProfile {
     accountNo?: string;
     accountNumber?: string;
   } | null;
+  photoUrl?: string | null;
+  signatureUrl?: string | null;
   
   // Timestamps
   createdAt?: string;
@@ -371,6 +373,61 @@ export class StudentProfileService {
         this.error.set(errorMsg);
         this.isLoading.set(false);
       }
+    });
+  }
+
+  uploadProfileAsset(type: 'photo' | 'signature', dataUrl: string): Promise<{ ok: boolean; url: string; student: StudentProfile; sizeKB: number }> {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    return new Promise((resolve, reject) => {
+      this.http.post<{ ok: boolean; type: string; url: string; sizeKB: number; student: StudentProfile }>(`${API_BASE_URL}/students/me/assets/${type}`, { dataUrl }).subscribe({
+        next: (response) => {
+          const current = this.studentProfile() || ({} as StudentProfile);
+          const updatedProfile = {
+            ...current,
+            ...response.student,
+            photoUrl: type === 'photo' ? response.url : (response.student?.photoUrl ?? current.photoUrl ?? null),
+            signatureUrl: type === 'signature' ? response.url : (response.student?.signatureUrl ?? current.signatureUrl ?? null)
+          } as StudentProfile;
+          this.studentProfile.set(updatedProfile);
+          this.isLoading.set(false);
+          resolve({ ok: true, url: response.url, student: updatedProfile, sizeKB: response.sizeKB });
+        },
+        error: (err: any) => {
+          const errorMsg = err?.error?.error || err?.error?.message || `Failed to upload ${type}. Please try again.`;
+          this.error.set(errorMsg);
+          this.isLoading.set(false);
+          reject(err);
+        }
+      });
+    });
+  }
+
+  removeProfileAsset(type: 'photo' | 'signature'): Promise<void> {
+    this.isLoading.set(true);
+    this.error.set(null);
+
+    return new Promise((resolve, reject) => {
+      this.http.delete<{ ok: boolean; student: StudentProfile }>(`${API_BASE_URL}/students/me/assets/${type}`).subscribe({
+        next: (response) => {
+          const current = this.studentProfile() || ({} as StudentProfile);
+          const updatedProfile = {
+            ...current,
+            ...response.student,
+            [type === 'photo' ? 'photoUrl' : 'signatureUrl']: null
+          } as StudentProfile;
+          this.studentProfile.set(updatedProfile);
+          this.isLoading.set(false);
+          resolve();
+        },
+        error: (err: any) => {
+          const errorMsg = err?.error?.error || err?.error?.message || `Failed to remove ${type}. Please try again.`;
+          this.error.set(errorMsg);
+          this.isLoading.set(false);
+          reject(err);
+        }
+      });
     });
   }
 

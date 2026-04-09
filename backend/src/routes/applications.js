@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
 import { env } from '../env.js';
+import { attachStudentAssets } from '../utils/student-assets.js';
 
 const STUDENT_STREAM_CODE_LOOKUP = {
   '1': 'Science',
@@ -56,6 +57,10 @@ async function getApplicationScoped(applicationId, auth) {
     }
   });
   if (!app) return null;
+
+  if (app.student) {
+    app.student = await attachStudentAssets(app.student);
+  }
 
   if (auth.role === 'SUPER_ADMIN') return app;
 

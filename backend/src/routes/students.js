@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth } from '../auth/middleware.js';
 import { signAccessToken } from '../auth/tokens.js';
+import { attachStudentAssets, removeStudentAsset, saveStudentAsset } from '../utils/student-assets.js';
 
 export const studentsRouter = Router();
 
@@ -88,7 +89,8 @@ studentsRouter.get('/me', requireAuth, async (req, res) => {
       return res.status(404).json({ error: 'STUDENT_PROFILE_MISSING', message: 'Please complete your profile first' });
     }
 
-    return res.json({ student });
+    const studentWithAssets = await attachStudentAssets(student);
+    return res.json({ student: studentWithAssets });
   } catch (err) {
     console.error('Get student profile error:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
@@ -176,7 +178,8 @@ studentsRouter.patch('/me', requireAuth, async (req, res) => {
       });
     });
 
-    return res.json({ ok: true, student: updated });
+    const studentWithAssets = await attachStudentAssets(updated);
+    return res.json({ ok: true, student: studentWithAssets });
   } catch (err) {
     console.error('Update student profile error:', err);
     if (err.name === 'ZodError') {
@@ -184,6 +187,59 @@ studentsRouter.patch('/me', requireAuth, async (req, res) => {
       return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
     }
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+studentsRouter.post('/me/assets/:type', requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth?.userId;
+    if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+    const { type } = z.object({ type: z.enum(['photo', 'signature']) }).parse(req.params);
+    const { dataUrl } = z.object({ dataUrl: z.string().min(40) }).parse(req.body ?? {});
+
+    const student = await prisma.student.findUnique({ where: { userId } });
+    if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND', message: 'Student profile not found' });
+
+    const saved = await saveStudentAsset(student.id, type, dataUrl);
+    const studentWithAssets = await attachStudentAssets(student);
+
+    return res.json({
+      ok: true,
+      type,
+      url: saved.url,
+      sizeKB: Number((saved.bytes / 1024).toFixed(1)),
+      student: studentWithAssets
+    });
+  } catch (err) {
+    console.error('Upload student asset error:', err);
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    return res.status(err.status || 500).json({ error: err.message || 'UPLOAD_FAILED', message: err.message || 'Unable to upload image' });
+  }
+});
+
+studentsRouter.delete('/me/assets/:type', requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth?.userId;
+    if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+    const { type } = z.object({ type: z.enum(['photo', 'signature']) }).parse(req.params);
+    const student = await prisma.student.findUnique({ where: { userId } });
+    if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND', message: 'Student profile not found' });
+
+    await removeStudentAsset(student.id, type);
+    const studentWithAssets = await attachStudentAssets(student);
+    return res.json({ ok: true, student: studentWithAssets });
+  } catch (err) {
+    console.error('Remove student asset error:', err);
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    return res.status(err.status || 500).json({ error: err.message || 'REMOVE_FAILED', message: err.message || 'Unable to remove image' });
   }
 });
 

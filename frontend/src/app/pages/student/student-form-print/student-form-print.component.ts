@@ -285,8 +285,20 @@ import { BrandingService } from '../../../core/branding.service';
             </div>
 
             <div class="photo-sign-wrap">
-              <div class="photo-box signature-cell"><span>PHOTO / छायाचित्र</span></div>
-              <div class="sign-box signature-cell"><span>Candidate Signature / उमेदवाराची सही</span></div>
+              <div class="photo-box signature-cell">
+                @if (s().photoUrl) {
+                  <img [src]="s().photoUrl" alt="Student photograph" class="asset-image photo-image" />
+                } @else {
+                  <span>PHOTO / छायाचित्र</span>
+                }
+              </div>
+              <div class="sign-box signature-cell">
+                @if (s().signatureUrl) {
+                  <img [src]="s().signatureUrl" alt="Student signature" class="asset-image signature-image" />
+                } @else {
+                  <span>Candidate Signature / उमेदवाराची सही</span>
+                }
+              </div>
               <div class="sign-box signature-cell"><span>Class Teacher / वर्गशिक्षक सही</span></div>
               <div class="sign-box signature-cell"><span>Principal Seal & Signature / मुख्याध्यापक शिक्का व सही</span></div>
             </div>
@@ -668,6 +680,23 @@ import { BrandingService } from '../../../core/branding.service';
         font-size: 8.5px;
         font-weight: 700;
         text-align: center;
+        overflow: hidden;
+      }
+
+      .asset-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+      }
+
+      .photo-image {
+        object-fit: cover;
+      }
+
+      .signature-image {
+        object-fit: contain;
+        padding: 2px;
       }
 
       .signature-cell {

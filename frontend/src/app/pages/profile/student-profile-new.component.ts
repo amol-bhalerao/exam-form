@@ -22,6 +22,7 @@ import { StudentProfileService, StudentProfile, SubjectMarks } from '../../core/
 import { I18nService } from '../../core/i18n.service';
 import { InstituteService } from '../../core/institute.service';
 import { AddSubjectMarkDialogComponent } from './add-subject-mark-dialog.component';
+import { StudentImageUploadComponent } from '../../components/student-image-upload/student-image-upload.component';
 
 @Component({
   selector: 'app-student-profile',
@@ -42,7 +43,8 @@ import { AddSubjectMarkDialogComponent } from './add-subject-mark-dialog.compone
     MatIconModule,
     MatTableModule,
     MatDialogModule,
-    RouterModule
+    RouterModule,
+    StudentImageUploadComponent
   ],
   template: `
     <div class="student-profile-container">
@@ -100,6 +102,28 @@ import { AddSubjectMarkDialogComponent } from './add-subject-mark-dialog.compone
             </ng-template>
 
             <form [formGroup]="personalForm" class="form-section">
+              <div class="profile-assets-grid">
+                <app-student-image-upload
+                  title="Photograph / छायाचित्र"
+                  hint="Upload a clear passport-style photo. It will be cropped and compressed under 50 KB."
+                  type="photo"
+                  [imageUrl]="profile?.photoUrl || null"
+                  [saving]="savingPhoto"
+                  (saved)="handleProfileImageSaved($event)"
+                  (removed)="handleProfileImageRemoved($event)">
+                </app-student-image-upload>
+
+                <app-student-image-upload
+                  title="Student Signature / सही"
+                  hint="Upload a clean signature on a plain background. It will be optimized for hall tickets."
+                  type="signature"
+                  [imageUrl]="profile?.signatureUrl || null"
+                  [saving]="savingSignature"
+                  (saved)="handleProfileImageSaved($event)"
+                  (removed)="handleProfileImageRemoved($event)">
+                </app-student-image-upload>
+              </div>
+
               <div class="form-grid">
                 <mat-form-field class="form-field">
                   <mat-label>{{ i18n.t('firstName') }}</mat-label>
@@ -602,6 +626,13 @@ import { AddSubjectMarkDialogComponent } from './add-subject-mark-dialog.compone
       padding: 2.5rem;
     }
 
+    .profile-assets-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
     .form-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -792,6 +823,7 @@ import { AddSubjectMarkDialogComponent } from './add-subject-mark-dialog.compone
         padding: 1.5rem;
       }
 
+      .profile-assets-grid,
       .form-grid {
         grid-template-columns: 1fr;
         gap: 1rem;
@@ -883,6 +915,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   error: string | null = null;
   savingPersonal = false;
   savingCollege = false;
+  savingPhoto = false;
+  savingSignature = false;
 
   personalForm: FormGroup;
   collegeForm: FormGroup;
@@ -1002,6 +1036,61 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         this.savingCollege = false;
         this.snackBar.open('✓ College information saved successfully', '', { duration: 3000 });
       }, 1500);
+    }
+  }
+
+  async handleProfileImageSaved(event: { type: 'photo' | 'signature'; dataUrl: string; sizeKB: number }) {
+    const isPhoto = event.type === 'photo';
+    if (isPhoto) {
+      this.savingPhoto = true;
+    } else {
+      this.savingSignature = true;
+    }
+
+    try {
+      const response = await this.profileService.uploadProfileAsset(event.type, event.dataUrl);
+      this.profile = {
+        ...(this.profile || {}),
+        ...response.student,
+        [isPhoto ? 'photoUrl' : 'signatureUrl']: response.url
+      } as StudentProfile;
+      this.snackBar.open(`✓ ${isPhoto ? 'Photograph' : 'Signature'} saved (${event.sizeKB.toFixed(1)} KB)`, '', { duration: 3000 });
+    } catch (err: any) {
+      this.snackBar.open(err?.error?.message || `Failed to save ${isPhoto ? 'photograph' : 'signature'}.`, '', { duration: 4000 });
+    } finally {
+      if (isPhoto) {
+        this.savingPhoto = false;
+      } else {
+        this.savingSignature = false;
+      }
+    }
+  }
+
+  async handleProfileImageRemoved(type: 'photo' | 'signature') {
+    const isPhoto = type === 'photo';
+    if (isPhoto) {
+      this.savingPhoto = true;
+    } else {
+      this.savingSignature = true;
+    }
+
+    try {
+      await this.profileService.removeProfileAsset(type);
+      if (this.profile) {
+        this.profile = {
+          ...this.profile,
+          [isPhoto ? 'photoUrl' : 'signatureUrl']: null
+        } as StudentProfile;
+      }
+      this.snackBar.open(`✓ ${isPhoto ? 'Photograph' : 'Signature'} removed`, '', { duration: 2500 });
+    } catch (err: any) {
+      this.snackBar.open(err?.error?.message || `Failed to remove ${isPhoto ? 'photograph' : 'signature'}.`, '', { duration: 4000 });
+    } finally {
+      if (isPhoto) {
+        this.savingPhoto = false;
+      } else {
+        this.savingSignature = false;
+      }
     }
   }
 

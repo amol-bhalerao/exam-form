@@ -121,6 +121,11 @@ app.use('/api', auditMiddleware);
 // The frontend build output is at: frontend/dist/exam-form/browser
 const frontendPath = path.join(__dirname, '../../frontend/dist/exam-form/browser');
 const frontendIndexPath = path.join(frontendPath, 'index.html');
+const uploadsPath = path.join(__dirname, '../uploads');
+
+app.use('/uploads', express.static(uploadsPath, {
+  maxAge: '7d'
+}));
 
 app.use(express.static(frontendPath, {
   maxAge: '1d', // Cache assets for 1 day
