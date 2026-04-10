@@ -286,15 +286,15 @@ import { BrandingService } from '../../../core/branding.service';
 
             <div class="photo-sign-wrap">
               <div class="photo-box signature-cell candidate-photo-box">
-                @if (s().photoUrl) {
-                  <img [src]="s().photoUrl" alt="Student photograph" class="asset-image photo-image" />
+                @if (photoUrl()) {
+                  <img [src]="photoUrl()" alt="Student photograph" class="asset-image photo-image" crossorigin="anonymous" referrerpolicy="no-referrer" loading="eager" />
                 } @else {
                   <span class="placeholder-label">Student Photo / छायाचित्र</span>
                 }
               </div>
               <div class="sign-box signature-cell candidate-sign-box">
-                @if (s().signatureUrl) {
-                  <img [src]="s().signatureUrl" alt="Student signature" class="asset-image signature-image" />
+                @if (signatureUrl()) {
+                  <img [src]="signatureUrl()" alt="Student signature" class="asset-image signature-image" crossorigin="anonymous" referrerpolicy="no-referrer" loading="eager" />
                 } @else {
                   <span class="placeholder-label">Candidate Signature / उमेदवाराची सही</span>
                 }
@@ -520,6 +520,7 @@ import { BrandingService } from '../../../core/branding.service';
 
       .summary-item strong {
         font-size: 10px;
+        font-weight: 800;
       }
 
       .section-card {
@@ -582,6 +583,8 @@ import { BrandingService } from '../../../core/branding.service';
         line-height: 1.22;
         word-break: break-word;
         overflow-wrap: anywhere;
+        font-weight: 700;
+        color: #000;
       }
 
       .table-wrap {
@@ -619,6 +622,11 @@ import { BrandingService } from '../../../core/branding.service';
 
       .subject-table tbody tr:nth-child(even) {
         background: #fafafa;
+      }
+
+      .subject-table tbody td {
+        font-weight: 700;
+        color: #000;
       }
 
       .subject-name-cell {
@@ -908,6 +916,7 @@ import { BrandingService } from '../../../core/branding.service';
 })
 export class StudentFormPrintComponent implements OnInit {
   readonly application = signal<any | null>(null);
+  readonly studentProfile = signal<any | null>(null);
   readonly printedAt = new Date();
   readonly branding = inject(BrandingService);
 
@@ -916,7 +925,37 @@ export class StudentFormPrintComponent implements OnInit {
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.http.get<{ application: any }>(`${API_BASE_URL}/applications/${id}`).subscribe((r: any) => this.application.set(r.application));
+
+    this.http.get<{ application: any }>(`${API_BASE_URL}/applications/${id}`).subscribe((r: any) => {
+      const application = r?.application
+        ? {
+            ...r.application,
+            student: r.application.student
+              ? {
+                  ...r.application.student,
+                  photoUrl: this.withCacheBust(r.application.student.photoUrl),
+                  signatureUrl: this.withCacheBust(r.application.student.signatureUrl)
+                }
+              : null
+          }
+        : null;
+
+      this.application.set(application);
+    });
+
+    this.http.get<{ student?: any }>(`${API_BASE_URL}/me`).subscribe({
+      next: (r: any) => {
+        if (!r?.student) return;
+        this.studentProfile.set({
+          ...r.student,
+          photoUrl: this.withCacheBust(r.student.photoUrl),
+          signatureUrl: this.withCacheBust(r.student.signatureUrl)
+        });
+      },
+      error: () => {
+        // Keep printable form working for institute/board roles; application student data remains the fallback.
+      }
+    });
   }
 
   a() {
@@ -924,7 +963,36 @@ export class StudentFormPrintComponent implements OnInit {
   }
 
   s() {
-    return this.application()?.student ?? {};
+    const appStudent = this.application()?.student ?? {};
+    const profileStudent = this.studentProfile() ?? {};
+
+    return {
+      ...appStudent,
+      ...profileStudent,
+      photoUrl: profileStudent.photoUrl || appStudent.photoUrl || null,
+      signatureUrl: profileStudent.signatureUrl || appStudent.signatureUrl || null
+    };
+  }
+
+  photoUrl() {
+    return this.s().photoUrl || null;
+  }
+
+  signatureUrl() {
+    return this.s().signatureUrl || null;
+  }
+
+  private withCacheBust(url: unknown) {
+    if (!url) return null;
+    const value = String(url).trim();
+    if (!value) return null;
+
+    const version = `v=${Date.now()}`;
+    if (/([?&])v=/.test(value)) {
+      return value.replace(/([?&])v=[^&]*/i, `$1${version}`);
+    }
+
+    return `${value}${value.includes('?') ? '&' : '?'}${version}`;
   }
 
   valueOrDash(value: unknown, fallback = '—') {
