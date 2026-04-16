@@ -49,7 +49,7 @@ import { BrandingService } from '../../../core/branding.service';
 
           <section class="section-card">
             <div class="section-title">1. Candidate Personal Particulars</div>
-            <div class="detail-grid grid-4">
+            <div class="detail-grid" [class.grid-3]="useThreeColumnDetails()" [class.grid-4]="!useThreeColumnDetails()">
               <div class="detail-item">
                 <label>Surname</label>
                 <div>{{ valueOrDash(s().lastName) }}</div>
@@ -323,6 +323,8 @@ import { BrandingService } from '../../../core/branding.service';
         border: 1.5px solid #000;
         padding: 2.5mm;
         box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
       }
 
       .document-header {
@@ -482,6 +484,10 @@ import { BrandingService } from '../../../core/branding.service';
         grid-template-columns: repeat(4, 1fr);
       }
 
+      .grid-3 {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
       .detail-item {
         position: relative;
         padding: 7px 5px 3px;
@@ -593,7 +599,7 @@ import { BrandingService } from '../../../core/branding.service';
         display: grid;
         grid-template-columns: 70% 15% 15%;
         gap: 4px;
-        margin-top: 4px;
+        margin-top: auto;
         align-items: stretch;
         break-inside: avoid;
         page-break-inside: avoid;
@@ -731,7 +737,7 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       .document-footer {
-        margin-top: 3px;
+        margin-top: 2px;
         display: flex;
         justify-content: space-between;
         gap: 8px;
@@ -773,6 +779,10 @@ import { BrandingService } from '../../../core/branding.service';
           grid-template-columns: repeat(2, 1fr);
         }
 
+        .grid-3 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+
         .standalone-photo-box {
           min-height: 64px;
         }
@@ -802,7 +812,8 @@ import { BrandingService } from '../../../core/branding.service';
         }
 
         .document-header,
-        .grid-4 {
+        .grid-4,
+        .grid-3 {
           grid-template-columns: 1fr;
         }
 
@@ -869,6 +880,10 @@ import { BrandingService } from '../../../core/branding.service';
 
         .grid-4 {
           grid-template-columns: repeat(4, 1fr) !important;
+        }
+
+        .grid-3 {
+          grid-template-columns: repeat(3, 1fr) !important;
         }
 
         .bottom-grid {
@@ -1311,7 +1326,8 @@ export class StudentFormPrintComponent implements OnInit {
   }
 
   useThreeColumnDetails() {
-    return !this.hasOtherDetails() && !this.isDenseSubjectTable();
+    const subjectCount = this.a().subjects?.length ?? 0;
+    return !this.hasOtherDetails() && !this.isDenseSubjectTable() && subjectCount <= 9;
   }
 
   isDenseSubjectTable() {
