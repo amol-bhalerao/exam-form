@@ -242,28 +242,33 @@ import { BrandingService } from '../../../core/branding.service';
               <p>
                 I hereby declare that the information furnished by me in this form is true and correct to the best of my knowledge.
                             </p>
+
+             
+
               <div class="note-line">
                 Reference: <strong>{{ a().applicationNo || applicationSerialValue() }}</strong>
               </div>
+              <div class="sign-box declaration-signature-box">
+                  <div class="asset-caption">Candidate Signature</div>
+                  @if (signatureUrl()) {
+                    <img [src]="signatureUrl()" alt="Student signature" class="asset-image signature-image declaration-signature-image" loading="eager" (error)="onSignatureLoadError()" />
+                  } @else {
+                    <span class="placeholder-label">Candidate Signature</span>
+                  }
+                </div>
             </div>
 
-            <div class="photo-sign-wrap">
-              <div class="photo-box signature-cell candidate-photo-box">
-                @if (photoUrl()) {
-                  <img [src]="photoUrl()" alt="Student photograph" class="asset-image photo-image" loading="eager" (error)="onPhotoLoadError()" />
-                } @else {
-                  <span class="placeholder-label">Student Photo</span>
-                }
-              </div>
-              <div class="sign-box signature-cell candidate-sign-box">
-                @if (signatureUrl()) {
-                  <img [src]="signatureUrl()" alt="Student signature" class="asset-image signature-image" loading="eager" (error)="onSignatureLoadError()" />
-                } @else {
-                  <span class="placeholder-label">Candidate Signature</span>
-                }
-              </div>
-              <div class="sign-box signature-cell teacher-sign-box"><span class="placeholder-label">Class Teacher</span></div>
-              <div class="sign-box signature-cell principal-sign-box"><span class="placeholder-label">Principal Seal & Signature</span></div>
+            <div class="photo-box declaration-photo-box standalone-photo-box">
+              <div class="asset-caption">Candidate Photograph</div>
+              @if (photoUrl()) {
+                <img [src]="photoUrl()" alt="Student photograph" class="asset-image photo-image declaration-photo-image" loading="eager" (error)="onPhotoLoadError()" />
+              } @else {
+                <span class="placeholder-label">Student Photo</span>
+              }
+            </div>
+
+            <div class="sign-box signature-cell principal-sign-box principal-seal-box">
+                <span class="placeholder-label">Principal Seal & Signature</span>
             </div>
           </section>
 
@@ -389,7 +394,7 @@ import { BrandingService } from '../../../core/branding.service';
 
       .institute-meta-row {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 2px 10px;
         margin-top: 3px;
         font-size: 9px;
@@ -586,15 +591,20 @@ import { BrandingService } from '../../../core/branding.service';
 
       .bottom-grid {
         display: grid;
-        grid-template-columns: 1.45fr 1.25fr;
+        grid-template-columns: 70% 15% 15%;
         gap: 4px;
         margin-top: 4px;
+        align-items: stretch;
         break-inside: avoid;
         page-break-inside: avoid;
       }
 
       .declaration-box {
-        padding: 4px 5px;
+        padding: 5px 6px;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
       }
 
       .declaration-box p {
@@ -611,48 +621,58 @@ import { BrandingService } from '../../../core/branding.service';
         text-align: center;
       }
 
-      .photo-sign-wrap {
+      .declaration-media-row {
+        margin-top: 5px;
         display: grid;
-        grid-template-columns: minmax(34mm, 120px) 1fr 1fr;
-        grid-template-areas:
-          'photo candidate candidate'
-          'photo teacher principal';
-        gap: 4px;
-        align-items: stretch;
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+        align-items: end;
       }
 
-      .candidate-photo-box {
-        grid-area: photo;
-        width: min(100%, clamp(120px, 16vw, 160px));
-        aspect-ratio: 1 / 1;
-        min-height: 0;
-        align-items: center;
-        justify-self: center;
-        align-self: center;
+      .declaration-photo-box {
+        min-height: 54px;
       }
 
-      .candidate-sign-box {
-        grid-area: candidate;
-        min-height: clamp(56px, 8vw, 84px);
+      .standalone-photo-box {
+        min-height: 70px;
+        height: 100%;
+        width: 100%;
       }
 
-      .teacher-sign-box {
-        grid-area: teacher;
-        min-height: clamp(50px, 7vw, 72px);
+      .declaration-signature-box {
+        min-height: 44px;
+        margin-top: auto;
+        align-items: end;
+        border: none;
+      }
+
+      .asset-caption {
+        font-size: 6.6px;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        text-transform: uppercase;
       }
 
       .principal-sign-box {
-        grid-area: principal;
-        min-height: clamp(50px, 7vw, 72px);
+        min-height: 70px;
+        width: 100%;
+      }
+
+      .principal-seal-box {
+        justify-content: flex-end;
+        align-items: center;
+        padding: 3px 4px;
       }
 
       .sign-box,
       .photo-box {
         display: flex;
-        align-items: center;
+        flex-direction: column;
+        align-items: end;
         justify-content: center;
-        padding: 3px;
-        font-size: 7.5px;
+        gap: 2px;
+        padding: 2px;
+        font-size: 7.2px;
         font-weight: 700;
         text-align: center;
         overflow: hidden;
@@ -683,18 +703,31 @@ import { BrandingService } from '../../../core/branding.service';
         background: #fff;
       }
 
+      .declaration-photo-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
       .signature-image {
         object-fit: contain;
         object-position: center;
+        height: 50%;
         padding: 2px;
+        border: none;
+      }
+
+      .declaration-signature-image {
+        width: 30%;
+        height: 100%;
       }
 
       .signature-cell {
-        min-height: clamp(50px, 7vw, 72px);
+        min-height: 48px;
       }
 
       .sign-box {
-        min-height: clamp(50px, 7vw, 72px);
+        min-height: 48px;
       }
 
       .document-footer {
@@ -740,31 +773,26 @@ import { BrandingService } from '../../../core/branding.service';
           grid-template-columns: repeat(2, 1fr);
         }
 
-        .photo-sign-wrap {
-          grid-template-columns: repeat(2, 1fr);
-          grid-template-areas:
-            'photo candidate'
-            'teacher principal';
+        .standalone-photo-box {
+          min-height: 64px;
         }
 
-        .candidate-photo-box {
-          width: min(100%, clamp(140px, 36vw, 200px));
-          aspect-ratio: 1 / 1;
-          min-height: 0;
-          justify-self: center;
-          align-self: center;
+        .declaration-photo-box {
+          min-height: 50px;
         }
 
-        .candidate-sign-box,
-        .teacher-sign-box,
+        .declaration-signature-box {
+          min-height: 40px;
+        }
+
         .principal-sign-box,
         .signature-cell,
         .sign-box {
-          min-height: clamp(56px, 11vw, 80px);
+          min-height: 44px;
         }
 
         .bottom-grid {
-          grid-template-columns: 1fr;
+          grid-template-columns: 1fr 1fr;
         }
       }
 
@@ -774,33 +802,34 @@ import { BrandingService } from '../../../core/branding.service';
         }
 
         .document-header,
-        .grid-4,
-        .photo-sign-wrap {
+        .grid-4 {
           grid-template-columns: 1fr;
         }
 
-        .photo-sign-wrap {
-          grid-template-areas:
-            'photo'
-            'candidate'
-            'teacher'
-            'principal';
+        .declaration-media-row {
+          grid-template-columns: 1fr;
         }
 
-        .candidate-photo-box {
-          width: min(100%, 200px);
-          aspect-ratio: 1 / 1;
-          min-height: 0;
-          justify-self: center;
-          align-self: center;
+        .declaration-photo-box {
+          min-height: 46px;
         }
 
-        .candidate-sign-box,
-        .teacher-sign-box,
+        .standalone-photo-box {
+          min-height: 58px;
+        }
+
+        .declaration-signature-box {
+          min-height: 36px;
+        }
+
         .principal-sign-box,
         .signature-cell,
         .sign-box {
-          min-height: 64px;
+          min-height: 42px;
+        }
+
+        .bottom-grid {
+          grid-template-columns: 1fr;
         }
 
         .detail-item,
@@ -843,7 +872,7 @@ import { BrandingService } from '../../../core/branding.service';
         }
 
         .bottom-grid {
-          grid-template-columns: 1.45fr 1.25fr !important;
+          grid-template-columns: 70% 15% 15% !important;
         }
 
         .subject-table {
@@ -860,33 +889,27 @@ import { BrandingService } from '../../../core/branding.service';
           height: 15px !important;
         }
 
-        .photo-sign-wrap {
-          grid-template-columns: 34mm 1fr 1fr !important;
-          grid-template-areas:
-            'photo candidate candidate'
-            'photo teacher principal' !important;
+        .standalone-photo-box {
+          min-height: 14mm !important;
         }
 
-        .candidate-photo-box {
-          width: 32mm !important;
-          aspect-ratio: 1 / 1 !important;
-          min-height: 0 !important;
-          justify-self: center !important;
-          align-self: center !important;
+        .declaration-photo-box {
+          min-height: 11.5mm !important;
         }
 
-        .candidate-sign-box,
-        .teacher-sign-box,
+        .declaration-signature-box {
+          min-height: 9mm !important;
+        }
+
         .principal-sign-box,
         .signature-cell,
         .sign-box {
-          min-height: 13mm !important;
+          min-height: 9.5mm !important;
         }
 
         .section-card,
         .bottom-grid,
         .declaration-box,
-        .photo-sign-wrap,
         .document-footer,
         .subject-table tr,
         .subject-table td,
