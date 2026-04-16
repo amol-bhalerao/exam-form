@@ -79,16 +79,28 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
   styles: [
     `
       .card { margin-bottom: 14px; padding: 16px; }
+      .grid-panel { overflow: visible; }
+      .grid-panel__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+      .grid-panel__title { display: flex; align-items: center; gap: 6px; font-weight: 800; }
+      .grid-panel__subtitle { color: #64748b; margin-top: 4px; font-size: 13px; }
+      .grid-panel__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .grid-pill { border: 1px solid #dbeafe; background: #f8fbff; color: #1e3a8a; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
       .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
       .actions { margin-top: 10px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
       .status { color: #166534; font-weight: 600; }
       .status--error { color: #b91c1c; }
       .stream-row { margin-top: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .table-search-field { width: min(280px, 100%); }
+      .grid-panel__table { margin-top: 10px; width: 100%; min-height: 420px; height: 420px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+      .grid-panel__table--lg { min-height: 460px; height: 460px; }
       .w180 { width: min(180px, 100%); }
       .pager { margin-top: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
       @media (max-width: 980px) {
         .grid { grid-template-columns: 1fr; }
         .w180 { width: 100%; }
+        .table-search-field { width: 100%; }
+        .grid-panel__table,
+        .grid-panel__table--lg { min-height: 360px; height: 360px; }
       }
     `
   ]

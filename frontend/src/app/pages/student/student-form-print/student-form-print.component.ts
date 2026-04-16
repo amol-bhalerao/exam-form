@@ -108,7 +108,7 @@ import { BrandingService } from '../../../core/branding.service';
 
           <section class="section-card">
             <div class="section-title">2. Academic & Reservation Details</div>
-            <div class="detail-grid grid-4 compact-grid">
+            <div class="detail-grid compact-grid" [class.grid-3]="useThreeColumnDetails()" [class.grid-4]="!useThreeColumnDetails()">
               <div class="detail-item">
                 <label>Stream</label>
                 <div>{{ streamLabel() }}</div>
@@ -147,7 +147,7 @@ import { BrandingService } from '../../../core/branding.service';
           <section class="section-card">
             <div class="section-title">3. Subject Details</div>
             <div class="table-wrap">
-              <table class="subject-table">
+              <table class="subject-table" [class.subject-table-dense]="isDenseSubjectTable()">
                 <thead>
                   <tr>
                     <th style="width: 7%;">Sr</th>
@@ -469,8 +469,8 @@ import { BrandingService } from '../../../core/branding.service';
 
       .detail-grid {
         display: grid;
-        gap: 10px;
-        padding: 5px;
+        gap: 6px;
+        padding: 4px;
       }
 
       .grid-4 {
@@ -479,8 +479,8 @@ import { BrandingService } from '../../../core/branding.service';
 
       .detail-item {
         position: relative;
-        padding: 8px 5px 3px;
-        min-height: 26px;
+        padding: 7px 5px 3px;
+        min-height: 24px;
         border: 1px solid #000;
         background: #fff;
       }
@@ -531,7 +531,21 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       .subject-table tbody tr {
-        height: 20px;
+        height: 18px;
+      }
+
+      .subject-table.subject-table-dense {
+        font-size: 7px;
+      }
+
+      .subject-table.subject-table-dense th,
+      .subject-table.subject-table-dense td {
+        padding: 1px 2px;
+        line-height: 1.05;
+      }
+
+      .subject-table.subject-table-dense tbody tr {
+        height: 15px;
       }
 
       .subject-table thead th {
@@ -574,7 +588,7 @@ import { BrandingService } from '../../../core/branding.service';
         display: grid;
         grid-template-columns: 1.45fr 1.25fr;
         gap: 4px;
-        margin-top: auto;
+        margin-top: 4px;
         break-inside: avoid;
         page-break-inside: avoid;
       }
@@ -830,6 +844,20 @@ import { BrandingService } from '../../../core/branding.service';
 
         .bottom-grid {
           grid-template-columns: 1.45fr 1.25fr !important;
+        }
+
+        .subject-table {
+          font-size: 7px !important;
+        }
+
+        .subject-table th,
+        .subject-table td {
+          padding: 1px 2px !important;
+          line-height: 1.05 !important;
+        }
+
+        .subject-table tbody tr {
+          height: 15px !important;
         }
 
         .photo-sign-wrap {
@@ -1187,6 +1215,7 @@ export class StudentFormPrintComponent implements OnInit {
     const value = String(this.s().minorityReligionCode || '').toUpperCase();
     const mapping: Record<string, string> = {
       HINDU: 'Hindu',
+      NON_MINORITY: 'Other Non-Minority',
       MUSLIM: 'Muslim',
       CHRISTIAN: 'Christian',
       BUDDHIST: 'Buddhist',
@@ -1257,6 +1286,14 @@ export class StudentFormPrintComponent implements OnInit {
   hasOtherDetails() {
     const app = this.a();
     return this.isPrivateCandidate() || this.isBacklogCandidate() || !!app.eligibilityCertNo || (app.eligibilityCertIssued !== null && app.eligibilityCertIssued !== undefined);
+  }
+
+  useThreeColumnDetails() {
+    return !this.hasOtherDetails() && !this.isDenseSubjectTable();
+  }
+
+  isDenseSubjectTable() {
+    return (this.a().subjects?.length ?? 0) > 10;
   }
 
   async print() {

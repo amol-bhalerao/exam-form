@@ -105,7 +105,7 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
           <button mat-stroked-button type="button" *ngIf="activeTab() > 0" (click)="prevStep()">Back</button>
           <span class="action-spacer"></span>
           <button mat-stroked-button color="primary" type="button" *ngIf="activeTab() < 2" (click)="nextStep()">Next</button>
-          <button mat-flat-button color="primary" type="submit" *ngIf="activeTab() === 2" [disabled]="form.invalid || loading()">{{ loading() ? 'Saving…' : selectedTeacherId() ? 'Update Teacher' : 'Add Teacher' }}</button>
+          <button mat-flat-button color="primary" type="submit" *ngIf="activeTab() >= 1" [disabled]="form.invalid || loading()">{{ loading() ? 'Saving…' : selectedTeacherId() ? 'Update Teacher' : 'Save Teacher' }}</button>
           <button mat-stroked-button type="button" *ngIf="selectedTeacherId()" (click)="resetForm()">Cancel Edit</button>
         </div>
       </form>
@@ -173,10 +173,11 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
   styles: [`
     .card { margin-bottom: 14px; padding: 16px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-    .tab-content { padding: 14px 4px 8px; margin-bottom: 4px; }
+    .tab-content { padding: 20px 4px 12px; margin-bottom: 10px; }
     .h { font-weight: 800; }
     .p { color: #6b7280; margin-top: 4px; line-height: 1.45; }
     .teacher-tabs { margin-top: 12px; }
+    .teacher-tabs :where(.mat-mdc-tab-body-content) { padding-top: 6px; }
     .inline-action { display: flex; align-items: center; min-height: 56px; }
     .span-2 { grid-column: span 2; }
     .calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 14px 0; }

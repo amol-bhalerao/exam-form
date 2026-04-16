@@ -500,6 +500,8 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                       <mat-label>Minority Religion Code (10)</mat-label>
                       <mat-select formControlName="minorityReligionCode">
                         <mat-option value="">-- Select Minority Religion --</mat-option>
+                        <mat-option value="HINDU">Hindu</mat-option>
+                        <mat-option value="NON_MINORITY">Other Non-Minority</mat-option>
                         <mat-option value="MUSLIM">Muslim</mat-option>
                         <mat-option value="CHRISTIAN">Christian</mat-option>
                         <mat-option value="SIKH">Sikh</mat-option>
@@ -1623,6 +1625,7 @@ export class StudentApplicationEditComponent implements OnInit {
     };
     const religionLabels: Record<string, string> = {
       HINDU: 'Hindu',
+      NON_MINORITY: 'Other Non-Minority',
       MUSLIM: 'Muslim',
       CHRISTIAN: 'Christian',
       SIKH: 'Sikh',

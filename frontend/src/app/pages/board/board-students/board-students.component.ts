@@ -113,7 +113,7 @@ type ExportColumn = {
       <div class="filters">
         <mat-form-field appearance="outline" class="w260">
           <mat-label>Exam</mat-label>
-          <mat-select [(ngModel)]="examId" (selectionChange)="onFilterChanged()">
+          <mat-select [(ngModel)]="examId" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
             <mat-option [value]="''">All exams</mat-option>
             <mat-option *ngFor="let exam of exams()" [value]="String(exam.id)">{{ exam.name }} - {{ exam.session }} {{ exam.academicYear }}</mat-option>
           </mat-select>
@@ -121,7 +121,7 @@ type ExportColumn = {
 
         <mat-form-field appearance="outline" class="w180">
           <mat-label>Status</mat-label>
-          <mat-select [(ngModel)]="status" (selectionChange)="onFilterChanged()">
+          <mat-select [(ngModel)]="status" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
             <mat-option [value]="''">All visible</mat-option>
             <mat-option value="INSTITUTE_VERIFIED">Institute Verified</mat-option>
             <mat-option value="BOARD_APPROVED">Board Approved</mat-option>
@@ -131,7 +131,7 @@ type ExportColumn = {
 
         <mat-form-field appearance="outline" class="w180">
           <mat-label>Caste</mat-label>
-          <mat-select [(ngModel)]="caste" (selectionChange)="onFilterChanged()">
+          <mat-select [(ngModel)]="caste" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
             <mat-option [value]="''">All caste groups</mat-option>
             <mat-option *ngFor="let item of casteOptions()" [value]="item">{{ item }}</mat-option>
           </mat-select>
@@ -139,7 +139,7 @@ type ExportColumn = {
 
         <mat-form-field appearance="outline" class="w260">
           <mat-label>Subject</mat-label>
-          <mat-select [(ngModel)]="subjectId" (selectionChange)="onFilterChanged()">
+          <mat-select [(ngModel)]="subjectId" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
             <mat-option [value]="''">All subjects</mat-option>
             <mat-option *ngFor="let subject of subjects()" [value]="String(subject.id)">{{ subject.code }} - {{ subject.name }}</mat-option>
           </mat-select>
@@ -147,7 +147,7 @@ type ExportColumn = {
 
         <mat-form-field appearance="outline" class="w220">
           <mat-label>Sort By</mat-label>
-          <mat-select [(ngModel)]="sortBy" (selectionChange)="onFilterChanged()">
+          <mat-select [(ngModel)]="sortBy" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
             <mat-option value="updatedAt">Updated Date</mat-option>
             <mat-option value="exam">Exam</mat-option>
             <mat-option value="caste">Caste</mat-option>
@@ -158,7 +158,7 @@ type ExportColumn = {
 
         <mat-form-field appearance="outline" class="w160">
           <mat-label>Order</mat-label>
-          <mat-select [(ngModel)]="sortOrder" (selectionChange)="onFilterChanged()">
+          <mat-select [(ngModel)]="sortOrder" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
             <mat-option value="asc">Ascending</mat-option>
             <mat-option value="desc">Descending</mat-option>
           </mat-select>
@@ -226,18 +226,20 @@ type ExportColumn = {
     </mat-card>
   `,
   styles: [
-    `.card { margin-bottom: 14px; padding: 16px; }`,
+    `.card { margin-bottom: 14px; padding: 16px; overflow: visible; }`,
     `.title-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }`,
     `.h { font-weight: 900; font-size: 1.05rem; }`,
     `.p { color: #64748b; margin-top: 4px; }`,
     `.stats { font-weight: 700; color: #0f766e; }`,
-    `.filters { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }`,
-    `.actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; }`,
-    `.summary-grid { margin-top: 10px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }`,
+    `.filters { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; position: relative; z-index: 8; }`,
+    `.actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 8; }`,
+    `.summary-grid { margin-top: 10px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; position: relative; z-index: 8; }`,
     `.summary-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; background: #f8fafc; }`,
     `.summary-title { font-weight: 700; color: #1d4ed8; margin-bottom: 6px; }`,
     `.summary-item { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; padding: 2px 0; }`,
-    `.table-wrap { margin-top: 10px; width: 100%; height: 470px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }`,
+    `.table-wrap { margin-top: 10px; width: 100%; height: 470px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; position: relative; z-index: 2; }`,
+    `:host ::ng-deep .cdk-overlay-container { z-index: 1300; }`,
+    `:host ::ng-deep .cdk-overlay-pane .board-students-select-panel { z-index: 1301 !important; }`,
     `.pager { margin-top: 10px; display: flex; align-items: center; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }`,
     `.error-box { margin-top: 10px; color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; padding: 8px 10px; border-radius: 6px; }`,
     `.w160 { width: 160px; max-width: 100%; }`,

@@ -513,6 +513,8 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     <mat-icon matPrefix>people</mat-icon>
                     <mat-select formControlName="minorityReligionCode">
                       <mat-option value="">-- Select Minority Religion --</mat-option>
+                      <mat-option value="HINDU">Hindu</mat-option>
+                      <mat-option value="NON_MINORITY">Other Non-Minority</mat-option>
                       <mat-option value="MUSLIM">Muslim</mat-option>
                       <mat-option value="CHRISTIAN">Christian</mat-option>
                       <mat-option value="SIKH">Sikh</mat-option>
@@ -2678,6 +2680,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
   getReligionLabel(code?: string | null): string {
     const labels: Record<string, string> = {
+      HINDU: 'Hindu',
+      NON_MINORITY: 'Other Non-Minority',
       MUSLIM: 'Muslim',
       CHRISTIAN: 'Christian',
       SIKH: 'Sikh',
