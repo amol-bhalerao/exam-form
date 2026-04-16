@@ -1214,8 +1214,7 @@ export class StudentFormPrintComponent implements OnInit {
   religionLabel() {
     const value = String(this.s().minorityReligionCode || '').toUpperCase();
     const mapping: Record<string, string> = {
-      HINDU: 'Hindu',
-      NON_MINORITY: 'Other Non-Minority',
+      HINDU_NON_MINORITY: 'Hindu & Other Non-Minority',
       MUSLIM: 'Muslim',
       CHRISTIAN: 'Christian',
       BUDDHIST: 'Buddhist',
