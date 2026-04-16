@@ -50,6 +50,7 @@ app.use(
           'https://sdk.cashfree.com',
           "'unsafe-inline'" // Angular requires this in dev
         ],
+        scriptSrcAttr: ["'unsafe-inline'"],
         frameSrc: ["'self'", 'https://accounts.google.com', 'https://sdk.cashfree.com', 'https://sandbox.cashfree.com', 'https://api.cashfree.com'],
         imgSrc: ["'self'", 'data:', 'https:'],
         connectSrc: ["'self'", 'https://accounts.google.com', 'https://sdk.cashfree.com', 'https://sandbox.cashfree.com', 'https://api.cashfree.com'],
@@ -130,7 +131,18 @@ app.use('/uploads', express.static(uploadsPath, {
 
 app.use(express.static(frontendPath, {
   maxAge: '1d', // Cache assets for 1 day
-  dotfiles: 'allow' // Allow serving .htaccess
+  dotfiles: 'allow', // Allow serving .htaccess
+  setHeaders: (res, filePath) => {
+    // Prevent stale index from referencing removed hashed chunks after redeploy.
+    if (filePath.endsWith('index.html')) {
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+      return;
+    }
+
+    if (/\.(js|css)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    }
+  }
 }));
 
 // ── SPA Routing: Fallback to index.html for Angular routing ──────────────

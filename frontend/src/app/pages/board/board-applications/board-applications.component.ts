@@ -368,14 +368,40 @@ export class BoardApplicationsComponent implements OnInit {
   printList() {
     if (!this.selectedExam) return;
 
-    const header = `<h2>Applications for ${this.selectedExam.name} ${this.selectedExam.session} ${this.selectedExam.academicYear}</h2><p>Status: ${this.status || 'All'} | Search: ${this.search || 'All'} | Total: ${this.totalApplications}</p>`;
-    const rowsHtml = this.rows().map((r) => `<tr><td>${r.applicationNo}</td><td>${r.student.lastName || ''}, ${r.student.firstName || ''}</td><td>${r.institute.name}</td><td>${r.exam.name} ${r.exam.session} ${r.exam.academicYear}</td><td>${r.status}</td><td>${new Date(r.updatedAt).toLocaleString()}</td></tr>`).join('');
-    const content = `<html><head><title>Applications - ${this.selectedExam.name}</title><style>table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border:1px solid #666;padding:4px;text-align:left;}th{background:#f5f5f5;font-weight:bold;}</style></head><body>${header}<table><thead><tr><th>App No</th><th>Student</th><th>Institute</th><th>Exam</th><th>Status</th><th>Updated</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
-    const w = window.open('', '_blank');
-    if (!w) return;
-    w.document.write(content);
-    w.document.close();
-    w.print();
+    this.loading.set(true);
+    this.error.set(null);
+
+    const p = new URLSearchParams();
+    p.set('examId', `${this.selectedExam.id}`);
+    if (this.status) p.set('status', this.status);
+    if (this.search) p.set('search', this.search);
+    p.set('limit', '10000');
+
+    this.http.get<{ applications: Row[] }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe({
+      next: (response) => {
+        const printableRows = response.applications || [];
+        const header = `<h2>Applications for ${this.selectedExam!.name} ${this.selectedExam!.session} ${this.selectedExam!.academicYear}</h2><p>Status: ${this.status || 'All'} | Search: ${this.search || 'All'} | Total: ${printableRows.length}</p>`;
+        const rowsHtml = printableRows
+          .map((r) => `<tr><td>${r.applicationNo}</td><td>${r.student.lastName || ''}, ${r.student.firstName || ''}</td><td>${r.institute.name}</td><td>${r.exam.name} ${r.exam.session} ${r.exam.academicYear}</td><td>${r.status}</td><td>${new Date(r.updatedAt).toLocaleString()}</td></tr>`)
+          .join('');
+        const content = `<html><head><title>Applications - ${this.selectedExam!.name}</title><style>table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border:1px solid #666;padding:4px;text-align:left;}th{background:#f5f5f5;font-weight:bold;}</style></head><body>${header}<table><thead><tr><th>App No</th><th>Student</th><th>Institute</th><th>Exam</th><th>Status</th><th>Updated</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+        const w = window.open('', '_blank');
+        if (!w) {
+          this.loading.set(false);
+          return;
+        }
+        w.document.write(content);
+        w.document.close();
+        w.print();
+        this.loading.set(false);
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to load applications for print';
+        console.error('Failed to print applications:', errorMsg);
+        this.error.set(errorMsg);
+        this.loading.set(false);
+      }
+    });
   }
 
   nextPage() {

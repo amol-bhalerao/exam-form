@@ -35,6 +35,7 @@ import { ProfileComponent } from './pages/profile/profile.component';
 import { BoardApplicationsComponent } from './pages/board/board-applications/board-applications.component';
 import { BoardSubjectsComponent } from './pages/board/board-subjects/board-subjects.component';
 import { BoardTeachersComponent } from './pages/board/board-teachers/board-teachers.component';
+import { BoardStudentsComponent } from './pages/board/board-students/board-students.component';
 import { BoardStreamsComponent } from './pages/board/board-streams/board-streams.component';
 import { InstituteApplicationsComponent } from './pages/institute/institute-applications/institute-applications.component';
 import { BoardExamsComponent } from './pages/board/board-exams/board-exams.component';
@@ -95,6 +96,7 @@ export const routes: Routes = [
       // BOARD
       { path: 'board/exams', component: BoardExamsComponent, canActivate: [roleGuard(['BOARD'])] },
       { path: 'board/applications', component: BoardApplicationsComponent, canActivate: [roleGuard(['BOARD'])] },
+      { path: 'board/students', component: BoardStudentsComponent, canActivate: [roleGuard(['BOARD'])] },
       { path: 'board/news', component: BoardNewsComponent, canActivate: [roleGuard(['BOARD'])] },
       { path: 'board/teachers', component: BoardTeachersComponent, canActivate: [roleGuard(['BOARD'])] },
       { path: 'board/subjects', component: BoardSubjectsComponent, canActivate: [roleGuard(['BOARD'])] },

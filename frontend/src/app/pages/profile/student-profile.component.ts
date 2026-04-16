@@ -493,11 +493,17 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     <mat-icon matPrefix>group</mat-icon>
                     <mat-select formControlName="categoryCode">
                       <mat-option value="">-- Select Category --</mat-option>
-                      <mat-option value="GEN">General</mat-option>
+                      <mat-option value="OPEN">Open</mat-option>
                       <mat-option value="OBC">OBC</mat-option>
-                      <mat-option value="SC">SC</mat-option>
-                      <mat-option value="ST">ST</mat-option>
-                      <mat-option value="NT">NT</mat-option>
+                      <mat-option value="SC">Scheduled Caste (SC)</mat-option>
+                      <mat-option value="ST">Scheduled Tribe (ST)</mat-option>
+                      <mat-option value="VJA">VJ/DT (VJ-A)</mat-option>
+                      <mat-option value="NTB">Nomadic Tribe (NT-B)</mat-option>
+                      <mat-option value="NTC">Nomadic Tribe (NT-C)</mat-option>
+                      <mat-option value="NTD">Nomadic Tribe (NT-D)</mat-option>
+                      <mat-option value="SBC">SBC</mat-option>
+                      <mat-option value="SEBC">SEBC</mat-option>
+                      <mat-option value="EWS">EWS</mat-option>
                     </mat-select>
                     
                   </mat-form-field>
@@ -511,8 +517,10 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       <mat-option value="CHRISTIAN">Christian</mat-option>
                       <mat-option value="SIKH">Sikh</mat-option>
                       <mat-option value="BUDDHIST">Buddhist</mat-option>
+                      <mat-option value="JAIN">Jain</mat-option>
                       <mat-option value="PARSI">Parsi</mat-option>
                       <mat-option value="JEWISH">Jewish</mat-option>
+                      <mat-option value="OTHER">Other</mat-option>
                     </mat-select>
                   
                   </mat-form-field>
@@ -1891,7 +1899,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   // Profile completion tracking
   profileCompletionPercentage = 0;
   profileCompletionCount = 0;
-  totalProfileFields = 11; // firstName, lastName, dob, gender, aadhaar, address, pinCode, mobile, email, sscYear, xiYear
+  totalProfileFields = 13; // + photo and signature are mandatory for completion
 
   // Active tab index for auto-navigation after save
   selectedTabIndex = 0;
@@ -2430,12 +2438,23 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     const previousExams = profile.previousExams || [];
     const hasSSCYear = previousExams.some((e: any) => e.examType === 'SSC' && e.year);
     const hasXIYear = previousExams.some((e: any) => ['XI', '11TH', '11'].includes(String(e.examType || '').toUpperCase()) && e.year);
+    const hasPhoto = this.hasMeaningfulAsset(profile?.photoUrl);
+    const hasSignature = this.hasMeaningfulAsset(profile?.signatureUrl);
 
     if (hasSSCYear) completedCount++;
     if (hasXIYear) completedCount++;
+    if (hasPhoto) completedCount++;
+    if (hasSignature) completedCount++;
 
     this.profileCompletionCount = completedCount;
     this.profileCompletionPercentage = Math.round((completedCount / this.totalProfileFields) * 100);
+  }
+
+  private hasMeaningfulAsset(url: unknown) {
+    const value = String(url || '').trim().toLowerCase();
+    if (!value) return false;
+    // Do not count placeholder/default images as completed profile assets.
+    return !/(default|placeholder|avatar)/.test(value);
   }
 
   /**
@@ -2639,11 +2658,20 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
   getCategoryLabel(code?: string | null): string {
     const labels: Record<string, string> = {
-      GEN: 'General',
+      GEN: 'Open',
+      GENERAL: 'Open',
+      OPEN: 'Open',
       OBC: 'OBC',
-      SC: 'SC',
-      ST: 'ST',
-      NT: 'NT'
+      SC: 'Scheduled Caste (SC)',
+      ST: 'Scheduled Tribe (ST)',
+      VJA: 'VJ/DT (VJ-A)',
+      NT: 'Nomadic Tribe (NT)',
+      NTB: 'Nomadic Tribe (NT-B)',
+      NTC: 'Nomadic Tribe (NT-C)',
+      NTD: 'Nomadic Tribe (NT-D)',
+      SBC: 'SBC',
+      SEBC: 'SEBC',
+      EWS: 'EWS'
     };
     return code ? (labels[code] || code) : '-';
   }
@@ -2654,8 +2682,10 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       CHRISTIAN: 'Christian',
       SIKH: 'Sikh',
       BUDDHIST: 'Buddhist',
+      JAIN: 'Jain',
       PARSI: 'Parsi',
-      JEWISH: 'Jewish'
+      JEWISH: 'Jewish',
+      OTHER: 'Other'
     };
     return code ? (labels[code] || code) : '-';
   }
@@ -2685,6 +2715,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         ...response.student,
         [isPhoto ? 'photoUrl' : 'signatureUrl']: this.withAssetCacheBust(response.url)
       } as StudentProfile;
+      this.calculateProfileCompletion(this.profile);
       this.cdr.markForCheck();
       this.cdr.detectChanges();
       this.snackBar.open(`✓ ${isPhoto ? 'फोटो' : 'स्वाक्षरी'} जतन झाली (${event.sizeKB.toFixed(1)} KB)`, '', { duration: 3000 });
@@ -2714,6 +2745,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           ...this.profile,
           [isPhoto ? 'photoUrl' : 'signatureUrl']: null
         } as StudentProfile;
+        this.calculateProfileCompletion(this.profile);
       }
       this.snackBar.open(`✓ ${isPhoto ? 'फोटो' : 'स्वाक्षरी'} काढली`, '', { duration: 2500 });
     } catch (err: any) {

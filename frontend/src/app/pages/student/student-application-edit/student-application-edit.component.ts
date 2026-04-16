@@ -191,7 +191,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                 </form>
 
                 <div class="step-actions">
-                  <button mat-button matStepperNext>
+                  <button mat-button matStepperNext class="next-cta">
                     Next: Review Setup
                     <mat-icon>arrow_forward</mat-icon>
                   </button>
@@ -262,7 +262,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                   <button mat-button matStepperPrevious>
                     <mat-icon>arrow_back</mat-icon> Back
                   </button>
-                  <button mat-button matStepperNext>
+                  <button mat-button matStepperNext class="next-cta">
                     Next: Personal Details
                     <mat-icon>arrow_forward</mat-icon>
                   </button>
@@ -427,7 +427,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                   <button mat-button matStepperPrevious>
                     <mat-icon>arrow_back</mat-icon> Back
                   </button>
-                  <button mat-button matStepperNext [disabled]="!personFormGroup().get('firstName')?.value?.trim() || !personFormGroup().get('lastName')?.value?.trim()">
+                  <button mat-button matStepperNext class="next-cta" [disabled]="!personFormGroup().get('firstName')?.value?.trim() || !personFormGroup().get('lastName')?.value?.trim()">
                     Next: Academic Details
                     <mat-icon>arrow_forward</mat-icon>
                   </button>
@@ -498,13 +498,36 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                   @if (!hasValue('academicGroup.minorityReligionCode')) {
                     <mat-form-field appearance="outline" class="w100" matTooltip="Fill this only if a minority religion code applies to you." matTooltipPosition="above">
                       <mat-label>Minority Religion Code (10)</mat-label>
-                      <input matInput formControlName="minorityReligionCode" />
+                      <mat-select formControlName="minorityReligionCode">
+                        <mat-option value="">-- Select Minority Religion --</mat-option>
+                        <mat-option value="MUSLIM">Muslim</mat-option>
+                        <mat-option value="CHRISTIAN">Christian</mat-option>
+                        <mat-option value="SIKH">Sikh</mat-option>
+                        <mat-option value="BUDDHIST">Buddhist</mat-option>
+                        <mat-option value="JAIN">Jain</mat-option>
+                        <mat-option value="PARSI">Parsi</mat-option>
+                        <mat-option value="JEWISH">Jewish</mat-option>
+                        <mat-option value="OTHER">Other</mat-option>
+                      </mat-select>
                     </mat-form-field>
                   }
                   @if (!hasValue('academicGroup.categoryCode')) {
                     <mat-form-field appearance="outline" class="w100" matTooltip="Enter your category code as per admission or school records." matTooltipPosition="above">
                       <mat-label>Category / जात प्रवर्ग (11)</mat-label>
-                      <input matInput formControlName="categoryCode" />
+                      <mat-select formControlName="categoryCode">
+                        <mat-option value="">-- Select Category --</mat-option>
+                        <mat-option value="OPEN">Open</mat-option>
+                        <mat-option value="SC">Scheduled Caste (SC)</mat-option>
+                        <mat-option value="ST">Scheduled Tribe (ST)</mat-option>
+                        <mat-option value="VJA">VJ/DT (VJ-A)</mat-option>
+                        <mat-option value="NTB">Nomadic Tribe (NT-B)</mat-option>
+                        <mat-option value="NTC">Nomadic Tribe (NT-C)</mat-option>
+                        <mat-option value="NTD">Nomadic Tribe (NT-D)</mat-option>
+                        <mat-option value="OBC">OBC</mat-option>
+                        <mat-option value="SBC">SBC</mat-option>
+                        <mat-option value="SEBC">SEBC</mat-option>
+                        <mat-option value="EWS">EWS</mat-option>
+                      </mat-select>
                     </mat-form-field>
                   }
 
@@ -561,7 +584,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                   <button mat-button matStepperPrevious>
                     <mat-icon>arrow_back</mat-icon> Back
                   </button>
-                  <button mat-button matStepperNext [disabled]="academicFormGroup().invalid">
+                  <button mat-button matStepperNext class="next-cta" [disabled]="academicFormGroup().invalid">
                     Next: Subjects
                     <mat-icon>arrow_forward</mat-icon>
                   </button>
@@ -671,7 +694,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                   <button mat-button matStepperPrevious>
                     <mat-icon>arrow_back</mat-icon> Back
                   </button>
-                  <button mat-button matStepperNext [disabled]="subjects().length === 0">
+                  <button mat-button matStepperNext class="next-cta" [disabled]="subjects().length === 0">
                     Next: Review
                     <mat-icon>arrow_forward</mat-icon>
                   </button>
@@ -1004,6 +1027,21 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
       display: flex;
       align-items: center;
       gap: 6px;
+    }
+
+    .step-actions .next-cta {
+      background: #0f766e;
+      color: #fff;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 0 18px;
+      box-shadow: 0 2px 8px rgba(15, 118, 110, 0.3);
+    }
+
+    .step-actions .next-cta:disabled {
+      background: #cbd5e1;
+      color: #64748b;
+      box-shadow: none;
     }
 
     .step-actions.final-actions {
@@ -1567,13 +1605,20 @@ export class StudentApplicationEditComponent implements OnInit {
       URDU: 'Urdu'
     };
     const categoryLabels: Record<string, string> = {
+      GEN: 'Open',
+      GENERAL: 'Open',
       OPEN: 'Open',
       SC: 'Scheduled Caste',
       ST: 'Scheduled Tribe',
       OBC: 'OBC',
       SBC: 'SBC',
-      VJ: 'VJ',
-      NT: 'NT',
+      SEBC: 'SEBC',
+      VJ: 'VJ/DT (VJ-A)',
+      VJA: 'VJ/DT (VJ-A)',
+      NT: 'Nomadic Tribe (NT)',
+      NTB: 'Nomadic Tribe (NT-B)',
+      NTC: 'Nomadic Tribe (NT-C)',
+      NTD: 'Nomadic Tribe (NT-D)',
       EWS: 'EWS'
     };
     const religionLabels: Record<string, string> = {
@@ -1584,6 +1629,7 @@ export class StudentApplicationEditComponent implements OnInit {
       BUDDHIST: 'Buddhist',
       JAIN: 'Jain',
       PARSI: 'Parsi',
+      JEWISH: 'Jewish',
       OTHER: 'Other'
     };
 

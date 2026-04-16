@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild, signal } from '@angular/core';
+import { Component, ElementRef, EventEmitter, HostListener, Input, OnChanges, Output, SimpleChanges, ViewChild, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -20,8 +20,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       </div>
 
       <ng-container *ngIf="previewUrl(); else uploadHintTpl">
-        <div class="asset-preview" [class.signature-preview]="type === 'signature'">
-          <img [src]="previewUrl()!" [alt]="title" [class.signature-image]="type === 'signature'" />
+        <div
+          class="asset-preview"
+          [class.signature-preview]="type === 'signature'"
+          [style.width.px]="editorDimensions().width"
+          [style.height.px]="editorDimensions().height"
+        >
+          <img
+            [src]="previewUrl()!"
+            [alt]="title"
+            [class.signature-image]="type === 'signature'"
+            [style.max-width.px]="editorDimensions().width"
+            [style.max-height.px]="editorDimensions().height"
+            (error)="handlePreviewImageError()"
+          />
         </div>
       </ng-container>
 
@@ -65,25 +77,41 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       <div class="asset-error" *ngIf="error()">{{ error() }}</div>
 
       <div class="crop-panel" *ngIf="editorOpen()">
-        <div class="crop-stage" [class.signature-stage]="type === 'signature'">
-          <canvas #editorCanvas></canvas>
+        <div
+          class="crop-stage"
+          [class.signature-stage]="type === 'signature'"
+          [style.width.px]="editorDimensions().width"
+          [style.height.px]="editorDimensions().height"
+        >
+          <canvas
+            #editorCanvas
+            [attr.width]="editorDimensions().width"
+            [attr.height]="editorDimensions().height"
+            [style.width.px]="editorDimensions().width"
+            [style.height.px]="editorDimensions().height"
+          ></canvas>
           <div class="guide-frame" [class.signature-guide]="type === 'signature'"></div>
         </div>
 
         <div class="control-grid">
           <label>
             <span>Zoom</span>
-            <input type="range" min="1" max="3" step="0.05" [(ngModel)]="zoom" (input)="renderEditorPreview()" />
+            <input type="range" min="1" max="3" step="0.05" [(ngModel)]="zoom" (input)="renderEditorPreview()" [disabled]="type === 'photo' && keepOriginalPhoto" />
           </label>
           <label>
             <span>Move Left / Right</span>
-            <input type="range" min="-100" max="100" step="1" [(ngModel)]="offsetX" (input)="renderEditorPreview()" />
+            <input type="range" min="-100" max="100" step="1" [(ngModel)]="offsetX" (input)="renderEditorPreview()" [disabled]="type === 'photo' && keepOriginalPhoto" />
           </label>
           <label>
             <span>Move Up / Down</span>
-            <input type="range" min="-100" max="100" step="1" [(ngModel)]="offsetY" (input)="renderEditorPreview()" />
+            <input type="range" min="-100" max="100" step="1" [(ngModel)]="offsetY" (input)="renderEditorPreview()" [disabled]="type === 'photo' && keepOriginalPhoto" />
           </label>
         </div>
+
+        <label class="original-toggle" *ngIf="type === 'photo'">
+          <input type="checkbox" [(ngModel)]="keepOriginalPhoto" (change)="renderEditorPreview()" />
+          <span>Keep original proportions (no crop), optimize only file size</span>
+        </label>
 
         <p class="crop-note">
           Follow the guide frame while adjusting the image. It will be resized to the correct hall-ticket shape and optimized automatically below {{ maxSizeKB }} KB.
@@ -145,17 +173,17 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     }
 
     .asset-preview {
-      height: 170px;
       border: 1.5px dashed #93c5fd;
       border-radius: 12px;
       background: #f8fbff;
       display: grid;
       place-items: center;
       overflow: hidden;
+      margin: 0 auto;
     }
 
     .signature-preview {
-      height: 110px;
+      background: #f8fbff;
     }
 
     .upload-empty-state {
@@ -173,9 +201,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     }
 
     .asset-preview img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
     }
 
@@ -249,23 +275,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
     .crop-stage {
       position: relative;
-      width: 100%;
-      height: 240px;
       border-radius: 12px;
       border: 1px solid #cbd5e1;
       background: repeating-conic-gradient(#f8fafc 0% 25%, #eef2f7 0% 50%) 50% / 18px 18px;
       display: grid;
       place-items: center;
       overflow: hidden;
+      margin: 0 auto;
     }
 
     .signature-stage {
-      height: 150px;
+      border-radius: 10px;
     }
 
     .crop-stage canvas {
-      width: 100%;
-      height: 100%;
       display: block;
     }
 
@@ -304,6 +327,16 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       accent-color: #2563eb;
     }
 
+    .original-toggle {
+      margin-top: 0.7rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.82rem;
+      color: #334155;
+      font-weight: 600;
+    }
+
     .crop-note {
       margin: 0.75rem 0 0;
       font-size: 0.8rem;
@@ -317,19 +350,19 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
       }
 
       .asset-preview {
-        height: 150px;
+        margin: 0 auto;
       }
 
       .signature-preview {
-        height: 96px;
+        margin: 0 auto;
       }
 
       .crop-stage {
-        height: 200px;
+        margin: 0 auto;
       }
 
       .signature-stage {
-        height: 130px;
+        margin: 0 auto;
       }
     }
   `]
@@ -357,13 +390,44 @@ export class StudentImageUploadComponent implements OnChanges {
   zoom = 1;
   offsetX = 0;
   offsetY = 0;
+  keepOriginalPhoto = false;
 
   private sourceImage: HTMLImageElement | null = null;
+  private previousPreviewUrl: string | null = null;
+  private lastLocalSavedPreview: string | null = null;
+
+  private static readonly MOBILE_BREAKPOINT = 768;
+  private static readonly DIMENSIONS = {
+    photo: {
+      desktop: { width: 240, height: 300 },
+      mobile: { width: 200, height: 250 }
+    },
+    signature: {
+      desktop: { width: 360, height: 120 },
+      mobile: { width: 300, height: 100 }
+    }
+  } as const;
+
+  readonly viewportWidth = signal(typeof window !== 'undefined' ? window.innerWidth : 1280);
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.viewportWidth.set(window.innerWidth);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['imageUrl']) {
       this.previewUrl.set(this.imageUrl || this.previewUrl() || null);
     }
+  }
+
+  handlePreviewImageError(): void {
+    // If remote URL fails, keep a working local preview so user can still see the image they saved.
+    if (this.lastLocalSavedPreview && this.previewUrl() !== this.lastLocalSavedPreview) {
+      this.previewUrl.set(this.lastLocalSavedPreview);
+      return;
+    }
+    this.error.set('Image preview could not be loaded from server.');
   }
 
   openPicker(): void {
@@ -386,22 +450,36 @@ export class StudentImageUploadComponent implements OnChanges {
       return;
     }
 
+    this.previousPreviewUrl = this.previewUrl();
+
     const reader = new FileReader();
     reader.onload = () => {
+      const dataUrl = String(reader.result || '');
       const image = new Image();
       image.onload = () => {
         this.sourceImage = image;
+        this.previewUrl.set(dataUrl);
         this.zoom = 1;
         this.offsetX = 0;
         this.offsetY = 0;
+        this.keepOriginalPhoto = false;
         this.error.set(null);
         this.editorOpen.set(true);
         setTimeout(() => this.renderEditorPreview(), 0);
       };
-      image.onerror = () => this.error.set('The selected image could not be loaded.');
-      image.src = String(reader.result || '');
+      image.onerror = () => {
+        this.previewUrl.set(this.previousPreviewUrl);
+        this.error.set('The selected image could not be loaded.');
+      };
+      image.src = dataUrl;
     };
     reader.readAsDataURL(file);
+  }
+
+  editorDimensions() {
+    const breakpoint = StudentImageUploadComponent.MOBILE_BREAKPOINT;
+    const mode = this.viewportWidth() <= breakpoint ? 'mobile' : 'desktop';
+    return StudentImageUploadComponent.DIMENSIONS[this.type][mode];
   }
 
   renderEditorPreview(): void {
@@ -409,8 +487,9 @@ export class StudentImageUploadComponent implements OnChanges {
     const image = this.sourceImage;
     if (!canvas || !image) return;
 
-    const width = this.type === 'photo' ? 240 : 360;
-    const height = this.type === 'photo' ? 300 : 120;
+    const dimensions = this.editorDimensions();
+    const width = dimensions.width;
+    const height = dimensions.height;
     canvas.width = width;
     canvas.height = height;
 
@@ -435,6 +514,7 @@ export class StudentImageUploadComponent implements OnChanges {
 
   cancelEditing(): void {
     this.editorOpen.set(false);
+    this.previewUrl.set(this.previousPreviewUrl);
     this.error.set(null);
     if (this.fileInput?.nativeElement) {
       this.fileInput.nativeElement.value = '';
@@ -446,8 +526,12 @@ export class StudentImageUploadComponent implements OnChanges {
       this.processing.set(true);
       this.error.set(null);
 
-      const result = await this.exportCompressedImage();
+      const result = this.type === 'photo' && this.keepOriginalPhoto
+        ? await this.exportCompressedOriginalImage()
+        : await this.exportCompressedImage();
       this.previewUrl.set(result.dataUrl);
+      this.lastLocalSavedPreview = result.dataUrl;
+      this.previousPreviewUrl = result.dataUrl;
       this.sizeLabel.set(`${result.sizeKB.toFixed(1)} KB`);
       this.editorOpen.set(false);
       this.sourceImage = null;
@@ -464,6 +548,8 @@ export class StudentImageUploadComponent implements OnChanges {
 
   removeExisting(): void {
     this.previewUrl.set(null);
+    this.previousPreviewUrl = null;
+    this.lastLocalSavedPreview = null;
     this.sizeLabel.set('');
     this.error.set(null);
     this.editorOpen.set(false);
@@ -478,19 +564,71 @@ export class StudentImageUploadComponent implements OnChanges {
     }
 
     const maxBytes = this.maxSizeKB * 1024;
-    const scales = [1, 0.92, 0.84, 0.76];
-    const qualities = [0.86, 0.78, 0.7, 0.62, 0.54, 0.46];
+    const scales = [1, 0.92, 0.84, 0.76, 0.68, 0.6, 0.52, 0.44, 0.36];
+    const qualities = [0.86, 0.78, 0.7, 0.62, 0.54, 0.46, 0.38, 0.32, 0.26, 0.22];
     let fallbackBlob: Blob | null = null;
 
     for (const scale of scales) {
       const canvas = document.createElement('canvas');
-      canvas.width = Math.max(80, Math.round(sourceCanvas.width * scale));
-      canvas.height = Math.max(40, Math.round(sourceCanvas.height * scale));
+      canvas.width = Math.max(40, Math.round(sourceCanvas.width * scale));
+      canvas.height = Math.max(24, Math.round(sourceCanvas.height * scale));
       const ctx = canvas.getContext('2d');
       if (!ctx) continue;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(sourceCanvas, 0, 0, canvas.width, canvas.height);
+
+      for (const quality of qualities) {
+        const blob = await this.canvasToBlob(canvas, 'image/webp', quality)
+          || await this.canvasToBlob(canvas, 'image/jpeg', quality);
+        if (!blob) continue;
+        fallbackBlob = blob;
+        if (blob.size <= maxBytes) {
+          return {
+            dataUrl: await this.blobToDataUrl(blob),
+            sizeKB: blob.size / 1024
+          };
+        }
+      }
+    }
+
+    if (!fallbackBlob) {
+      throw new Error('Image compression failed.');
+    }
+
+    if (fallbackBlob.size > maxBytes) {
+      throw new Error(`Unable to compress the image below ${this.maxSizeKB} KB. Please choose a simpler image.`);
+    }
+
+    return {
+      dataUrl: await this.blobToDataUrl(fallbackBlob),
+      sizeKB: fallbackBlob.size / 1024
+    };
+  }
+
+  private async exportCompressedOriginalImage(): Promise<{ dataUrl: string; sizeKB: number }> {
+    const image = this.sourceImage;
+    if (!image) {
+      throw new Error('Original image is not available.');
+    }
+
+    const maxBytes = this.maxSizeKB * 1024;
+    const scales = [1, 0.92, 0.84, 0.76, 0.68, 0.6, 0.52, 0.44, 0.36, 0.28];
+    const qualities = [0.86, 0.78, 0.7, 0.62, 0.54, 0.46, 0.38, 0.3, 0.24, 0.2];
+    let fallbackBlob: Blob | null = null;
+
+    for (const scale of scales) {
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.max(80, Math.round(image.width * scale));
+      canvas.height = Math.max(80, Math.round(image.height * scale));
+      const ctx = canvas.getContext('2d');
+      if (!ctx) continue;
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
       for (const quality of qualities) {
         const blob = await this.canvasToBlob(canvas, 'image/webp', quality)

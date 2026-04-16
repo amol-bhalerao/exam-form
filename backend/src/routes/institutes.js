@@ -1042,11 +1042,47 @@ function mergeTeacherRecordsForBoard(teachersRaw) {
   }
 
   return Array.from(merged.values())
-    .map((teacher) => ({
-      ...teacher,
-      seniorPayGradeEligible: typeof teacher.totalYearsService === 'number' && teacher.totalYearsService >= 12,
-      selectionPayGradeEligible: typeof teacher.totalYearsService === 'number' && teacher.totalYearsService >= 24
-    }))
+    .map((teacher) => {
+      const totalYearsService = typeof teacher.totalYearsService === 'number' ? teacher.totalYearsService : 0;
+      const examinerYears = teacher.examinerExperienceYears ?? 0;
+      const moderatorYears = teacher.moderatorExperienceYears ?? 0;
+      const chiefYears = teacher.chiefModeratorExperienceYears ?? 0;
+      const seniorPayGradeEligible = totalYearsService >= 12;
+      const selectionPayGradeEligible = totalYearsService >= 24;
+
+      const canCoordinateExam = !!teacher.active && selectionPayGradeEligible;
+      const canExamine = !!teacher.active && (examinerYears > 0 || moderatorYears > 0 || chiefYears > 0);
+      const canPaperCheck = !!teacher.active && (totalYearsService >= 5 || examinerYears > 0);
+
+      const readinessScore = Math.min(
+        100,
+        Math.round(
+          (teacher.active ? 25 : 0)
+            + Math.min(totalYearsService, 25)
+            + Math.min(examinerYears * 4, 20)
+            + Math.min(moderatorYears * 5, 15)
+            + Math.min(chiefYears * 5, 10)
+            + (selectionPayGradeEligible ? 5 : 0)
+        )
+      );
+
+      const recommendedRoles = [];
+      if (canCoordinateExam) recommendedRoles.push('EXAM_COORDINATOR');
+      if (chiefYears > 0 || moderatorYears >= 3) recommendedRoles.push('MODERATION_LEAD');
+      if (canExamine) recommendedRoles.push('EXAMINER_PANEL');
+      if (canPaperCheck) recommendedRoles.push('PAPER_CHECKING_PANEL');
+
+      return {
+        ...teacher,
+        seniorPayGradeEligible,
+        selectionPayGradeEligible,
+        canCoordinateExam,
+        canExamine,
+        canPaperCheck,
+        readinessScore,
+        recommendedRoles
+      };
+    })
     .sort((a, b) => String(a.fullName || '').localeCompare(String(b.fullName || '')));
 }
 
@@ -1059,10 +1095,11 @@ institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), asy
         active: z.string().optional(),
         institute: z.string().optional(),
         dutyType: z.enum(['EXAMINER', 'MODERATOR', 'CHIEF_MODERATOR', 'ANY_BOARD_DUTY', 'NONE']).optional(),
+        roleFit: z.enum(['COORDINATOR', 'PAPER_CHECKER', 'EXAMINER_PANEL', 'MODERATION_LEAD']).optional(),
         eligibility: z.enum(['SENIOR', 'SELECTION']).optional(),
         multiInstitute: z.string().optional(),
         page: z.coerce.number().int().min(1).optional(),
-        limit: z.coerce.number().int().min(1).max(200).optional()
+        limit: z.coerce.number().int().min(1).max(10000).optional()
       })
       .parse(req.query);
 
@@ -1140,6 +1177,16 @@ institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), asy
       mergedTeachers = mergedTeachers.filter((teacher) => teacher.selectionPayGradeEligible);
     }
 
+    if (q.roleFit === 'COORDINATOR') {
+      mergedTeachers = mergedTeachers.filter((teacher) => teacher.canCoordinateExam);
+    } else if (q.roleFit === 'PAPER_CHECKER') {
+      mergedTeachers = mergedTeachers.filter((teacher) => teacher.canPaperCheck);
+    } else if (q.roleFit === 'EXAMINER_PANEL') {
+      mergedTeachers = mergedTeachers.filter((teacher) => teacher.canExamine);
+    } else if (q.roleFit === 'MODERATION_LEAD') {
+      mergedTeachers = mergedTeachers.filter((teacher) => (teacher.chiefModeratorExperienceYears ?? 0) > 0 || (teacher.moderatorExperienceYears ?? 0) >= 3);
+    }
+
     if (q.multiInstitute === 'true') {
       mergedTeachers = mergedTeachers.filter((teacher) => (teacher.instituteCount ?? 0) > 1);
     } else if (q.multiInstitute === 'false') {
@@ -1150,6 +1197,10 @@ institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), asy
     const activeCount = mergedTeachers.filter((teacher) => teacher.active).length;
     const inactiveCount = total - activeCount;
     const multiInstituteCount = mergedTeachers.filter((teacher) => (teacher.instituteCount ?? 0) > 1).length;
+    const coordinatorCount = mergedTeachers.filter((teacher) => teacher.canCoordinateExam).length;
+    const examinerPanelCount = mergedTeachers.filter((teacher) => teacher.canExamine).length;
+    const paperCheckerCount = mergedTeachers.filter((teacher) => teacher.canPaperCheck).length;
+    const moderationLeadCount = mergedTeachers.filter((teacher) => (teacher.chiefModeratorExperienceYears ?? 0) > 0 || (teacher.moderatorExperienceYears ?? 0) >= 3).length;
     const teachers = mergedTeachers.slice((page - 1) * limit, page * limit);
 
     return res.json({
@@ -1160,10 +1211,18 @@ institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), asy
         total,
         activeCount,
         inactiveCount,
-        multiInstituteCount
+        multiInstituteCount,
+        coordinatorCount,
+        examinerPanelCount,
+        paperCheckerCount,
+        moderationLeadCount
       }
     });
   } catch (err) {
+    if (err?.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
     console.error('Error fetching board teachers:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }

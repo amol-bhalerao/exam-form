@@ -32,6 +32,79 @@ function now() {
   return new Date();
 }
 
+function asText(value, fallback = '') {
+  if (value === null || value === undefined) return fallback;
+  return String(value);
+}
+
+function fullStudentName(student = {}) {
+  return [student.lastName, student.firstName, student.middleName].filter(Boolean).join(' ').trim();
+}
+
+function toBoardStudentMasterRow(application) {
+  const subjectItems = (application.subjects || []).map((entry) => entry.subject).filter(Boolean);
+  const subjectCodes = subjectItems.map((subject) => subject.code).filter(Boolean).join(', ');
+  const subjectNames = subjectItems.map((subject) => subject.name).filter(Boolean).join(', ');
+  const subjectCategories = Array.from(new Set(subjectItems.map((subject) => subject.category).filter(Boolean))).join(', ');
+
+  return {
+    applicationId: application.id,
+    applicationNo: application.applicationNo || '',
+    status: application.status || '',
+    candidateType: application.candidateType || '',
+    examId: application.exam?.id ?? null,
+    examName: application.exam?.name || '',
+    examSession: application.exam?.session || '',
+    examAcademicYear: application.exam?.academicYear || '',
+    instituteId: application.institute?.id ?? null,
+    instituteCode: application.institute?.code || application.institute?.collegeNo || '',
+    instituteName: application.institute?.name || '',
+    instituteDistrict: application.institute?.district || '',
+    studentId: application.student?.id ?? null,
+    studentName: fullStudentName(application.student),
+    firstName: asText(application.student?.firstName),
+    middleName: asText(application.student?.middleName),
+    lastName: asText(application.student?.lastName),
+    motherName: asText(application.student?.motherName),
+    dob: application.student?.dob || null,
+    gender: asText(application.student?.gender),
+    aadhaar: asText(application.student?.aadhaar),
+    apaarId: asText(application.student?.apaarId),
+    studentSaralId: asText(application.student?.studentSaralId || application.studentSaralId),
+    mobile: asText(application.student?.mobile),
+    streamCode: asText(application.student?.streamCode),
+    categoryCode: asText(application.student?.categoryCode),
+    minorityReligionCode: asText(application.student?.minorityReligionCode),
+    mediumCode: asText(application.student?.mediumCode),
+    divyangCode: asText(application.student?.divyangCode),
+    address: asText(application.student?.address),
+    district: asText(application.student?.district),
+    taluka: asText(application.student?.taluka),
+    village: asText(application.student?.village),
+    pinCode: asText(application.student?.pinCode),
+    subjectCodes,
+    subjectNames,
+    subjectCategories,
+    subjectCount: subjectItems.length,
+    submittedAt: application.submittedAt || null,
+    updatedAt: application.updatedAt || null
+  };
+}
+
+function topGroupedCounts(values = [], limit = 10) {
+  const grouped = new Map();
+  for (const value of values) {
+    const key = String(value || '').trim();
+    if (!key) continue;
+    grouped.set(key, (grouped.get(key) || 0) + 1);
+  }
+
+  return [...grouped.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+    .slice(0, limit);
+}
+
 async function addStatusHistory(params) {
   await prisma.statusHistory.create({
     data: {
@@ -684,6 +757,117 @@ applicationsRouter.get('/board/exams', requireAuth, requireRole(['BOARD', 'SUPER
   });
 
   return res.json({ exams });
+});
+
+// Board: consolidated student master records (exam wise, caste wise, subject wise filters)
+applicationsRouter.get('/board/student-master', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
+  const q = z
+    .object({
+      examId: z.coerce.number().int().positive().optional(),
+      status: z.enum(['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD']).optional(),
+      caste: z.string().optional(),
+      subjectId: z.coerce.number().int().positive().optional(),
+      search: z.string().optional(),
+      sortBy: z.enum(['updatedAt', 'exam', 'caste', 'subject', 'studentName']).optional(),
+      sortOrder: z.enum(['asc', 'desc']).optional(),
+      page: z.coerce.number().int().min(1).optional(),
+      limit: z.coerce.number().int().min(10).max(1000).optional()
+    })
+    .parse(req.query);
+
+  const page = q.page ?? 1;
+  const limit = q.limit ?? 100;
+  const sortOrder = q.sortOrder ?? 'desc';
+  const sortBy = q.sortBy ?? 'updatedAt';
+
+  const where = {
+    examId: q.examId,
+    status: q.status ?? { in: ['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'] },
+    student: {
+      categoryCode: q.caste || undefined
+    },
+    subjects: q.subjectId
+      ? {
+          some: {
+            subjectId: q.subjectId
+          }
+        }
+      : undefined
+  };
+
+  if (q.search) {
+    where.OR = [
+      { applicationNo: { contains: q.search } },
+      { institute: { name: { contains: q.search } } },
+      { student: { firstName: { contains: q.search } } },
+      { student: { lastName: { contains: q.search } } },
+      { student: { studentSaralId: { contains: q.search } } },
+      { student: { aadhaar: { contains: q.search } } }
+    ];
+  }
+
+  const orderBy =
+    sortBy === 'exam'
+      ? [{ exam: { name: sortOrder } }, { updatedAt: 'desc' }]
+      : sortBy === 'caste'
+        ? [{ student: { categoryCode: sortOrder } }, { updatedAt: 'desc' }]
+        : sortBy === 'studentName'
+          ? [{ student: { lastName: sortOrder } }, { student: { firstName: sortOrder } }, { updatedAt: 'desc' }]
+          : [{ updatedAt: sortOrder }];
+
+  const applications = await prisma.examApplication.findMany({
+    where,
+    include: {
+      exam: true,
+      institute: true,
+      student: true,
+      subjects: {
+        include: {
+          subject: true
+        }
+      }
+    },
+    orderBy,
+    take: 10000
+  });
+
+  let rows = applications.map(toBoardStudentMasterRow);
+
+  if (sortBy === 'subject') {
+    rows.sort((a, b) => {
+      const left = a.subjectNames || '';
+      const right = b.subjectNames || '';
+      return sortOrder === 'asc' ? left.localeCompare(right) : right.localeCompare(left);
+    });
+  }
+
+  const total = rows.length;
+  const start = (page - 1) * limit;
+  const end = start + limit;
+  rows = rows.slice(start, end);
+
+  const allCastes = Array.from(new Set(applications.map((item) => item.student?.categoryCode).filter(Boolean))).sort();
+
+  const summaries = {
+    byExam: topGroupedCounts(applications.map((item) => item.exam?.name)),
+    byCaste: topGroupedCounts(applications.map((item) => item.student?.categoryCode)),
+    bySubject: topGroupedCounts(
+      applications.flatMap((item) => (item.subjects || []).map((entry) => entry.subject?.name))
+    )
+  };
+
+  return res.json({
+    rows,
+    metadata: {
+      page,
+      limit,
+      total,
+      sortBy,
+      sortOrder,
+      availableCastes: allCastes,
+      summaries
+    }
+  });
 });
 
 // Board: approve/reject
