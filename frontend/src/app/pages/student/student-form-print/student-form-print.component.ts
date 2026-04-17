@@ -51,98 +51,33 @@ import { BrandingService } from '../../../core/branding.service';
 
           <section class="section-card">
             <div class="section-title">1. Candidate Personal Particulars</div>
-            <div class="detail-grid" [class.grid-3]="useThreeColumnDetails()" [class.grid-4]="!useThreeColumnDetails()">
-              <div class="detail-item">
-                <label>Surname</label>
-                <div>{{ valueOrDash(s().lastName) }}</div>
-              </div>
-              <div class="detail-item">
-                <label>First Name</label>
-                <div>{{ valueOrDash(s().firstName) }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Middle Name</label>
-                <div>{{ valueOrDash(s().middleName) }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Mother Name</label>
-                <div>{{ valueOrDash(s().motherName) }}</div>
-              </div>
-
-              
-              
-              <div class="detail-item">
-                <label>Aadhaar No</label>
-                <div>{{ valueOrDash(s().aadhaar) }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Student Saral ID</label>
-                <div>{{ studentSaralIdValue() }}</div>
-              </div>
-              <div class="detail-item">
-                <label>APAAR ID</label>
-                <div>{{ valueOrDash(s().apaarId) }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Mobile No</label>
-                <div>{{ valueOrDash(s().mobile) }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Date of Birth</label>
-                <div>{{ s().dob ? (s().dob | date:'dd MMM, yyyy') : '—' }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Gender</label>
-                <div>{{ genderLabel() }}</div>
-              </div>
-              
-              <div class="detail-item">
-                <label>Email</label>
-                <div>{{ valueOrDash(s().email || a().user?.email) }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Residential Address</label>
-                <div>{{ valueOrDash(s().address) }}</div>
-              </div>
-            
+            <div class="detail-list detail-list--personal">
+              <div class="detail-line"><span class="line-label">Surname:</span><span class="line-value">{{ valueOrDash(s().lastName) }}</span></div>
+              <div class="detail-line"><span class="line-label">First Name:</span><span class="line-value">{{ valueOrDash(s().firstName) }}</span></div>
+              <div class="detail-line"><span class="line-label">Middle Name:</span><span class="line-value">{{ valueOrDash(s().middleName) }}</span></div>
+              <div class="detail-line"><span class="line-label">Mother Name:</span><span class="line-value">{{ valueOrDash(s().motherName) }}</span></div>
+              <div class="detail-line"><span class="line-label">Aadhaar No:</span><span class="line-value">{{ valueOrDash(s().aadhaar) }}</span></div>
+              <div class="detail-line"><span class="line-label">Student Saral ID:</span><span class="line-value">{{ studentSaralIdValue() }}</span></div>
+              <div class="detail-line"><span class="line-label">APAAR ID:</span><span class="line-value">{{ valueOrDash(s().apaarId) }}</span></div>
+              <div class="detail-line"><span class="line-label">Mobile No:</span><span class="line-value">{{ valueOrDash(s().mobile) }}</span></div>
+              <div class="detail-line"><span class="line-label">Date of Birth:</span><span class="line-value">{{ s().dob ? (s().dob | date:'dd MMM, yyyy') : '—' }}</span></div>
+              <div class="detail-line"><span class="line-label">Gender:</span><span class="line-value">{{ genderLabel() }}</span></div>
+              <div class="detail-line"><span class="line-label">Email:</span><span class="line-value">{{ valueOrDash(s().email || a().user?.email) }}</span></div>
+              <div class="detail-line"><span class="line-label">Residential Address:</span><span class="line-value">{{ valueOrDash(s().address) }}</span></div>
             </div>
           </section>
 
           <section class="section-card">
             <div class="section-title">2. Academic & Reservation Details</div>
-            <div class="detail-grid compact-grid" [class.grid-3]="useThreeColumnDetails()" [class.grid-4]="!useThreeColumnDetails()">
-              <div class="detail-item">
-                <label>Stream</label>
-                <div>{{ streamLabel() }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Minority Religion</label>
-                <div>{{ religionLabel() }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Category</label>
-                <div>{{ categoryLabel() }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Medium</label>
-                <div>{{ mediumLabel() }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Divyang Code</label>
-                <div>{{ s().divyangCode ? s().divyangCode : 'No' }}</div>
-              </div>
-              <div class="detail-item">
-                <label>SSC from Maharashtra</label>
-                <div>{{ yesNoOrDash(a().sscPassedFromMaharashtra) }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Eligibility Certificate</label>
-                <div>{{ yesNoOrDash(a().eligibilityCertIssued) }}</div>
-              </div>
-              <div class="detail-item">
-                <label>Certificate No</label>
-                <div>{{ valueOrDash(a().eligibilityCertNo) }}</div>
-              </div>
+            <div class="detail-list detail-list--academic">
+              <div class="detail-line"><span class="line-label">Stream:</span><span class="line-value">{{ streamLabel() }}</span></div>
+              <div class="detail-line"><span class="line-label">Minority Religion:</span><span class="line-value">{{ religionLabel() }}</span></div>
+              <div class="detail-line"><span class="line-label">Category:</span><span class="line-value">{{ categoryLabel() }}</span></div>
+              <div class="detail-line"><span class="line-label">Medium:</span><span class="line-value">{{ mediumLabel() }}</span></div>
+              <div class="detail-line"><span class="line-label">Divyang Code:</span><span class="line-value">{{ s().divyangCode ? s().divyangCode : 'No' }}</span></div>
+              <div class="detail-line"><span class="line-label">SSC from Maharashtra:</span><span class="line-value">{{ yesNoOrDash(a().sscPassedFromMaharashtra) }}</span></div>
+              <div class="detail-line"><span class="line-label">Eligibility Certificate:</span><span class="line-value">{{ yesNoOrDash(a().eligibilityCertIssued) }}</span></div>
+              <div class="detail-line"><span class="line-label">Certificate No:</span><span class="line-value">{{ valueOrDash(a().eligibilityCertNo) }}</span></div>
             </div>
           </section>
 
@@ -422,7 +357,7 @@ import { BrandingService } from '../../../core/branding.service';
         gap: 8px;
         padding: 4px 6px;
         border-top: 1px solid #000;
-        font-size: 8px;
+        font-size: 10px;
         align-items: center;
       }
 
@@ -480,6 +415,37 @@ import { BrandingService } from '../../../core/branding.service';
         display: grid;
         gap: 6px;
         padding: 4px;
+      }
+
+      .detail-list {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 4px 10px;
+        padding: 6px;
+      }
+
+      .detail-line {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        min-width: 0;
+        padding: 1px 0;
+      }
+
+      .line-label {
+        font-size: 12px;
+        font-weight: 700;
+        color: #0f172a;
+        flex-shrink: 0;
+      }
+
+      .line-value {
+        font-size: 9.4px;
+        line-height: 1.28;
+        color: #000;
+        font-weight: 600;
+        word-break: break-word;
+        overflow-wrap: anywhere;
       }
 
       .grid-4 {
@@ -777,7 +743,8 @@ import { BrandingService } from '../../../core/branding.service';
         }
 
         .document-header,
-        .grid-4 {
+        .grid-4,
+        .detail-list {
           grid-template-columns: repeat(2, 1fr);
         }
 
@@ -815,7 +782,8 @@ import { BrandingService } from '../../../core/branding.service';
 
         .document-header,
         .grid-4,
-        .grid-3 {
+        .grid-3,
+        .detail-list {
           grid-template-columns: 1fr;
         }
 
@@ -886,6 +854,21 @@ import { BrandingService } from '../../../core/branding.service';
 
         .grid-3 {
           grid-template-columns: repeat(3, 1fr) !important;
+        }
+
+        .detail-list {
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          gap: 3px 10px !important;
+          padding: 5px 6px !important;
+        }
+
+        .line-label {
+          font-size: 12px !important;
+        }
+
+        .line-value {
+          font-size: 9.4px !important;
+          line-height: 1.24 !important;
         }
 
         .bottom-grid {
