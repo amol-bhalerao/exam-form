@@ -7,6 +7,279 @@ import { attachStudentAssets, removeStudentAsset, saveStudentAsset } from '../ut
 
 export const studentsRouter = Router();
 
+function normalizeStudentName(student) {
+  const parts = [student?.lastName, student?.firstName, student?.middleName]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean);
+  return parts.join(' ').trim();
+}
+
+function profileCompletionForStudent(student) {
+  const requiredFields = [
+    student?.firstName,
+    student?.lastName,
+    student?.dob,
+    student?.gender,
+    student?.aadhaar,
+    student?.address,
+    student?.pinCode,
+    student?.mobile
+  ];
+
+  const completed = requiredFields.filter((value) => value !== null && value !== undefined && String(value).trim() !== '').length;
+  return Math.round((completed / requiredFields.length) * 100);
+}
+
+function studentSummaryDto(student) {
+  return {
+    id: student.id,
+    userId: student.userId ?? null,
+    managerUserId: student.managerUserId ?? null,
+    instituteId: student.instituteId,
+    instituteName: student.institute?.name || null,
+    instituteCode: student.institute?.code || student.institute?.collegeNo || null,
+    streamCode: student.streamCode || null,
+    firstName: student.firstName || null,
+    middleName: student.middleName || null,
+    lastName: student.lastName || null,
+    fullName: normalizeStudentName(student) || 'Unnamed Student',
+    mobile: student.mobile || null,
+    gender: student.gender || null,
+    profileCompletion: profileCompletionForStudent(student),
+    createdAt: student.createdAt
+  };
+}
+
+async function getAccessibleStudents(userId) {
+  return prisma.student.findMany({
+    where: {
+      OR: [
+        { userId },
+        { managerUserId: userId }
+      ]
+    },
+    include: {
+      institute: {
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          collegeNo: true
+        }
+      }
+    },
+    orderBy: [
+      { createdAt: 'desc' }
+    ]
+  });
+}
+
+async function getAccessibleStudentById(userId, studentId) {
+  return prisma.student.findFirst({
+    where: {
+      id: studentId,
+      OR: [
+        { userId },
+        { managerUserId: userId }
+      ]
+    },
+    include: {
+      institute: {
+        select: {
+          id: true,
+          name: true,
+          code: true,
+          collegeNo: true
+        }
+      }
+    }
+  });
+}
+
+studentsRouter.get('/managed', requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth?.userId;
+    if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+    const students = await getAccessibleStudents(userId);
+    return res.json({ students: students.map(studentSummaryDto) });
+  } catch (err) {
+    console.error('Get managed students error:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+studentsRouter.post('/managed', requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth?.userId;
+    if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+    const body = z.object({
+      instituteId: z.coerce.number().int().positive(),
+      streamCode: z.string().min(1).max(20),
+      firstName: z.string().min(1).max(100),
+      middleName: z.string().max(100).optional(),
+      lastName: z.string().min(1).max(100),
+      motherName: z.string().max(100).optional(),
+      dob: z.string().datetime().optional(),
+      gender: z.string().max(20).optional(),
+      mobile: z.string().regex(/^[6-9]\d{9}$/).optional(),
+      aadhaar: z.string().regex(/^\d{12}$/).optional(),
+      address: z.string().max(500).optional(),
+      pinCode: z.string().max(10).optional(),
+      district: z.string().max(100).optional(),
+      taluka: z.string().max(100).optional(),
+      village: z.string().max(100).optional(),
+      categoryCode: z.string().max(10).optional(),
+      minorityReligionCode: z.string().max(20).optional(),
+      divyangCode: z.string().max(10).optional(),
+      mediumCode: z.string().max(10).optional(),
+      apaarId: z.string().max(20).optional(),
+      studentSaralId: z.string().max(50).optional()
+    }).parse(req.body ?? {});
+
+    const institute = await prisma.institute.findUnique({ where: { id: body.instituteId } });
+    if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
+
+    const student = await prisma.student.create({
+      data: {
+        instituteId: body.instituteId,
+        managerUserId: userId,
+        userId: null,
+        streamCode: body.streamCode,
+        firstName: body.firstName,
+        middleName: body.middleName || null,
+        lastName: body.lastName,
+        motherName: body.motherName || null,
+        dob: body.dob ? new Date(body.dob) : null,
+        gender: body.gender || null,
+        mobile: body.mobile || null,
+        aadhaar: body.aadhaar || null,
+        address: body.address || null,
+        pinCode: body.pinCode || null,
+        district: body.district || null,
+        taluka: body.taluka || null,
+        village: body.village || null,
+        categoryCode: body.categoryCode || null,
+        minorityReligionCode: body.minorityReligionCode || null,
+        divyangCode: body.divyangCode || null,
+        mediumCode: body.mediumCode || null,
+        apaarId: body.apaarId ? body.apaarId.toUpperCase() : null,
+        studentSaralId: body.studentSaralId ? body.studentSaralId.toUpperCase() : null
+      },
+      include: {
+        institute: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            collegeNo: true
+          }
+        }
+      }
+    });
+
+    return res.status(201).json({ ok: true, student: studentSummaryDto(student) });
+  } catch (err) {
+    console.error('Create managed student error:', err);
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+studentsRouter.patch('/managed/:id', requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth?.userId;
+    if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+    const studentId = z.coerce.number().int().positive().parse(req.params.id);
+    const student = await getAccessibleStudentById(userId, studentId);
+    if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND' });
+
+    if (student.userId === userId) {
+      return res.status(400).json({ error: 'PRIMARY_PROFILE_READONLY', message: 'Use /students/me for your own profile updates.' });
+    }
+
+    const body = z.object({
+      instituteId: z.coerce.number().int().positive().optional(),
+      streamCode: z.string().min(1).max(20).optional(),
+      firstName: z.string().min(1).max(100).optional(),
+      middleName: z.string().max(100).nullable().optional(),
+      lastName: z.string().min(1).max(100).optional(),
+      motherName: z.string().max(100).nullable().optional(),
+      dob: z.string().datetime().nullable().optional(),
+      gender: z.string().max(20).nullable().optional(),
+      mobile: z.string().regex(/^[6-9]\d{9}$/).nullable().optional(),
+      aadhaar: z.string().regex(/^\d{12}$/).nullable().optional(),
+      address: z.string().max(500).nullable().optional(),
+      pinCode: z.string().max(10).nullable().optional(),
+      district: z.string().max(100).nullable().optional(),
+      taluka: z.string().max(100).nullable().optional(),
+      village: z.string().max(100).nullable().optional(),
+      categoryCode: z.string().max(10).nullable().optional(),
+      minorityReligionCode: z.string().max(20).nullable().optional(),
+      divyangCode: z.string().max(10).nullable().optional(),
+      mediumCode: z.string().max(10).nullable().optional(),
+      apaarId: z.string().max(20).nullable().optional(),
+      studentSaralId: z.string().max(50).nullable().optional()
+    }).parse(req.body ?? {});
+
+    if (body.instituteId !== undefined) {
+      const institute = await prisma.institute.findUnique({ where: { id: body.instituteId } });
+      if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
+    }
+
+    const updated = await prisma.student.update({
+      where: { id: student.id },
+      data: {
+        instituteId: body.instituteId ?? undefined,
+        streamCode: body.streamCode ?? undefined,
+        firstName: body.firstName ?? undefined,
+        middleName: body.middleName ?? undefined,
+        lastName: body.lastName ?? undefined,
+        motherName: body.motherName ?? undefined,
+        dob: body.dob ? new Date(body.dob) : (body.dob === null ? null : undefined),
+        gender: body.gender ?? undefined,
+        mobile: body.mobile ?? undefined,
+        aadhaar: body.aadhaar ?? undefined,
+        address: body.address ?? undefined,
+        pinCode: body.pinCode ?? undefined,
+        district: body.district ?? undefined,
+        taluka: body.taluka ?? undefined,
+        village: body.village ?? undefined,
+        categoryCode: body.categoryCode ?? undefined,
+        minorityReligionCode: body.minorityReligionCode ?? undefined,
+        divyangCode: body.divyangCode ?? undefined,
+        mediumCode: body.mediumCode ?? undefined,
+        apaarId: body.apaarId ? body.apaarId.toUpperCase() : (body.apaarId === null ? null : undefined),
+        studentSaralId: body.studentSaralId ? body.studentSaralId.toUpperCase() : (body.studentSaralId === null ? null : undefined)
+      },
+      include: {
+        institute: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            collegeNo: true
+          }
+        }
+      }
+    });
+
+    return res.json({ ok: true, student: studentSummaryDto(updated) });
+  } catch (err) {
+    console.error('Update managed student error:', err);
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
 // Check student onboarding status - required before accessing dashboard
 studentsRouter.get('/setup-status', requireAuth, async (req, res) => {
   try {

@@ -33,7 +33,8 @@ const CASTE_OPTIONS = [
   'OTHER'
 ];
 const TEACHER_TYPE_OPTIONS = ['Aided', 'Partially Aided 80', 'Partially Aided 60', 'Partially Aided 40', 'Partially Aided 20', 'Unaided', 'Permanent Unaided', 'Self Financed'];
-const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
+const DESIGNATION_OPTIONS = ['Assistant Teacher', 'Teacher', 'Supervisor', 'Voice Principal', 'Principal'];
+const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
 
 @Component({
   selector: 'app-institute-add-teacher',
@@ -114,8 +115,20 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
         <section class="form-section">
           <div class="section-title">2. Service & Contact</div>
           <div class="grid section-grid">
-            <mat-form-field appearance="outline"><mat-label>Designation</mat-label><input matInput formControlName="designation" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Subject Specialization</mat-label><input matInput formControlName="subjectSpecialization" /></mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Designation</mat-label>
+              <mat-select formControlName="designation">
+                <mat-option value="">Not specified</mat-option>
+                <mat-option *ngFor="let designation of designationOptions" [value]="designation">{{ designation }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Subject Specialization</mat-label>
+              <mat-select formControlName="subjectSpecialization" multiple>
+                <mat-option *ngFor="let subject of availableSubjects()" [value]="subject">{{ subject }}</mat-option>
+              </mat-select>
+              <mat-hint>Select one or more subjects</mat-hint>
+            </mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Teacher Type</mat-label><mat-select formControlName="teacherType"><mat-option *ngFor="let type of teacherTypeOptions" [value]="type">{{ type }}</mat-option></mat-select></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Joining Date of This Institute</mat-label><input matInput [matDatepicker]="dojPicker" formControlName="appointmentDate" /><mat-datepicker-toggle matSuffix [for]="dojPicker"></mat-datepicker-toggle><mat-datepicker #dojPicker></mat-datepicker></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Service Start Date</mat-label><input matInput [matDatepicker]="serviceStartPicker" formControlName="serviceStartDate" /><mat-datepicker-toggle matSuffix [for]="serviceStartPicker"></mat-datepicker-toggle><mat-datepicker #serviceStartPicker></mat-datepicker></mat-form-field>
@@ -257,7 +270,7 @@ export class InstituteAddTeacherComponent implements OnInit {
     governmentId: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^\d{12}$/)] }),
     fullName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     designation: new FormControl('', { nonNullable: true }),
-    subjectSpecialization: new FormControl('', { nonNullable: true }),
+    subjectSpecialization: new FormControl<string[]>([], { nonNullable: true }),
     qualification: new FormControl('', { nonNullable: true }),
     dob: new FormControl<Date | null>(null),
     appointmentDate: new FormControl<Date | null>(null),
@@ -290,7 +303,9 @@ export class InstituteAddTeacherComponent implements OnInit {
   readonly isFormModalOpen = signal(false);
   readonly selectedTeacherId = signal<number | null>(null);
   readonly casteOptions = CASTE_OPTIONS;
+  readonly designationOptions = DESIGNATION_OPTIONS;
   readonly teacherTypeOptions = TEACHER_TYPE_OPTIONS;
+  readonly availableSubjects = signal<string[]>([]);
   readonly maharashtraRetirementAge = MAHARASHTRA_TEACHER_RETIREMENT_AGE;
   readonly experience = signal('');
   readonly retirementDateDisplay = signal('');
@@ -471,7 +486,26 @@ export class InstituteAddTeacherComponent implements OnInit {
     this.form.controls.chiefModeratorExperienceYears.valueChanges.subscribe(() => this.refreshBoardDutyVisibility());
     this.refreshDerivedValues();
     this.refreshBoardDutyVisibility();
+    this.loadSubjects();
     this.load();
+  }
+
+  loadSubjects() {
+    this.http.get<{ subjects: Array<{ name?: string | null }> }>(`${API_BASE_URL}/masters/subjects`).subscribe({
+      next: (response) => {
+        const subjects = Array.from(
+          new Set(
+            (response?.subjects || [])
+              .map((subject) => String(subject?.name || '').trim())
+              .filter(Boolean)
+          )
+        ).sort((a, b) => a.localeCompare(b));
+        this.availableSubjects.set(subjects);
+      },
+      error: () => {
+        this.availableSubjects.set([]);
+      }
+    });
   }
 
   topSubjectLabel(): string {
@@ -554,7 +588,7 @@ export class InstituteAddTeacherComponent implements OnInit {
           governmentId: existing.governmentId || governmentId,
           fullName: existing.fullName || '',
           designation: existing.designation || '',
-          subjectSpecialization: existing.subjectSpecialization || '',
+          subjectSpecialization: this.toSubjectSelection(existing.subjectSpecialization),
           qualification: existing.qualification || '',
           dob: existing.dob ? new Date(existing.dob) : null,
           appointmentDate: existing.appointmentDate ? new Date(existing.appointmentDate) : null,
@@ -599,7 +633,7 @@ export class InstituteAddTeacherComponent implements OnInit {
 
     const payload: any = {
       fullName: this.form.value.fullName,
-      designation: this.form.value.designation,
+      designation: this.form.value.designation || undefined,
       subjectSpecialization: this.form.value.subjectSpecialization,
       qualification: this.form.value.qualification,
       dob: this.form.value.dob ? this.formatDate(this.form.value.dob) : undefined,
@@ -652,7 +686,7 @@ export class InstituteAddTeacherComponent implements OnInit {
       governmentId: '',
       fullName: '',
       designation: '',
-      subjectSpecialization: '',
+      subjectSpecialization: [],
       qualification: '',
       dob: null,
       appointmentDate: null,
@@ -695,7 +729,7 @@ export class InstituteAddTeacherComponent implements OnInit {
         governmentId: teacher.governmentId ?? '',
         fullName: teacher.fullName ?? '',
         designation: teacher.designation ?? '',
-        subjectSpecialization: teacher.subjectSpecialization ?? '',
+        subjectSpecialization: this.toSubjectSelection(teacher.subjectSpecialization),
         qualification: teacher.qualification ?? '',
         dob: teacher.dob ? new Date(teacher.dob) : null,
         appointmentDate: teacher.appointmentDate ? new Date(teacher.appointmentDate) : null,
@@ -766,6 +800,15 @@ export class InstituteAddTeacherComponent implements OnInit {
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
+  }
+
+  private toSubjectSelection(value: unknown): string[] {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.map((entry) => String(entry || '').trim()).filter(Boolean);
+    return String(value)
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean);
   }
 }
 

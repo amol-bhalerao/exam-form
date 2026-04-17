@@ -31,10 +31,19 @@ const TEACHER_TYPE_OPTIONS = [
   'Self Financed'
 ];
 
+const DESIGNATION_OPTIONS = [
+  'Assistant Teacher',
+  'Teacher',
+  'Supervisor',
+  'Voice Principal',
+  'Vice Principal',
+  'Principal'
+];
+
 const teacherPayloadSchema = z.object({
   fullName: z.string().min(2).max(150),
-  designation: z.string().max(100).optional(),
-  subjectSpecialization: z.string().max(150).optional(),
+  designation: z.enum(DESIGNATION_OPTIONS).optional(),
+  subjectSpecialization: z.union([z.string().max(500), z.array(z.string().min(1).max(150)).max(30)]).optional(),
   qualification: z.string().max(255).optional(),
   dob: z.string().optional(),
   appointmentDate: z.string().optional(),
@@ -81,6 +90,24 @@ function parseOptionalNumber(value) {
   return Number(Math.max(parsed, 0).toFixed(1));
 }
 
+function normalizeTeacherSubjectSpecialization(value) {
+  if (value === undefined || value === null || value === '') return null;
+
+  if (Array.isArray(value)) {
+    const normalized = Array.from(
+      new Set(
+        value
+          .map((entry) => String(entry || '').trim())
+          .filter(Boolean)
+      )
+    );
+    return normalized.length ? normalized.join(', ') : null;
+  }
+
+  const text = String(value).trim();
+  return text || null;
+}
+
 const STUDENT_STREAM_CODE_LOOKUP = {
   '1': 'Science',
   '2': 'Arts',
@@ -113,7 +140,7 @@ function calculateTotalYearsService(serviceStartDate) {
   return Number(years.toFixed(1));
 }
 
-const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
+const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
 
 function calculateRetirementDate(dob, retirementAgeYears = MAHARASHTRA_TEACHER_RETIREMENT_AGE) {
   const date = parseOptionalDate(dob);
@@ -1356,7 +1383,7 @@ institutesRouter.post('/me/teachers', requireAuth, requireRole(['INSTITUTE']), a
       data: {
         fullName: body.fullName,
         designation: body.designation,
-        subjectSpecialization: body.subjectSpecialization,
+        subjectSpecialization: normalizeTeacherSubjectSpecialization(body.subjectSpecialization),
         qualification: body.qualification,
         dob: parseOptionalDate(body.dob),
         appointmentDate: parseOptionalDate(body.appointmentDate),
@@ -1440,7 +1467,9 @@ institutesRouter.put('/me/teachers/:id', requireAuth, requireRole(['INSTITUTE'])
     const updateData = {};
     if (body.fullName !== undefined) updateData.fullName = body.fullName;
     if (body.designation !== undefined) updateData.designation = body.designation;
-    if (body.subjectSpecialization !== undefined) updateData.subjectSpecialization = body.subjectSpecialization;
+    if (body.subjectSpecialization !== undefined) {
+      updateData.subjectSpecialization = normalizeTeacherSubjectSpecialization(body.subjectSpecialization);
+    }
     if (body.qualification !== undefined) updateData.qualification = body.qualification;
     if (body.dob !== undefined) updateData.dob = parseOptionalDate(body.dob);
     if (body.appointmentDate !== undefined) updateData.appointmentDate = parseOptionalDate(body.appointmentDate);

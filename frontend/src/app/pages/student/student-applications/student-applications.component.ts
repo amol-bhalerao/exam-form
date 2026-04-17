@@ -24,7 +24,29 @@ type Exam = {
   remainingApplications?: number | null;
   isCapacityReached?: boolean;
 };
-type Application = { id: number; applicationNo: string; status: string; candidateType: string; exam: Exam; updatedAt: string };
+type ManagedStudent = {
+  id: number;
+  instituteId: number;
+  instituteName?: string | null;
+  streamCode?: string | null;
+  fullName?: string | null;
+  firstName?: string | null;
+  middleName?: string | null;
+  lastName?: string | null;
+  gender?: string | null;
+  mobile?: string | null;
+  profileCompletion?: number;
+};
+
+type Application = {
+  id: number;
+  applicationNo: string;
+  status: string;
+  candidateType: string;
+  exam: Exam;
+  student?: { id: number; firstName?: string; middleName?: string; lastName?: string };
+  updatedAt: string;
+};
 
 @Component({
   selector: 'app-student-applications',
@@ -43,9 +65,17 @@ type Application = { id: number; applicationNo: string; status: string; candidat
       <div class="row">
         <div>
           <div class="h">My Applications</div>
-          <div class="p">Create, fill, submit and print.</div>
+          <div class="p">Choose student, exam, and application type to start a new form.</div>
         </div>
         <div class="grow"></div>
+        <mat-form-field appearance="outline" class="w240">
+          <mat-label>Student</mat-label>
+          <mat-select [value]="selectedStudentId()" (selectionChange)="selectedStudentId.set($event.value)">
+            @for (s of managedStudents(); track s.id) {
+              <mat-option [value]="s.id">{{ displayStudentName(s) }} • {{ s.instituteName || 'Institute N/A' }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
         <mat-form-field appearance="outline" class="w240">
           <mat-label>Exam</mat-label>
           <mat-select [value]="selectedExamId()" (selectionChange)="selectedExamId.set($event.value)">
@@ -70,14 +100,54 @@ type Application = { id: number; applicationNo: string; status: string; candidat
             <mat-option value="PRIVATE">Private</mat-option>
           </mat-select>
         </mat-form-field>
-        <button mat-flat-button color="primary" (click)="create()" [disabled]="!selectedExamId() || creating() || selectedExamCapacityReached()">
+        <button mat-stroked-button type="button" (click)="showAddStudentForm.set(!showAddStudentForm())">
+          {{ showAddStudentForm() ? 'Hide Add Student' : 'Add New Student' }}
+        </button>
+        <button mat-flat-button color="primary" (click)="create()" [disabled]="!selectedStudentId() || !selectedExamId() || creating() || selectedExamCapacityReached()">
           {{ creating() ? 'Creating…' : 'New application' }}
         </button>
       </div>
 
+      @if (showAddStudentForm()) {
+        <div class="managed-student-form">
+          <mat-form-field appearance="outline" class="w240"><mat-label>First Name</mat-label><input matInput [value]="newStudentFirstName()" (input)="newStudentFirstName.set($any($event.target).value)" /></mat-form-field>
+          <mat-form-field appearance="outline" class="w240"><mat-label>Middle Name</mat-label><input matInput [value]="newStudentMiddleName()" (input)="newStudentMiddleName.set($any($event.target).value)" /></mat-form-field>
+          <mat-form-field appearance="outline" class="w240"><mat-label>Last Name</mat-label><input matInput [value]="newStudentLastName()" (input)="newStudentLastName.set($any($event.target).value)" /></mat-form-field>
+          <mat-form-field appearance="outline" class="w240"><mat-label>Institute</mat-label><mat-select [value]="newStudentInstituteId()" (selectionChange)="newStudentInstituteId.set($event.value)">@for (inst of institutes(); track inst.id) { <mat-option [value]="inst.id">{{ inst.name }}</mat-option> }</mat-select></mat-form-field>
+          <mat-form-field appearance="outline" class="w240"><mat-label>Stream</mat-label><mat-select [value]="newStudentStreamCode()" (selectionChange)="newStudentStreamCode.set($event.value)"><mat-option value="SCIENCE">Science</mat-option><mat-option value="ARTS">Arts</mat-option><mat-option value="COMMERCE">Commerce</mat-option><mat-option value="VOCATIONAL">Vocational</mat-option><mat-option value="TECHNOLOGY">Technology</mat-option><mat-option value="1">1-Science</mat-option><mat-option value="2">2-Arts</mat-option><mat-option value="3">3-Commerce</mat-option><mat-option value="4">4-Vocational</mat-option><mat-option value="5">5-Technology</mat-option></mat-select></mat-form-field>
+          <mat-form-field appearance="outline" class="w240"><mat-label>Mobile</mat-label><input matInput [value]="newStudentMobile()" (input)="newStudentMobile.set($any($event.target).value)" /></mat-form-field>
+          <button mat-flat-button color="primary" type="button" (click)="createManagedStudent()" [disabled]="creatingStudent()">{{ creatingStudent() ? 'Saving…' : 'Save Student' }}</button>
+        </div>
+      }
+
       @if (selectedExamCapacityReached()) {
         <div style="margin-top:8px;color:#b91c1c;">
           No remaining application slots are available for the selected exam at your institute.
+        </div>
+      }
+
+      @if (managedStudents().length > 0) {
+        <div class="managed-students-table-wrap">
+          <table class="managed-students-table">
+            <thead>
+              <tr>
+                <th>Student Name</th>
+                <th>Institute</th>
+                <th>Stream</th>
+                <th>Profile %</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of managedStudents(); track s.id) {
+                <tr [class.active]="s.id === selectedStudentId()" (click)="selectedStudentId.set(s.id)">
+                  <td>{{ displayStudentName(s) }}</td>
+                  <td>{{ s.instituteName || '-' }}</td>
+                  <td>{{ s.streamCode || '-' }}</td>
+                  <td>{{ s.profileCompletion ?? 0 }}%</td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       }
     </mat-card>
@@ -105,6 +175,7 @@ type Application = { id: number; applicationNo: string; status: string; candidat
                 <div>
                   <div class="tile-app-no">{{ app.applicationNo }}</div>
                   <div class="tile-exam">{{ app.exam?.name }}</div>
+                  <div class="tile-student">{{ studentNameFromApplication(app) }}</div>
                 </div>
                 <span class="status-pill" [class.status-draft]="app.status === 'DRAFT'" [class.status-submitted]="app.status === 'SUBMITTED'">
                   {{ app.status }}
@@ -225,6 +296,43 @@ type Application = { id: number; applicationNo: string; status: string; candidat
         color: #4b5563;
         font-size: 0.92rem;
       }
+      .tile-student {
+        margin-top: 4px;
+        color: #0f172a;
+        font-size: 0.82rem;
+        font-weight: 700;
+      }
+      .managed-student-form {
+        margin-top: 12px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+      .managed-students-table-wrap {
+        margin-top: 12px;
+        border: 1px solid #dbe1ea;
+        border-radius: 10px;
+        overflow: auto;
+      }
+      .managed-students-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 640px;
+      }
+      .managed-students-table th,
+      .managed-students-table td {
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 10px;
+        font-size: 0.9rem;
+      }
+      .managed-students-table tr.active {
+        background: #eef6ff;
+      }
+      .managed-students-table tbody tr {
+        cursor: pointer;
+      }
       .status-pill {
         padding: 6px 10px;
         border-radius: 999px;
@@ -303,10 +411,21 @@ type Application = { id: number; applicationNo: string; status: string; candidat
 })
 export class StudentApplicationsComponent implements OnInit {
   readonly applications = signal<Application[]>([]);
+  readonly managedStudents = signal<ManagedStudent[]>([]);
+  readonly institutes = signal<Array<{ id: number; name: string }>>([]);
   readonly exams = signal<Exam[]>([]);
   readonly creating = signal(false);
+  readonly creatingStudent = signal(false);
+  readonly showAddStudentForm = signal(false);
+  readonly selectedStudentId = signal<number | null>(null);
   readonly selectedExamId = signal<number | null>(null);
   readonly selectedCandidateType = signal<'REGULAR' | 'BACKLOG' | 'REPEATER' | 'ATKT' | 'IMPROVEMENT' | 'PRIVATE'>('REGULAR');
+  readonly newStudentFirstName = signal('');
+  readonly newStudentMiddleName = signal('');
+  readonly newStudentLastName = signal('');
+  readonly newStudentInstituteId = signal<number | null>(null);
+  readonly newStudentStreamCode = signal('');
+  readonly newStudentMobile = signal('');
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   selectedApplication: Application | null = null;
@@ -319,8 +438,67 @@ export class StudentApplicationsComponent implements OnInit {
   constructor() {}
 
   ngOnInit() {
+    this.loadManagedStudents();
+    this.loadInstitutes();
     this.reload();
     this.loadExams();
+  }
+
+  private loadManagedStudents() {
+    this.http.get<{ students: ManagedStudent[] }>(`${API_BASE_URL}/students/managed`).subscribe({
+      next: (response) => {
+        const students = response.students || [];
+        this.managedStudents.set(students);
+        if (!this.selectedStudentId() && students.length) {
+          this.selectedStudentId.set(students[0].id);
+        }
+      },
+      error: (err: any) => {
+        this.error.set(err?.error?.message || 'Failed to load students');
+      }
+    });
+  }
+
+  private loadInstitutes() {
+    this.http.get<{ institutes: Array<{ id: number; name: string }> }>(`${API_BASE_URL}/institutes/search`).subscribe({
+      next: (response) => this.institutes.set(response.institutes || []),
+      error: () => this.institutes.set([])
+    });
+  }
+
+  createManagedStudent() {
+    if (!this.newStudentFirstName().trim() || !this.newStudentLastName().trim() || !this.newStudentInstituteId() || !this.newStudentStreamCode().trim()) {
+      this.error.set('Please fill First Name, Last Name, Institute and Stream for new student.');
+      return;
+    }
+
+    this.creatingStudent.set(true);
+    this.error.set(null);
+
+    this.http.post(`${API_BASE_URL}/students/managed`, {
+      firstName: this.newStudentFirstName().trim(),
+      middleName: this.newStudentMiddleName().trim() || undefined,
+      lastName: this.newStudentLastName().trim(),
+      instituteId: this.newStudentInstituteId(),
+      streamCode: this.newStudentStreamCode().trim(),
+      mobile: this.newStudentMobile().trim() || undefined
+    }).subscribe({
+      next: () => {
+        this.creatingStudent.set(false);
+        this.newStudentFirstName.set('');
+        this.newStudentMiddleName.set('');
+        this.newStudentLastName.set('');
+        this.newStudentStreamCode.set('');
+        this.newStudentMobile.set('');
+        this.newStudentInstituteId.set(null);
+        this.showAddStudentForm.set(false);
+        this.loadManagedStudents();
+      },
+      error: (err: any) => {
+        this.creatingStudent.set(false);
+        this.error.set(err?.error?.message || 'Failed to create student');
+      }
+    });
   }
 
   private loadExams() {
@@ -410,8 +588,12 @@ export class StudentApplicationsComponent implements OnInit {
   }
 
   create() {
+    const studentId = this.selectedStudentId();
     const examId = this.selectedExamId();
-    if (!examId) return;
+    if (!studentId || !examId) return;
+
+    const selectedStudent = this.managedStudents().find((item) => item.id === studentId);
+    const selectedStudentCompletion = Number(selectedStudent?.profileCompletion ?? 0);
     
     const exam = this.exams().find((e) => e.id === examId);
     if (!exam || !this.isExamOpen(exam)) {
@@ -420,7 +602,7 @@ export class StudentApplicationsComponent implements OnInit {
     }
 
     // Check if student profile is complete before allowing application creation
-    const profileCompletion = this.getProfileCompletion();
+    const profileCompletion = selectedStudentCompletion || this.getProfileCompletion();
     if (profileCompletion < 70) {
       this.snackBar.open(
         `⚠️ Please complete your profile (${profileCompletion}% done) before creating an exam application`,
@@ -438,7 +620,7 @@ export class StudentApplicationsComponent implements OnInit {
 
     // FIX: Added error handling and proper response typing
     this.http
-      .post<{ application: Application }>(`${API_BASE_URL}/applications`, { examId, candidateType: this.selectedCandidateType() })
+    .post<{ application: Application }>(`${API_BASE_URL}/applications`, { examId, studentId, candidateType: this.selectedCandidateType() })
       .subscribe({
         next: (r: any) => {
           this.creating.set(false);
@@ -451,6 +633,21 @@ export class StudentApplicationsComponent implements OnInit {
           this.creating.set(false);
         }
       });
+  }
+
+  displayStudentName(student: ManagedStudent | null | undefined): string {
+    if (!student) return '-';
+    return student.fullName || [student.lastName, student.firstName, student.middleName].filter(Boolean).join(' ') || `Student #${student.id}`;
+  }
+
+  studentNameFromApplication(app: Application): string {
+    return this.displayStudentName({
+      id: app.student?.id || 0,
+      firstName: app.student?.firstName,
+      middleName: app.student?.middleName,
+      lastName: app.student?.lastName,
+      fullName: [app.student?.lastName, app.student?.firstName, app.student?.middleName].filter(Boolean).join(' ')
+    } as ManagedStudent);
   }
 
   /**

@@ -99,7 +99,8 @@ model User {
 
   examsCreated Exam[] @relation("ExamCreatedBy")
   newsCreated News[] @relation("NewsCreatedBy")
-  studentProfile Student?
+  studentProfile Student? @relation("PrimaryStudentProfile")
+  managedStudents Student[] @relation("ManagedStudents")
 
   auditLogs AuditLog[]
   statusEvents StatusHistory[] @relation("StatusActor")
@@ -212,6 +213,7 @@ model Student {
   id           Int      @id @default(autoincrement())
   instituteId  Int
   userId       Int?     @unique
+  managerUserId Int?
   firstName    String?  @db.VarChar(100)
   middleName   String?  @db.VarChar(100)
   lastName     String?  @db.VarChar(100)
@@ -238,12 +240,14 @@ model Student {
   createdAt DateTime @default(now())
 
   institute Institute @relation(fields: [instituteId], references: [id])
-  user      User?     @relation(fields: [userId], references: [id])
+  user      User?     @relation("PrimaryStudentProfile", fields: [userId], references: [id])
+  managerUser User?   @relation("ManagedStudents", fields: [managerUserId], references: [id])
   previousExams PreviousExam[]
   feeReimbursement FeeReimbursement?
   applications ExamApplication[]
 
   @@index([instituteId])
+  @@index([managerUserId])
   @@index([lastName, firstName])
   @@map("students")
 }

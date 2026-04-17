@@ -52,9 +52,7 @@ import { BrandingService } from '../../../core/branding.service';
           <section class="section-card">
             <div class="section-title">1. Candidate Personal Particulars</div>
             <div class="detail-list detail-list--personal">
-              <div class="detail-line"><span class="line-label">Surname:</span><span class="line-value">{{ valueOrDash(s().lastName) }}</span></div>
-              <div class="detail-line"><span class="line-label">First Name:</span><span class="line-value">{{ valueOrDash(s().firstName) }}</span></div>
-              <div class="detail-line"><span class="line-label">Middle Name:</span><span class="line-value">{{ valueOrDash(s().middleName) }}</span></div>
+              <div class="detail-line"><span class="line-label">Full Name (Surname First Middle):</span><span class="line-value">{{ fullNameForPrint() }}</span></div>
               <div class="detail-line"><span class="line-label">Mother Name:</span><span class="line-value">{{ valueOrDash(s().motherName) }}</span></div>
               <div class="detail-line"><span class="line-label">Aadhaar No:</span><span class="line-value">{{ valueOrDash(s().aadhaar) }}</span></div>
               <div class="detail-line"><span class="line-label">Student Saral ID:</span><span class="line-value">{{ studentSaralIdValue() }}</span></div>
@@ -117,6 +115,17 @@ import { BrandingService } from '../../../core/branding.service';
           @if (hasOtherDetails()) {
             <section class="section-card">
               <div class="section-title">4. Previous Exam Details</div>
+              <div class="detail-list detail-list--academic">
+                <div class="detail-line"><span class="line-label">SSC Seat No:</span><span class="line-value">{{ valueOrDash(sscPreviousExam()?.seatNo) }}</span></div>
+                <div class="detail-line"><span class="line-label">SSC Month/Year:</span><span class="line-value">{{ formatPreviousExamMonthYear(sscPreviousExam()) }}</span></div>
+                <div class="detail-line"><span class="line-label">SSC Board:</span><span class="line-value">{{ valueOrDash(sscPreviousExam()?.boardOrCollegeName) }}</span></div>
+                <div class="detail-line"><span class="line-label">SSC Percentage:</span><span class="line-value">{{ valueOrDash(sscPreviousExam()?.percentage) }}</span></div>
+                <div class="detail-line"><span class="line-label">11th Seat No:</span><span class="line-value">{{ valueOrDash(xithPreviousExam()?.seatNo) }}</span></div>
+                <div class="detail-line"><span class="line-label">11th Month/Year:</span><span class="line-value">{{ formatPreviousExamMonthYear(xithPreviousExam()) }}</span></div>
+                <div class="detail-line"><span class="line-label">11th College:</span><span class="line-value">{{ valueOrDash(xithPreviousExam()?.boardOrCollegeName) }}</span></div>
+                <div class="detail-line"><span class="line-label">11th Percentage:</span><span class="line-value">{{ valueOrDash(xithPreviousExam()?.percentage) }}</span></div>
+              </div>
+
               <div class="detail-grid grid-4 compact-grid">
                 <div class="detail-item">
                   <label>Exemptions Claimed</label>
@@ -147,6 +156,8 @@ import { BrandingService } from '../../../core/branding.service';
                       <th>Month</th>
                       <th>Year</th>
                       <th>Marks</th>
+                      <th>Previous Exam Seat No</th>
+                      <th>Previous Marks</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -160,11 +171,13 @@ import { BrandingService } from '../../../core/branding.service';
                         <td>{{ valueOrDash(e.month) }}</td>
                         <td>{{ valueOrDash(e.year) }}</td>
                         <td>{{ valueOrDash(e.marksObt) }}</td>
+                        <td>{{ valueOrDash(e.previousExamSeatNo || e.seatNo || a().lastExamSeatNo) }}</td>
+                        <td>{{ valueOrDash(e.previousMarks || e.marksObt || e.marks || e.obtainedMarks) }}</td>
                       </tr>
                     }
                     @if (!(a().exemptedSubjects?.length)) {
                       <tr>
-                        <td colspan="6" class="muted center">No exempted subject details provided</td>
+                        <td colspan="9" class="muted center">No exempted subject details provided</td>
                       </tr>
                     }
                   </tbody>
@@ -344,6 +357,7 @@ import { BrandingService } from '../../../core/branding.service';
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        text-transform: uppercase;
       }
 
       .header-side {
@@ -371,6 +385,7 @@ import { BrandingService } from '../../../core/branding.service';
 
       .meta-row strong {
         text-align: right;
+        text-transform: uppercase;
       }
 
       .status-chip {
@@ -400,7 +415,7 @@ import { BrandingService } from '../../../core/branding.service';
 
       .section-title {
         padding: 2px 5px;
-        font-size: 8px;
+        font-size: 9px;
         font-weight: 700;
         text-transform: uppercase;
         border-bottom: 1px solid #000;
@@ -425,25 +440,28 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       .detail-line {
-        display: flex;
-        align-items: baseline;
-        gap: 6px;
+        display: grid;
+        grid-template-columns: 165px minmax(0, 1fr);
+        align-items: start;
+        column-gap: 8px;
         min-width: 0;
-        padding: 1px 0;
+        padding: 2px 0;
       }
 
       .line-label {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 700;
         color: #0f172a;
         flex-shrink: 0;
+        line-height: 1.2;
       }
 
       .line-value {
-        font-size: 9.4px;
+        font-size: 11px;
         line-height: 1.28;
         color: #000;
         font-weight: 600;
+        text-transform: uppercase;
         word-break: break-word;
         overflow-wrap: anywhere;
       }
@@ -472,6 +490,7 @@ import { BrandingService } from '../../../core/branding.service';
         font-weight: 700;
         color: #000;
         text-align: center;
+        text-transform: uppercase;
       }
 
       .detail-item label {
@@ -496,7 +515,7 @@ import { BrandingService } from '../../../core/branding.service';
         width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
-        font-size: 7.5px;
+        font-size: 8px;
       }
 
       .subject-table th,
@@ -541,6 +560,7 @@ import { BrandingService } from '../../../core/branding.service';
       .subject-table tbody td {
         font-weight: 700;
         color: #000;
+        text-transform: uppercase;
       }
 
       .subject-name-cell {
@@ -862,12 +882,17 @@ import { BrandingService } from '../../../core/branding.service';
           padding: 5px 6px !important;
         }
 
+        .detail-line {
+          grid-template-columns: 150px minmax(0, 1fr) !important;
+          column-gap: 6px !important;
+        }
+
         .line-label {
-          font-size: 12px !important;
+          font-size: 11px !important;
         }
 
         .line-value {
-          font-size: 9.4px !important;
+          font-size: 11px !important;
           line-height: 1.24 !important;
         }
 
@@ -1185,6 +1210,14 @@ export class StudentFormPrintComponent implements OnInit {
     return this.a().studentSaralId || this.s().studentSaralId || this.s().apaarId || '—';
   }
 
+  fullNameForPrint() {
+    const surname = this.valueOrDash(this.s().lastName, '').trim();
+    const first = this.valueOrDash(this.s().firstName, '').trim();
+    const middle = this.valueOrDash(this.s().middleName, '').trim();
+    const combined = [surname, first, middle].filter(Boolean).join(' ').trim();
+    return combined || '—';
+  }
+
   applicationSerialValue() {
     return this.a().applSrNo || '—';
   }
@@ -1356,6 +1389,23 @@ export class StudentFormPrintComponent implements OnInit {
   hasOtherDetails() {
     const app = this.a();
     return this.isPrivateCandidate() || this.isBacklogCandidate() || !!app.eligibilityCertNo || (app.eligibilityCertIssued !== null && app.eligibilityCertIssued !== undefined);
+  }
+
+  sscPreviousExam() {
+    return (this.a().student?.previousExams || []).find((exam: any) => String(exam?.examType || '').toUpperCase() === 'SSC') || null;
+  }
+
+  xithPreviousExam() {
+    const acceptedExamTypes = new Set(['XI', '11TH', '11']);
+    return (this.a().student?.previousExams || []).find((exam: any) => acceptedExamTypes.has(String(exam?.examType || '').toUpperCase())) || null;
+  }
+
+  formatPreviousExamMonthYear(exam: any) {
+    if (!exam) return '—';
+    const month = this.valueOrDash(exam.month, '').trim();
+    const year = this.valueOrDash(exam.year, '').trim();
+    const combined = `${month} ${year}`.trim();
+    return combined || '—';
   }
 
   useThreeColumnDetails() {

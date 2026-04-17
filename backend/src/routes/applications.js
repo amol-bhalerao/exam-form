@@ -122,6 +122,31 @@ function buildApplicationDashboard(applications = [], totalCapacity = null) {
   };
 }
 
+async function getAccessibleStudentIdsForUser(userId) {
+  const students = await prisma.student.findMany({
+    where: {
+      OR: [
+        { userId },
+        { managerUserId: userId }
+      ]
+    },
+    select: { id: true }
+  });
+  return students.map((student) => student.id);
+}
+
+async function getAccessibleStudentForUser(userId, studentId = null) {
+  const where = {
+    OR: [
+      { userId },
+      { managerUserId: userId }
+    ],
+    ...(studentId ? { id: studentId } : {})
+  };
+
+  return prisma.student.findFirst({ where });
+}
+
 async function addStatusHistory(params) {
   await prisma.statusHistory.create({
     data: {
@@ -140,7 +165,11 @@ async function getApplicationScoped(applicationId, auth) {
     include: {
       exam: { include: { stream: true } },
       institute: true,
-      student: true,
+      student: {
+        include: {
+          previousExams: true
+        }
+      },
       subjects: { include: { subject: true } },
       exemptedSubjects: true,
       statusHistory: { orderBy: { createdAt: 'desc' }, take: 25 }
@@ -171,7 +200,15 @@ async function getApplicationScoped(applicationId, auth) {
   }
 
   if (auth.role === 'STUDENT') {
-    const student = await prisma.student.findFirst({ where: { id: app.studentId, userId: auth.userId } });
+    const student = await prisma.student.findFirst({
+      where: {
+        id: app.studentId,
+        OR: [
+          { userId: auth.userId },
+          { managerUserId: auth.userId }
+        ]
+      }
+    });
     if (!student) return null;
     return app;
   }
@@ -182,10 +219,9 @@ async function getApplicationScoped(applicationId, auth) {
 // Student: list my applications
 applicationsRouter.get('/my', requireAuth, requireRole(['STUDENT']), async (req, res) => {
   try {
-    let student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
+    const accessibleStudentIds = await getAccessibleStudentIdsForUser(req.auth.userId);
     
-    // If profile doesn't exist yet, it means student hasn't selected institute yet
-    if (!student) {
+    if (!accessibleStudentIds.length) {
       // Return helpful error directing them to complete profile
       return res.status(412).json({ 
         error: 'PROFILE_INCOMPLETE',
@@ -195,8 +231,20 @@ applicationsRouter.get('/my', requireAuth, requireRole(['STUDENT']), async (req,
     }
 
     const apps = await prisma.examApplication.findMany({
-      where: { studentId: student.id },
-      include: { exam: true },
+      where: { studentId: { in: accessibleStudentIds } },
+      include: {
+        exam: true,
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            middleName: true,
+            lastName: true,
+            instituteId: true,
+            streamCode: true
+          }
+        }
+      },
       orderBy: { updatedAt: 'desc' },
       take: 50
     });
@@ -214,11 +262,12 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
     const body = z
       .object({
         examId: z.number().int().positive(),
+        studentId: z.number().int().positive().optional(),
         candidateType: z.enum(['REGULAR', 'REPEATER', 'ATKT', 'BACKLOG', 'IMPROVEMENT', 'PRIVATE'])
       })
       .parse(req.body);
 
-    const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
+    const student = await getAccessibleStudentForUser(req.auth.userId, body.studentId ?? null);
     if (!student) {
       return res.status(412).json({ 
         error: 'PROFILE_INCOMPLETE',
@@ -330,18 +379,21 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
   try {
     const applicationId = z.coerce.number().int().positive().parse(req.params.id);
 
-    const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
-    if (!student) {
-      return res.status(412).json({ 
+    const accessibleStudentIds = await getAccessibleStudentIdsForUser(req.auth.userId);
+    if (!accessibleStudentIds.length) {
+      return res.status(412).json({
         error: 'PROFILE_INCOMPLETE',
         message: 'Please complete your profile by selecting your institute and stream first.',
         redirectUrl: '/student/select-institute'
       });
     }
 
-    const app = await prisma.examApplication.findFirst({ where: { id: applicationId, studentId: student.id } });
+    const app = await prisma.examApplication.findFirst({ where: { id: applicationId, studentId: { in: accessibleStudentIds } } });
     if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
     if (app.status !== 'DRAFT') return res.status(400).json({ error: 'NOT_EDITABLE' });
+
+    const student = await prisma.student.findUnique({ where: { id: app.studentId } });
+    if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND' });
 
   const body = z
     .object({
@@ -542,9 +594,9 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
 applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), async (req, res) => {
   try {
     const applicationId = z.coerce.number().int().positive().parse(req.params.id);
-    const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
-    if (!student) {
-      return res.status(412).json({ 
+    const accessibleStudentIds = await getAccessibleStudentIdsForUser(req.auth.userId);
+    if (!accessibleStudentIds.length) {
+      return res.status(412).json({
         error: 'PROFILE_INCOMPLETE',
         message: 'Please complete your profile by selecting your institute and stream first.',
         redirectUrl: '/student/select-institute'
@@ -552,7 +604,7 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
     }
 
   const app = await prisma.examApplication.findFirst({
-    where: { id: applicationId, studentId: student.id },
+    where: { id: applicationId, studentId: { in: accessibleStudentIds } },
     include: {
       subjects: { include: { subject: true } }
     }
