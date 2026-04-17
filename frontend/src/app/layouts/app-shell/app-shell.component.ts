@@ -664,6 +664,43 @@ import { API_BASE_URL } from '../../core/api';
       width: 100%;
     }
 
+    /* Keep page-level modal overlays inside the main content area, not under the sidenav */
+    .container ::ng-deep .app-modal-backdrop,
+    .container ::ng-deep .modal-backdrop,
+    .container ::ng-deep .picker-overlay {
+      z-index: 1300 !important;
+    }
+
+    .container:not(.sidebar-hidden):not(.sidebar-compact) ::ng-deep .app-modal-backdrop,
+    .container:not(.sidebar-hidden):not(.sidebar-compact) ::ng-deep .modal-backdrop,
+    .container:not(.sidebar-hidden):not(.sidebar-compact) ::ng-deep .picker-overlay {
+      left: 280px !important;
+      width: calc(100vw - 280px) !important;
+    }
+
+    .container.sidebar-compact:not(.sidebar-hidden) ::ng-deep .app-modal-backdrop,
+    .container.sidebar-compact:not(.sidebar-hidden) ::ng-deep .modal-backdrop,
+    .container.sidebar-compact:not(.sidebar-hidden) ::ng-deep .picker-overlay {
+      left: 88px !important;
+      width: calc(100vw - 88px) !important;
+    }
+
+    .container.sidebar-hidden ::ng-deep .app-modal-backdrop,
+    .container.sidebar-hidden ::ng-deep .modal-backdrop,
+    .container.sidebar-hidden ::ng-deep .picker-overlay {
+      left: 0 !important;
+      width: 100vw !important;
+    }
+
+    @media (max-width: 960px) {
+      .container ::ng-deep .app-modal-backdrop,
+      .container ::ng-deep .modal-backdrop,
+      .container ::ng-deep .picker-overlay {
+        left: 0 !important;
+        width: 100vw !important;
+      }
+    }
+
     ::ng-deep .content > * {
       display: block;
       width: 100%;

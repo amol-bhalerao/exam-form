@@ -36,57 +36,12 @@ type MappingRow = {
   imports: [MatCardModule, AgGridAngular, MatFormFieldModule, MatInputModule, MatSelectModule, MatButtonModule, MatSnackBarModule, FormsModule, NgIf, NgFor],
   template: `
     <mat-card class="card">
-      <div class="h">Stream Subject Mapping</div>
-      <p class="p">Map subjects to a stream and set the answer language for each subject at institute level.</p>
-
-      <div class="row">
-        <mat-form-field appearance="outline" class="field">
-          <mat-label>Stream search</mat-label>
-          <input matInput [ngModel]="streamSearch()" (ngModelChange)="streamSearch.set($event)" placeholder="Search stream" />
-        </mat-form-field>
-        <mat-form-field appearance="outline" class="field field-wide">
-          <mat-label>Search in subject list</mat-label>
-          <input matInput [ngModel]="subjectSearch()" (ngModelChange)="subjectSearch.set($event)" placeholder="Type subject name, code, or category" />
-        </mat-form-field>
-      </div>
-
-      <div class="row">
-        <mat-form-field appearance="outline" class="field">
-          <mat-label>Stream</mat-label>
-          <mat-select [(ngModel)]="streamId" (selectionChange)="onStreamChanged()">
-            <mat-option *ngFor="let s of filteredStreams" [value]="s.id">{{ s.name }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="field field-wide">
-          <mat-label>Subjects</mat-label>
-          <mat-select [multiple]="!editingMappingId()" [(ngModel)]="selectedSubjectIds">
-            <mat-option *ngIf="filteredSubjects.length === 0" disabled>No subjects match the current search.</mat-option>
-            <mat-option *ngFor="let s of filteredSubjects" [value]="s.id">
-              {{ s.name }} ({{ s.code }}) - {{ s.category || 'General' }}
-            </mat-option>
-          </mat-select>
-          <mat-hint>{{ filteredSubjects.length }} of {{ subjects().length }} subjects shown</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="field">
-          <mat-label>Language of Answer</mat-label>
-          <mat-select [(ngModel)]="answerLanguageCode">
-            <mat-option value="">Not set</mat-option>
-            <mat-option *ngFor="let lang of languageOptions" [value]="lang.code">{{ lang.label }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      <div class="row chips-row" *ngIf="selectedSubjectIds.length > 0">
-        <span class="chip" *ngFor="let sid of selectedSubjectIds">{{ getSubjectName(sid) }}</span>
-      </div>
-
-      <div class="actions">
-        <button mat-flat-button color="primary" (click)="save()" [disabled]="!streamId || selectedSubjectIds.length === 0">
-          {{ editingMappingId() ? 'Update Mapping' : 'Save Mapping' }}
-        </button>
-        <button mat-stroked-button type="button" *ngIf="editingMappingId()" (click)="resetForm()">Cancel Edit</button>
+      <div class="header-row">
+        <div>
+          <div class="h">Stream Subject Mapping</div>
+          <p class="p">Map subjects to stream and answer language when required. Default view focuses on current mappings.</p>
+        </div>
+        <button mat-flat-button color="primary" (click)="openForm()">Add Mapping</button>
       </div>
 
       <div class="error" *ngIf="error()">{{ error() }}</div>
@@ -110,9 +65,69 @@ type MappingRow = {
 
       <div *ngIf="mappings().length === 0" class="empty">No stream-subject mappings found yet.</div>
     </mat-card>
+
+    <div class="app-modal-backdrop" *ngIf="showForm()">
+      <div class="app-modal-panel app-modal-panel--lg">
+        <div class="app-modal-header">
+          <div class="h">{{ editingMappingId() ? 'Update Mapping' : 'Add Mapping' }}</div>
+          <button mat-icon-button type="button" (click)="closeForm()"><mat-icon>close</mat-icon></button>
+        </div>
+
+        <div class="row">
+          <mat-form-field appearance="outline" class="field">
+            <mat-label>Stream search</mat-label>
+            <input matInput [ngModel]="streamSearch()" (ngModelChange)="streamSearch.set($event)" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="field field-wide">
+            <mat-label>Search in subject list</mat-label>
+            <input matInput [ngModel]="subjectSearch()" (ngModelChange)="subjectSearch.set($event)" />
+          </mat-form-field>
+        </div>
+
+        <div class="row">
+          <mat-form-field appearance="outline" class="field">
+            <mat-label>Stream</mat-label>
+            <mat-select [(ngModel)]="streamId" (selectionChange)="onStreamChanged()">
+              <mat-option *ngFor="let s of filteredStreams" [value]="s.id">{{ s.name }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="field field-wide">
+            <mat-label>Subjects</mat-label>
+            <mat-select [multiple]="!editingMappingId()" [(ngModel)]="selectedSubjectIds">
+              <mat-option *ngIf="filteredSubjects.length === 0" disabled>No subjects match the current search.</mat-option>
+              <mat-option *ngFor="let s of filteredSubjects" [value]="s.id">
+                {{ s.name }} ({{ s.code }}) - {{ s.category || 'General' }}
+              </mat-option>
+            </mat-select>
+            <mat-hint>{{ filteredSubjects.length }} of {{ subjects().length }} subjects shown</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="field">
+            <mat-label>Language of Answer</mat-label>
+            <mat-select [(ngModel)]="answerLanguageCode">
+              <mat-option value="">Not set</mat-option>
+              <mat-option *ngFor="let lang of languageOptions" [value]="lang.code">{{ lang.label }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="row chips-row" *ngIf="selectedSubjectIds.length > 0">
+          <span class="chip" *ngFor="let sid of selectedSubjectIds">{{ getSubjectName(sid) }}</span>
+        </div>
+
+        <div class="actions">
+          <button mat-stroked-button type="button" (click)="closeForm()">Cancel</button>
+          <button mat-flat-button color="primary" (click)="save()" [disabled]="!streamId || selectedSubjectIds.length === 0">
+            {{ editingMappingId() ? 'Update Mapping' : 'Save Mapping' }}
+          </button>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
     .card { margin-bottom: 14px; padding: 16px; }
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
     .h { font-weight: 800; }
     .p { color: #6b7280; margin: 6px 0 12px; line-height: 1.45; }
     .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -137,6 +152,7 @@ export class InstituteStreamSubjectsComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
   readonly editingMappingId = signal<number | null>(null);
+  readonly showForm = signal(false);
 
   streamId = 0;
   selectedSubjectIds: number[] = [];
@@ -172,6 +188,16 @@ export class InstituteStreamSubjectsComponent implements OnInit {
     this.http.get<{ streams: any[] }>(`${API_BASE_URL}/masters/streams`).subscribe((r) => this.streams.set(r.streams || []));
     this.http.get<{ subjects: any[] }>(`${API_BASE_URL}/masters/subjects`).subscribe((r) => this.subjects.set(r.subjects || []));
     this.load();
+  }
+
+  openForm() {
+    this.resetForm();
+    this.showForm.set(true);
+  }
+
+  closeForm() {
+    this.showForm.set(false);
+    this.resetForm();
   }
 
   get filteredStreams() {
@@ -245,6 +271,7 @@ export class InstituteStreamSubjectsComponent implements OnInit {
         next: () => {
           this.success.set('Mapping updated successfully.');
           this.snackBar.open('Mapping updated', 'Close', { duration: 2000 });
+          this.showForm.set(false);
           this.resetForm();
           this.load();
         },
@@ -269,6 +296,7 @@ export class InstituteStreamSubjectsComponent implements OnInit {
       next: (r) => {
         this.success.set(r.message || 'Saved successfully');
         this.snackBar.open('Stream subjects saved', 'Close', { duration: 2000 });
+        this.showForm.set(false);
         this.resetForm();
         this.load();
       },
@@ -304,6 +332,7 @@ export class InstituteStreamSubjectsComponent implements OnInit {
       this.answerLanguageCode = row.answerLanguageCode || '';
       this.success.set(null);
       this.error.set(null);
+      this.showForm.set(true);
       return;
     }
 

@@ -39,18 +39,6 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
 
     <mat-tab-group>
       <mat-tab label="Streams">
-        <mat-card class="card">
-          <div class="form-grid">
-            <mat-form-field appearance="outline"><mat-label>Stream name</mat-label><input matInput [(ngModel)]="streamEdit.name" /></mat-form-field>
-          </div>
-          <div class="card-actions">
-            <button mat-flat-button color="primary" (click)="saveStream()">{{ streamEdit.id ? 'Update Stream' : 'Add Stream' }}</button>
-            <button mat-stroked-button (click)="resetStream()" *ngIf="streamEdit.id">Cancel</button>
-          </div>
-          <div class="msg error" *ngIf="streamError">{{ streamError }}</div>
-          <div class="msg success" *ngIf="streamSuccess">{{ streamSuccess }}</div>
-        </mat-card>
-
         <mat-card class="card grid-panel">
           <div class="grid-panel__header">
             <div>
@@ -59,10 +47,11 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
             </div>
             <div class="grid-panel__actions">
               <span class="grid-pill">{{ streams().length }} records</span>
+              <button mat-flat-button color="primary" (click)="openStreamForm()">Add Stream</button>
               <mat-form-field appearance="outline" class="search">
                 <mat-label>Search streams</mat-label>
                 <mat-icon matPrefix>search</mat-icon>
-                <input matInput [(ngModel)]="streamSearch" (input)="loadStreams()" placeholder="Search by name" />
+                <input matInput [(ngModel)]="streamSearch" (input)="loadStreams()" />
               </mat-form-field>
             </div>
           </div>
@@ -78,23 +67,27 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
             ></ag-grid-angular>
           </div>
         </mat-card>
+
+        <div class="app-modal-backdrop" *ngIf="showStreamForm()">
+          <div class="app-modal-panel app-modal-panel--md">
+            <div class="app-modal-header">
+              <div class="grid-panel__title">{{ streamEdit.id ? 'Update Stream' : 'Add Stream' }}</div>
+              <button mat-icon-button type="button" (click)="closeStreamForm()"><mat-icon>close</mat-icon></button>
+            </div>
+            <div class="form-grid">
+              <mat-form-field appearance="outline"><mat-label>Stream name</mat-label><input matInput [(ngModel)]="streamEdit.name" /></mat-form-field>
+            </div>
+            <div class="card-actions">
+              <button mat-stroked-button (click)="closeStreamForm()">Cancel</button>
+              <button mat-flat-button color="primary" (click)="saveStream()">{{ streamEdit.id ? 'Update Stream' : 'Add Stream' }}</button>
+            </div>
+            <div class="msg error" *ngIf="streamError">{{ streamError }}</div>
+            <div class="msg success" *ngIf="streamSuccess">{{ streamSuccess }}</div>
+          </div>
+        </div>
       </mat-tab>
 
       <mat-tab label="Subjects">
-        <mat-card class="card">
-          <div class="form-grid">
-            <mat-form-field appearance="outline"><mat-label>Code</mat-label><input matInput [(ngModel)]="subjectEdit.code" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="subjectEdit.name" /></mat-form-field>
-            <mat-form-field appearance="outline"><mat-label>Category</mat-label><mat-select [(ngModel)]="subjectEdit.category"><mat-option *ngFor="let c of categories" [value]="c">{{ c }}</mat-option></mat-select></mat-form-field>
-          </div>
-          <div class="card-actions">
-            <button mat-flat-button color="primary" (click)="saveSubject()">{{ subjectEdit.id ? 'Update Subject' : 'Add Subject' }}</button>
-            <button mat-stroked-button color="warn" *ngIf="subjectEdit.id" (click)="resetSubject()">Cancel</button>
-          </div>
-          <div class="msg error" *ngIf="subjectError">{{ subjectError }}</div>
-          <div class="msg success" *ngIf="subjectSuccess">{{ subjectSuccess }}</div>
-        </mat-card>
-
         <mat-card class="card grid-panel">
           <div class="grid-panel__header">
             <div>
@@ -103,10 +96,11 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
             </div>
             <div class="grid-panel__actions">
               <span class="grid-pill">{{ subjects().length }} records</span>
+              <button mat-flat-button color="primary" (click)="openSubjectForm()">Add Subject</button>
               <mat-form-field appearance="outline" class="search">
                 <mat-label>Search subjects</mat-label>
                 <mat-icon matPrefix>search</mat-icon>
-                <input matInput [(ngModel)]="subjectSearch" (input)="loadSubjects()" placeholder="Search by code or name" />
+                <input matInput [(ngModel)]="subjectSearch" (input)="loadSubjects()" />
               </mat-form-field>
             </div>
           </div>
@@ -122,6 +116,26 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
             ></ag-grid-angular>
           </div>
         </mat-card>
+
+        <div class="app-modal-backdrop" *ngIf="showSubjectForm()">
+          <div class="app-modal-panel app-modal-panel--md">
+            <div class="app-modal-header">
+              <div class="grid-panel__title">{{ subjectEdit.id ? 'Update Subject' : 'Add Subject' }}</div>
+              <button mat-icon-button type="button" (click)="closeSubjectForm()"><mat-icon>close</mat-icon></button>
+            </div>
+            <div class="form-grid">
+              <mat-form-field appearance="outline"><mat-label>Code</mat-label><input matInput [(ngModel)]="subjectEdit.code" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="subjectEdit.name" /></mat-form-field>
+              <mat-form-field appearance="outline"><mat-label>Category</mat-label><mat-select [(ngModel)]="subjectEdit.category"><mat-option *ngFor="let c of categories" [value]="c">{{ c }}</mat-option></mat-select></mat-form-field>
+            </div>
+            <div class="card-actions">
+              <button mat-stroked-button (click)="closeSubjectForm()">Cancel</button>
+              <button mat-flat-button color="primary" (click)="saveSubject()">{{ subjectEdit.id ? 'Update Subject' : 'Add Subject' }}</button>
+            </div>
+            <div class="msg error" *ngIf="subjectError">{{ subjectError }}</div>
+            <div class="msg success" *ngIf="subjectSuccess">{{ subjectSuccess }}</div>
+          </div>
+        </div>
       </mat-tab>
     </mat-tab-group>
   `,
@@ -142,6 +156,8 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
 export class SuperMastersComponent implements OnInit {
   readonly streams = signal<StreamRow[]>([]);
   readonly subjects = signal<SubjectRow[]>([]);
+  readonly showStreamForm = signal(false);
+  readonly showSubjectForm = signal(false);
   private readonly http = inject(HttpClient);
 
   streamEdit: Partial<StreamRow> = { id: 0, name: '' };
@@ -178,6 +194,26 @@ export class SuperMastersComponent implements OnInit {
     this.loadSubjects();
   }
 
+  openStreamForm() {
+    this.resetStream();
+    this.showStreamForm.set(true);
+  }
+
+  closeStreamForm() {
+    this.showStreamForm.set(false);
+    this.resetStream();
+  }
+
+  openSubjectForm() {
+    this.resetSubject();
+    this.showSubjectForm.set(true);
+  }
+
+  closeSubjectForm() {
+    this.showSubjectForm.set(false);
+    this.resetSubject();
+  }
+
   loadStreams() {
     const params = this.streamSearch ? `?search=${encodeURIComponent(this.streamSearch)}` : '';
     this.http.get<{ streams: StreamRow[] }>(`${API_BASE_URL}/masters/streams${params}`).subscribe({
@@ -204,12 +240,12 @@ export class SuperMastersComponent implements OnInit {
     const payload = { name: this.streamEdit.name.trim() };
     if (this.streamEdit.id) {
       this.http.put(`${API_BASE_URL}/masters/streams/${this.streamEdit.id}`, payload).subscribe({
-        next: () => { this.streamSuccess = 'Updated stream'; this.resetStream(); this.loadStreams(); },
+        next: () => { this.streamSuccess = 'Updated stream'; this.showStreamForm.set(false); this.resetStream(); this.loadStreams(); },
         error: (e: { error: { error: string; }; }) => { this.streamError = e?.error?.error || 'Update failed'; }
       });
     } else {
       this.http.post(`${API_BASE_URL}/masters/streams`, payload).subscribe({
-        next: () => { this.streamSuccess = 'Added stream'; this.resetStream(); this.loadStreams(); },
+        next: () => { this.streamSuccess = 'Added stream'; this.showStreamForm.set(false); this.resetStream(); this.loadStreams(); },
         error: (e: { error: { error: string; }; }) => { this.streamError = e?.error?.error || 'Create failed'; }
       });
     }
@@ -226,12 +262,12 @@ export class SuperMastersComponent implements OnInit {
     const payload = { code: this.subjectEdit.code.trim(), name: this.subjectEdit.name.trim(), category: this.subjectEdit.category };
     if (this.subjectEdit.id) {
       this.http.put(`${API_BASE_URL}/masters/subjects/${this.subjectEdit.id}`, payload).subscribe({
-        next: () => { this.subjectSuccess = 'Updated subject'; this.resetSubject(); this.loadSubjects(); },
+        next: () => { this.subjectSuccess = 'Updated subject'; this.showSubjectForm.set(false); this.resetSubject(); this.loadSubjects(); },
         error: (e: { error: { error: string; }; }) => { this.subjectError = e?.error?.error || 'Update failed'; }
       });
     } else {
       this.http.post(`${API_BASE_URL}/masters/subjects`, payload).subscribe({
-        next: () => { this.subjectSuccess = 'Added subject'; this.resetSubject(); this.loadSubjects(); },
+        next: () => { this.subjectSuccess = 'Added subject'; this.showSubjectForm.set(false); this.resetSubject(); this.loadSubjects(); },
         error: (e: { error: { error: string; }; }) => { this.subjectError = e?.error?.error || 'Create failed'; }
       });
     }
@@ -243,6 +279,7 @@ export class SuperMastersComponent implements OnInit {
     if (!action || !row) return;
     if (action === 'edit') {
       this.streamEdit = { ...row };
+      this.showStreamForm.set(true);
       return;
     }
 
@@ -261,6 +298,7 @@ export class SuperMastersComponent implements OnInit {
     if (!action || !row) return;
     if (action === 'edit') {
       this.subjectEdit = { ...row };
+      this.showSubjectForm.set(true);
       return;
     }
 

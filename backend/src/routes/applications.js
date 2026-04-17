@@ -138,7 +138,13 @@ async function getApplicationScoped(applicationId, auth) {
   if (auth.role === 'SUPER_ADMIN') return app;
 
   if (auth.role === 'BOARD') {
-    if (app.status === 'INSTITUTE_VERIFIED' || app.status === 'BOARD_APPROVED' || app.status === 'REJECTED_BY_BOARD') return app;
+    if (
+      app.status === 'SUBMITTED' ||
+      app.status === 'INSTITUTE_VERIFIED' ||
+      app.status === 'BOARD_APPROVED' ||
+      app.status === 'REJECTED_BY_INSTITUTE' ||
+      app.status === 'REJECTED_BY_BOARD'
+    ) return app;
     return null;
   }
 
@@ -744,21 +750,28 @@ applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_
   const page = q.page ?? 1;
   const limit = q.limit ?? 25;
 
-  const where = {
-    examId: q.examId,
-    status: q.status ?? { in: ['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'] }
-  };
-  if (q.search) {
-    where.OR = [
-      { applicationNo: { contains: q.search } },
-      { institute: { name: { contains: q.search } } },
-      { student: { lastName: { contains: q.search } } },
-      { student: { firstName: { contains: q.search } } }
-    ];
-  }
+  const strictStatuses = ['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'];
+  const fallbackStatuses = ['SUBMITTED', 'INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD'];
 
-  const total = await prisma.examApplication.count({ where });
-  const apps = await prisma.examApplication.findMany({
+  const buildWhere = (statusCondition) => {
+    const where = {
+      examId: q.examId,
+      status: statusCondition
+    };
+    if (q.search) {
+      where.OR = [
+        { applicationNo: { contains: q.search } },
+        { institute: { name: { contains: q.search } } },
+        { student: { lastName: { contains: q.search } } },
+        { student: { firstName: { contains: q.search } } }
+      ];
+    }
+    return where;
+  };
+
+  let where = buildWhere(q.status ?? { in: strictStatuses });
+  let total = await prisma.examApplication.count({ where });
+  let apps = await prisma.examApplication.findMany({
     where,
     include: { student: true, institute: true, exam: true },
     orderBy: { updatedAt: 'desc' },
@@ -766,13 +779,33 @@ applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_
     take: limit
   });
 
+  // If no explicit status filter is requested and strict status set has no rows,
+  // fall back to include submitted-stage data so board can still review exam data.
+  if (!q.status && total === 0) {
+    where = buildWhere({ in: fallbackStatuses });
+    total = await prisma.examApplication.count({ where });
+    apps = await prisma.examApplication.findMany({
+      where,
+      include: { student: true, institute: true, exam: true },
+      orderBy: { updatedAt: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit
+    });
+  }
+
   return res.json({ applications: apps, metadata: { page, limit, total } });
 });
 
 // Board: get exams that have applications
 applicationsRouter.get('/board/exams', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
-  const boardVisibleStatuses = ['SUBMITTED', 'INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD'];
-  const exams = await prisma.exam.findMany({
+  const includeSubmitted = String(req.query.includeSubmitted || '').toLowerCase() === 'true';
+  const boardVisibleStatuses = includeSubmitted
+    ? ['SUBMITTED', 'INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD']
+    : ['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'];
+
+  const broadStatuses = ['SUBMITTED', 'INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD'];
+
+  let exams = await prisma.exam.findMany({
     where: {
       applications: {
         some: {
@@ -793,6 +826,31 @@ applicationsRouter.get('/board/exams', requireAuth, requireRole(['BOARD', 'SUPER
     },
     orderBy: { name: 'asc' }
   });
+
+  // Keep default board screens useful when no applications have reached verified/approved statuses yet.
+  if (!includeSubmitted && exams.length === 0) {
+    exams = await prisma.exam.findMany({
+      where: {
+        applications: {
+          some: {
+            status: { in: broadStatuses }
+          }
+        }
+      },
+      include: {
+        _count: {
+          select: {
+            applications: {
+              where: {
+                status: { in: broadStatuses }
+              }
+            }
+          }
+        }
+      },
+      orderBy: { name: 'asc' }
+    });
+  }
 
   return res.json({ exams });
 });
@@ -887,8 +945,9 @@ applicationsRouter.get('/board/student-master', requireAuth, requireRole(['BOARD
   const allCastes = Array.from(new Set(applications.map((item) => item.student?.categoryCode).filter(Boolean))).sort();
 
   const summaries = {
-    byExam: topGroupedCounts(applications.map((item) => item.exam?.name)),
     byCaste: topGroupedCounts(applications.map((item) => item.student?.categoryCode)),
+    byGender: topGroupedCounts(applications.map((item) => item.student?.gender)),
+    byDistrict: topGroupedCounts(applications.map((item) => item.student?.district || item.institute?.district)),
     bySubject: topGroupedCounts(
       applications.flatMap((item) => (item.subjects || []).map((entry) => entry.subject?.name))
     )

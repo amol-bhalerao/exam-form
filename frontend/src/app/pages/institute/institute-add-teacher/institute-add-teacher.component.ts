@@ -70,8 +70,8 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
       </div>
     </mat-card>
 
-    <div class="modal-backdrop" *ngIf="isFormModalOpen()">
-      <div class="modal form-modal">
+    <div class="app-modal-backdrop" *ngIf="isFormModalOpen()">
+      <div class="modal form-modal app-modal-panel app-modal-panel--xl">
         <div class="modal-header">
           <h3>{{ selectedTeacherId() ? 'Update Teacher / Staff' : 'Register Teacher / Staff' }}</h3>
           <button mat-icon-button type="button" (click)="closeFormModal()"><mat-icon>close</mat-icon></button>
@@ -140,14 +140,6 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
                 <th>Retirement Date</th>
                 <td>{{ retirementDateDisplay() || ('Auto-set at age ' + maharashtraRetirementAge) }}</td>
               </tr>
-              <tr>
-                <th>Senior Pay Grade</th>
-                <td>{{ seniorPayGradeStatus() }}</td>
-              </tr>
-              <tr>
-                <th>Selection Pay Grade</th>
-                <td>{{ selectionPayGradeStatus() }}</td>
-              </tr>
             </tbody>
           </table>
         </div>
@@ -173,8 +165,8 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
       </div>
     </div>
 
-    <div class="modal-backdrop" *ngIf="viewingTeacher()">
-      <div class="modal">
+    <div class="app-modal-backdrop" *ngIf="viewingTeacher()">
+      <div class="modal app-modal-panel app-modal-panel--md">
         <div class="modal-header">
           <h3>Teacher details</h3>
           <button mat-icon-button (click)="closeView()"><mat-icon>close</mat-icon></button>
@@ -190,8 +182,6 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
           <div><strong>Examiner Details:</strong> {{ viewingTeacher()?.examinerExperienceYears ? (viewingTeacher()?.examinerExperienceYears + ' years • Appointment No: ' + (viewingTeacher()?.previousExaminerAppointmentNo || 'Not added')) : 'No examiner experience added' }}</div>
           <div><strong>Moderator Details:</strong> {{ viewingTeacher()?.moderatorExperienceYears ? (viewingTeacher()?.moderatorExperienceYears + ' years • ' + (viewingTeacher()?.lastModeratorName || 'Name not added') + ' • ' + (viewingTeacher()?.lastModeratorAppointmentNo || 'Appointment no not added')) : 'No moderator experience added' }}</div>
           <div><strong>Chief Moderator Details:</strong> {{ viewingTeacher()?.chiefModeratorExperienceYears ? (viewingTeacher()?.chiefModeratorExperienceYears + ' years • ' + (viewingTeacher()?.lastChiefModeratorName || 'Name not added') + ' • ' + (viewingTeacher()?.lastChiefModeratorAppointmentNo || 'Appointment no not added')) : 'No chief moderator experience added' }}</div>
-          <div><strong>Senior Pay Grade Training:</strong> {{ viewingTeacher()?.seniorPayGradeEligible ? 'Eligible' : 'Not yet eligible' }}</div>
-          <div><strong>Selection Pay Grade Training:</strong> {{ viewingTeacher()?.selectionPayGradeEligible ? 'Eligible' : 'Not yet eligible' }}</div>
           <div><strong>Caste Category:</strong> {{ viewingTeacher()?.casteCategory }}</div>
           <div><strong>Aadhar:</strong> {{ viewingTeacher()?.governmentId }}</div>
           <div><strong>Email:</strong> {{ viewingTeacher()?.email }}</div>
@@ -229,7 +219,6 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
     .error { color: #b91c1c; margin-top: 8px; }
     .search { width: min(360px, 100%); }
     .table-box { width: 100%; height: 380px; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
-    .modal-backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.45); display: flex; align-items: center; justify-content: center; z-index: 120; padding: 12px; }
     .modal { background: white; border-radius: 12px; width: min(680px, calc(100vw - 24px)); max-height: 80vh; overflow: auto; }
     .form-modal { width: min(1080px, calc(100vw - 24px)); max-height: 90vh; }
     .form-modal-content { padding: 0 16px 16px; }
@@ -417,18 +406,6 @@ export class InstituteAddTeacherComponent implements OnInit {
       field: 'retirementDate',
       headerName: 'Retirement Date',
       valueGetter: (params: any) => params.data?.retirementDate ? new Date(params.data.retirementDate).toLocaleDateString('en-GB') : '-',
-      flex: 1
-    },
-    {
-      field: 'seniorPayGradeEligible',
-      headerName: 'Senior Grade',
-      valueGetter: (params: any) => params.data?.seniorPayGradeEligible ? 'Eligible' : 'Pending',
-      flex: 1
-    },
-    {
-      field: 'selectionPayGradeEligible',
-      headerName: 'Selection Grade',
-      valueGetter: (params: any) => params.data?.selectionPayGradeEligible ? 'Eligible' : 'Pending',
       flex: 1
     },
     { headerName: 'College', valueGetter: (params: any) => params.data?.institute?.name ?? '-', flex: 1.4 },

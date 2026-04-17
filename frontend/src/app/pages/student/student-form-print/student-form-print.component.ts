@@ -12,10 +12,12 @@ import { BrandingService } from '../../../core/branding.service';
   standalone: true,
   imports: [DatePipe, MatButtonModule],
   template: `
-    <div class="no-print actions">
-      <button mat-stroked-button type="button" (click)="goBack()">Back</button>
-      <button mat-flat-button color="primary" (click)="print()">Print Form</button>
-    </div>
+    @if (showActions()) {
+      <div class="no-print actions">
+        <button mat-stroked-button type="button" (click)="goBack()">Back</button>
+        <button mat-flat-button color="primary" (click)="print()">Print Form</button>
+      </div>
+    }
 
     @if (application()) {
       <div class="page">
@@ -947,9 +949,21 @@ export class StudentFormPrintComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
   private readonly location = inject(Location);
+  private autoPrint = false;
+  private closeAfterPrint = false;
+  private hideActions = false;
+  private autoPrintTriggered = false;
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
+    const query = this.route.snapshot.queryParamMap;
+    this.autoPrint = query.get('autoprint') === '1';
+    this.closeAfterPrint = query.get('closeAfterPrint') === '1';
+    this.hideActions = query.get('hideActions') === '1';
+
+    if (this.closeAfterPrint) {
+      window.addEventListener('afterprint', () => window.close());
+    }
 
     this.http.get<{ application: any }>(`${API_BASE_URL}/applications/${id}`).subscribe((r: any) => {
       const application = r?.application
@@ -968,6 +982,7 @@ export class StudentFormPrintComponent implements OnInit {
       this.application.set(application);
       this.photoLoadMode.set('normalized');
       this.signatureLoadMode.set('normalized');
+      this.triggerAutoPrintIfNeeded();
     });
 
     this.http.get<{ student?: any }>(`${API_BASE_URL}/me`).subscribe({
@@ -985,6 +1000,18 @@ export class StudentFormPrintComponent implements OnInit {
         // Keep printable form working for institute/board roles; application student data remains the fallback.
       }
     });
+  }
+
+  showActions() {
+    return !this.hideActions;
+  }
+
+  private triggerAutoPrintIfNeeded() {
+    if (!this.autoPrint || this.autoPrintTriggered || !this.application()) return;
+    this.autoPrintTriggered = true;
+    setTimeout(() => {
+      this.print();
+    }, 250);
   }
 
   a() {

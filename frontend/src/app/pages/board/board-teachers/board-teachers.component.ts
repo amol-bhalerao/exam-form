@@ -133,8 +133,8 @@ type TeacherRow = {
       </div>
     </mat-card>
 
-    <div class="modal-backdrop" *ngIf="viewingTeacher() as teacher">
-      <div class="modal-card">
+    <div class="app-modal-backdrop" *ngIf="viewingTeacher() as teacher">
+      <div class="modal-card app-modal-panel app-modal-panel--lg">
         <div class="modal-header">
           <div>
             <div class="modal-title">{{ teacher.fullName }}</div>
@@ -238,7 +238,6 @@ type TeacherRow = {
     `.w180 { width: 180px; }`,
     `.w220 { width: 220px; }`,
     `.table-box { border: 1px solid #e2e8f0; border-radius: 6px; }`,
-    `.modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 16px; }`,
     `.modal-card { background: #fff; border-radius: 14px; width: min(980px, calc(100vw - 24px)); max-height: 88vh; overflow: auto; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25); }`,
     `.modal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 16px 18px; border-bottom: 1px solid #e2e8f0; }`,
     `.modal-title { font-size: 1.15rem; font-weight: 700; }`,

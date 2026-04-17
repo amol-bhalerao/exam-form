@@ -90,8 +90,8 @@ type Institute = {
     </mat-card>
 
     @if (viewingInstitute) {
-      <div class="modal-backdrop">
-        <div class="modal">
+      <div class="app-modal-backdrop">
+        <div class="app-modal-panel app-modal-panel--md">
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
             <div style="font-weight: 700;">Institute Details</div>
             <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="closeView()">&times;</button>
@@ -117,8 +117,8 @@ type Institute = {
     }
 
     @if (showCreateInstitute()) {
-      <div class="modal-backdrop">
-        <div class="modal" style="max-width: 700px;">
+      <div class="app-modal-backdrop">
+        <div class="app-modal-panel app-modal-panel--md">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <div style="font-weight:700;">Create New Institute</div>
             <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showCreateInstitute.set(false); resetCreateForm()">&times;</button>
@@ -149,8 +149,8 @@ type Institute = {
     }
 
     @if (showEditInstitute()) {
-      <div class="modal-backdrop">
-        <div class="modal" style="max-width: 700px;">
+      <div class="app-modal-backdrop">
+        <div class="app-modal-panel app-modal-panel--md">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <div style="font-weight:700;">Edit Institute</div>
             <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showEditInstitute.set(false)">&times;</button>
@@ -213,25 +213,6 @@ type Institute = {
         align-items: center;
         gap: 12px;
         flex-wrap: wrap;
-      }
-      .modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(15, 23, 42, 0.45);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-        padding: 16px;
-      }
-      .modal {
-        background: #fff;
-        border-radius: 16px;
-        padding: 16px;
-        width: min(720px, 92vw);
-        max-height: 90vh;
-        overflow: auto;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
       }
       @media (max-width: 768px) {
         .form-grid {

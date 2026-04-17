@@ -1,5 +1,5 @@
 import { Component, OnInit, signal } from '@angular/core';
-import { NgFor } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -20,7 +20,7 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
 @Component({
   selector: 'app-board-exams',
   standalone: true,
-  imports: [FormsModule, NgFor, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, AgGridModule],
+  imports: [FormsModule, NgFor, NgIf, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, MatDatepickerModule, MatNativeDateModule, AgGridModule],
   template: `
     <mat-card class="card grid-panel">
       <div class="grid-panel__header">
@@ -34,21 +34,10 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
         <div class="grid-panel__actions">
           <span class="grid-pill">{{ activeCount() }} active exams</span>
           <span class="grid-pill">{{ dateRange() }}</span>
+          <button mat-flat-button color="primary" (click)="openFormModal()">Create Exam</button>
         </div>
       </div>
-      <div class="grid">
-        <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="form.name" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Academic year</mat-label><input matInput [(ngModel)]="form.academicYear" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Session</mat-label><input matInput [(ngModel)]="form.session" placeholder="e.g. FEB-MAR 2026" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Stream</mat-label><mat-select [(ngModel)]="form.streamId"><mat-option *ngFor="let s of streams()" [value]="s.id">{{ s.name }}</mat-option></mat-select></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Open date</mat-label><input matInput [matDatepicker]="openPicker" [(ngModel)]="form.applicationOpen" /><mat-datepicker-toggle matSuffix [for]="openPicker"></mat-datepicker-toggle><mat-datepicker #openPicker></mat-datepicker></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Close date</mat-label><input matInput [matDatepicker]="closePicker" [(ngModel)]="form.applicationClose" /><mat-datepicker-toggle matSuffix [for]="closePicker"></mat-datepicker-toggle><mat-datepicker #closePicker></mat-datepicker></mat-form-field>
-      </div>
-      <div class="actions"><button mat-flat-button color="primary" (click)="create()">Create Exam</button><span class="status" [class.status--error]="status.includes('failed') || status.includes('Invalid') || status.includes('Fill')">{{ status }}</span></div>
-      <div class="stream-row">
-        <mat-form-field appearance="outline" class="table-search-field"><mat-label>New stream name</mat-label><input matInput [(ngModel)]="newStreamName" placeholder="E.g. Science" /></mat-form-field>
-        <button mat-stroked-button color="primary" (click)="createStream()" [disabled]="!newStreamName">Add Stream</button>
-      </div>
+      <div class="actions"><span class="status" [class.status--error]="status.includes('failed') || status.includes('Invalid') || status.includes('Fill')">{{ status }}</span></div>
     </mat-card>
 
     <mat-card class="card grid-panel">
@@ -62,7 +51,7 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
           <mat-form-field appearance="outline" class="w180"><mat-label>Stream</mat-label><mat-select [(ngModel)]="filterStream" (selectionChange)="load()"><mat-option value="">All</mat-option><mat-option *ngFor="let s of streams()" [value]="s.id">{{ s.name }}</mat-option></mat-select></mat-form-field>
         </div>
       </div>
-      <div class="grid-panel__table grid-panel__table--lg">
+      <div class="grid-panel__table grid-panel__table--lg ag-theme-alpine">
         <ag-grid-angular
           style="width:100%; height:100%;"
           [rowData]="exams()"
@@ -75,6 +64,31 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
       </div>
       <div class="pager"><button mat-stroked-button (click)="prevPage()" [disabled]="page<=1">Prev</button><span>Page {{ page }}</span><button mat-stroked-button (click)="nextPage()">Next</button></div>
     </mat-card>
+
+    <div class="app-modal-backdrop" *ngIf="showFormModal()">
+      <div class="app-modal-panel app-modal-panel--lg">
+        <div class="app-modal-header">
+          <div class="grid-panel__title"><mat-icon>event_available</mat-icon>Create Exam</div>
+          <button mat-icon-button type="button" (click)="closeFormModal()"><mat-icon>close</mat-icon></button>
+        </div>
+        <div class="grid">
+          <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="form.name" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Academic year</mat-label><input matInput [(ngModel)]="form.academicYear" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Session</mat-label><input matInput [(ngModel)]="form.session" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Stream</mat-label><mat-select [(ngModel)]="form.streamId"><mat-option *ngFor="let s of streams()" [value]="s.id">{{ s.name }}</mat-option></mat-select></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Open date</mat-label><input matInput [matDatepicker]="openPicker" [(ngModel)]="form.applicationOpen" /><mat-datepicker-toggle matSuffix [for]="openPicker"></mat-datepicker-toggle><mat-datepicker #openPicker></mat-datepicker></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Close date</mat-label><input matInput [matDatepicker]="closePicker" [(ngModel)]="form.applicationClose" /><mat-datepicker-toggle matSuffix [for]="closePicker"></mat-datepicker-toggle><mat-datepicker #closePicker></mat-datepicker></mat-form-field>
+        </div>
+        <div class="stream-row">
+          <mat-form-field appearance="outline" class="table-search-field"><mat-label>New stream name</mat-label><input matInput [(ngModel)]="newStreamName" /></mat-form-field>
+          <button mat-stroked-button color="primary" (click)="createStream()" [disabled]="!newStreamName">Add Stream</button>
+        </div>
+        <div class="actions">
+          <button mat-stroked-button (click)="closeFormModal()">Cancel</button>
+          <button mat-flat-button color="primary" (click)="create()">Create Exam</button>
+        </div>
+      </div>
+    </div>
   `,
   styles: [
     `
@@ -120,6 +134,7 @@ export class BoardExamsComponent implements OnInit {
   readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true, floatingFilter: true };
   readonly activeCount = signal(0);
   readonly dateRange = signal('');
+  readonly showFormModal = signal(false);
   page = 1;
   limit = 10;
   search = '';
@@ -140,6 +155,14 @@ export class BoardExamsComponent implements OnInit {
   ngOnInit() {
     this.loadStreams();
     this.load();
+  }
+
+  openFormModal() {
+    this.showFormModal.set(true);
+  }
+
+  closeFormModal() {
+    this.showFormModal.set(false);
   }
 
   private isExamOpen(exam: any): boolean {
@@ -199,6 +222,7 @@ export class BoardExamsComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.status = 'Exam created';
+        this.showFormModal.set(false);
         this.load();
       },
       error: () => {

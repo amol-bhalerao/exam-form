@@ -61,44 +61,6 @@ interface NewsForm {
       </mat-card>
 
       <mat-card class="table-card">
-        <!-- News Form -->
-        <div *ngIf="showForm()" class="news-form-card">
-          <mat-card class="form-card">
-            <mat-card-header>
-              <mat-card-title>{{ isEditing() ? 'Edit' : 'Create' }} News Item</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <form class="news-form" (ngSubmit)="saveItem()">
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Title</mat-label>
-                  <input matInput [(ngModel)]="newsForm.title" name="title" required>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Type</mat-label>
-                  <mat-select [(ngModel)]="newsForm.type" name="type" required>
-                    <mat-option value="news">News</mat-option>
-                    <mat-option value="event">Event</mat-option>
-                    <mat-option value="notification">Notification</mat-option>
-                  </mat-select>
-                </mat-form-field>
-
-                <mat-form-field appearance="outline" class="full-width">
-                  <mat-label>Content</mat-label>
-                  <textarea matInput [(ngModel)]="newsForm.content" name="content" rows="4" required></textarea>
-                </mat-form-field>
-
-                <div class="form-actions">
-                  <button mat-button type="button" (click)="closeDialog()">Cancel</button>
-                  <button mat-raised-button color="primary" type="submit" [disabled]="!newsForm.title || !newsForm.content">
-                    {{ isEditing() ? 'Update' : 'Create' }}
-                  </button>
-                </div>
-              </form>
-            </mat-card-content>
-          </mat-card>
-        </div>
-
         <table mat-table [dataSource]="newsItems()" class="news-table">
           <!-- Title Column -->
           <ng-container matColumnDef="title">
@@ -144,44 +106,43 @@ interface NewsForm {
           <p>No news items found. Create your first announcement!</p>
         </div>
       </mat-card>
+
+      <div class="app-modal-backdrop" *ngIf="showForm()">
+        <mat-card class="dialog-card app-modal-panel app-modal-panel--md">
+          <mat-card-header>
+            <mat-card-title>{{ isEditing() ? 'Edit' : 'Create' }} News Item</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <form (ngSubmit)="saveItem()" class="news-form">
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Title</mat-label>
+                <input matInput [(ngModel)]="newsForm.title" name="title" required>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Type</mat-label>
+                <mat-select [(ngModel)]="newsForm.type" name="type" required>
+                  <mat-option value="news">News</mat-option>
+                  <mat-option value="event">Event</mat-option>
+                  <mat-option value="notification">Notification</mat-option>
+                </mat-select>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Content</mat-label>
+                <textarea matInput [(ngModel)]="newsForm.content" name="content" rows="4" required></textarea>
+              </mat-form-field>
+            </form>
+          </mat-card-content>
+          <mat-card-actions align="end">
+            <button mat-button (click)="closeDialog()">Cancel</button>
+            <button mat-raised-button color="primary" (click)="saveItem()" [disabled]="!newsForm.title || !newsForm.content">
+              {{ isEditing() ? 'Update' : 'Create' }}
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
     </div>
-
-    <!-- Create/Edit Dialog -->
-    <ng-template #newsDialog>
-      <mat-card class="dialog-card">
-        <mat-card-header>
-          <mat-card-title>{{ isEditing() ? 'Edit' : 'Create' }} News Item</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <form (ngSubmit)="saveItem()" class="news-form">
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Title</mat-label>
-              <input matInput [(ngModel)]="newsForm.title" name="title" required>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Type</mat-label>
-              <mat-select [(ngModel)]="newsForm.type" name="type" required>
-                <mat-option value="news">News</mat-option>
-                <mat-option value="event">Event</mat-option>
-                <mat-option value="notification">Notification</mat-option>
-              </mat-select>
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Content</mat-label>
-              <textarea matInput [(ngModel)]="newsForm.content" name="content" rows="4" required></textarea>
-            </mat-form-field>
-          </form>
-        </mat-card-content>
-        <mat-card-actions align="end">
-          <button mat-button (click)="closeDialog()">Cancel</button>
-          <button mat-raised-button color="primary" (click)="saveItem()" [disabled]="!newsForm.title || !newsForm.content">
-            {{ isEditing() ? 'Update' : 'Create' }}
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </ng-template>
   `,
   styleUrls: ['./board-news.component.scss']
 })

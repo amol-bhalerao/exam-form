@@ -56,9 +56,6 @@ interface InstituteUser {
     .invite-title { font-weight:700; margin-bottom:8px; }
     .invite-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px; }
     .invite-link { color:#065f46; font-size:.9rem; word-break: break-all; }
-    .picker-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); display:flex; align-items:center; justify-content:center; z-index:1000; }
-    .picker-card { width:min(520px, calc(100vw - 24px)); padding:12px; }
-    .editor-box { margin-top:12px; border:1px solid #e5e7eb; border-radius:10px; padding:12px; background:#fff9db; }
     .error { margin-top:10px; color:#b91c1c; }
     @media (max-width: 900px) { .invite-grid { grid-template-columns: 1fr; } }
   `],
@@ -135,8 +132,8 @@ interface InstituteUser {
           </div>
         </div>
 
-        <div *ngIf="showCreateUser()" class="picker-overlay">
-          <mat-card class="picker-card">
+        <div *ngIf="showCreateUser()" class="app-modal-backdrop">
+          <mat-card class="app-modal-panel app-modal-panel--sm app-modal-panel--tight">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
               <div><strong>Create institute user</strong></div>
               <button mat-icon-button type="button" (click)="showCreateUser.set(false)"><mat-icon>close</mat-icon></button>
@@ -154,22 +151,25 @@ interface InstituteUser {
         </div>
       </div>
 
-      <div *ngIf="editingUser" class="editor-box">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-          <strong>Edit user {{ editingUser.username }} (id {{ editingUser.id }})</strong>
-          <button mat-icon-button (click)="editingUser = null"><mat-icon>close</mat-icon></button>
-        </div>
-        <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr; margin-top:8px;">
-          <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="editUsername" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput [(ngModel)]="editEmail" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="editMobile" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Password (optional)</mat-label><input matInput type="password" [(ngModel)]="editPassword" /></mat-form-field>
-        </div>
-        <div style="margin-top:8px;">
-          <button mat-flat-button color="primary" (click)="updateUser()">Save</button>
-          <span style="color:#065f46; margin-left:8px;" *ngIf="editMsg()">{{ editMsg() }}</span>
-          <span style="color:#b91c1c; margin-left:8px;" *ngIf="editError()">{{ editError() }}</span>
-        </div>
+      <div *ngIf="editingUser" class="app-modal-backdrop">
+        <mat-card class="app-modal-panel app-modal-panel--md app-modal-panel--tight">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <strong>Edit user {{ editingUser.username }} (id {{ editingUser.id }})</strong>
+            <button mat-icon-button (click)="editingUser = null"><mat-icon>close</mat-icon></button>
+          </div>
+          <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr; margin-top:8px;">
+            <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="editUsername" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput [(ngModel)]="editEmail" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="editMobile" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Password (optional)</mat-label><input matInput type="password" [(ngModel)]="editPassword" /></mat-form-field>
+          </div>
+          <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button mat-stroked-button type="button" (click)="editingUser = null">Cancel</button>
+            <button mat-flat-button color="primary" (click)="updateUser()">Save</button>
+            <span style="color:#065f46;" *ngIf="editMsg()">{{ editMsg() }}</span>
+            <span style="color:#b91c1c;" *ngIf="editError()">{{ editError() }}</span>
+          </div>
+        </mat-card>
       </div>
 
       <div *ngIf="error()" class="error">{{ error() }}</div>

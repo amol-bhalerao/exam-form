@@ -24,14 +24,7 @@ type StreamRow = { id: number; name: string; createdAt: string };
           <div class="h">Board Streams</div>
           <div class="p">Add, update and delete board streams. Cannot delete stream with bound subjects.</div>
         </div>
-      </div>
-
-      <div class="form-grid">
-        <mat-form-field appearance="outline"><mat-label>Stream name</mat-label><input matInput [(ngModel)]="edit.name" /></mat-form-field>
-      </div>
-      <div class="card-actions">
-        <button mat-flat-button color="primary" (click)="save()">{{ edit.id ? 'Update Stream' : 'Add Stream' }}</button>
-        <button mat-stroked-button (click)="reset()" *ngIf="edit.id">Cancel</button>
+        <button mat-flat-button color="primary" (click)="openForm()">Add Stream</button>
       </div>
       <div class="msg error" *ngIf="error">{{ error }}</div>
       <div class="msg success" *ngIf="success">{{ success }}</div>
@@ -52,6 +45,22 @@ type StreamRow = { id: number; name: string; createdAt: string };
         ></ag-grid-angular>
       </div>
     </mat-card>
+
+    <div class="app-modal-backdrop" *ngIf="showForm()">
+      <div class="app-modal-panel app-modal-panel--sm">
+        <div class="app-modal-header">
+          <div class="h">{{ edit.id ? 'Update Stream' : 'Add Stream' }}</div>
+          <button mat-icon-button type="button" (click)="closeForm()"><mat-icon>close</mat-icon></button>
+        </div>
+        <div class="form-grid">
+          <mat-form-field appearance="outline"><mat-label>Stream name</mat-label><input matInput [(ngModel)]="edit.name" /></mat-form-field>
+        </div>
+        <div class="card-actions">
+          <button mat-stroked-button (click)="closeForm()">Cancel</button>
+          <button mat-flat-button color="primary" (click)="save()">{{ edit.id ? 'Update Stream' : 'Add Stream' }}</button>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
     .card { margin-bottom: 14px; padding: 16px; }
@@ -69,6 +78,7 @@ type StreamRow = { id: number; name: string; createdAt: string };
 })
 export class BoardStreamsComponent implements OnInit {
   readonly streams = signal<StreamRow[]>([]);
+  readonly showForm = signal(false);
   edit: Partial<StreamRow> = { id: 0, name: '' };
   search = '';
   error = '';
@@ -85,6 +95,16 @@ export class BoardStreamsComponent implements OnInit {
   constructor(private readonly http: HttpClient) {}
 
   ngOnInit() { this.load(); }
+
+  openForm() {
+    this.reset();
+    this.showForm.set(true);
+  }
+
+  closeForm() {
+    this.showForm.set(false);
+    this.reset();
+  }
 
   load() {
     const params = this.search ? `?search=${encodeURIComponent(this.search)}` : '';
@@ -105,12 +125,12 @@ export class BoardStreamsComponent implements OnInit {
     const payload = { name: this.edit.name.trim() };
     if (this.edit.id) {
       this.http.put(`${API_BASE_URL}/masters/streams/${this.edit.id}`, payload).subscribe({
-        next: () => { this.success = 'Updated stream'; this.reset(); this.load(); },
+        next: () => { this.success = 'Updated stream'; this.closeForm(); this.load(); },
         error: (e) => { this.error = e?.error?.error || 'Update failed'; }
       });
     } else {
       this.http.post(`${API_BASE_URL}/masters/streams`, payload).subscribe({
-        next: () => { this.success = 'Added stream'; this.reset(); this.load(); },
+        next: () => { this.success = 'Added stream'; this.closeForm(); this.load(); },
         error: (e) => { this.error = e?.error?.error || 'Create failed'; }
       });
     }
@@ -122,6 +142,7 @@ export class BoardStreamsComponent implements OnInit {
     if (!action || !row) return;
     if (action === 'edit') {
       this.edit = { ...row };
+      this.showForm.set(true);
       return;
     }
 

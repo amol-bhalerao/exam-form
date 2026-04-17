@@ -67,8 +67,8 @@ type User = {
     </mat-card>
 
     @if (showEditUserModal) {
-      <div class="modal-backdrop">
-        <div class="modal" style="max-width: 500px;">
+      <div class="app-modal-backdrop">
+        <div class="app-modal-panel app-modal-panel--sm">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <div style="font-weight:700;">Edit User</div>
             <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showEditUserModal = false">&times;</button>
@@ -90,8 +90,8 @@ type User = {
     }
 
     @if (showResetPasswordModal) {
-      <div class="modal-backdrop">
-        <div class="modal" style="max-width: 400px;">
+      <div class="app-modal-backdrop">
+        <div class="app-modal-panel app-modal-panel--sm">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <div style="font-weight:700;">Reset Password</div>
             <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showResetPasswordModal = false">&times;</button>
@@ -108,8 +108,8 @@ type User = {
     }
 
     @if (showCreateUser()) {
-      <div class="modal-backdrop">
-        <div class="modal" style="max-width: 500px;">
+      <div class="app-modal-backdrop">
+        <div class="app-modal-panel app-modal-panel--sm">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
             <div style="font-weight:700;">Create New User</div>
             <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showCreateUser.set(false); resetCreateForm()">&times;</button>
@@ -190,22 +190,6 @@ type User = {
         display: flex;
         justify-content: space-between;
         align-items: center;
-      }
-      .modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.35);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-      }
-      .modal {
-        background: #fff;
-        border-radius: 8px;
-        padding: 16px;
-        width: min(500px, 90vw);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
       }
     `
   ]
