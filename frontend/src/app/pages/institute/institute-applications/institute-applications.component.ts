@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select';
 
 import { API_BASE_URL } from '../../../core/api';
 
@@ -32,12 +33,27 @@ type Row = {
   student: { firstName?: string; lastName?: string };
   exam: { name: string; session: string; academicYear: string };
   updatedAt: string;
+  candidateType?: string;
 };
+
+type GroupSummary = { name: string; count: number };
+type DashboardSummary = {
+  totalCapacity: number | null;
+  totalReceived: number;
+  byStatus: GroupSummary[];
+  bySubject: GroupSummary[];
+  byCaste: GroupSummary[];
+  byGender: GroupSummary[];
+  byDistrict: GroupSummary[];
+  byExamType: GroupSummary[];
+};
+
+type ExamOption = { id: number; name: string; session: string; academicYear: string };
 
 @Component({
   selector: 'app-institute-applications',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule],
+  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, MatSelectModule],
   template: `
     <mat-card class="card hero-card">
       <div class="row hero-row">
@@ -47,10 +63,34 @@ type Row = {
           <div class="p">Only paid and submitted forms are shown for institute verification. Search by application number for fast review.</div>
         </div>
         <div class="grow"></div>
+        <button mat-stroked-button type="button" (click)="printAllExamForms()" [disabled]="loading() || rows().length === 0">
+          <mat-icon>print</mat-icon>
+          Print All Exam Forms
+        </button>
+        <mat-form-field appearance="outline" class="w260">
+          <mat-label>Exam</mat-label>
+          <mat-select [(ngModel)]="selectedExamId" (selectionChange)="load()">
+            <mat-option value="">All exams</mat-option>
+            <mat-option *ngFor="let exam of availableExams()" [value]="exam.id">{{ exam.name }} - {{ exam.session }} {{ exam.academicYear }}</mat-option>
+          </mat-select>
+        </mat-form-field>
         <mat-form-field appearance="outline" class="w260">
           <mat-label>Search by application no. or student</mat-label>
           <input matInput [(ngModel)]="search" (input)="load()" placeholder="e.g. APP-2026-000123" />
         </mat-form-field>
+      </div>
+
+      <div class="analytics-grid app-summary-grid" *ngIf="dashboard() as s">
+        <div class="analytics-card hero app-summary-card app-summary-card--hero">
+          <div class="analytics-title app-summary-title">Capacity vs Received</div>
+          <div class="analytics-big">{{ s.totalCapacity ?? 'N/A' }} / {{ s.totalReceived }}</div>
+        </div>
+        <div class="analytics-card app-summary-card"><div class="analytics-title app-summary-title">Exam Type-wise</div><div class="app-summary-scroll"><div class="analytics-item app-summary-item" *ngFor="let item of s.byExamType"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div></div>
+        <div class="analytics-card app-summary-card"><div class="analytics-title app-summary-title">Subject-wise</div><div class="app-summary-scroll"><div class="analytics-item app-summary-item" *ngFor="let item of s.bySubject"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div></div>
+        <div class="analytics-card app-summary-card"><div class="analytics-title app-summary-title">Caste-wise</div><div class="app-summary-scroll"><div class="analytics-item app-summary-item" *ngFor="let item of s.byCaste"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div></div>
+        <div class="analytics-card app-summary-card"><div class="analytics-title app-summary-title">Gender-wise</div><div class="app-summary-scroll"><div class="analytics-item app-summary-item" *ngFor="let item of s.byGender"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div></div>
+        <div class="analytics-card app-summary-card"><div class="analytics-title app-summary-title">District-wise</div><div class="app-summary-scroll"><div class="analytics-item app-summary-item" *ngFor="let item of s.byDistrict"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div></div>
+        <div class="analytics-card app-summary-card"><div class="analytics-title app-summary-title">Status-wise</div><div class="app-summary-scroll"><div class="analytics-item app-summary-item" *ngFor="let item of s.byStatus"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div></div>
       </div>
 
       <div class="summary-row" *ngIf="rows().length > 0">
@@ -220,6 +260,8 @@ type Row = {
         gap: 10px;
         margin-top: 14px;
       }
+
+      .analytics-big { font-size: 1.12rem; font-weight: 800; color: #0f172a; }
 
       .summary-chip {
         border-radius: 14px;
@@ -434,12 +476,15 @@ type Row = {
 })
 export class InstituteApplicationsComponent implements OnInit {
   readonly rows = signal<Row[]>([]);
+  readonly dashboard = signal<DashboardSummary | null>(null);
+  readonly availableExams = signal<ExamOption[]>([]);
   readonly loading = signal(false);
   readonly decidingId = signal<number | null>(null);
   readonly errorMessage = signal<string | null>(null);
   readonly readyToVerifyCount = computed(() => this.rows().filter((row) => !!row.verification?.isReadyForVerification).length);
   readonly needsChecklistCount = computed(() => this.rows().filter((row) => !row.verification?.isReadyForVerification).length);
   search = '';
+  selectedExamId = '';
 
   constructor(private readonly http: HttpClient) {}
 
@@ -462,11 +507,16 @@ export class InstituteApplicationsComponent implements OnInit {
   load() {
     this.loading.set(true);
     this.errorMessage.set(null);
-    const params = this.search ? `?search=${encodeURIComponent(this.search)}` : '';
+    const q = new URLSearchParams();
+    if (this.search) q.set('search', this.search);
+    if (this.selectedExamId) q.set('examId', this.selectedExamId);
+    const params = q.toString() ? `?${q.toString()}` : '';
 
-    this.http.get<{ applications: Row[] }>(`${API_BASE_URL}/applications/institute/list${params}`).subscribe({
+    this.http.get<{ applications: Row[]; metadata?: { availableExams?: ExamOption[]; dashboard?: DashboardSummary } }>(`${API_BASE_URL}/applications/institute/list${params}`).subscribe({
       next: (response) => {
         this.rows.set(response.applications || []);
+        this.availableExams.set(response.metadata?.availableExams || []);
+        this.dashboard.set(response.metadata?.dashboard || null);
         this.loading.set(false);
       },
       error: (error) => {
@@ -493,6 +543,19 @@ export class InstituteApplicationsComponent implements OnInit {
   openPrint(row: Row) {
     if (!row?.id) return;
     window.open(`/app/student/forms/${row.id}/print`, '_blank');
+  }
+
+  printAllExamForms() {
+    const ids = this.rows().map((row) => row.id).filter((id) => Number.isInteger(id) && id > 0);
+    if (!ids.length) {
+      this.errorMessage.set('No applications available to print.');
+      return;
+    }
+
+    const popup = window.open(`/print/institute/forms?ids=${encodeURIComponent(ids.join(','))}`, '_blank');
+    if (!popup) {
+      this.errorMessage.set('Print window was blocked by browser popup settings. Please allow popups and try again.');
+    }
   }
 }
 

@@ -31,6 +31,21 @@ type Row = {
   student: { firstName?: string; lastName?: string };
   exam: { name: string; session: string; academicYear: string };
   updatedAt: string;
+  candidateType?: string;
+  subjects?: Array<{ subject?: { name?: string; code?: string } }>;
+};
+
+type GroupSummary = { name: string; count: number };
+type DashboardSummary = {
+  totalCapacity: number | null;
+  totalReceived: number;
+  byStatus: GroupSummary[];
+  byInstitute: GroupSummary[];
+  bySubject: GroupSummary[];
+  byCaste: GroupSummary[];
+  byGender: GroupSummary[];
+  byDistrict: GroupSummary[];
+  byExamType: GroupSummary[];
 };
 
 @Component({
@@ -91,6 +106,42 @@ type Row = {
           <button mat-flat-button color="primary" (click)="exportExcel()">Export Excel</button>
           <button mat-stroked-button color="primary" (click)="printList()">Print List</button>
           <button mat-stroked-button color="primary" (click)="printAllExamForms()">Print All Exam Forms</button>
+        </div>
+
+        <div class="summary-grid app-summary-grid" *ngIf="summary() as s">
+          <div class="summary-card hero app-summary-card app-summary-card--hero">
+            <div class="summary-title app-summary-title">Capacity vs Received</div>
+            <div class="big">{{ s.totalCapacity ?? 'N/A' }} / {{ s.totalReceived }}</div>
+            <div class="muted">Total capacity / applications received</div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Exam Type-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byExamType"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Subject-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.bySubject"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Caste-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byCaste"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Gender-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byGender"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">District-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byDistrict"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Status-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byStatus"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Institute-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byInstitute"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
         </div>
       </mat-card>
 
@@ -207,12 +258,15 @@ type Row = {
         padding: 20px;
         color: #666;
       }
+      .big { font-size: 1.12rem; font-weight: 800; color: #0f172a; }
+      .muted { color: #64748b; font-size: 12px; margin-top: 3px; }
     `
   ]
 })
 export class BoardApplicationsComponent implements OnInit {
   readonly rows = signal<Row[]>([]);
   readonly exams = signal<Exam[]>([]);
+  readonly summary = signal<DashboardSummary | null>(null);
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   selectedRow: Row | null = null;
@@ -289,6 +343,7 @@ export class BoardApplicationsComponent implements OnInit {
   clearExamSelection() {
     this.selectedExam = null;
     this.rows.set([]);
+    this.summary.set(null);
     this.selectedRow = null;
     this.totalApplications = 0;
     this.totalPages = 1;
@@ -307,11 +362,12 @@ export class BoardApplicationsComponent implements OnInit {
     p.set('page', `${this.page}`);
     p.set('limit', '25');
 
-    this.http.get<{ applications: Row[]; metadata: { total: number; page: number; limit: number } }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe({
+    this.http.get<{ applications: Row[]; metadata: { total: number; page: number; limit: number; dashboard?: DashboardSummary } }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe({
       next: (r) => {
         this.rows.set(r.applications || []);
         this.totalApplications = r.metadata.total;
         this.totalPages = Math.ceil(r.metadata.total / r.metadata.limit);
+        this.summary.set(r.metadata.dashboard || null);
         this.loading.set(false);
       },
       error: (err: any) => {
@@ -415,22 +471,13 @@ export class BoardApplicationsComponent implements OnInit {
         return;
       }
 
-      const urls = applications.map((row) =>
-        `/app/student/forms/${row.id}/print?autoprint=1&hideActions=1&closeAfterPrint=1`
-      );
-
-      let blocked = 0;
-      urls.forEach((url, index) => {
-        setTimeout(() => {
-          const popup = window.open(url, '_blank');
-          if (!popup) blocked += 1;
-
-          if (index === urls.length - 1 && blocked > 0) {
-            this.error.set('Some print windows were blocked by browser popup settings. Please allow popups and try again.');
-          }
-        }, index * 150);
-      });
-
+      const ids = applications.map((row) => row.id).join(',');
+      const popup = window.open(`/print/board/forms?ids=${encodeURIComponent(ids)}`, '_blank');
+      if (!popup) {
+        this.error.set('Print window was blocked by browser popup settings. Please allow popups and try again.');
+        this.loading.set(false);
+        return;
+      }
       this.loading.set(false);
     });
   }

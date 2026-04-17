@@ -109,9 +109,12 @@ interface NewsForm {
 
       <div class="app-modal-backdrop" *ngIf="showForm()">
         <mat-card class="dialog-card app-modal-panel app-modal-panel--md">
-          <mat-card-header>
+          <div class="dialog-top">
             <mat-card-title>{{ isEditing() ? 'Edit' : 'Create' }} News Item</mat-card-title>
-          </mat-card-header>
+            <button mat-icon-button type="button" aria-label="Close dialog" (click)="closeDialog()">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
           <mat-card-content>
             <form (ngSubmit)="saveItem()" class="news-form">
               <mat-form-field appearance="outline" class="full-width">

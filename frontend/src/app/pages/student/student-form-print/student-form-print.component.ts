@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, Input, OnInit, signal, inject } from '@angular/core';
 import { DatePipe, Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -449,7 +449,7 @@ import { BrandingService } from '../../../core/branding.service';
 
       .detail-item label {
         display: block;
-        font-size: 7px;
+        font-size: 7.8px;
         font-weight: 400;
         text-transform: none;
         margin-bottom: 2px;
@@ -492,15 +492,15 @@ import { BrandingService } from '../../../core/branding.service';
 
       .detail-item {
         position: relative;
-        padding: 7px 5px 3px;
-        min-height: 24px;
+        padding: 9px 6px 4px;
+        min-height: 30px;
         border: 1px solid #000;
         background: #fff;
       }
 
       .detail-item div {
-        font-size: 8px;
-        line-height: 1.2;
+        font-size: 9.2px;
+        line-height: 1.25;
         word-break: break-word;
         overflow-wrap: anywhere;
         font-weight: 700;
@@ -510,10 +510,10 @@ import { BrandingService } from '../../../core/branding.service';
 
       .detail-item label {
         position: absolute;
-        top: -5px;
+        top: -6px;
         left: 6px;
         margin: 0;
-        padding: 0 3px;
+        padding: 0 4px;
         border: 1px solid #000;
         background: #fff;
         color: #111827;
@@ -896,6 +896,20 @@ import { BrandingService } from '../../../core/branding.service';
           font-size: 7px !important;
         }
 
+        .detail-item {
+          min-height: 28px !important;
+          padding: 8px 5px 3px !important;
+        }
+
+        .detail-item label {
+          font-size: 7.6px !important;
+        }
+
+        .detail-item div {
+          font-size: 8.8px !important;
+          line-height: 1.2 !important;
+        }
+
         .subject-table th,
         .subject-table td {
           padding: 1px 2px !important;
@@ -939,6 +953,10 @@ import { BrandingService } from '../../../core/branding.service';
   ]
 })
 export class StudentFormPrintComponent implements OnInit {
+  @Input() applicationId: number | null = null;
+  @Input() hideActionsInput = false;
+  @Input() embeddedMode = false;
+
   readonly application = signal<any | null>(null);
   readonly studentProfile = signal<any | null>(null);
   readonly printedAt = new Date();
@@ -955,11 +973,14 @@ export class StudentFormPrintComponent implements OnInit {
   private autoPrintTriggered = false;
 
   ngOnInit() {
-    const id = Number(this.route.snapshot.paramMap.get('id'));
+    const routeId = Number(this.route.snapshot.paramMap.get('id'));
+    const id = this.applicationId && this.applicationId > 0 ? this.applicationId : routeId;
+    if (!id || Number.isNaN(id)) return;
+
     const query = this.route.snapshot.queryParamMap;
     this.autoPrint = query.get('autoprint') === '1';
     this.closeAfterPrint = query.get('closeAfterPrint') === '1';
-    this.hideActions = query.get('hideActions') === '1';
+    this.hideActions = this.hideActionsInput || query.get('hideActions') === '1';
 
     if (this.closeAfterPrint) {
       window.addEventListener('afterprint', () => window.close());
@@ -985,21 +1006,23 @@ export class StudentFormPrintComponent implements OnInit {
       this.triggerAutoPrintIfNeeded();
     });
 
-    this.http.get<{ student?: any }>(`${API_BASE_URL}/me`).subscribe({
-      next: (r: any) => {
-        if (!r?.student) return;
-        this.studentProfile.set({
-          ...r.student,
-          photoUrl: this.withCacheBust(r.student.photoUrl),
-          signatureUrl: this.withCacheBust(r.student.signatureUrl)
-        });
-        this.photoLoadMode.set('normalized');
-        this.signatureLoadMode.set('normalized');
-      },
-      error: () => {
-        // Keep printable form working for institute/board roles; application student data remains the fallback.
-      }
-    });
+    if (!this.embeddedMode) {
+      this.http.get<{ student?: any }>(`${API_BASE_URL}/me`).subscribe({
+        next: (r: any) => {
+          if (!r?.student) return;
+          this.studentProfile.set({
+            ...r.student,
+            photoUrl: this.withCacheBust(r.student.photoUrl),
+            signatureUrl: this.withCacheBust(r.student.signatureUrl)
+          });
+          this.photoLoadMode.set('normalized');
+          this.signatureLoadMode.set('normalized');
+        },
+        error: () => {
+          // Keep printable form working for institute/board roles; application student data remains the fallback.
+        }
+      });
+    }
   }
 
   showActions() {

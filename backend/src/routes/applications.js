@@ -105,6 +105,23 @@ function topGroupedCounts(values = [], limit = 10) {
     .slice(0, limit);
 }
 
+function buildApplicationDashboard(applications = [], totalCapacity = null) {
+  const subjects = applications.flatMap((app) => (app.subjects || []).map((entry) => entry.subject?.name).filter(Boolean));
+  const totalReceived = applications.length;
+
+  return {
+    totalCapacity: typeof totalCapacity === 'number' ? totalCapacity : null,
+    totalReceived,
+    byStatus: topGroupedCounts(applications.map((app) => app.status)),
+    byInstitute: topGroupedCounts(applications.map((app) => app.institute?.name)),
+    bySubject: topGroupedCounts(subjects),
+    byCaste: topGroupedCounts(applications.map((app) => app.student?.categoryCode)),
+    byGender: topGroupedCounts(applications.map((app) => app.student?.gender)),
+    byDistrict: topGroupedCounts(applications.map((app) => app.student?.district || app.institute?.district)),
+    byExamType: topGroupedCounts(applications.map((app) => app.candidateType))
+  };
+}
+
 async function addStatusHistory(params) {
   await prisma.statusHistory.create({
     data: {
@@ -615,7 +632,8 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
 applicationsRouter.get('/institute/list', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
   const q = z
     .object({
-      search: z.string().optional()
+      search: z.string().optional(),
+      examId: z.coerce.number().int().positive().optional()
     })
     .parse(req.query);
 
@@ -626,6 +644,7 @@ applicationsRouter.get('/institute/list', requireAuth, requireRole(['INSTITUTE']
     where: {
       instituteId,
       status: 'SUBMITTED',
+      examId: q.examId,
       ...(q.search
         ? {
             OR: [
@@ -688,7 +707,36 @@ applicationsRouter.get('/institute/list', requireAuth, requireRole(['INSTITUTE']
     })
     .filter((app) => app.paymentCompleted);
 
-  return res.json({ applications: visibleApps });
+  const availableExams = Array.from(
+    new Map(
+      visibleApps
+        .filter((app) => app.exam?.id)
+        .map((app) => [app.exam.id, { id: app.exam.id, name: app.exam.name, session: app.exam.session, academicYear: app.exam.academicYear }])
+    ).values()
+  );
+
+  let totalCapacity = null;
+  if (q.examId) {
+    const capacityAggregate = await prisma.instituteExamCapacity.aggregate({
+      where: {
+        instituteId,
+        examId: q.examId
+      },
+      _sum: {
+        totalStudents: true
+      }
+    });
+    totalCapacity = capacityAggregate?._sum?.totalStudents ?? null;
+  }
+
+  return res.json({
+    applications: visibleApps,
+    metadata: {
+      total: visibleApps.length,
+      availableExams,
+      dashboard: buildApplicationDashboard(visibleApps, totalCapacity)
+    }
+  });
 });
 
 // Institute: verify (SUBMITTED -> INSTITUTE_VERIFIED) or reject
@@ -773,7 +821,7 @@ applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_
   let total = await prisma.examApplication.count({ where });
   let apps = await prisma.examApplication.findMany({
     where,
-    include: { student: true, institute: true, exam: true },
+    include: { student: true, institute: true, exam: true, subjects: { include: { subject: true } } },
     orderBy: { updatedAt: 'desc' },
     skip: (page - 1) * limit,
     take: limit
@@ -786,14 +834,43 @@ applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_
     total = await prisma.examApplication.count({ where });
     apps = await prisma.examApplication.findMany({
       where,
-      include: { student: true, institute: true, exam: true },
+      include: { student: true, institute: true, exam: true, subjects: { include: { subject: true } } },
       orderBy: { updatedAt: 'desc' },
       skip: (page - 1) * limit,
       take: limit
     });
   }
 
-  return res.json({ applications: apps, metadata: { page, limit, total } });
+  const allForDashboard = await prisma.examApplication.findMany({
+    where,
+    include: {
+      student: true,
+      institute: true,
+      subjects: { include: { subject: true } }
+    },
+    orderBy: { updatedAt: 'desc' },
+    take: 10000
+  });
+
+  const capacityAggregate = await prisma.instituteExamCapacity.aggregate({
+    where: {
+      examId: q.examId
+    },
+    _sum: {
+      totalStudents: true
+    }
+  });
+  const totalCapacity = capacityAggregate?._sum?.totalStudents ?? null;
+
+  return res.json({
+    applications: apps,
+    metadata: {
+      page,
+      limit,
+      total,
+      dashboard: buildApplicationDashboard(allForDashboard, totalCapacity)
+    }
+  });
 });
 
 // Board: get exams that have applications

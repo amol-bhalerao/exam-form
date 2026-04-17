@@ -50,6 +50,21 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
         <button mat-flat-button color="primary" type="button" (click)="openFormModal()">Add Teacher / Staff</button>
       </div>
 
+      <div class="teacher-dashboard" *ngIf="teachers().length > 0">
+        <div class="dash-card primary"><span>Total Teachers</span><strong>{{ teachers().length }}</strong></div>
+        <div class="dash-card"><span>Active</span><strong>{{ activeTeacherCount() }}</strong></div>
+        <div class="dash-card"><span>Inactive</span><strong>{{ inactiveTeacherCount() }}</strong></div>
+        <div class="dash-card"><span>Examiner Experienced</span><strong>{{ examinerReadyCount() }}</strong></div>
+        <div class="dash-card"><span>Moderator Experienced</span><strong>{{ moderatorReadyCount() }}</strong></div>
+        <div class="dash-card"><span>Chief Moderator</span><strong>{{ chiefModeratorReadyCount() }}</strong></div>
+      </div>
+
+      <div class="teacher-dashboard" *ngIf="teachers().length > 0">
+        <div class="dash-card"><span>Top Subject</span><strong>{{ topSubjectLabel() }}</strong></div>
+        <div class="dash-card"><span>Top District</span><strong>{{ topDistrictLabel() }}</strong></div>
+        <div class="dash-card"><span>Avg Service</span><strong>{{ averageServiceYears() }} yrs</strong></div>
+      </div>
+
       <div class="error" *ngIf="error()">{{ error() }}</div>
 
       <mat-form-field appearance="outline" class="search">
@@ -218,6 +233,12 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
     .history-item { color: #334155; margin-bottom: 4px; }
     .error { color: #b91c1c; margin-top: 8px; }
     .search { width: min(360px, 100%); }
+    .teacher-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+    .dash-card { border: 1px solid #dbeafe; border-radius: 10px; padding: 10px 12px; background: #f8fbff; display: grid; gap: 2px; }
+    .dash-card span { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; font-weight: 700; }
+    .dash-card strong { font-size: 1.05rem; color: #0f172a; }
+    .dash-card.primary { background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%); border-color: #1d4ed8; }
+    .dash-card.primary span, .dash-card.primary strong { color: #eff6ff; }
     .table-box { width: 100%; height: 380px; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
     .modal { background: white; border-radius: 12px; width: min(680px, calc(100vw - 24px)); max-height: 80vh; overflow: auto; }
     .form-modal { width: min(1080px, calc(100vw - 24px)); max-height: 90vh; }
@@ -294,6 +315,12 @@ export class InstituteAddTeacherComponent implements OnInit {
         .includes(q)
     );
   });
+
+  readonly activeTeacherCount = computed(() => this.teachers().filter((teacher) => !!teacher.active).length);
+  readonly inactiveTeacherCount = computed(() => this.teachers().filter((teacher) => !teacher.active).length);
+  readonly examinerReadyCount = computed(() => this.teachers().filter((teacher) => (teacher.examinerExperienceYears || 0) > 0).length);
+  readonly moderatorReadyCount = computed(() => this.teachers().filter((teacher) => (teacher.moderatorExperienceYears || 0) > 0).length);
+  readonly chiefModeratorReadyCount = computed(() => this.teachers().filter((teacher) => (teacher.chiefModeratorExperienceYears || 0) > 0).length);
 
   hasExaminerExperience(): boolean {
     return (this.toNumberOrUndefined(this.form.controls.examinerExperienceYears.value) ?? 0) > 0;
@@ -445,6 +472,35 @@ export class InstituteAddTeacherComponent implements OnInit {
     this.refreshDerivedValues();
     this.refreshBoardDutyVisibility();
     this.load();
+  }
+
+  topSubjectLabel(): string {
+    const grouped = new Map<string, number>();
+    for (const teacher of this.teachers()) {
+      const key = String(teacher.subjectSpecialization || '').trim();
+      if (!key) continue;
+      grouped.set(key, (grouped.get(key) || 0) + 1);
+    }
+    const top = [...grouped.entries()].sort((a, b) => b[1] - a[1])[0];
+    return top ? `${top[0]} (${top[1]})` : '-';
+  }
+
+  topDistrictLabel(): string {
+    const grouped = new Map<string, number>();
+    for (const teacher of this.teachers()) {
+      const key = String(teacher.institute?.district || '').trim();
+      if (!key) continue;
+      grouped.set(key, (grouped.get(key) || 0) + 1);
+    }
+    const top = [...grouped.entries()].sort((a, b) => b[1] - a[1])[0];
+    return top ? `${top[0]} (${top[1]})` : '-';
+  }
+
+  averageServiceYears(): string {
+    const values = this.teachers().map((teacher) => Number(teacher.totalYearsService || 0)).filter((value) => !Number.isNaN(value));
+    if (!values.length) return '0.0';
+    const avg = values.reduce((sum, value) => sum + value, 0) / values.length;
+    return avg.toFixed(1);
   }
 
   load() {

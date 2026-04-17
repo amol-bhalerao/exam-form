@@ -40,6 +40,7 @@ import { BoardStreamsComponent } from './pages/board/board-streams/board-streams
 import { InstituteApplicationsComponent } from './pages/institute/institute-applications/institute-applications.component';
 import { BoardExamsComponent } from './pages/board/board-exams/board-exams.component';
 import { BoardNewsComponent } from './pages/board/board-news/board-news.component';
+import { BoardBulkFormsPrintComponent } from './pages/board/board-bulk-forms-print/board-bulk-forms-print.component';
 import { AdminStatusDashboardComponent } from './components/admin-status-dashboard/admin-status-dashboard.component';
 import { HealthCheckComponent } from './pages/health/health-check.component';
 
@@ -48,6 +49,8 @@ export const routes: Routes = [
   
   // Public Health Check (no auth required)
   { path: 'health', component: HealthCheckComponent, data: { title: 'System Health Monitor' } },
+  { path: 'print/board/forms', component: BoardBulkFormsPrintComponent, canActivate: [authGuard, roleGuard(['BOARD', 'SUPER_ADMIN'])] },
+  { path: 'print/institute/forms', component: BoardBulkFormsPrintComponent, canActivate: [authGuard, roleGuard(['INSTITUTE'])] },
   { path: 'contact-us', component: ContactUsComponent, data: { title: 'Contact Us' } },
   { path: 'terms-and-conditions', component: TermsAndConditionsComponent, data: { title: 'Terms and Conditions' } },
   { path: 'refund-policy', component: RefundPolicyComponent, data: { title: 'Refund Policy' } },

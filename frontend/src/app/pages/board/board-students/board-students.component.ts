@@ -139,36 +139,44 @@ type ExportColumn = {
         <button mat-stroked-button color="primary" (click)="printAllExamForms()"><mat-icon>print</mat-icon>Print All Exam Forms</button>
       </div>
 
-      <div class="summary-grid">
-        <div class="summary-card">
-          <div class="summary-title">Gender-wise</div>
-          <div class="summary-item" *ngFor="let item of summaries().byGender">
-            <span>{{ item.name }}</span>
-            <strong>{{ item.count }}</strong>
+      <div class="summary-grid app-summary-grid">
+        <div class="summary-card app-summary-card">
+          <div class="summary-title app-summary-title">Gender-wise</div>
+          <div class="app-summary-scroll">
+            <div class="summary-item app-summary-item" *ngFor="let item of summaries().byGender">
+              <span>{{ item.name }}</span>
+              <strong>{{ item.count }}</strong>
+            </div>
           </div>
         </div>
 
-        <div class="summary-card">
-          <div class="summary-title">Caste-wise</div>
-          <div class="summary-item" *ngFor="let item of summaries().byCaste">
-            <span>{{ item.name }}</span>
-            <strong>{{ item.count }}</strong>
+        <div class="summary-card app-summary-card">
+          <div class="summary-title app-summary-title">Caste-wise</div>
+          <div class="app-summary-scroll">
+            <div class="summary-item app-summary-item" *ngFor="let item of summaries().byCaste">
+              <span>{{ item.name }}</span>
+              <strong>{{ item.count }}</strong>
+            </div>
           </div>
         </div>
 
-        <div class="summary-card">
-          <div class="summary-title">District-wise</div>
-          <div class="summary-item" *ngFor="let item of summaries().byDistrict">
-            <span>{{ item.name }}</span>
-            <strong>{{ item.count }}</strong>
+        <div class="summary-card app-summary-card">
+          <div class="summary-title app-summary-title">District-wise</div>
+          <div class="app-summary-scroll">
+            <div class="summary-item app-summary-item" *ngFor="let item of summaries().byDistrict">
+              <span>{{ item.name }}</span>
+              <strong>{{ item.count }}</strong>
+            </div>
           </div>
         </div>
 
-        <div class="summary-card">
-          <div class="summary-title">Subject-wise</div>
-          <div class="summary-item" *ngFor="let item of summaries().bySubject">
-            <span>{{ item.name }}</span>
-            <strong>{{ item.count }}</strong>
+        <div class="summary-card app-summary-card">
+          <div class="summary-title app-summary-title">Subject-wise</div>
+          <div class="app-summary-scroll">
+            <div class="summary-item app-summary-item" *ngFor="let item of summaries().bySubject">
+              <span>{{ item.name }}</span>
+              <strong>{{ item.count }}</strong>
+            </div>
           </div>
         </div>
       </div>
@@ -207,11 +215,7 @@ type ExportColumn = {
     `.stats-value { color: #065f46; font-size: 1rem; line-height: 1; }`,
     `.filters { margin-top: 10px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; position: relative; z-index: 8; }`,
     `.actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 8; }`,
-    `.summary-grid { margin-top: 10px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; position: relative; z-index: 8; }`,
-    `.summary-card { border: 1px solid #dbe7f6; border-radius: 10px; padding: 10px; background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); min-height: 120px; }`,
-    `.summary-title { font-weight: 800; color: #1d4ed8; margin-bottom: 6px; font-size: 0.86rem; }`,
-    `.summary-item { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; padding: 2px 0; color: #334155; }`,
-    `.summary-item strong { color: #0f172a; }`,
+    `.summary-grid { margin-top: 10px; position: relative; z-index: 8; }`,
     `.table-wrap { margin-top: 10px; width: 100%; height: 470px; border: 1px solid #dbe7f6; border-radius: 10px; overflow: hidden; position: relative; z-index: 2; background: #fff; }`,
     `::ng-deep .cdk-overlay-container { z-index: 1300 !important; }`,
     `::ng-deep .cdk-overlay-pane { z-index: 1301 !important; }`,
