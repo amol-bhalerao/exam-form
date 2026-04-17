@@ -1880,15 +1880,15 @@ mat-sidenav-content {
 
 /* Container */
 .container {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 0 24px;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 clamp(10px, 2vw, 24px);
 }
 
 /* Section Styling */
 .section-header {
   text-align: center;
-  margin-bottom: 60px;
 }
 
 .section-title {
@@ -2135,6 +2135,37 @@ mat-sidenav-content {
 mat-form-field {
   width: 100%;
   display: block;
+
+  --mdc-outlined-text-field-container-shape: 10px;
+
+  .mat-mdc-text-field-wrapper {
+    min-height: 46px !important;
+    border-radius: 10px !important;
+    padding: 0 10px !important;
+    background: #fff !important;
+  }
+
+  .mat-mdc-form-field-flex {
+    align-items: center !important;
+  }
+
+  .mat-mdc-form-field-infix {
+    min-height: 46px !important;
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+    padding-left: 0 !important;
+  }
+
+  .mat-mdc-form-field-icon-prefix,
+  .mat-mdc-form-field-icon-suffix {
+    padding: 0 4px !important;
+    color: var(--text-secondary) !important;
+  }
+
+  .mat-mdc-form-field-icon-prefix:empty,
+  .mat-mdc-form-field-icon-suffix:empty {
+    display: none !important;
+  }
   
   /* Ensure error messages always display */
   .mdc-text-field__resizer {
@@ -2160,7 +2191,9 @@ mat-form-field {
   
   /* Ensure label floats properly when focused or filled */
   .mdc-floating-label {
-    font-size: 0.95rem;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #334155 !important;
     top: 50% !important;
     transform: translateY(-50%) !important;
   }
@@ -2186,8 +2219,9 @@ mat-form-field {
   /* Input styling for proper appearance */
   input.mdc-text-field__input,
   textarea.mdc-text-field__input {
-    padding: 12px 0;
-    font-size: 1rem;
+    padding: 10px 0;
+    font-size: 0.92rem;
+    color: #0f172a !important;
     
     &:focus {
       outline: none;
@@ -2197,7 +2231,7 @@ mat-form-field {
   /* State colors */
   &.mat-form-field-invalid {
     .mdc-text-field {
-      border-color: #f44336;
+      border-color: var(--border);
     }
   }
   
@@ -2256,7 +2290,7 @@ mat-datepicker-toggle {
         .mdc-notched-outline__leading,
         .mdc-notched-outline__notch,
         .mdc-notched-outline__trailing {
-          border-color: #f44336 !important;
+          border-color: var(--border) !important;
         }
       }
     }
@@ -2266,7 +2300,7 @@ mat-datepicker-toggle {
 /* Label color when invalid */
 .ng-invalid.ng-touched {
   .mdc-floating-label {
-    color: #f44336 !important;
+    color: #334155 !important;
   }
 }
 

@@ -15,11 +15,15 @@ import { API_BASE_URL } from '../../core/api';
   standalone: true,
   imports: [RouterOutlet, RouterLink, MatToolbarModule, MatSidenavModule, MatListModule, MatIconModule, MatButtonModule],
   template: `
-    <mat-sidenav-container class="container" autosize>
+    <mat-sidenav-container
+      class="container"
+      [class.sidebar-compact]="sidebarCompact() && !isMobile()"
+      [class.sidebar-hidden]="desktopSidebarHidden() && !isMobile()"
+      autosize>
       <mat-sidenav 
         #sidenav
         [mode]="isMobile() ? 'over' : 'side'" 
-        [opened]="opened()" 
+        [opened]="isMobile() ? opened() : !desktopSidebarHidden()" 
         class="sidenav" 
         (closedStart)="opened.set(false)">
         <div class="sidebar-header">
@@ -30,6 +34,11 @@ import { API_BASE_URL } from '../../core/api';
               <div class="logo-sub">Management</div>
             </div>
           </div>
+          @if (!isMobile()) {
+            <button mat-icon-button type="button" class="sidebar-control-btn" (click)="toggleCompactSidebar()" [attr.aria-label]="sidebarCompact() ? 'Expand sidebar' : 'Compact sidebar'">
+              <mat-icon>{{ sidebarCompact() ? 'last_page' : 'first_page' }}</mat-icon>
+            </button>
+          }
         </div>
 
         <mat-nav-list class="nav-list">
@@ -108,6 +117,12 @@ import { API_BASE_URL } from '../../core/api';
             <mat-icon>menu</mat-icon>
           </button>
 
+          @if (!isMobile()) {
+            <button mat-icon-button type="button" class="desktop-sidebar-toggle" (click)="toggleDesktopSidebar()" [attr.aria-label]="desktopSidebarHidden() ? 'Show sidebar' : 'Hide sidebar for full page'">
+              <mat-icon>{{ desktopSidebarHidden() ? 'dock_to_left' : 'fullscreen' }}</mat-icon>
+            </button>
+          }
+
           @if (isMobile()) {
             <div class="mobile-brand">
               <div class="brand-title">HSC Exam</div>
@@ -145,8 +160,35 @@ import { API_BASE_URL } from '../../core/api';
 
     .sidenav {
       width: 280px;
+      min-width: 280px;
+      max-width: 280px;
       background: linear-gradient(135deg, #f5f7fa 0%, #fff 100%);
       border-right: 1px solid #e0e0e0;
+      transition: width 0.22s ease, transform 0.22s ease;
+    }
+
+    .container.sidebar-compact .sidenav {
+      width: 88px !important;
+      min-width: 88px !important;
+      max-width: 88px !important;
+    }
+
+    .container.sidebar-compact ::ng-deep .mat-drawer.sidenav,
+    .container.sidebar-compact ::ng-deep .mat-drawer.mat-sidenav {
+      width: 88px !important;
+      min-width: 88px !important;
+      max-width: 88px !important;
+    }
+
+    .container.sidebar-compact ::ng-deep .mat-drawer-inner-container {
+      overflow-x: hidden !important;
+    }
+
+    .container.sidebar-hidden .sidenav {
+      width: 0 !important;
+      min-width: 0 !important;
+      border-right: 0 !important;
+      overflow: hidden;
     }
 
     @media (max-width: 960px) {
@@ -164,10 +206,14 @@ import { API_BASE_URL } from '../../core/api';
     }
 
     .sidebar-header {
-      padding: 1.5rem 1rem;
+      padding: 0.9rem 0.75rem;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
       border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
     }
 
     @media (max-width: 480px) {
@@ -183,7 +229,7 @@ import { API_BASE_URL } from '../../core/api';
     }
 
     .logo-badge {
-      font-size: 28px;
+      font-size: 24px;
       flex-shrink: 0;
     }
 
@@ -192,27 +238,37 @@ import { API_BASE_URL } from '../../core/api';
     }
 
     .logo-main {
-      font-size: 1.1rem;
+      font-size: 0.98rem;
       font-weight: 700;
       line-height: 1.2;
     }
 
     .logo-sub {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       opacity: 0.8;
     }
 
+    .sidebar-control-btn {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      width: 34px;
+      height: 34px;
+      min-width: 34px;
+      min-height: 34px;
+    }
+
     .nav-list {
-      padding: 0.5rem 0 1rem;
+      padding: 0.35rem 0 0.75rem;
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 0.15rem;
+      gap: 0.05rem;
     }
 
     .section-header {
-      padding: 0.9rem 1.25rem 0.4rem;
-      font-size: 0.78rem;
+      padding: 0.62rem 0.8rem 0.2rem;
+      font-size: 0.68rem;
       font-weight: 700;
       color: #667eea;
       text-transform: uppercase;
@@ -220,7 +276,7 @@ import { API_BASE_URL } from '../../core/api';
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 0.35rem;
+      margin-top: 0.2rem;
     }
 
     .section-indicator {
@@ -230,25 +286,61 @@ import { API_BASE_URL } from '../../core/api';
     }
 
     .nav-item {
-      margin: 0.25rem 0.5rem !important;
+      margin: 0.12rem 0.4rem !important;
       border-radius: 10px !important;
       position: relative !important;
       transition: all 0.2s ease !important;
       color: #333 !important;
       font-size: 0.95rem !important;
       height: auto !important;
-      min-height: 46px !important;
-      padding: 0.7rem 1rem !important;
+      min-height: 40px !important;
+      padding: 0.45rem 0.7rem !important;
       box-sizing: border-box !important;
       display: flex !important;
       flex-direction: row !important;
       align-items: center !important;
       justify-content: flex-start !important;
-      gap: 12px !important;
+      gap: 9px !important;
       overflow: visible !important;
       flex-wrap: nowrap !important;
       width: calc(100% - 1rem) !important;
       white-space: nowrap !important;
+    }
+
+    .container.sidebar-compact .logo-text,
+    .container.sidebar-compact .section-header,
+    .container.sidebar-compact .nav-item .label,
+    .container.sidebar-compact .nav-item .icon-badge,
+    .container.sidebar-compact .section-indicator {
+      display: none !important;
+    }
+
+    .container.sidebar-compact .sidebar-header {
+      justify-content: center;
+      padding: 0.75rem 0.45rem;
+    }
+
+    .container.sidebar-compact .logo-container {
+      justify-content: center;
+    }
+
+    .container.sidebar-compact .sidebar-control-btn {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      min-height: 28px;
+    }
+
+    .container.sidebar-compact .nav-item {
+      justify-content: center !important;
+      width: calc(100% - 0.6rem) !important;
+      margin: 0.1rem 0.3rem !important;
+      padding: 0.5rem !important;
+      min-height: 38px !important;
+      gap: 0 !important;
     }
 
     /* Force Angular Material list item content into a single row */
@@ -289,10 +381,10 @@ import { API_BASE_URL } from '../../core/api';
 
     .nav-item .icon {
       flex-shrink: 0 !important;
-      font-size: 24px !important;
-      width: 24px !important;
-      height: 24px !important;
-      min-width: 24px !important;
+      font-size: 20px !important;
+      width: 20px !important;
+      height: 20px !important;
+      min-width: 20px !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
@@ -444,6 +536,16 @@ import { API_BASE_URL } from '../../core/api';
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
     }
 
+    .desktop-sidebar-toggle {
+      color: #ffffff;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      width: 38px;
+      height: 38px;
+      min-width: 38px;
+      min-height: 38px;
+    }
+
     .menu-toggle mat-icon {
       color: inherit !important;
     }
@@ -558,7 +660,14 @@ import { API_BASE_URL } from '../../core/api';
       flex: 1;
       overflow-y: auto;
       background: linear-gradient(180deg, #f4f7fb 0%, #eef4ff 100%);
-      padding: 16px;
+      padding: 12px 0;
+      width: 100%;
+    }
+
+    ::ng-deep .content > * {
+      display: block;
+      width: 100%;
+      max-width: 100%;
     }
 
     .student-content {
@@ -577,7 +686,7 @@ import { API_BASE_URL } from '../../core/api';
 
     @media (max-width: 768px) {
       .content {
-        padding: 10px;
+        padding: 8px 0;
       }
 
       .student-content {
@@ -598,6 +707,8 @@ import { API_BASE_URL } from '../../core/api';
 export class AppShellComponent {
   readonly isMobile = signal(typeof window !== 'undefined' ? window.innerWidth <= 960 : false);
   readonly opened = signal(typeof window !== 'undefined' ? window.innerWidth > 960 : true);
+  readonly sidebarCompact = signal(false);
+  readonly desktopSidebarHidden = signal(false);
 
   readonly role = computed(() => this.auth.user()?.role ?? null);
   readonly username = computed(() => this.auth.user()?.username ?? '');
@@ -624,6 +735,10 @@ export class AppShellComponent {
     const mobile = window.matchMedia('(max-width: 960px)').matches;
     this.isMobile.set(mobile);
     this.opened.set(!mobile);
+    if (mobile) {
+      this.sidebarCompact.set(false);
+      this.desktopSidebarHidden.set(false);
+    }
   }
 
   private loadProfile() {
@@ -641,6 +756,20 @@ export class AppShellComponent {
 
   toggle() {
     this.opened.set(!this.opened());
+  }
+
+  toggleCompactSidebar() {
+    if (this.isMobile()) return;
+    this.sidebarCompact.set(!this.sidebarCompact());
+  }
+
+  toggleDesktopSidebar() {
+    if (this.isMobile()) return;
+    const nextState = !this.desktopSidebarHidden();
+    this.desktopSidebarHidden.set(nextState);
+    if (nextState) {
+      this.sidebarCompact.set(false);
+    }
   }
 
   closeOnMobile() {

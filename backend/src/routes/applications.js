@@ -609,16 +609,6 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
 applicationsRouter.get('/institute/list', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
   const q = z
     .object({
-      status: z
-        .enum([
-          'DRAFT',
-          'SUBMITTED',
-          'INSTITUTE_VERIFIED',
-          'BOARD_APPROVED',
-          'REJECTED_BY_INSTITUTE',
-          'REJECTED_BY_BOARD'
-        ])
-        .optional(),
       search: z.string().optional()
     })
     .parse(req.query);
@@ -629,7 +619,7 @@ applicationsRouter.get('/institute/list', requireAuth, requireRole(['INSTITUTE']
   const apps = await prisma.examApplication.findMany({
     where: {
       instituteId,
-      status: q.status,
+      status: 'SUBMITTED',
       ...(q.search
         ? {
             OR: [
@@ -640,12 +630,59 @@ applicationsRouter.get('/institute/list', requireAuth, requireRole(['INSTITUTE']
           }
         : {})
     },
-    include: { student: true, exam: true },
+    include: {
+      student: true,
+      institute: true,
+      exam: { include: { stream: true } },
+      subjects: { include: { subject: true } },
+      fees: { orderBy: { id: 'desc' }, take: 1 }
+    },
     orderBy: { updatedAt: 'desc' },
     take: 200
   });
 
-  return res.json({ applications: apps });
+  const paidOnlyRequired = Number(env.EXAM_FEE_PAISE ?? 0) > 0;
+
+  const visibleApps = apps
+    .map((app) => {
+      const latestPayment = app.fees?.[0] ?? null;
+      const paymentCompleted = !paidOnlyRequired
+        ? true
+        : !!latestPayment
+          && !!latestPayment.receivedAt
+          && new Date(latestPayment.receivedAt).getTime() > 1000
+          && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
+
+      const hasStudentCoreDetails = !!(
+        app.student?.firstName
+        && app.student?.lastName
+        && app.student?.mobile
+        && app.student?.address
+      );
+
+      const subjectCount = app.subjects?.length ?? 0;
+      const hasSubjects = subjectCount > 0;
+
+      return {
+        ...app,
+        paymentCompleted,
+        verification: {
+          hasStudentCoreDetails,
+          hasSubjects,
+          subjectCount,
+          instituteName: app.institute?.name || '',
+          instituteCode: app.institute?.code || app.institute?.collegeNo || '',
+          examName: app.exam?.name || '',
+          examSession: app.exam?.session || '',
+          examAcademicYear: app.exam?.academicYear || '',
+          streamName: app.exam?.stream?.name || '',
+          isReadyForVerification: paymentCompleted && hasStudentCoreDetails && hasSubjects
+        }
+      };
+    })
+    .filter((app) => app.paymentCompleted);
+
+  return res.json({ applications: visibleApps });
 });
 
 // Institute: verify (SUBMITTED -> INSTITUTE_VERIFIED) or reject
@@ -734,11 +771,12 @@ applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_
 
 // Board: get exams that have applications
 applicationsRouter.get('/board/exams', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
+  const boardVisibleStatuses = ['SUBMITTED', 'INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD'];
   const exams = await prisma.exam.findMany({
     where: {
       applications: {
         some: {
-          status: { in: ['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'] }
+          status: { in: boardVisibleStatuses }
         }
       }
     },
@@ -747,7 +785,7 @@ applicationsRouter.get('/board/exams', requireAuth, requireRole(['BOARD', 'SUPER
         select: {
           applications: {
             where: {
-              status: { in: ['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'] }
+              status: { in: boardVisibleStatuses }
             }
           }
         }
@@ -782,7 +820,7 @@ applicationsRouter.get('/board/student-master', requireAuth, requireRole(['BOARD
 
   const where = {
     examId: q.examId,
-    status: q.status ?? { in: ['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'] },
+    status: q.status ?? { in: ['SUBMITTED', 'INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD'] },
     student: {
       categoryCode: q.caste || undefined
     },

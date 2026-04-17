@@ -14,6 +14,21 @@ type Row = {
   id: number;
   applicationNo: string;
   status: string;
+  paymentCompleted?: boolean;
+  verification?: {
+    hasStudentCoreDetails?: boolean;
+    hasSubjects?: boolean;
+    subjectCount?: number;
+    instituteName?: string;
+    instituteCode?: string;
+    examName?: string;
+    examSession?: string;
+    examAcademicYear?: string;
+    streamName?: string;
+    isReadyForVerification?: boolean;
+  };
+  institute?: { name?: string; code?: string; collegeNo?: string };
+  subjects?: Array<{ subject?: { name?: string; code?: string } }>;
   student: { firstName?: string; lastName?: string };
   exam: { name: string; session: string; academicYear: string };
   updatedAt: string;
@@ -29,31 +44,31 @@ type Row = {
         <div>
           <div class="eyebrow">Institute review desk</div>
           <div class="h">Student Applications</div>
-          <div class="p">Submitted forms are now shown in a mobile-friendly list for quick institute verification.</div>
+          <div class="p">Only paid and submitted forms are shown for institute verification. Search by application number for fast review.</div>
         </div>
         <div class="grow"></div>
         <mat-form-field appearance="outline" class="w260">
-          <mat-label>Search application or student</mat-label>
-          <input matInput [(ngModel)]="search" (input)="load()" />
+          <mat-label>Search by application no. or student</mat-label>
+          <input matInput [(ngModel)]="search" (input)="load()" placeholder="e.g. APP-2026-000123" />
         </mat-form-field>
       </div>
 
       <div class="summary-row" *ngIf="rows().length > 0">
         <div class="summary-chip total-chip">
           <strong>{{ rows().length }}</strong>
-          <span>Total</span>
-        </div>
-        <div class="summary-chip submitted-chip">
-          <strong>{{ submittedCount() }}</strong>
-          <span>Submitted</span>
+          <span>Submitted + Paid</span>
         </div>
         <div class="summary-chip verified-chip">
-          <strong>{{ verifiedCount() }}</strong>
-          <span>Verified</span>
+          <strong>{{ readyToVerifyCount() }}</strong>
+          <span>Ready to Verify</span>
+        </div>
+        <div class="summary-chip submitted-chip">
+          <strong>{{ needsChecklistCount() }}</strong>
+          <span>Needs Detail Check</span>
         </div>
         <div class="summary-chip rejected-chip">
-          <strong>{{ rejectedCount() }}</strong>
-          <span>Rejected</span>
+          <strong>{{ rows().length - readyToVerifyCount() }}</strong>
+          <span>Not Verifiable Yet</span>
         </div>
       </div>
     </mat-card>
@@ -104,12 +119,28 @@ type Row = {
             </div>
           </div>
 
+          <div class="verify-checklist" *ngIf="row.verification">
+            <div class="check-title">Verification Checklist</div>
+            <div class="check-grid">
+              <span class="check-pill" [class.ok]="!!row.verification?.hasStudentCoreDetails">Student details: {{ row.verification?.hasStudentCoreDetails ? 'Complete' : 'Missing' }}</span>
+              <span class="check-pill" [class.ok]="!!row.verification?.hasSubjects">Subjects: {{ row.verification?.subjectCount || 0 }}</span>
+              <span class="check-pill" [class.ok]="!!row.verification?.instituteCode">Institute code: {{ row.verification?.instituteCode || 'Missing' }}</span>
+              <span class="check-pill" [class.ok]="!!row.paymentCompleted">Payment: {{ row.paymentCompleted ? 'Completed' : 'Pending' }}</span>
+            </div>
+          </div>
+
           <div class="item-actions">
+            <button
+              mat-stroked-button
+              (click)="openPrint(row)">
+              <mat-icon>print</mat-icon>
+              Review / Print
+            </button>
             <button
               mat-flat-button
               color="primary"
               (click)="decide(row.id, 'VERIFY')"
-              [disabled]="row.status !== 'SUBMITTED' || decidingId() === row.id">
+              [disabled]="row.status !== 'SUBMITTED' || decidingId() === row.id || !row.verification?.isReadyForVerification">
               <mat-icon>verified</mat-icon>
               Verify
             </button>
@@ -339,12 +370,58 @@ type Row = {
         margin-top: auto;
       }
 
+      .verify-checklist {
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px;
+        background: #f8fafc;
+      }
+
+      .check-title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #334155;
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+      }
+
+      .check-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .check-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+        background: #fef2f2;
+        font-size: 0.74rem;
+        font-weight: 700;
+        padding: 5px 8px;
+        text-align: center;
+      }
+
+      .check-pill.ok {
+        border-color: #bbf7d0;
+        color: #166534;
+        background: #ecfdf5;
+      }
+
       @media (max-width: 768px) {
         .card {
           padding: 14px;
         }
 
         .item-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .check-grid {
           grid-template-columns: 1fr;
         }
 
@@ -360,9 +437,8 @@ export class InstituteApplicationsComponent implements OnInit {
   readonly loading = signal(false);
   readonly decidingId = signal<number | null>(null);
   readonly errorMessage = signal<string | null>(null);
-  readonly submittedCount = computed(() => this.rows().filter((row) => row.status === 'SUBMITTED').length);
-  readonly verifiedCount = computed(() => this.rows().filter((row) => ['INSTITUTE_VERIFIED', 'BOARD_APPROVED'].includes(row.status)).length);
-  readonly rejectedCount = computed(() => this.rows().filter((row) => ['REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD'].includes(row.status)).length);
+  readonly readyToVerifyCount = computed(() => this.rows().filter((row) => !!row.verification?.isReadyForVerification).length);
+  readonly needsChecklistCount = computed(() => this.rows().filter((row) => !row.verification?.isReadyForVerification).length);
   search = '';
 
   constructor(private readonly http: HttpClient) {}
@@ -412,6 +488,11 @@ export class InstituteApplicationsComponent implements OnInit {
         this.decidingId.set(null);
       }
     });
+  }
+
+  openPrint(row: Row) {
+    if (!row?.id) return;
+    window.open(`/app/student/forms/${row.id}/print`, '_blank');
   }
 }
 

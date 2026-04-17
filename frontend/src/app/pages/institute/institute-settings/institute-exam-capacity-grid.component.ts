@@ -1,5 +1,5 @@
 import { Component, OnInit, computed, signal } from '@angular/core';
-import { NgIf } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -26,15 +26,52 @@ type ExamCapacityGridRow = {
 @Component({
   selector: 'app-institute-exam-capacity-grid',
   standalone: true,
-  imports: [NgIf, MatCardModule, MatButtonModule, AgGridModule],
+  imports: [NgIf, NgFor, MatCardModule, MatButtonModule, AgGridModule],
   template: `
     <mat-card class="card">
       <div class="header-row">
         <div>
           <div class="h">Exam-wise Student Capacity by Stream</div>
-          <div class="p">Edit the total capacity for each exam and stream, then click save for that row. Remaining applications update automatically.</div>
+          <div class="p">Use Set Exam Limit for a guided update, or edit directly in the table and click Save in that row.</div>
         </div>
-        <button mat-stroked-button color="primary" type="button" (click)="load()">Refresh</button>
+        <div class="header-actions">
+          <button mat-flat-button color="primary" type="button" (click)="toggleQuickSet()">Set Exam Limit</button>
+          <button mat-stroked-button color="primary" type="button" (click)="load()">Refresh</button>
+        </div>
+      </div>
+
+      <div *ngIf="showQuickSet()" class="quick-set-panel">
+        <div class="quick-set-title">Quick Set Exam Capacity</div>
+        <div class="quick-set-help">Select exam + stream, enter limit, and save.</div>
+
+        <div class="quick-set-grid">
+          <div class="quick-field">
+            <label>Exam and Stream</label>
+            <select class="quick-input" [value]="quickSetKey() ?? ''" (change)="onQuickSetSelection($any($event.target).value)">
+              <option value="">Select exam and stream</option>
+              <option *ngFor="let row of rows()" [value]="keyFor(row)">
+                {{ row.examName }} ({{ row.session }} {{ row.academicYear }}) • {{ row.streamName }}
+              </option>
+            </select>
+          </div>
+
+          <div class="quick-field">
+            <label>Total Capacity</label>
+            <input
+              class="quick-input"
+              type="number"
+              min="0"
+              [value]="quickSetCapacity() ?? ''"
+              (input)="onQuickSetCapacityInput($any($event.target).value)"
+              placeholder="Enter total students"
+            />
+          </div>
+        </div>
+
+        <div class="quick-set-actions">
+          <button mat-flat-button color="primary" type="button" [disabled]="!canSaveQuickSet()" (click)="saveQuickSet()">Save Limit</button>
+          <button mat-stroked-button type="button" (click)="showQuickSet.set(false)">Close</button>
+        </div>
       </div>
 
       <div *ngIf="loading()" class="p">Loading exam capacities…</div>
@@ -87,14 +124,24 @@ type ExamCapacityGridRow = {
   styles: [
     `.card { margin-bottom: 14px; padding: 18px; }`,
     `.header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }`,
+    `.header-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }`,
     `.h { font-weight: 800; margin-bottom: 4px; }`,
     `.p { color: #6b7280; margin-bottom: 8px; line-height: 1.45; }`,
+    `.quick-set-panel { border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; margin-bottom: 12px; background: #f9fafb; }`,
+    `.quick-set-title { font-weight: 700; color: #111827; margin-bottom: 4px; }`,
+    `.quick-set-help { font-size: 13px; color: #4b5563; margin-bottom: 10px; }`,
+    `.quick-set-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }`,
+    `.quick-field { display: grid; gap: 4px; }`,
+    `.quick-field label { font-size: 12px; font-weight: 600; color: #374151; }`,
+    `.quick-input { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 10px; font: inherit; background: #fff; }`,
+    `.quick-set-actions { margin-top: 10px; display: flex; gap: 8px; }`,
     `.tables-stack { display: grid; gap: 18px; }`,
     `.table-section { display: grid; gap: 8px; }`,
     `.section-title { font-weight: 700; color: #111827; }`,
     `.table-box { width: 100%; height: 430px; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }`,
     `.success { color: #065f46; font-size: 13px; margin-bottom: 8px; }`,
-    `.error { color: #b91c1c; font-size: 13px; margin-bottom: 8px; }`
+    `.error { color: #b91c1c; font-size: 13px; margin-bottom: 8px; }`,
+    `@media (max-width: 860px) { .quick-set-grid { grid-template-columns: 1fr; } }`
   ]
 })
 export class InstituteExamCapacityGridComponent implements OnInit {
@@ -105,6 +152,9 @@ export class InstituteExamCapacityGridComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
   readonly savingKey = signal<string | null>(null);
+  readonly showQuickSet = signal(false);
+  readonly quickSetKey = signal<string | null>(null);
+  readonly quickSetCapacity = signal<number | null>(null);
 
   readonly defaultColDef: ColDef = {
     sortable: true,
@@ -181,6 +231,7 @@ export class InstituteExamCapacityGridComponent implements OnInit {
     this.http.get<{ exams: ExamCapacityGridRow[] }>(`${API_BASE_URL}/institutes/me/exam-capacities`).subscribe({
       next: (response) => {
         this.rows.set(response.exams || []);
+        this.syncQuickSetWithRows();
         this.loading.set(false);
       },
       error: (err) => {
@@ -188,6 +239,50 @@ export class InstituteExamCapacityGridComponent implements OnInit {
         this.loading.set(false);
       }
     });
+  }
+
+  toggleQuickSet(): void {
+    this.showQuickSet.update((state) => !state);
+    if (this.showQuickSet()) {
+      this.syncQuickSetWithRows();
+    }
+  }
+
+  keyFor(row: ExamCapacityGridRow): string {
+    return `${row.examId}-${row.streamId}`;
+  }
+
+  onQuickSetSelection(key: string): void {
+    this.quickSetKey.set(key || null);
+    const row = this.findRowByKey(key);
+    this.quickSetCapacity.set(row ? Number(row.totalStudents ?? 0) : null);
+  }
+
+  onQuickSetCapacityInput(value: string): void {
+    const parsed = Number(value);
+    this.quickSetCapacity.set(Number.isFinite(parsed) && parsed >= 0 ? parsed : null);
+  }
+
+  canSaveQuickSet(): boolean {
+    const key = this.quickSetKey();
+    const capacity = this.quickSetCapacity();
+    return !!key && Number.isFinite(capacity) && (capacity ?? -1) >= 0;
+  }
+
+  saveQuickSet(): void {
+    if (!this.canSaveQuickSet()) {
+      this.error.set('Select an exam-stream and enter a valid total capacity.');
+      return;
+    }
+
+    const row = this.findRowByKey(this.quickSetKey());
+    if (!row) {
+      this.error.set('Selected exam-stream row was not found. Please refresh and try again.');
+      return;
+    }
+
+    row.totalStudents = this.quickSetCapacity();
+    this.saveRow(row);
   }
 
   onGridAction(event: any): void {
@@ -248,5 +343,30 @@ export class InstituteExamCapacityGridComponent implements OnInit {
         this.savingKey.set(null);
       }
     });
+  }
+
+  private findRowByKey(key: string | null): ExamCapacityGridRow | undefined {
+    if (!key) return undefined;
+    return this.rows().find((row) => this.keyFor(row) === key);
+  }
+
+  private syncQuickSetWithRows(): void {
+    const rows = this.rows();
+    if (rows.length === 0) {
+      this.quickSetKey.set(null);
+      this.quickSetCapacity.set(null);
+      return;
+    }
+
+    const currentKey = this.quickSetKey();
+    const selectedRow = this.findRowByKey(currentKey);
+    if (selectedRow) {
+      this.quickSetCapacity.set(Number(selectedRow.totalStudents ?? 0));
+      return;
+    }
+
+    const defaultRow = rows[0];
+    this.quickSetKey.set(this.keyFor(defaultRow));
+    this.quickSetCapacity.set(Number(defaultRow.totalStudents ?? 0));
   }
 }

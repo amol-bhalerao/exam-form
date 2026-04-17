@@ -11,120 +11,50 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatTabsModule } from '@angular/material/tabs';
 import { AgGridModule } from 'ag-grid-angular';
 import type { ColDef } from 'ag-grid-community';
 import { API_BASE_URL } from '../../../core/api';
 
-const CASTE_OPTIONS = ['General', 'OBC', 'SC', 'ST', 'VJNT', 'SBC', 'EWS', 'Other'];
+const CASTE_OPTIONS = [
+  'OPEN',
+  'SC',
+  'ST',
+  'VJ-A',
+  'NT-B',
+  'NT-C',
+  'NT-D',
+  'SBC',
+  'OBC',
+  'SEBC',
+  'EWS',
+  'MINORITY',
+  'ORPHAN',
+  'DIVYANG',
+  'OTHER'
+];
 const TEACHER_TYPE_OPTIONS = ['Aided', 'Partially Aided 80', 'Partially Aided 60', 'Partially Aided 40', 'Partially Aided 20', 'Unaided', 'Permanent Unaided', 'Self Financed'];
 const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
 
 @Component({
   selector: 'app-institute-add-teacher',
   standalone: true,
-  imports: [ReactiveFormsModule, DatePipe, MatCardModule, MatFormFieldModule, MatInputModule, MatDatepickerModule, MatNativeDateModule, MatSelectModule, MatButtonModule, MatIconModule, MatSnackBarModule, MatTabsModule, AgGridModule, NgIf, NgFor],
+  imports: [ReactiveFormsModule, DatePipe, MatCardModule, MatFormFieldModule, MatInputModule, MatDatepickerModule, MatNativeDateModule, MatSelectModule, MatButtonModule, MatIconModule, MatSnackBarModule, AgGridModule, NgIf, NgFor],
   template: `
+    <div class="page-wrap">
     <mat-card class="card">
-      <div class="h">Teachers & Staff</div>
-      <p class="p">Register staff using Aadhar first, reuse prior institute details when available, and capture examiner / moderator details for the board panel.</p>
-
-      <form [formGroup]="form" (ngSubmit)="save()">
-        <mat-tab-group class="teacher-tabs" animationDuration="0ms" [selectedIndex]="activeTab()" (selectedIndexChange)="activeTab.set($event)">
-          <mat-tab label="1. Identity">
-            <div class="grid tab-content">
-              <mat-form-field appearance="outline">
-                <mat-label>Aadhar Number</mat-label>
-                <input matInput formControlName="governmentId" maxlength="20" inputmode="numeric" (input)="normalizeGovernmentId()" (blur)="onAadharLookup()" />
-              </mat-form-field>
-
-              <div class="inline-action">
-                <button mat-stroked-button color="primary" type="button" (click)="onAadharLookup()">Lookup Aadhar</button>
-              </div>
-
-              <mat-form-field appearance="outline"><mat-label>Full Name</mat-label><input matInput formControlName="fullName" [readonly]="isReadonly()" /></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Date of Birth</mat-label><input matInput [matDatepicker]="dobPicker" formControlName="dob" [readonly]="isReadonly()" /><mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle><mat-datepicker #dobPicker></mat-datepicker></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Gender</mat-label><mat-select formControlName="gender" [disabled]="isReadonly()"><mat-option value="Male">Male</mat-option><mat-option value="Female">Female</mat-option><mat-option value="Other">Other</mat-option></mat-select></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Qualification</mat-label><input matInput formControlName="qualification" [readonly]="isReadonly()" /></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Caste Category</mat-label><mat-select formControlName="casteCategory"><mat-option value="">Not specified</mat-option><mat-option *ngFor="let caste of casteOptions" [value]="caste">{{ caste }}</mat-option></mat-select></mat-form-field>
-            </div>
-          </mat-tab>
-
-          <mat-tab label="2. Service & Contact">
-            <div class="grid tab-content">
-              <mat-form-field appearance="outline"><mat-label>Designation</mat-label><input matInput formControlName="designation" /></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Subject Specialization</mat-label><input matInput formControlName="subjectSpecialization" /></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Teacher Type</mat-label><mat-select formControlName="teacherType"><mat-option *ngFor="let type of teacherTypeOptions" [value]="type">{{ type }}</mat-option></mat-select></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Joining Date of this institute</mat-label><input matInput [matDatepicker]="dojPicker" formControlName="appointmentDate" /><mat-datepicker-toggle matSuffix [for]="dojPicker"></mat-datepicker-toggle><mat-datepicker #dojPicker></mat-datepicker></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Service Start Date</mat-label><input matInput [matDatepicker]="serviceStartPicker" formControlName="serviceStartDate" /><mat-datepicker-toggle matSuffix [for]="serviceStartPicker"></mat-datepicker-toggle><mat-datepicker #serviceStartPicker></mat-datepicker></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput formControlName="email" /></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput formControlName="mobile" maxlength="10" inputmode="numeric" (input)="normalizeMobile()" /></mat-form-field>
-              <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select formControlName="active"><mat-option [value]="true">Active</mat-option><mat-option [value]="false">Inactive</mat-option></mat-select></mat-form-field>
-              <mat-form-field appearance="outline" class="span-2"><mat-label>Certificate Details</mat-label><input matInput formControlName="certificates" placeholder="B.Ed, TET, MSCIT etc." /></mat-form-field>
-            </div>
-          </mat-tab>
-
-          <mat-tab label="3. Board Duty">
-            <div class="grid tab-content">
-              <mat-form-field appearance="outline"><mat-label>Examiner experience (years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="examinerExperienceYears" /><mat-hint>Enter 0 if no examiner experience</mat-hint></mat-form-field>
-              <mat-form-field appearance="outline" *ngIf="hasExaminerExperience()"><mat-label>Previous Examiner Appointment No.</mat-label><input matInput formControlName="previousExaminerAppointmentNo" /></mat-form-field>
-
-              <mat-form-field appearance="outline"><mat-label>Moderator experience (years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="moderatorExperienceYears" /><mat-hint>Enter 0 if no moderator experience</mat-hint></mat-form-field>
-              <mat-form-field appearance="outline" *ngIf="hasModeratorExperience()"><mat-label>Last Exam Moderator Name</mat-label><input matInput formControlName="lastModeratorName" /></mat-form-field>
-              <mat-form-field appearance="outline" *ngIf="hasModeratorExperience()"><mat-label>Last Moderator Appointment No.</mat-label><input matInput formControlName="lastModeratorAppointmentNo" /></mat-form-field>
-              <mat-form-field appearance="outline" class="span-2" *ngIf="hasModeratorExperience()"><mat-label>Last Moderator College Name</mat-label><input matInput formControlName="lastModeratorCollegeName" /></mat-form-field>
-
-              <mat-form-field appearance="outline"><mat-label>Chief Moderator experience (years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="chiefModeratorExperienceYears" /><mat-hint>Optional board panel history</mat-hint></mat-form-field>
-              <mat-form-field appearance="outline" *ngIf="hasChiefModeratorExperience()"><mat-label>Last Chief Moderator Name</mat-label><input matInput formControlName="lastChiefModeratorName" /></mat-form-field>
-              <mat-form-field appearance="outline" *ngIf="hasChiefModeratorExperience()"><mat-label>Last Chief Moderator Appointment No.</mat-label><input matInput formControlName="lastChiefModeratorAppointmentNo" /></mat-form-field>
-              <mat-form-field appearance="outline" class="span-2" *ngIf="hasChiefModeratorExperience()"><mat-label>Last Chief Moderator College Name</mat-label><input matInput formControlName="lastChiefModeratorCollegeName" /></mat-form-field>
-            </div>
-          </mat-tab>
-        </mat-tab-group>
-
-        <div class="calc-grid">
-          <div class="calc-tile">
-            <div class="calc-label">Total Experience</div>
-            <div class="calc-value">{{ experience() || 'Will auto-calculate after service start date' }}</div>
-          </div>
-          <div class="calc-tile">
-            <div class="calc-label">Retirement Date</div>
-            <div class="calc-value">{{ retirementDateDisplay() || ('Auto-set at age ' + maharashtraRetirementAge) }}</div>
-          </div>
-          <div class="calc-tile">
-            <div class="calc-label">Senior Pay Grade</div>
-            <div class="calc-value">{{ seniorPayGradeStatus() }}</div>
-          </div>
-          <div class="calc-tile">
-            <div class="calc-label">Selection Pay Grade</div>
-            <div class="calc-value">{{ selectionPayGradeStatus() }}</div>
-          </div>
+      <div class="header-row">
+        <div>
+          <div class="h">Teachers & Staff</div>
+          <p class="p">Track registered teachers and open the registration form only when required.</p>
         </div>
-
-        <div class="form-actions">
-          <button mat-stroked-button type="button" *ngIf="activeTab() > 0" (click)="prevStep()">Back</button>
-          <span class="action-spacer"></span>
-          <button mat-stroked-button color="primary" type="button" *ngIf="activeTab() < 2" (click)="nextStep()">Next</button>
-          <button mat-flat-button color="primary" type="submit" *ngIf="activeTab() >= 1" [disabled]="form.invalid || loading()">{{ loading() ? 'Saving…' : selectedTeacherId() ? 'Update Teacher' : 'Save Teacher' }}</button>
-          <button mat-stroked-button type="button" *ngIf="selectedTeacherId()" (click)="resetForm()">Cancel Edit</button>
-        </div>
-      </form>
-
-      <div class="history-box" *ngIf="historyTeachers().length > 0">
-        <div class="history-title">Previous institute history found for this Aadhar</div>
-        <div class="history-item" *ngFor="let item of historyTeachers()">
-          <strong>{{ item.institute?.name || 'Unknown Institute' }}</strong>
-          <span> · {{ item.institute?.district || '-' }}</span>
-          <span> · {{ item.serviceStartDate ? (item.serviceStartDate | date:'dd-MM-yyyy') : 'Start not set' }}</span>
-          <span> → {{ item.leavingDate ? (item.leavingDate | date:'dd-MM-yyyy') : 'Present' }}</span>
-        </div>
+        <button mat-flat-button color="primary" type="button" (click)="openFormModal()">Add Teacher / Staff</button>
       </div>
 
       <div class="error" *ngIf="error()">{{ error() }}</div>
 
       <mat-form-field appearance="outline" class="search">
         <mat-label>Search teachers</mat-label>
-        <input matInput [value]="searchText()" (input)="searchText.set($any($event.target).value)" placeholder="name, email, subject, college" />
+        <input matInput [value]="searchText()" (input)="searchText.set($any($event.target).value)" />
       </mat-form-field>
 
       <div class="ag-theme-alpine table-box">
@@ -139,6 +69,109 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
         ></ag-grid-angular>
       </div>
     </mat-card>
+
+    <div class="modal-backdrop" *ngIf="isFormModalOpen()">
+      <div class="modal form-modal">
+        <div class="modal-header">
+          <h3>{{ selectedTeacherId() ? 'Update Teacher / Staff' : 'Register Teacher / Staff' }}</h3>
+          <button mat-icon-button type="button" (click)="closeFormModal()"><mat-icon>close</mat-icon></button>
+        </div>
+        <div class="form-modal-content">
+          <form [formGroup]="form" (ngSubmit)="save()">
+        <section class="form-section">
+          <div class="section-title">1. Identity & Aadhaar Lookup</div>
+          <div class="section-sub">Lookup uses existing teacher records across institutes; if no history is found, enter details manually and continue.</div>
+          <div class="grid section-grid">
+            <mat-form-field appearance="outline">
+              <mat-label>Aadhaar Number</mat-label>
+              <input matInput formControlName="governmentId" maxlength="12" inputmode="numeric" (input)="normalizeGovernmentId()" (blur)="onAadharLookup()" />
+              <mat-hint>Enter 12 digits</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline"><mat-label>Full Name</mat-label><input matInput formControlName="fullName" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Date of Birth</mat-label><input matInput [matDatepicker]="dobPicker" formControlName="dob" /><mat-datepicker-toggle matSuffix [for]="dobPicker"></mat-datepicker-toggle><mat-datepicker #dobPicker></mat-datepicker></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Gender</mat-label><mat-select formControlName="gender"><mat-option value="Male">Male</mat-option><mat-option value="Female">Female</mat-option><mat-option value="Other">Other</mat-option></mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Qualification</mat-label><input matInput formControlName="qualification" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Caste Category (Maharashtra)</mat-label><mat-select formControlName="casteCategory"><mat-option value="">Not specified</mat-option><mat-option *ngFor="let caste of casteOptions" [value]="caste">{{ caste }}</mat-option></mat-select></mat-form-field>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-title">2. Service & Contact</div>
+          <div class="grid section-grid">
+            <mat-form-field appearance="outline"><mat-label>Designation</mat-label><input matInput formControlName="designation" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Subject Specialization</mat-label><input matInput formControlName="subjectSpecialization" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Teacher Type</mat-label><mat-select formControlName="teacherType"><mat-option *ngFor="let type of teacherTypeOptions" [value]="type">{{ type }}</mat-option></mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Joining Date of This Institute</mat-label><input matInput [matDatepicker]="dojPicker" formControlName="appointmentDate" /><mat-datepicker-toggle matSuffix [for]="dojPicker"></mat-datepicker-toggle><mat-datepicker #dojPicker></mat-datepicker></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Service Start Date</mat-label><input matInput [matDatepicker]="serviceStartPicker" formControlName="serviceStartDate" /><mat-datepicker-toggle matSuffix [for]="serviceStartPicker"></mat-datepicker-toggle><mat-datepicker #serviceStartPicker></mat-datepicker></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput formControlName="email" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput formControlName="mobile" maxlength="10" inputmode="numeric" (input)="normalizeMobile()" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select formControlName="active"><mat-option [value]="true">Active</mat-option><mat-option [value]="false">Inactive</mat-option></mat-select></mat-form-field>
+            <mat-form-field appearance="outline" class="span-2"><mat-label>Certificate Details</mat-label><input matInput formControlName="certificates" /></mat-form-field>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <div class="section-title">3. Board Duty Experience</div>
+          <div class="grid section-grid">
+            <mat-form-field appearance="outline"><mat-label>Examiner Experience (Years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="examinerExperienceYears" /><mat-hint>{{ hasExaminerExperience() ? 'Examiner details are enabled below' : 'Set 0 if no examiner experience' }}</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="hasExaminerExperience()"><mat-label>Previous Examiner Appointment No.</mat-label><input matInput formControlName="previousExaminerAppointmentNo" /></mat-form-field>
+
+            <mat-form-field appearance="outline"><mat-label>Moderator Experience (Years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="moderatorExperienceYears" /><mat-hint>{{ hasModeratorExperience() ? 'Moderator details are required below' : 'Set 0 if no moderator experience' }}</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="hasModeratorExperience()"><mat-label>Last Moderator Name</mat-label><input matInput formControlName="lastModeratorName" /></mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="hasModeratorExperience()"><mat-label>Last Moderator Appointment No.</mat-label><input matInput formControlName="lastModeratorAppointmentNo" /></mat-form-field>
+            <mat-form-field appearance="outline" class="span-2" *ngIf="hasModeratorExperience()"><mat-label>Last Moderator College Name</mat-label><input matInput formControlName="lastModeratorCollegeName" /></mat-form-field>
+
+            <mat-form-field appearance="outline"><mat-label>Chief Moderator Experience (Years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="chiefModeratorExperienceYears" /><mat-hint>{{ hasChiefModeratorExperience() ? 'Chief moderator details are required below' : 'Set 0 if no chief moderator experience' }}</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="hasChiefModeratorExperience()"><mat-label>Last Chief Moderator Name</mat-label><input matInput formControlName="lastChiefModeratorName" /></mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="hasChiefModeratorExperience()"><mat-label>Last Chief Moderator Appointment No.</mat-label><input matInput formControlName="lastChiefModeratorAppointmentNo" /></mat-form-field>
+            <mat-form-field appearance="outline" class="span-2" *ngIf="hasChiefModeratorExperience()"><mat-label>Last Chief Moderator College Name</mat-label><input matInput formControlName="lastChiefModeratorCollegeName" /></mat-form-field>
+          </div>
+        </section>
+
+        <div class="derived-table">
+          <table>
+            <tbody>
+              <tr>
+                <th>Total Experience</th>
+                <td>{{ experience() || 'Will auto-calculate after service start date' }}</td>
+              </tr>
+              <tr>
+                <th>Retirement Date</th>
+                <td>{{ retirementDateDisplay() || ('Auto-set at age ' + maharashtraRetirementAge) }}</td>
+              </tr>
+              <tr>
+                <th>Senior Pay Grade</th>
+                <td>{{ seniorPayGradeStatus() }}</td>
+              </tr>
+              <tr>
+                <th>Selection Pay Grade</th>
+                <td>{{ selectionPayGradeStatus() }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="form-actions">
+          <span class="action-spacer"></span>
+          <button mat-stroked-button type="button" (click)="closeFormModal()">Close</button>
+          <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || loading()">{{ loading() ? 'Saving…' : selectedTeacherId() ? 'Update Teacher' : 'Save Teacher' }}</button>
+          <button mat-stroked-button type="button" *ngIf="selectedTeacherId()" (click)="resetForm()">Cancel Edit</button>
+        </div>
+          </form>
+
+          <div class="history-box" *ngIf="historyTeachers().length > 0">
+            <div class="history-title">Previous institute history found for this Aadhaar</div>
+            <div class="history-item" *ngFor="let item of historyTeachers()">
+              <strong>{{ item.institute?.name || 'Unknown Institute' }}</strong>
+              <span> · {{ item.institute?.district || '-' }}</span>
+              <span> · {{ item.serviceStartDate ? (item.serviceStartDate | date:'dd-MM-yyyy') : 'Start not set' }}</span>
+              <span> → {{ item.leavingDate ? (item.leavingDate | date:'dd-MM-yyyy') : 'Present' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="modal-backdrop" *ngIf="viewingTeacher()">
       <div class="modal">
@@ -169,21 +202,25 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
         </div>
       </div>
     </div>
+    </div>
   `,
   styles: [`
-    .card { margin-bottom: 14px; padding: 16px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-    .tab-content { padding: 20px 4px 12px; margin-bottom: 10px; }
+    .page-wrap { position: relative; min-height: calc(100vh - 130px); }
+    .card { margin-bottom: 14px; margin-top: 10px; padding: 20px; }
+    .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .section-grid { padding-top: 10px; }
+    .form-section { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 14px; margin: 0 0 14px; }
+    .section-title { font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+    .section-sub { color: #64748b; font-size: 0.86rem; line-height: 1.4; }
     .h { font-weight: 800; }
     .p { color: #6b7280; margin-top: 4px; line-height: 1.45; }
-    .teacher-tabs { margin-top: 12px; }
-    .teacher-tabs :where(.mat-mdc-tab-body-content) { padding-top: 6px; }
-    .inline-action { display: flex; align-items: center; min-height: 56px; }
     .span-2 { grid-column: span 2; }
-    .calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; margin: 14px 0; }
-    .calc-tile { border: 1px solid #dbeafe; border-radius: 10px; padding: 10px 12px; background: #f8fbff; }
-    .calc-label { font-size: 12px; color: #1d4ed8; font-weight: 700; margin-bottom: 4px; text-transform: uppercase; letter-spacing: .02em; }
-    .calc-value { color: #0f172a; font-weight: 600; line-height: 1.4; }
+    .derived-table { margin: 8px 0 14px; border: 1px solid #dbeafe; border-radius: 10px; overflow: hidden; }
+    .derived-table table { width: 100%; border-collapse: collapse; }
+    .derived-table th, .derived-table td { border-bottom: 1px solid #e2e8f0; padding: 10px 12px; text-align: left; font-size: 0.9rem; }
+    .derived-table th { width: 240px; background: #f8fafc; color: #334155; font-weight: 700; }
+    .derived-table tr:last-child th, .derived-table tr:last-child td { border-bottom: 0; }
     .form-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
     .action-spacer { flex: 1 1 auto; }
     .history-box { background: #f8fafc; border: 1px solid #dbeafe; border-radius: 8px; padding: 12px; margin: 8px 0 14px; }
@@ -192,19 +229,22 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 60;
     .error { color: #b91c1c; margin-top: 8px; }
     .search { width: min(360px, 100%); }
     .table-box { width: 100%; height: 380px; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
-    .modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, 0.45); display: flex; align-items: center; justify-content: center; z-index: 120; padding: 12px; }
     .modal { background: white; border-radius: 12px; width: min(680px, calc(100vw - 24px)); max-height: 80vh; overflow: auto; }
+    .form-modal { width: min(1080px, calc(100vw - 24px)); max-height: 90vh; }
+    .form-modal-content { padding: 0 16px 16px; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; }
     .modal-content { display: grid; gap: 8px; padding: 16px; }
     @media (max-width: 768px) {
       .span-2 { grid-column: span 1; }
+      .derived-table th { width: 40%; }
       .form-actions { flex-direction: column; align-items: stretch; }
     }
   `]
 })
 export class InstituteAddTeacherComponent implements OnInit {
   readonly form = new FormGroup({
-    governmentId: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^\d{8,20}$/)] }),
+    governmentId: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.pattern(/^\d{12}$/)] }),
     fullName: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
     designation: new FormControl('', { nonNullable: true }),
     subjectSpecialization: new FormControl('', { nonNullable: true }),
@@ -237,8 +277,8 @@ export class InstituteAddTeacherComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly viewingTeacher = signal<any | null>(null);
+  readonly isFormModalOpen = signal(false);
   readonly selectedTeacherId = signal<number | null>(null);
-  readonly isReadonly = signal(false);
   readonly casteOptions = CASTE_OPTIONS;
   readonly teacherTypeOptions = TEACHER_TYPE_OPTIONS;
   readonly maharashtraRetirementAge = MAHARASHTRA_TEACHER_RETIREMENT_AGE;
@@ -246,7 +286,6 @@ export class InstituteAddTeacherComponent implements OnInit {
   readonly retirementDateDisplay = signal('');
   readonly seniorPayGradeStatus = signal('Need service start date');
   readonly selectionPayGradeStatus = signal('Need service start date');
-  readonly activeTab = signal(0);
 
   readonly filteredTeachers = computed(() => {
     const q = this.searchText().trim().toLowerCase();
@@ -277,14 +316,6 @@ export class InstituteAddTeacherComponent implements OnInit {
 
   hasChiefModeratorExperience(): boolean {
     return (this.toNumberOrUndefined(this.form.controls.chiefModeratorExperienceYears.value) ?? 0) > 0;
-  }
-
-  nextStep() {
-    this.activeTab.update((current) => Math.min(current + 1, 2));
-  }
-
-  prevStep() {
-    this.activeTab.update((current) => Math.max(current - 1, 0));
   }
 
   private calculateExperienceYears(serviceStartDate: Date | string | null | undefined): number | null {
@@ -446,8 +477,18 @@ export class InstituteAddTeacherComponent implements OnInit {
     });
   }
 
+  openFormModal() {
+    this.resetForm();
+    this.isFormModalOpen.set(true);
+  }
+
+  closeFormModal() {
+    this.isFormModalOpen.set(false);
+    this.resetForm();
+  }
+
   normalizeGovernmentId() {
-    const value = (this.form.controls.governmentId.value || '').replace(/\D/g, '').slice(0, 20);
+    const value = (this.form.controls.governmentId.value || '').replace(/\D/g, '').slice(0, 12);
     this.form.controls.governmentId.setValue(value, { emitEvent: false });
   }
 
@@ -458,7 +499,7 @@ export class InstituteAddTeacherComponent implements OnInit {
 
   onAadharLookup() {
     const governmentId = this.form.controls.governmentId.value.trim();
-    if (!governmentId || governmentId.length < 8) {
+    if (!/^\d{12}$/.test(governmentId)) {
       return;
     }
 
@@ -471,12 +512,11 @@ export class InstituteAddTeacherComponent implements OnInit {
         this.historyTeachers.set(history);
 
         if (history.length === 0) {
-          this.isReadonly.set(false);
+          this.snackBar.open('No previous institute history found. Please continue with manual entry.', 'Close', { duration: 3000 });
           return;
         }
 
         const existing = history[0];
-        this.isReadonly.set(true);
         this.form.patchValue({
           governmentId: existing.governmentId || governmentId,
           fullName: existing.fullName || '',
@@ -504,7 +544,7 @@ export class InstituteAddTeacherComponent implements OnInit {
           lastChiefModeratorCollegeName: existing.lastChiefModeratorCollegeName || '',
           active: true
         });
-        this.snackBar.open('Previous institute history loaded', 'Close', { duration: 2000 });
+        this.snackBar.open('Aadhaar history found and prefilled. Please review and update fields as needed.', 'Close', { duration: 2600 });
       },
       error: (err) => {
         this.loading.set(false);
@@ -561,6 +601,7 @@ export class InstituteAddTeacherComponent implements OnInit {
       next: () => {
         this.loading.set(false);
         this.snackBar.open(this.selectedTeacherId() ? 'Teacher updated' : 'Teacher added', 'Close', { duration: 2000 });
+        this.isFormModalOpen.set(false);
         this.resetForm();
         this.load();
       },
@@ -573,9 +614,7 @@ export class InstituteAddTeacherComponent implements OnInit {
 
   resetForm() {
     this.selectedTeacherId.set(null);
-    this.isReadonly.set(false);
     this.historyTeachers.set([]);
-    this.activeTab.set(0);
     this.form.reset({
       governmentId: '',
       fullName: '',
@@ -616,8 +655,8 @@ export class InstituteAddTeacherComponent implements OnInit {
     }
 
     if (action === 'edit') {
+      this.isFormModalOpen.set(true);
       this.selectedTeacherId.set(teacher.id);
-      this.isReadonly.set(false);
       this.historyTeachers.set([]);
       this.form.patchValue({
         governmentId: teacher.governmentId ?? '',

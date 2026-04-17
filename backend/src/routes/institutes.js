@@ -1348,6 +1348,10 @@ institutesRouter.post('/me/teachers', requireAuth, requireRole(['INSTITUTE']), a
     }
 
     const serviceStartDate = parseOptionalDate(body.serviceStartDate);
+    const examinerExperienceYears = parseOptionalNumber(body.examinerExperienceYears);
+    const moderatorExperienceYears = parseOptionalNumber(body.moderatorExperienceYears);
+    const chiefModeratorExperienceYears = parseOptionalNumber(body.chiefModeratorExperienceYears);
+
     const teacher = await prisma.teacher.create({
       data: {
         fullName: body.fullName,
@@ -1367,16 +1371,16 @@ institutesRouter.post('/me/teachers', requireAuth, requireRole(['INSTITUTE']), a
         teacherType: body.teacherType ?? TEACHER_TYPE_OPTIONS[0],
         email: body.email,
         mobile: body.mobile,
-        examinerExperienceYears: parseOptionalNumber(body.examinerExperienceYears),
-        previousExaminerAppointmentNo: normalizeOptionalText(body.previousExaminerAppointmentNo),
-        moderatorExperienceYears: parseOptionalNumber(body.moderatorExperienceYears),
-        lastModeratorName: normalizeOptionalText(body.lastModeratorName),
-        lastModeratorAppointmentNo: normalizeOptionalText(body.lastModeratorAppointmentNo),
-        lastModeratorCollegeName: normalizeOptionalText(body.lastModeratorCollegeName),
-        chiefModeratorExperienceYears: parseOptionalNumber(body.chiefModeratorExperienceYears),
-        lastChiefModeratorName: normalizeOptionalText(body.lastChiefModeratorName),
-        lastChiefModeratorAppointmentNo: normalizeOptionalText(body.lastChiefModeratorAppointmentNo),
-        lastChiefModeratorCollegeName: normalizeOptionalText(body.lastChiefModeratorCollegeName),
+        examinerExperienceYears,
+        previousExaminerAppointmentNo: (examinerExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.previousExaminerAppointmentNo) : null,
+        moderatorExperienceYears,
+        lastModeratorName: (moderatorExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.lastModeratorName) : null,
+        lastModeratorAppointmentNo: (moderatorExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.lastModeratorAppointmentNo) : null,
+        lastModeratorCollegeName: (moderatorExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.lastModeratorCollegeName) : null,
+        chiefModeratorExperienceYears,
+        lastChiefModeratorName: (chiefModeratorExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.lastChiefModeratorName) : null,
+        lastChiefModeratorAppointmentNo: (chiefModeratorExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.lastChiefModeratorAppointmentNo) : null,
+        lastChiefModeratorCollegeName: (chiefModeratorExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.lastChiefModeratorCollegeName) : null,
         active: body.active ?? true,
         totalYearsService: calculateTotalYearsService(serviceStartDate),
         instituteId: user.institute.id
@@ -1455,13 +1459,35 @@ institutesRouter.put('/me/teachers/:id', requireAuth, requireRole(['INSTITUTE'])
     if (body.teacherType !== undefined) updateData.teacherType = body.teacherType;
     if (body.email !== undefined) updateData.email = body.email;
     if (body.mobile !== undefined) updateData.mobile = body.mobile;
-    if (body.examinerExperienceYears !== undefined) updateData.examinerExperienceYears = parseOptionalNumber(body.examinerExperienceYears);
+    if (body.examinerExperienceYears !== undefined) {
+      const examinerExperienceYears = parseOptionalNumber(body.examinerExperienceYears);
+      updateData.examinerExperienceYears = examinerExperienceYears;
+      if ((examinerExperienceYears ?? 0) <= 0) {
+        updateData.previousExaminerAppointmentNo = null;
+      }
+    }
     if (body.previousExaminerAppointmentNo !== undefined) updateData.previousExaminerAppointmentNo = normalizeOptionalText(body.previousExaminerAppointmentNo);
-    if (body.moderatorExperienceYears !== undefined) updateData.moderatorExperienceYears = parseOptionalNumber(body.moderatorExperienceYears);
+    if (body.moderatorExperienceYears !== undefined) {
+      const moderatorExperienceYears = parseOptionalNumber(body.moderatorExperienceYears);
+      updateData.moderatorExperienceYears = moderatorExperienceYears;
+      if ((moderatorExperienceYears ?? 0) <= 0) {
+        updateData.lastModeratorName = null;
+        updateData.lastModeratorAppointmentNo = null;
+        updateData.lastModeratorCollegeName = null;
+      }
+    }
     if (body.lastModeratorName !== undefined) updateData.lastModeratorName = normalizeOptionalText(body.lastModeratorName);
     if (body.lastModeratorAppointmentNo !== undefined) updateData.lastModeratorAppointmentNo = normalizeOptionalText(body.lastModeratorAppointmentNo);
     if (body.lastModeratorCollegeName !== undefined) updateData.lastModeratorCollegeName = normalizeOptionalText(body.lastModeratorCollegeName);
-    if (body.chiefModeratorExperienceYears !== undefined) updateData.chiefModeratorExperienceYears = parseOptionalNumber(body.chiefModeratorExperienceYears);
+    if (body.chiefModeratorExperienceYears !== undefined) {
+      const chiefModeratorExperienceYears = parseOptionalNumber(body.chiefModeratorExperienceYears);
+      updateData.chiefModeratorExperienceYears = chiefModeratorExperienceYears;
+      if ((chiefModeratorExperienceYears ?? 0) <= 0) {
+        updateData.lastChiefModeratorName = null;
+        updateData.lastChiefModeratorAppointmentNo = null;
+        updateData.lastChiefModeratorCollegeName = null;
+      }
+    }
     if (body.lastChiefModeratorName !== undefined) updateData.lastChiefModeratorName = normalizeOptionalText(body.lastChiefModeratorName);
     if (body.lastChiefModeratorAppointmentNo !== undefined) updateData.lastChiefModeratorAppointmentNo = normalizeOptionalText(body.lastChiefModeratorAppointmentNo);
     if (body.lastChiefModeratorCollegeName !== undefined) updateData.lastChiefModeratorCollegeName = normalizeOptionalText(body.lastChiefModeratorCollegeName);
@@ -1564,7 +1590,7 @@ institutesRouter.delete('/me/teachers/:id', requireAuth, requireRole(['INSTITUTE
 institutesRouter.get('/me/teachers/history', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
   try {
     const q = z.object({
-      governmentId: z.string().min(1)
+      governmentId: z.string().regex(/^\d{12}$/, 'Aadhaar must be 12 digits')
     }).parse(req.query);
 
     const user = await getInstituteUserWithInstitute(req.auth.userId);

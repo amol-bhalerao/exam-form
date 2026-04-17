@@ -35,6 +35,19 @@ interface StatCard {
   deltaPos?: boolean;
 }
 
+interface RoleInsight {
+  label: string;
+  value: string;
+  tone: 'primary' | 'success' | 'warning' | 'danger';
+}
+
+interface QuickAction {
+  label: string;
+  icon: string;
+  link: string;
+  primary?: boolean;
+}
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -58,6 +71,21 @@ interface StatCard {
         </div>
       </div>
 
+      <!-- Quick Actions (Top Access) -->
+      <mat-card class="actions-card actions-card-top">
+        <div class="actions-header">
+          <mat-icon>flash_on</mat-icon>
+          <div class="chart-title">Quick Actions</div>
+        </div>
+        <div class="actions-grid">
+          @for (action of quickActions(); track action.label) {
+            <a [matFlatButton]="action.primary ? '' : null" [matStrokedButton]="!action.primary ? '' : null" [color]="action.primary ? 'primary' : null" [routerLink]="action.link" class="action-btn" [class.primary-action]="action.primary">
+              <mat-icon>{{ action.icon }}</mat-icon>{{ action.label }}
+            </a>
+          }
+        </div>
+      </mat-card>
+
       @if (loading()) {
         <!-- Skeleton loading cards -->
         <div class="stat-grid">
@@ -70,23 +98,40 @@ interface StatCard {
         <div class="stat-grid">
           @for (card of statCards(); track card.label) {
             <a class="stat-card" [routerLink]="card.link" [attr.aria-label]="card.label">
-              <div class="stat-icon-wrap" [ngClass]="card.gradient">
-                <mat-icon>{{ card.icon }}</mat-icon>
+              <div class="stat-head-row">
+                <div class="stat-icon-wrap" [ngClass]="card.gradient">
+                  <mat-icon>{{ card.icon }}</mat-icon>
+                </div>
+                <div class="stat-value-wrap">
+                  <div class="stat-value counter" [attr.data-target]="card.value">{{ card.value.toLocaleString() }}</div>
+                </div>
               </div>
-              <div class="stat-body">
-                <div class="stat-value counter" [attr.data-target]="card.value">{{ card.value.toLocaleString() }}</div>
-                <div class="stat-label">{{ card.label }}</div>
-                @if (card.delta) {
-                  <div class="stat-delta" [class.pos]="card.deltaPos" [class.neg]="!card.deltaPos">
-                    <mat-icon>{{ card.deltaPos ? 'trending_up' : 'trending_down' }}</mat-icon>
-                    {{ card.delta }}
-                  </div>
-                }
-              </div>
+              <div class="stat-label">{{ card.label }}</div>
+              @if (card.delta) {
+                <div class="stat-delta" [class.pos]="card.deltaPos" [class.neg]="!card.deltaPos">
+                  <mat-icon>{{ card.deltaPos ? 'trending_up' : 'trending_down' }}</mat-icon>
+                  {{ card.delta }}
+                </div>
+              }
             </a>
           }
         </div>
       }
+
+      <mat-card class="role-brief-card">
+        <div class="role-brief-header">
+          <div class="chart-title">{{ roleBriefTitle() }}</div>
+          <div class="chart-sub">{{ roleBriefSubtitle() }}</div>
+        </div>
+        <div class="role-brief-grid">
+          @for (insight of roleInsights(); track insight.label) {
+            <div class="role-brief-item" [attr.data-tone]="insight.tone">
+              <span class="role-brief-label">{{ insight.label }}</span>
+              <strong class="role-brief-value">{{ insight.value }}</strong>
+            </div>
+          }
+        </div>
+      </mat-card>
 
       @if (user()?.role === 'STUDENT') {
         <mat-card class="student-progress-card">
@@ -121,6 +166,11 @@ interface StatCard {
               <div class="chart-sub">Breakdown of submissions</div>
             </div>
           </div>
+          <div class="chart-kpi-row">
+            <div class="chart-kpi-chip">Total: <strong>{{ totalApplicationsCount() }}</strong></div>
+            <div class="chart-kpi-chip success">Approved: <strong>{{ approvalRate() }}%</strong></div>
+            <div class="chart-kpi-chip danger">Rejected: <strong>{{ rejectionRate() }}%</strong></div>
+          </div>
           <div class="chart-wrap">
             <canvas #doughnutCanvas width="280" height="280"></canvas>
           </div>
@@ -130,6 +180,7 @@ interface StatCard {
                 <span class="legend-dot" [style.background]="l.color"></span>
                 <span class="legend-label">{{ l.label }}</span>
                 <span class="legend-value">{{ l.value }}</span>
+                <span class="legend-share">{{ statusShare(l.value) }}%</span>
               </div>
             }
           </div>
@@ -147,68 +198,26 @@ interface StatCard {
           <div class="chart-wrap tall">
             <canvas #barCanvas></canvas>
           </div>
+          <div class="chart-insight-grid">
+            <div class="chart-insight-item">
+              <span>Top Status</span>
+              <strong>{{ topStatusLabel() }}</strong>
+            </div>
+            <div class="chart-insight-item">
+              <span>Top Count</span>
+              <strong>{{ topStatusValue() }}</strong>
+            </div>
+            <div class="chart-insight-item">
+              <span>Pending Pipeline</span>
+              <strong>{{ pendingPipelineCount() }}</strong>
+            </div>
+            <div class="chart-insight-item">
+              <span>Closure (Approved + Rejected)</span>
+              <strong>{{ closureRate() }}%</strong>
+            </div>
+          </div>
         </mat-card>
       </div>
-
-      <!-- Quick Actions -->
-      <mat-card class="actions-card">
-        <div class="actions-header">
-          <mat-icon>flash_on</mat-icon>
-          <div class="chart-title">Quick Actions</div>
-        </div>
-        <div class="actions-grid">
-          @if (user()?.role === 'SUPER_ADMIN') {
-            <a mat-stroked-button routerLink="/app/super/institutes" class="action-btn">
-              <mat-icon>account_balance</mat-icon> Manage Institutes
-            </a>
-            <a mat-stroked-button routerLink="/app/super/institute-users" class="action-btn">
-              <mat-icon>manage_accounts</mat-icon> Institute Users
-            </a>
-            <a mat-stroked-button routerLink="/app/super/users" class="action-btn">
-              <mat-icon>admin_panel_settings</mat-icon> Board Users
-            </a>
-            <a mat-stroked-button routerLink="/app/super/masters" class="action-btn">
-              <mat-icon>settings</mat-icon> Master Data
-            </a>
-          }
-          @if (user()?.role === 'BOARD') {
-            <a mat-stroked-button routerLink="/app/board/exams" class="action-btn">
-              <mat-icon>event_note</mat-icon> Manage Exams
-            </a>
-            <a mat-stroked-button routerLink="/app/board/applications" class="action-btn">
-              <mat-icon>assignment</mat-icon> Review Applications
-            </a>
-            <a mat-stroked-button routerLink="/app/board/subjects" class="action-btn">
-              <mat-icon>subject</mat-icon> Subjects
-            </a>
-            <a mat-stroked-button routerLink="/app/board/news" class="action-btn">
-              <mat-icon>announcement</mat-icon> News & Updates
-            </a>
-          }
-          @if (user()?.role === 'INSTITUTE') {
-            <a mat-stroked-button routerLink="/app/institute/applications" class="action-btn">
-              <mat-icon>fact_check</mat-icon> Student Applications
-            </a>
-            <a mat-stroked-button routerLink="/app/institute/settings" class="action-btn">
-              <mat-icon>corporate_fare</mat-icon> Institute Details
-            </a>
-            <a mat-stroked-button routerLink="/app/institute/teachers" class="action-btn">
-              <mat-icon>people</mat-icon> Teachers
-            </a>
-          }
-          @if (user()?.role === 'STUDENT') {
-            <a mat-stroked-button routerLink="/app/student/applications" class="action-btn">
-              <mat-icon>assignment_ind</mat-icon> My Applications
-            </a>
-            <a mat-flat-button color="primary" routerLink="/app/student/applications" class="action-btn primary-action">
-              <mat-icon>add</mat-icon> New Application
-            </a>
-          }
-          <a mat-stroked-button routerLink="/app/profile" class="action-btn">
-            <mat-icon>person</mat-icon> Edit Profile
-          </a>
-        </div>
-      </mat-card>
 
     </div>
   `,
@@ -240,6 +249,18 @@ interface StatCard {
       display: grid;
       gap: var(--spacing-md);
       width: 100%;
+      animation: dashEnter 0.45s ease-out both;
+    }
+
+    @keyframes dashEnter {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* ============================================================
@@ -256,6 +277,19 @@ interface StatCard {
       gap: var(--spacing-md);
       flex-wrap: wrap;
       min-height: 100px;
+      box-shadow: 0 16px 30px rgba(30, 64, 175, 0.22);
+      animation: slideBanner 0.5s ease-out both;
+    }
+
+    @keyframes slideBanner {
+      from {
+        opacity: 0;
+        transform: translateY(-6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     @media (max-width: 640px) {
@@ -292,6 +326,8 @@ interface StatCard {
       margin: 0 0 4px;
       line-height: 1.3;
       word-break: break-word;
+      color: #ffffff !important;
+      text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
     }
 
     .welcome-sub {
@@ -299,6 +335,13 @@ interface StatCard {
       font-size: clamp(0.75rem, 2vw, 0.85rem);
       opacity: 0.75;
       line-height: 1.4;
+      color: rgba(255, 255, 255, 0.95) !important;
+      text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
+    }
+
+    .welcome-banner .profile-btn,
+    .welcome-banner .profile-btn mat-icon {
+      color: #ffffff !important;
     }
 
     .profile-btn {
@@ -323,6 +366,67 @@ interface StatCard {
       border-radius: var(--border-radius);
       padding: var(--spacing-md);
       background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+    }
+
+    .role-brief-card {
+      border: 1px solid #dbeafe;
+      border-radius: var(--border-radius);
+      padding: var(--spacing-md);
+      background: #ffffff;
+    }
+
+    .role-brief-header {
+      margin-bottom: var(--spacing-sm);
+    }
+
+    .role-brief-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--spacing-sm);
+    }
+
+    .role-brief-item {
+      border: 1px solid #e2e8f0;
+      border-radius: var(--border-radius-sm);
+      padding: 10px 12px;
+      background: #f8fafc;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 64px;
+      justify-content: center;
+    }
+
+    .role-brief-item[data-tone='primary'] {
+      border-color: #bfdbfe;
+      background: #eff6ff;
+    }
+
+    .role-brief-item[data-tone='success'] {
+      border-color: #bbf7d0;
+      background: #ecfdf5;
+    }
+
+    .role-brief-item[data-tone='warning'] {
+      border-color: #fde68a;
+      background: #fffbeb;
+    }
+
+    .role-brief-item[data-tone='danger'] {
+      border-color: #fecaca;
+      background: #fef2f2;
+    }
+
+    .role-brief-label {
+      font-size: 0.78rem;
+      color: #475569;
+      line-height: 1.2;
+    }
+
+    .role-brief-value {
+      font-size: 1rem;
+      color: #0f172a;
+      line-height: 1.2;
     }
 
     .student-progress-header {
@@ -394,30 +498,45 @@ interface StatCard {
       border: 1px solid #e2e8f0;
       border-radius: var(--border-radius);
       padding: var(--spacing-md);
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-md);
+      display: grid;
+      grid-template-columns: 1fr;
+      align-items: start;
+      gap: 12px;
       text-decoration: none;
       color: inherit;
-      transition: all 0.2s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
       animation: fadeInUp 0.4s ease both;
       cursor: pointer;
-      flex-direction: column;
-      text-align: center;
-      min-height: 120px;
-      justify-content: space-between;
+      min-height: 116px;
+      position: relative;
+      overflow: hidden;
     }
 
-    @media (min-width: 768px) {
-      .stat-card {
-        flex-direction: row;
-        text-align: left;
-      }
+    .stat-head-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(255, 255, 255, 0) 35%, rgba(219, 234, 254, 0.25) 50%, rgba(255, 255, 255, 0) 65%);
+      transform: translateX(-100%);
+      transition: transform 0.5s ease;
     }
 
     .stat-card:hover {
       box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
       transform: translateY(-2px);
+      border-color: #bfdbfe;
+    }
+
+    .stat-card:hover::before {
+      transform: translateX(100%);
     }
 
     @keyframes fadeInUp {
@@ -443,6 +562,13 @@ interface StatCard {
       display: grid;
       place-items: center;
       flex-shrink: 0;
+      box-shadow: 0 8px 14px rgba(99, 102, 241, 0.24);
+      animation: iconPulse 2.8s ease-in-out infinite;
+    }
+
+    @keyframes iconPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
     }
 
     .stat-icon-wrap mat-icon {
@@ -465,12 +591,21 @@ interface StatCard {
       animation: countUp 0.5s ease both;
     }
 
+    .stat-value-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      min-width: 0;
+      flex: 1;
+    }
+
     .stat-label {
       font-size: var(--font-size-xs);
       color: #64748b;
-      margin-top: var(--spacing-xs);
+      margin-top: 0;
       font-weight: 500;
       line-height: 1.3;
+      text-align: left;
     }
 
     .stat-delta {
@@ -478,7 +613,7 @@ interface StatCard {
       align-items: center;
       gap: 2px;
       font-size: 0.7rem;
-      margin-top: var(--spacing-xs);
+      margin-top: -2px;
       font-weight: 600;
     }
 
@@ -514,6 +649,13 @@ interface StatCard {
       display: flex;
       flex-direction: column;
       min-height: 300px;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+      transition: transform 0.22s ease, box-shadow 0.22s ease;
+    }
+
+    .chart-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 18px 34px rgba(15, 23, 42, 0.12);
     }
 
     .chart-header {
@@ -560,6 +702,35 @@ interface StatCard {
       overflow-x: auto;
     }
 
+    .chart-kpi-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .chart-kpi-chip {
+      border: 1px solid #bfdbfe;
+      background: #eff6ff;
+      color: #1e3a8a;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 0.74rem;
+      font-weight: 600;
+    }
+
+    .chart-kpi-chip.success {
+      border-color: #bbf7d0;
+      background: #ecfdf5;
+      color: #166534;
+    }
+
+    .chart-kpi-chip.danger {
+      border-color: #fecaca;
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
     .chart-wrap.tall {
       height: clamp(200px, 50vh, 280px);
     }
@@ -602,6 +773,40 @@ interface StatCard {
       min-width: auto;
     }
 
+    .legend-share {
+      font-weight: 600;
+      color: #475569;
+      font-size: 0.74rem;
+      margin-left: auto;
+    }
+
+    .chart-insight-grid {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .chart-insight-item {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      background: #f8fafc;
+    }
+
+    .chart-insight-item span {
+      color: #64748b;
+      font-size: 0.72rem;
+    }
+
+    .chart-insight-item strong {
+      color: #0f172a;
+      font-size: 0.9rem;
+    }
+
     /* ============================================================
        QUICK ACTIONS - Responsive button grid
        ============================================================ */
@@ -610,6 +815,14 @@ interface StatCard {
       border: 1px solid #e2e8f0;
       border-radius: var(--border-radius);
       padding: var(--spacing-md);
+    }
+
+    .actions-card-top {
+      position: sticky;
+      top: 8px;
+      z-index: 8;
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+      animation: fadeInUp 0.35s ease both;
     }
 
     .actions-header {
@@ -642,6 +855,11 @@ interface StatCard {
       padding: 6px 16px !important;
       white-space: nowrap;
       transition: all 0.2s ease;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 14px rgba(59, 130, 246, 0.18);
     }
 
     @media (max-width: 640px) {
@@ -688,6 +906,14 @@ interface StatCard {
         min-height: 280px;
       }
 
+      .chart-insight-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .role-brief-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
       .actions-card {
         border-radius: var(--border-radius-sm);
       }
@@ -717,6 +943,14 @@ interface StatCard {
 
       .chart-wrap.tall {
         height: 220px;
+      }
+
+      .role-brief-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .actions-card-top {
+        position: static;
       }
     }
 
@@ -748,6 +982,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   readonly statCards = signal<StatCard[]>([]);
   readonly doughnutLegend = signal<{ label: string; value: number; color: string }[]>([]);
+  readonly roleInsights = signal<RoleInsight[]>([]);
+  readonly roleBriefTitle = signal('Role Snapshot');
+  readonly roleBriefSubtitle = signal('Key numbers for your login role.');
+  readonly quickActions = signal<QuickAction[]>([]);
 
   private doughnutChart?: Chart;
   private barChart?: Chart;
@@ -780,6 +1018,51 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     return new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }
 
+  totalApplicationsCount() {
+    return this.appDraft + this.appSubmitted + this.appVerified + this.appApproved + this.appRejected;
+  }
+
+  statusShare(value: number) {
+    const total = this.totalApplicationsCount();
+    if (total <= 0) return 0;
+    return Math.round((value / total) * 100);
+  }
+
+  approvalRate() {
+    return this.statusShare(this.appApproved);
+  }
+
+  rejectionRate() {
+    return this.statusShare(this.appRejected);
+  }
+
+  pendingPipelineCount() {
+    return this.appDraft + this.appSubmitted + this.appVerified;
+  }
+
+  closureRate() {
+    const total = this.totalApplicationsCount();
+    if (total <= 0) return 0;
+    return Math.round(((this.appApproved + this.appRejected) / total) * 100);
+  }
+
+  topStatusLabel() {
+    const buckets: Array<{ label: string; value: number }> = [
+      { label: 'Draft', value: this.appDraft },
+      { label: 'Submitted', value: this.appSubmitted },
+      { label: 'Verified', value: this.appVerified },
+      { label: 'Approved', value: this.appApproved },
+      { label: 'Rejected', value: this.appRejected }
+    ];
+
+    return buckets.sort((a, b) => b.value - a.value)[0]?.label ?? 'Draft';
+  }
+
+  topStatusValue() {
+    const buckets = [this.appDraft, this.appSubmitted, this.appVerified, this.appApproved, this.appRejected];
+    return Math.max(...buckets, 0);
+  }
+
   ngOnInit() { this.loadData(); }
 
   ngAfterViewInit() {
@@ -797,6 +1080,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const role = this.user()?.role;
 
     const done = () => {
+      this.refreshQuickActions();
+      this.refreshRoleInsights();
       this.loading.set(false);
       // Use requestAnimationFrame for better performance than setTimeout
       if (isPlatformBrowser(this.platformId)) {
@@ -824,6 +1109,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             { label: 'Total Institutes', value: all.length, icon: 'account_balance', gradient: 'gradient-blue', link: '/app/super/institutes', delta: `${approved} active`, deltaPos: true },
             { label: 'Pending Approval', value: pending, icon: 'pending_actions', gradient: 'gradient-amber', link: '/app/super/institute-users' }
           ]);
+          this.refreshRoleInsights();
           this.initBarData([all.length, approved, pending, disabled], ['Total', 'Approved', 'Pending', 'Disabled']);
           p1done = true; check();
         },
@@ -840,6 +1126,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           this.statCards.update((c) => [...c,
             { label: 'Institute Users', value: all.length, icon: 'people', gradient: 'gradient-cyan', link: '/app/super/institute-users' }
           ]);
+          this.refreshRoleInsights();
           p2done = true; check();
         },
         error: (err) => {
@@ -882,6 +1169,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           this.statCards.update((c) => [...c,
             { label: 'Teachers', value: r.teachers?.length ?? 0, icon: 'people', gradient: 'gradient-indigo', link: '/app/institute/teachers' }
           ]);
+          this.refreshRoleInsights();
         },
         error: (err) => {
           console.error('Failed to load teachers:', err?.error?.message || err?.message);
@@ -919,6 +1207,113 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
   }
 
+  private refreshRoleInsights() {
+    const role = this.user()?.role ?? '';
+    const byLabel = (label: string) => this.statCards().find((card) => card.label === label)?.value ?? 0;
+
+    if (role === 'SUPER_ADMIN') {
+      this.roleBriefTitle.set('Super Admin Control Snapshot');
+      this.roleBriefSubtitle.set('Institution health and approval pipeline overview.');
+      this.roleInsights.set([
+        { label: 'Institutes', value: String(byLabel('Total Institutes')), tone: 'primary' },
+        { label: 'Pending Approval', value: String(byLabel('Pending Approval')), tone: 'warning' },
+        { label: 'Institute Users', value: String(byLabel('Institute Users')), tone: 'success' },
+        { label: 'Board Approved Apps', value: String(this.appApproved), tone: 'success' }
+      ]);
+      return;
+    }
+
+    if (role === 'BOARD') {
+      this.roleBriefTitle.set('Board Verification Snapshot');
+      this.roleBriefSubtitle.set('Exam application pipeline for board decisions.');
+      this.roleInsights.set([
+        { label: 'Submitted', value: String(this.appSubmitted), tone: 'primary' },
+        { label: 'Institute Verified', value: String(this.appVerified), tone: 'success' },
+        { label: 'Board Approved', value: String(this.appApproved), tone: 'success' },
+        { label: 'Rejected', value: String(this.appRejected), tone: 'danger' }
+      ]);
+      return;
+    }
+
+    if (role === 'INSTITUTE') {
+      this.roleBriefTitle.set('Institute Operations Snapshot');
+      this.roleBriefSubtitle.set('Track institute-side processing at a glance.');
+      this.roleInsights.set([
+        { label: 'Total Applications', value: String(byLabel('Total Applications')), tone: 'primary' },
+        { label: 'Submitted', value: String(this.appSubmitted), tone: 'warning' },
+        { label: 'Institute Verified', value: String(this.appVerified), tone: 'success' },
+        { label: 'Teachers', value: String(byLabel('Teachers')), tone: 'primary' }
+      ]);
+      return;
+    }
+
+    if (role === 'STUDENT') {
+      this.roleBriefTitle.set('Student Progress Snapshot');
+      this.roleBriefSubtitle.set('Profile readiness and application status overview.');
+      this.roleInsights.set([
+        { label: 'Profile Completion', value: `${this.studentProfileCompletion()}%`, tone: this.studentProfileCompletion() >= 70 ? 'success' : 'warning' },
+        { label: 'Draft Applications', value: String(this.appDraft), tone: 'warning' },
+        { label: 'Submitted', value: String(this.appSubmitted), tone: 'primary' },
+        { label: 'Approved', value: String(this.appApproved), tone: 'success' }
+      ]);
+      return;
+    }
+
+    this.roleBriefTitle.set('Role Snapshot');
+    this.roleBriefSubtitle.set('Key numbers for your login role.');
+    this.roleInsights.set([]);
+  }
+
+  private refreshQuickActions() {
+    const role = this.user()?.role ?? '';
+
+    if (role === 'BOARD') {
+      this.quickActions.set([
+        { label: 'Manage Exams', icon: 'event_note', link: '/app/board/exams', primary: true },
+        { label: `Pending Verification (${this.appVerified})`, icon: 'pending_actions', link: '/app/board/applications', primary: true },
+        { label: 'Review Applications', icon: 'assignment', link: '/app/board/applications' },
+        { label: 'Student Master', icon: 'school', link: '/app/board/students' },
+        { label: 'News & Updates', icon: 'announcement', link: '/app/board/news' },
+        { label: 'Edit Profile', icon: 'person', link: '/app/profile' }
+      ]);
+      return;
+    }
+
+    if (role === 'INSTITUTE') {
+      this.quickActions.set([
+        { label: 'Student Applications', icon: 'fact_check', link: '/app/institute/applications', primary: true },
+        { label: 'Exam Capacity', icon: 'grid_view', link: '/app/institute/exam-capacity', primary: true },
+        { label: 'Institute Details', icon: 'corporate_fare', link: '/app/institute/settings' },
+        { label: 'Teachers', icon: 'people', link: '/app/institute/teachers' },
+        { label: 'Edit Profile', icon: 'person', link: '/app/profile' }
+      ]);
+      return;
+    }
+
+    if (role === 'SUPER_ADMIN') {
+      this.quickActions.set([
+        { label: 'Manage Institutes', icon: 'account_balance', link: '/app/super/institutes', primary: true },
+        { label: 'Institute Users', icon: 'manage_accounts', link: '/app/super/institute-users' },
+        { label: 'Board Users', icon: 'admin_panel_settings', link: '/app/super/users' },
+        { label: 'Master Data', icon: 'settings', link: '/app/super/masters' },
+        { label: 'Edit Profile', icon: 'person', link: '/app/profile' }
+      ]);
+      return;
+    }
+
+    if (role === 'STUDENT') {
+      this.quickActions.set([
+        { label: 'New Application', icon: 'add', link: '/app/student/applications', primary: true },
+        { label: 'My Applications', icon: 'assignment_ind', link: '/app/student/applications' },
+        { label: 'My Profile', icon: 'account_box', link: '/app/student/profile' },
+        { label: 'Edit Profile', icon: 'person', link: '/app/profile' }
+      ]);
+      return;
+    }
+
+    this.quickActions.set([{ label: 'Edit Profile', icon: 'person', link: '/app/profile' }]);
+  }
+
   private setAppCounts(apps: any[]) {
     this.appDraft = apps.filter((a) => a.status === 'DRAFT').length;
     this.appSubmitted = apps.filter((a) => a.status === 'SUBMITTED').length;
@@ -927,14 +1322,21 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.appRejected = apps.filter((a) => a.status?.startsWith('REJECTED')).length;
 
     if (this.user()?.role !== 'STUDENT') {
+      const role = this.user()?.role;
+      const applicationsLink = role === 'INSTITUTE'
+        ? '/app/institute/applications'
+        : role === 'BOARD'
+          ? '/app/board/applications'
+          : '/app/super/health';
+
       this.statCards.update((c) => {
         const hasApps = c.some((x) => x.label === 'Total Applications');
         if (hasApps) return c;
         return [...c,
-          { label: 'Total Applications', value: apps.length, icon: 'assignment', gradient: 'gradient-blue', link: '/app/board/applications' },
-          { label: 'Submitted', value: this.appSubmitted, icon: 'send', gradient: 'gradient-cyan', link: '/app/board/applications' },
-          { label: 'Institute Verified', value: this.appVerified, icon: 'verified', gradient: 'gradient-green', link: '/app/board/applications' },
-          { label: 'Board Approved', value: this.appApproved, icon: 'check_circle', gradient: 'gradient-indigo', link: '/app/board/applications' }
+          { label: 'Total Applications', value: apps.length, icon: 'assignment', gradient: 'gradient-blue', link: applicationsLink },
+          { label: 'Submitted', value: this.appSubmitted, icon: 'send', gradient: 'gradient-cyan', link: applicationsLink },
+          { label: 'Institute Verified', value: this.appVerified, icon: 'verified', gradient: 'gradient-green', link: applicationsLink },
+          { label: 'Board Approved', value: this.appApproved, icon: 'check_circle', gradient: 'gradient-indigo', link: applicationsLink }
         ];
       });
     }

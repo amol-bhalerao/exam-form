@@ -123,8 +123,10 @@ type ExportColumn = {
           <mat-label>Status</mat-label>
           <mat-select [(ngModel)]="status" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
             <mat-option [value]="''">All visible</mat-option>
+            <mat-option value="SUBMITTED">Submitted</mat-option>
             <mat-option value="INSTITUTE_VERIFIED">Institute Verified</mat-option>
             <mat-option value="BOARD_APPROVED">Board Approved</mat-option>
+            <mat-option value="REJECTED_BY_INSTITUTE">Rejected By Institute</mat-option>
             <mat-option value="REJECTED_BY_BOARD">Rejected By Board</mat-option>
           </mat-select>
         </mat-form-field>
@@ -169,6 +171,7 @@ type ExportColumn = {
           <input matInput [(ngModel)]="search" (input)="onFilterChanged()" placeholder="App no, student name, SARAL ID, Aadhaar" />
         </mat-form-field>
 
+        <button mat-flat-button color="primary" (click)="loadRowsForSelectedExam()"><mat-icon>search</mat-icon>Load Students</button>
         <button mat-stroked-button color="primary" (click)="resetFilters()"><mat-icon>restart_alt</mat-icon>Reset</button>
       </div>
 
@@ -205,6 +208,8 @@ type ExportColumn = {
       </div>
 
       <div *ngIf="error()" class="error-box">{{ error() }}</div>
+      <div *ngIf="loading()" class="p">Loading student records…</div>
+      <div *ngIf="!loading() && rows().length === 0" class="p">No students found for the selected filters. Please select an exam and click Load Students.</div>
 
       <div class="ag-theme-alpine table-wrap">
         <ag-grid-angular
@@ -238,8 +243,9 @@ type ExportColumn = {
     `.summary-title { font-weight: 700; color: #1d4ed8; margin-bottom: 6px; }`,
     `.summary-item { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; padding: 2px 0; }`,
     `.table-wrap { margin-top: 10px; width: 100%; height: 470px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; position: relative; z-index: 2; }`,
-    `:host ::ng-deep .cdk-overlay-container { z-index: 1300; }`,
-    `:host ::ng-deep .cdk-overlay-pane .board-students-select-panel { z-index: 1301 !important; }`,
+    `::ng-deep .cdk-overlay-container { z-index: 1300 !important; }`,
+    `::ng-deep .cdk-overlay-pane { z-index: 1301 !important; }`,
+    `::ng-deep .board-students-select-panel { max-height: 320px !important; }`,
     `.pager { margin-top: 10px; display: flex; align-items: center; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }`,
     `.error-box { margin-top: 10px; color: #b91c1c; background: #fee2e2; border: 1px solid #fecaca; padding: 8px 10px; border-radius: 6px; }`,
     `.w160 { width: 160px; max-width: 100%; }`,
@@ -335,7 +341,6 @@ export class BoardStudentsComponent implements OnInit {
 
   ngOnInit() {
     this.loadFilters();
-    this.loadRows();
   }
 
   totalPages() {
@@ -344,6 +349,17 @@ export class BoardStudentsComponent implements OnInit {
 
   onFilterChanged() {
     this.page = 1;
+    this.loadRows();
+  }
+
+  loadRowsForSelectedExam() {
+    this.page = 1;
+    if (!this.examId) {
+      this.error.set('Please select an exam to view student records exam-wise.');
+      this.rows.set([]);
+      this.total.set(0);
+      return;
+    }
     this.loadRows();
   }
 
@@ -431,7 +447,14 @@ export class BoardStudentsComponent implements OnInit {
 
   private loadFilters() {
     this.http.get<{ exams: ExamOption[] }>(`${API_BASE_URL}/applications/board/exams`).subscribe({
-      next: (response) => this.exams.set(response.exams || []),
+      next: (response) => {
+        const exams = response.exams || [];
+        this.exams.set(exams);
+        if (!this.examId && exams.length > 0) {
+          this.examId = String(exams[0].id);
+        }
+        this.loadRows();
+      },
       error: (err: any) => {
         const message = err?.error?.error || err?.error?.message || 'Unable to load exams';
         this.error.set(message);
