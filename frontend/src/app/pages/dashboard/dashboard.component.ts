@@ -1,7 +1,7 @@
 import {
   Component, computed, OnInit, OnDestroy, signal, AfterViewInit, ViewChild, ElementRef, PLATFORM_ID, inject
 } from '@angular/core';
-import { isPlatformBrowser, NgClass, TitleCasePipe } from '@angular/common';
+import { isPlatformBrowser, NgClass, NgIf } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -51,7 +51,7 @@ interface QuickAction {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [NgClass, MatCardModule, MatButtonModule, MatIconModule, MatProgressBarModule, RouterLink, TitleCasePipe],
+  imports: [NgClass, NgIf, MatCardModule, MatButtonModule, MatIconModule, MatProgressBarModule, RouterLink],
   template: `
     <div class="dash-page fade-in-up">
 

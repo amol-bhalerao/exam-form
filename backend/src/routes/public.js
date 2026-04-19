@@ -123,3 +123,95 @@ publicRouter.get('/stats', async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+// Verify document validity by application number (used by QR scan)
+publicRouter.get('/verify-document/:applicationNo', async (req, res) => {
+  try {
+    const applicationNo = String(req.params.applicationNo || '').trim();
+    if (!applicationNo) {
+      return res.status(400).json({ valid: false, error: 'APPLICATION_NO_REQUIRED' });
+    }
+
+    const app = await prisma.examApplication.findUnique({
+      where: { applicationNo },
+      include: {
+        exam: {
+          select: {
+            name: true,
+            session: true,
+            academicYear: true
+          }
+        },
+        institute: {
+          select: {
+            name: true,
+            code: true,
+            collegeNo: true,
+            district: true
+          }
+        },
+        student: {
+          select: {
+            firstName: true,
+            middleName: true,
+            lastName: true
+          }
+        },
+        fees: {
+          orderBy: { id: 'desc' },
+          take: 1
+        }
+      }
+    });
+
+    if (!app) {
+      return res.status(404).json({
+        valid: false,
+        error: 'DOCUMENT_NOT_FOUND',
+        message: 'No document found for this application number.'
+      });
+    }
+
+    const latestPayment = app.fees?.[0] ?? null;
+    const paymentCompleted = !!latestPayment
+      && !!latestPayment.receivedAt
+      && new Date(latestPayment.receivedAt).getTime() > 1000
+      && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
+
+    const isSubmitted = String(app.status || '').toUpperCase() === 'SUBMITTED';
+    const valid = isSubmitted && paymentCompleted;
+
+    const studentName = [app.student?.firstName, app.student?.middleName, app.student?.lastName]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+
+    return res.json({
+      valid,
+      verifiedAt: new Date().toISOString(),
+      document: {
+        applicationId: app.id,
+        applicationNo: app.applicationNo,
+        status: app.status,
+        candidateType: app.candidateType,
+        submittedAt: app.submittedAt,
+        studentName: studentName || null,
+        exam: app.exam,
+        institute: app.institute,
+        payment: latestPayment
+          ? {
+              amountPaise: latestPayment.amountPaise,
+              amountRupees: Number(latestPayment.amountPaise || 0) / 100,
+              method: latestPayment.method,
+              referenceNo: latestPayment.referenceNo,
+              receivedAt: latestPayment.receivedAt,
+              paymentCompleted
+            }
+          : null
+      }
+    });
+  } catch (error) {
+    console.error('[/api/public/verify-document/:applicationNo] Error:', error);
+    return res.status(500).json({ valid: false, error: 'INTERNAL_ERROR' });
+  }
+});

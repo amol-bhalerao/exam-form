@@ -27,7 +27,7 @@ declare global {
         <div class="payment-header">
           <div>
             <h1>Exam Fee Payment</h1>
-            <p>Validate, pay securely with Cashfree, and continue to the printable exam form.</p>
+            <p>Validate, pay securely with Cashfree, and get your printable payment receipt.</p>
           </div>
           <button mat-stroked-button type="button" [routerLink]="['/app/student/applications', applicationId()]">
             <mat-icon>arrow_back</mat-icon>
@@ -95,7 +95,7 @@ declare global {
             <mat-icon>check_circle</mat-icon>
             <div>
               <strong>Payment successful</strong>
-              <p>{{ infoMessage() || 'Redirecting to the printable exam form...' }}</p>
+              <p>{{ infoMessage() || 'Redirecting to your payment receipt...' }}</p>
             </div>
           </div>
         }
@@ -298,7 +298,7 @@ export class StudentApplicationPaymentComponent implements OnInit {
         this.amountRupees.set(typeof response?.amountRupees === 'number' ? response.amountRupees : null);
 
         if (response?.alreadyPaid) {
-          this.infoMessage.set('Payment already completed. Opening your printable exam form...');
+          this.infoMessage.set('Payment already completed. Opening your payment receipt...');
           this.finalizeSubmission(applicationId);
           return;
         }
@@ -396,18 +396,30 @@ export class StudentApplicationPaymentComponent implements OnInit {
       next: () => {
         this.success.set(true);
         this.loading.set(false);
-        this.infoMessage.set('Payment successful. Opening the printable exam form...');
+        this.infoMessage.set('Payment successful. Opening your printable payment receipt...');
         setTimeout(() => {
-          this.router.navigate(['/app/student/forms', applicationId, 'print']);
+          this.router.navigate(['/app/student/applications', applicationId, 'receipt'], {
+            queryParams: { autoprint: 1 }
+          });
         }, 700);
       },
       error: (err: any) => {
         if (err?.error?.error === 'INVALID_STATE') {
           this.success.set(true);
           this.loading.set(false);
-          this.infoMessage.set('Application was already submitted. Opening the printable form...');
+          this.infoMessage.set('Application was already submitted. Opening your payment receipt...');
           setTimeout(() => {
-            this.router.navigate(['/app/student/forms', applicationId, 'print']);
+            this.router.navigate(['/app/student/applications', applicationId, 'receipt']);
+          }, 700);
+          return;
+        }
+
+        if (err?.error?.error === 'INVALID_SUBJECT_CATEGORY') {
+          this.success.set(true);
+          this.loading.set(false);
+          this.infoMessage.set('Payment completed. Application submission needs subject correction. Opening your payment receipt...');
+          setTimeout(() => {
+            this.router.navigate(['/app/student/applications', applicationId, 'receipt']);
           }, 700);
           return;
         }

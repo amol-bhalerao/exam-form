@@ -165,6 +165,7 @@ async function getApplicationScoped(applicationId, auth) {
     include: {
       exam: { include: { stream: true } },
       institute: true,
+      fees: { orderBy: { id: 'desc' }, take: 1 },
       student: {
         include: {
           previousExams: true
@@ -234,6 +235,7 @@ applicationsRouter.get('/my', requireAuth, requireRole(['STUDENT']), async (req,
       where: { studentId: { in: accessibleStudentIds } },
       include: {
         exam: true,
+        fees: { orderBy: { id: 'desc' }, take: 1 },
         student: {
           select: {
             id: true,
@@ -249,7 +251,21 @@ applicationsRouter.get('/my', requireAuth, requireRole(['STUDENT']), async (req,
       take: 50
     });
 
-    return res.json({ applications: apps });
+    const enriched = apps.map((app) => {
+      const latestPayment = app.fees?.[0] ?? null;
+      const paymentCompleted = !!latestPayment
+        && !!latestPayment.receivedAt
+        && new Date(latestPayment.receivedAt).getTime() > 1000
+        && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
+
+      return {
+        ...app,
+        paymentCompleted,
+        printable: app.status !== 'DRAFT' && paymentCompleted
+      };
+    });
+
+    return res.json({ applications: enriched });
   } catch (err) {
     console.error('Get applications error:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
@@ -655,12 +671,13 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
 
     const normalizedAvailableCategories = [...new Set(availableCategories)];
 
-    // Enforce language/compulsory only if these categories are available for this institute/stream.
-    // If available categories are unknown, keep legacy strict behavior.
+    // Enforce language/compulsory only when mapping categories are known for this institute/stream.
+    // If mappings are unavailable, do not hard-fail on category mix.
     const languageAvailable = normalizedAvailableCategories.some((category) => category === 'language' || category.includes('lang'));
     const compulsoryAvailable = normalizedAvailableCategories.some((category) => category === 'compulsory' || category.includes('compulsory'));
-    const requireLanguage = languageAvailable || normalizedAvailableCategories.length === 0;
-    const requireCompulsory = compulsoryAvailable || normalizedAvailableCategories.length === 0;
+    const hasMappedCategories = normalizedAvailableCategories.length > 0;
+    const requireLanguage = hasMappedCategories && languageAvailable;
+    const requireCompulsory = hasMappedCategories && compulsoryAvailable;
 
     const hasLanguage = selectedCategories.some((category) => category === 'language' || category.includes('lang'));
     const hasCompulsory = selectedCategories.some((category) => category === 'compulsory' || category.includes('compulsory'));

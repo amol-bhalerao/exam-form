@@ -54,6 +54,7 @@ import { API_BASE_URL } from '../../core/api';
               <div class="section-indicator"></div>
             </div>
             <a mat-list-item routerLink="/app/super/health" routerLinkActive="active" class="nav-item"><mat-icon class="icon">health_and_safety</mat-icon><span class="label">Health Monitor</span></a>
+            <a mat-list-item routerLink="/app/super/payments" routerLinkActive="active" class="nav-item"><mat-icon class="icon">payments</mat-icon><span class="label">Payments Dashboard</span></a>
             <a mat-list-item routerLink="/app/super/institutes" routerLinkActive="active" class="nav-item"><mat-icon class="icon">apartment</mat-icon><span class="label">Institutes</span></a>
             <a mat-list-item routerLink="/app/super/institute-users" routerLinkActive="active" class="nav-item"><mat-icon class="icon">person_add</mat-icon><span class="label">Institute Users</span></a>
             <a mat-list-item routerLink="/app/super/users" routerLinkActive="active" class="nav-item"><mat-icon class="icon">admin_panel_settings</mat-icon><span class="label">Admin Users</span></a>
@@ -77,6 +78,7 @@ import { API_BASE_URL } from '../../core/api';
             <a mat-list-item routerLink="/app/board/teachers" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">groups</mat-icon><span class="label">Teachers</span></a>
             <a mat-list-item routerLink="/app/board/subjects" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">auto_stories</mat-icon><span class="label">Subjects</span></a>
             <a mat-list-item routerLink="/app/board/streams" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">branch</mat-icon><span class="label">Streams</span></a>
+            <a mat-list-item routerLink="/app/board/payments" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">payments</mat-icon><span class="label">Payments</span></a>
           }
 
           @if (role() === 'INSTITUTE') {
@@ -103,6 +105,7 @@ import { API_BASE_URL } from '../../core/api';
             </div>
             <a mat-list-item routerLink="/app/student/profile" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">account_box</mat-icon><span class="label">Student Registration</span></a>
             <a mat-list-item routerLink="/app/student/applications" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">assignment</mat-icon><span class="label">Exam Forms</span></a>
+            <a mat-list-item routerLink="/app/student/payments" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">payments</mat-icon><span class="label">My Payments</span></a>
           }
 
           <div class="nav-divider"></div>

@@ -2,7 +2,7 @@ import { Component, OnInit, computed, signal, inject } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { FormArray, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NgClass, DatePipe } from '@angular/common';
+import { NgClass, NgIf, DatePipe } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -28,6 +28,7 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
     ReactiveFormsModule,
     RouterLink,
     NgClass,
+    NgIf,
     MatCardModule,
     MatButtonModule,
     MatFormFieldModule,
@@ -76,9 +77,16 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
               </div>
             </div>
             <div class="grow"></div>
-            <a mat-stroked-button [routerLink]="['/app/student/forms', application()!.id, 'print']" target="_blank">
-              <mat-icon>print</mat-icon> Print
-            </a>
+            @if (canPrintApplication()) {
+              <a mat-stroked-button [routerLink]="['/app/student/applications', application()!.id, 'receipt']" target="_blank">
+                <mat-icon>receipt_long</mat-icon> Receipt
+              </a>
+            }
+            @if (canPrintApplication()) {
+              <a mat-stroked-button [routerLink]="['/app/student/forms', application()!.id, 'print']" target="_blank">
+                <mat-icon>print</mat-icon> Print
+              </a>
+            }
           </div>
         </mat-card>
 
@@ -1234,6 +1242,19 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
   `]
 })
 export class StudentApplicationEditComponent implements OnInit {
+  private readonly submitFieldMeta: Array<{ path: string; label: string; selector: string }> = [
+    { path: 'personGroup.firstName', label: 'First Name', selector: 'input[formcontrolname="firstName"]' },
+    { path: 'personGroup.lastName', label: 'Last Name', selector: 'input[formcontrolname="lastName"]' },
+    { path: 'personGroup.mobile', label: 'Mobile', selector: 'input[formcontrolname="mobile"]' },
+    { path: 'personGroup.address', label: 'Address', selector: 'textarea[formcontrolname="address"], input[formcontrolname="address"]' },
+    { path: 'personGroup.pinCode', label: 'Pin Code', selector: 'input[formcontrolname="pinCode"]' },
+    { path: 'personGroup.dob', label: 'Date of Birth', selector: 'input[formcontrolname="dob"]' },
+    { path: 'personGroup.gender', label: 'Gender', selector: '[formcontrolname="gender"]' },
+    { path: 'academicGroup.streamCode', label: 'Stream', selector: '[formcontrolname="streamCode"]' },
+    { path: 'academicGroup.categoryCode', label: 'Category', selector: '[formcontrolname="categoryCode"]' },
+    { path: 'academicGroup.mediumCode', label: 'Medium', selector: '[formcontrolname="mediumCode"]' }
+  ];
+
   readonly application = signal<any | null>(null);
   readonly saving = signal(false);
   readonly submitting = signal(false);
@@ -1365,6 +1386,17 @@ export class StudentApplicationEditComponent implements OnInit {
   getStatusClass() {
     const status = this.application()?.status?.toLowerCase() || '';
     return `status-${status}`;
+  }
+
+  canPrintApplication(): boolean {
+    const app = this.application();
+    if (!app) return false;
+    const latestPayment = app.fees?.[0] || null;
+    const paymentCompleted = !!latestPayment
+      && !!latestPayment.receivedAt
+      && new Date(latestPayment.receivedAt).getTime() > 1000
+      && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
+    return String(app.status || '').toUpperCase() === 'SUBMITTED' && paymentCompleted;
   }
 
   personFormGroup() {
@@ -1797,18 +1829,41 @@ export class StudentApplicationEditComponent implements OnInit {
     this.error.set(null);
 
     if (!this.selectedInstitute()) {
-      this.error.set('Please select your institute before continuing to payment.');
+      const message = 'Please select your institute before continuing to payment.';
+      this.error.set(message);
+      this.showValidationPopup(message);
       return;
     }
 
     const selectedSubjectCount = this.subjects().controls.filter((group) => !!group.get('subjectId')?.value).length;
     if (!selectedSubjectCount) {
-      this.error.set('Please select at least one subject before continuing to payment.');
+      const message = 'Please select at least one subject before continuing to payment.';
+      this.error.set(message);
+      this.showValidationPopup(message, ['Subject Selection']);
+      return;
+    }
+
+    const missingProfileFields = this.getMissingProfileFieldsForSubmit();
+    if (missingProfileFields.length) {
+      const message = `Please complete profile fields before submitting: ${missingProfileFields.join(', ')}`;
+      this.error.set(message);
+      this.showValidationPopup('Please complete required fields before continuing to payment.', missingProfileFields);
+      this.focusFieldByLabel(missingProfileFields[0]);
       return;
     }
 
     if (this.form.invalid) {
-      this.error.set('Please complete all required fields before continuing to payment.');
+      const invalidFields = this.getInvalidFieldLabelsForSubmit();
+      const message = invalidFields.length
+        ? `Please complete all required fields before continuing to payment: ${invalidFields.join(', ')}`
+        : 'Please complete all required fields before continuing to payment.';
+      this.error.set(message);
+      this.showValidationPopup('Please complete all required fields before continuing to payment.', invalidFields);
+      if (invalidFields.length) {
+        this.focusFieldByLabel(invalidFields[0]);
+      } else {
+        this.focusFirstInvalidControl();
+      }
       return;
     }
 
@@ -1831,6 +1886,77 @@ export class StudentApplicationEditComponent implements OnInit {
         this.submitting.set(false);
       }
     });
+  }
+
+  private getMissingProfileFieldsForSubmit(): string[] {
+    const fields: Array<{ label: string; value: unknown }> = [
+      { label: 'First Name', value: this.form.get('personGroup.firstName')?.value },
+      { label: 'Last Name', value: this.form.get('personGroup.lastName')?.value },
+      { label: 'Mobile', value: this.form.get('personGroup.mobile')?.value },
+      { label: 'Address', value: this.form.get('personGroup.address')?.value },
+      { label: 'Pin Code', value: this.form.get('personGroup.pinCode')?.value },
+      { label: 'Date of Birth', value: this.form.get('personGroup.dob')?.value },
+      { label: 'Gender', value: this.form.get('personGroup.gender')?.value },
+      { label: 'Stream', value: this.form.get('academicGroup.streamCode')?.value },
+      { label: 'Category', value: this.form.get('academicGroup.categoryCode')?.value },
+      { label: 'Medium', value: this.form.get('academicGroup.mediumCode')?.value }
+    ];
+
+    return fields
+      .filter((entry) => {
+        const value = entry.value;
+        if (value === null || value === undefined) return true;
+        return String(value).trim() === '';
+      })
+      .map((entry) => entry.label);
+  }
+
+  private getInvalidFieldLabelsForSubmit(): string[] {
+    return this.submitFieldMeta
+      .filter((field) => !!this.form.get(field.path)?.invalid)
+      .map((field) => field.label);
+  }
+
+  private showValidationPopup(title: string, fields: string[] = []) {
+    if (!fields.length) {
+      window.alert(title);
+      return;
+    }
+
+    const lines = fields.map((field) => `- ${field}`).join('\n');
+    window.alert(`${title}\n\nPlease check:\n${lines}`);
+  }
+
+  private focusFieldByLabel(label: string) {
+    const meta = this.submitFieldMeta.find((field) => field.label === label);
+    if (!meta) {
+      this.focusFirstInvalidControl();
+      return;
+    }
+
+    const target = document.querySelector(meta.selector) as HTMLElement | null;
+    if (!target) {
+      this.focusFirstInvalidControl();
+      return;
+    }
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+      if (typeof target.focus === 'function') {
+        target.focus();
+      }
+    }, 120);
+  }
+
+  private focusFirstInvalidControl() {
+    const target = document.querySelector('.application-stepper .ng-invalid[formcontrolname]') as HTMLElement | null;
+    if (!target) return;
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+      if (typeof target.focus === 'function') {
+        target.focus();
+      }
+    }, 120);
   }
 
   private reload(id: number) {

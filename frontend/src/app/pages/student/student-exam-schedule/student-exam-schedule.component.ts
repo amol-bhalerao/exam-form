@@ -10,7 +10,7 @@ import { MatTableModule } from '@angular/material/table';
 import { API_BASE_URL } from '../../../core/api';
 
 type Exam = { id: number; name: string; academicYear: string; session: string; applicationOpen: string; applicationClose: string; examStartDate?: string; examEndDate?: string };
-type Application = { id: number; applicationNo: string; status: string; candidateType: string; updatedAt?: string; exam?: Exam };
+type Application = { id: number; applicationNo: string; status: string; candidateType: string; updatedAt?: string; exam?: Exam; paymentCompleted?: boolean; printable?: boolean };
 
 @Component({
   selector: 'app-student-exam-schedule',
@@ -62,7 +62,7 @@ type Application = { id: number; applicationNo: string; status: string; candidat
                     <button mat-flat-button color="primary" (click)="openApplication(app)">
                       {{ app.status === 'DRAFT' ? 'Continue Draft' : 'Open' }}
                     </button>
-                    <button mat-stroked-button (click)="printApplication(app)">
+                    <button mat-stroked-button (click)="printApplication(app)" [disabled]="!canPrintApplication(app)">
                       Print
                     </button>
                   </div>
@@ -116,7 +116,7 @@ type Application = { id: number; applicationNo: string; status: string; candidat
                     <button mat-flat-button color="primary" (click)="openApplication(app)">
                       {{ app.status === 'DRAFT' ? 'Continue Draft' : 'View Application' }}
                     </button>
-                    <button mat-stroked-button (click)="printApplication(app)">Print</button>
+                    <button mat-stroked-button (click)="printApplication(app)" [disabled]="!canPrintApplication(app)">Print</button>
                   </div>
                 } @else {
                   <button mat-stroked-button (click)="goToApplications()">
@@ -360,7 +360,14 @@ export class StudentExamScheduleComponent implements OnInit {
   }
 
   printApplication(app: Application) {
+    if (!this.canPrintApplication(app)) return;
     this.router.navigate(['/app/student/forms', app.id, 'print']);
+  }
+
+  canPrintApplication(app: Application | null): boolean {
+    if (!app) return false;
+    if (typeof app.printable === 'boolean') return app.printable;
+    return app.status === 'SUBMITTED' && !!app.paymentCompleted;
   }
 
   goToApplications() {

@@ -19,7 +19,16 @@ import { BrandingService } from '../../../core/branding.service';
       </div>
     }
 
-    @if (application()) {
+    @if (printBlockedReason()) {
+      <div class="page loading-page">
+        <div class="blocked-print-box">
+          <h3>Print Not Available</h3>
+          <p>{{ printBlockedReason() }}</p>
+        </div>
+      </div>
+    }
+
+    @if (!printBlockedReason() && application()) {
       <div class="page">
         <div class="document-shell official-sheet">
           <header class="document-header">
@@ -272,7 +281,7 @@ import { BrandingService } from '../../../core/branding.service';
           </footer>
         </div>
       </div>
-    } @else {
+    } @else if (!printBlockedReason()) {
       <div class="page loading-page">Loading printable exam form…</div>
     }
   `,
@@ -304,6 +313,25 @@ import { BrandingService } from '../../../core/branding.service';
         box-sizing: border-box;
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
         overflow: visible;
+      }
+
+      .blocked-print-box {
+        border: 1px solid #fca5a5;
+        background: #fff1f2;
+        color: #881337;
+        border-radius: 8px;
+        padding: 14px;
+        max-width: 620px;
+        margin: 30px auto;
+        text-align: center;
+      }
+
+      .blocked-print-box h3 {
+        margin: 0 0 6px;
+      }
+
+      .blocked-print-box p {
+        margin: 0;
       }
 
       .document-shell {
@@ -1137,6 +1165,7 @@ export class StudentFormPrintComponent implements OnInit {
 
   readonly application = signal<any | null>(null);
   readonly studentProfile = signal<any | null>(null);
+  readonly printBlockedReason = signal<string | null>(null);
   readonly printedAt = new Date();
   readonly branding = inject(BrandingService);
   readonly photoLoadMode = signal<'normalized' | 'original' | 'failed'>('normalized');
@@ -1180,7 +1209,14 @@ export class StudentFormPrintComponent implements OnInit {
         }
         : null;
 
+      if (!this.canPrintApplication(application)) {
+        this.application.set(null);
+        this.printBlockedReason.set('Only submitted applications with successful payment can be printed.');
+        return;
+      }
+
       this.application.set(application);
+      this.printBlockedReason.set(null);
       this.photoLoadMode.set('normalized');
       this.signatureLoadMode.set('normalized');
       this.triggerAutoPrintIfNeeded();
@@ -1207,7 +1243,20 @@ export class StudentFormPrintComponent implements OnInit {
   }
 
   showActions() {
-    return !this.hideActions;
+    return !this.hideActions && !this.printBlockedReason();
+  }
+
+  canPrintApplication(application: any): boolean {
+    if (!application) return false;
+
+    const status = String(application.status || '').toUpperCase();
+    const latestPayment = application.fees?.[0] || null;
+    const paymentCompleted = !!latestPayment
+      && !!latestPayment.receivedAt
+      && new Date(latestPayment.receivedAt).getTime() > 1000
+      && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
+
+    return status === 'SUBMITTED' && paymentCompleted;
   }
 
   private triggerAutoPrintIfNeeded() {
@@ -1694,21 +1743,10 @@ export class StudentFormPrintComponent implements OnInit {
 
   qrCodeUrl() {
     const app = this.a();
-    const student = this.s();
     if (!app?.applicationNo) return null;
 
-    const payload = {
-      applicationId: app.id ?? null,
-      applicationNo: app.applicationNo,
-      examId: app.examId ?? null,
-      candidateType: app.candidateType ?? null,
-      studentId: app.studentId ?? null,
-      fullName: this.fullNameForPrint(),
-      aadhaar: student?.aadhaar ?? null,
-      issuedAt: this.printedAt.toISOString()
-    };
-
-    const text = encodeURIComponent(JSON.stringify(payload));
+    const verifyUrl = `${window.location.origin}/verify/document/${encodeURIComponent(app.applicationNo)}`;
+    const text = encodeURIComponent(verifyUrl);
     return `https://quickchart.io/qr?size=110&text=${text}`;
   }
 
@@ -1722,6 +1760,7 @@ export class StudentFormPrintComponent implements OnInit {
   }
 
   async print() {
+    if (!this.application() || this.printBlockedReason()) return;
     await Promise.all([
       this.waitForImage('.photo-image'),
       this.waitForImage('.signature-image')

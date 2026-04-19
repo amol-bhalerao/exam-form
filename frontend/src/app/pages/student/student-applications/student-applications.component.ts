@@ -44,6 +44,8 @@ type Application = {
   applicationNo: string;
   status: string;
   candidateType: string;
+  paymentCompleted?: boolean;
+  printable?: boolean;
   exam: Exam;
   student?: { id: number; firstName?: string; middleName?: string; lastName?: string };
   updatedAt: string;
@@ -180,8 +182,11 @@ type Application = {
                   </td>
                   <td>{{ app.updatedAt ? (app.updatedAt | date:'medium') : '-' }}</td>
                   <td class="actions-cell">
-                    <button mat-stroked-button color="primary" (click)="openApplication(app)">{{ app.status === 'DRAFT' ? 'Continue' : 'Open' }}</button>
-                    <button mat-stroked-button (click)="printApplication(app)">Print</button>
+                    <button mat-stroked-button color="primary" (click)="openApplication(app)">{{ app.status === 'DRAFT' ? 'Continue Draft' : 'View' }}</button>
+                    @if (canPrintApplication(app)) {
+                      <button mat-stroked-button class="mini-action-btn" (click)="printApplication(app)">Print Form</button>
+                      <button mat-stroked-button color="accent" class="mini-action-btn" (click)="openReceipt(app)">Print Receipt</button>
+                    }
                   </td>
                 </tr>
               }
@@ -265,15 +270,16 @@ type Application = {
       .applications-table th,
       .applications-table td {
         text-align: left;
-        padding: 10px;
+        padding: 8px;
         border-bottom: 1px solid #e5e7eb;
         vertical-align: middle;
-        font-size: 0.9rem;
+        font-size: 0.82rem;
       }
       .applications-table thead th {
         background: #f8fafc;
         color: #334155;
         font-weight: 700;
+        font-size: 0.78rem;
       }
       .actions-cell {
         display: flex;
@@ -284,10 +290,13 @@ type Application = {
       }
       .actions-cell button {
         min-width: 64px;
-        height: 30px;
-        line-height: 28px;
-        padding: 0 10px;
-        font-size: 0.78rem;
+        height: 28px;
+        line-height: 26px;
+        padding: 0 8px;
+        font-size: 0.72rem;
+      }
+      .mini-action-btn {
+        min-width: 78px;
       }
       .tile-app-no {
         font-size: 1rem;
@@ -654,8 +663,19 @@ export class StudentApplicationsComponent implements OnInit {
   }
 
   printApplication(app: Application | null) {
-    if (!app) return;
+    if (!app || !this.canPrintApplication(app)) return;
     this.router.navigate(['/app/student/forms', app.id, 'print']);
+  }
+
+  canPrintApplication(app: Application | null): boolean {
+    if (!app) return false;
+    if (typeof app.printable === 'boolean') return app.printable;
+    return app.status === 'SUBMITTED' && !!app.paymentCompleted;
+  }
+
+  openReceipt(app: Application | null) {
+    if (!app || !this.canPrintApplication(app)) return;
+    this.router.navigate(['/app/student/applications', app.id, 'receipt']);
   }
 
   create() {
