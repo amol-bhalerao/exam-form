@@ -3,8 +3,8 @@ export const environment = {
   production: true,
 
   // Production API Configuration
-  apiUrl: 'https://api.hscexam.in/api',
-  apiBaseUrl: 'https://api.hscexam.in/api',
+  apiUrl: '__API_BASE_URL__',
+  apiBaseUrl: '__API_BASE_URL__',
   apiTimeout: 30000,
 
   // Google OAuth Configuration

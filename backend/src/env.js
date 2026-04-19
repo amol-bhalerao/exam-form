@@ -31,7 +31,7 @@ const envSchema = z.object({
 
   // CORS / Origins
   CORS_ORIGIN: z.string().min(1).default(
-    isProd ? 'https://hsc-exam-form.hisofttechnology.com' : 'http://localhost:4200'
+    isProd ? 'https://www.hscexam.in' : 'http://localhost:4200'
   ),
 
   // Google SSO – REQUIRED for Google login to work
@@ -44,8 +44,8 @@ const envSchema = z.object({
   EXAM_FEE_PAISE: z.coerce.number().int().positive().default(50000), // ₹500
 
   // URLs (used for redirects and webhook base URL)
-  BACKEND_URL: z.string().default(isProd ? 'https://hsc-api.hisofttechnology.com' : 'http://localhost:3000'),
-  FRONTEND_URL: z.string().default(isProd ? 'https://hsc-exam-form.hisofttechnology.com' : 'http://localhost:4200'),
+  BACKEND_URL: z.string().default(isProd ? 'https://api.hscexam.in' : 'http://localhost:3000'),
+  FRONTEND_URL: z.string().default(isProd ? 'https://www.hscexam.in' : 'http://localhost:4200'),
 
   // Security – AES-256 key for encrypting sensitive fields (Aadhaar etc)
   ENCRYPTION_KEY: z.string().min(16).optional(),
