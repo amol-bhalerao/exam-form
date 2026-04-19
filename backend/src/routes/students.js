@@ -369,9 +369,8 @@ studentsRouter.patch('/managed/:id', requireAuth, async (req, res) => {
     const student = await getAccessibleStudentById(userId, studentId);
     if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND' });
 
-    if (student.userId === userId) {
-      return res.status(400).json({ error: 'PRIMARY_PROFILE_READONLY', message: 'Use /students/me for your own profile updates.' });
-    }
+    // Compatibility: allow primary profile updates on managed endpoint for legacy clients.
+    // Preferred endpoint for primary profile remains PATCH /students/me.
 
     const body = z.object({
       instituteId: z.coerce.number().int().positive().optional(),
