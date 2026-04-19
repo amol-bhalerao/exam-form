@@ -1,10 +1,10 @@
-import { Component, EventEmitter, Input, Output, OnInit, signal } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatOptionModule } from '@angular/material/core';
 import { API_BASE_URL } from '../../core/api';
 
@@ -19,20 +19,21 @@ export interface InstituteOption {
 @Component({
   selector: 'app-institute-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatOptionModule],
+  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule, MatAutocompleteModule, MatOptionModule],
   template: `
     <div class="picker-shell">
       <mat-form-field appearance="outline" class="full">
         <mat-label>Search institute</mat-label>
-        <input matInput [value]="searchTerm()" (input)="onSearch($any($event.target).value)" placeholder="Type name, code, college no, or udise" />
-      </mat-form-field>
-      <mat-form-field appearance="outline" class="full">
-        <mat-label>Select institute</mat-label>
-        <mat-select [value]="selectedInstituteId" (selectionChange)="onSelect($event.value)" panelClass="institute-picker-panel">
-          <mat-select-trigger>
-            {{ selectedInstituteLabel() }}
-          </mat-select-trigger>
-          <mat-option *ngFor="let inst of filteredInstitutes()" [value]="inst.id">
+        <input
+          matInput
+          [ngModel]="searchTerm()"
+          (ngModelChange)="onSearch($event)"
+          [matAutocomplete]="instituteAuto"
+          placeholder="Type name, code, college no, or udise"
+          autocomplete="off"
+        />
+        <mat-autocomplete #instituteAuto="matAutocomplete" autoActiveFirstOption (optionSelected)="onSelectOption($event.option.value)">
+          <mat-option *ngFor="let inst of filteredInstitutes()" [value]="inst">
             <div class="picker-option">
               <span class="picker-name">{{ inst.name }}</span>
               <span class="picker-meta">{{ inst.code || 'No code' }} • {{ inst.collegeNo || 'N/A' }} / {{ inst.udiseNo || 'N/A' }}</span>
@@ -41,7 +42,7 @@ export interface InstituteOption {
           <mat-option *ngIf="filteredInstitutes().length === 0" disabled>
             No matching institutes. Try approving or creating one in super admin.
           </mat-option>
-        </mat-select>
+        </mat-autocomplete>
       </mat-form-field>
     </div>
   `,
@@ -110,7 +111,7 @@ export interface InstituteOption {
     }
   `]
 })
-export class InstitutePickerComponent implements OnInit {
+export class InstitutePickerComponent implements OnInit, OnChanges {
   @Input() selectedInstituteId: number | null = null;
   @Output() selectedInstituteIdChange = new EventEmitter<number>();
 
@@ -121,16 +122,34 @@ export class InstitutePickerComponent implements OnInit {
   constructor(private readonly http: HttpClient) {}
 
   ngOnInit() {
-    this.http.get<{ institutes: InstituteOption[] }>(`${API_BASE_URL}/institutes/list`).subscribe({
+    this.http.get<{ institutes: InstituteOption[] }>(`${API_BASE_URL}/institutes`).subscribe({
       next: (res) => {
         this.institutes.set(res.institutes ?? []);
         this.filteredInstitutes.set(res.institutes ?? []);
+        this.syncSearchTermWithSelection();
       },
       error: () => {
         this.institutes.set([]);
         this.filteredInstitutes.set([]);
       }
     });
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['selectedInstituteId']) {
+      this.syncSearchTermWithSelection();
+    }
+  }
+
+  private syncSearchTermWithSelection() {
+    if (!this.selectedInstituteId) {
+      this.searchTerm.set('');
+      return;
+    }
+    const selected = this.institutes().find((inst) => inst.id === this.selectedInstituteId);
+    if (selected) {
+      this.searchTerm.set(selected.name);
+    }
   }
 
   onSearch(term: string) {
@@ -156,8 +175,12 @@ export class InstitutePickerComponent implements OnInit {
     return selected ? `${selected.name} (${selected.code || 'No code'})` : 'Select institute';
   }
 
-  onSelect(id: number) {
-    this.selectedInstituteId = id;
-    this.selectedInstituteIdChange.emit(id);
+  onSelectOption(inst: InstituteOption) {
+    if (!inst) {
+      return;
+    }
+    this.selectedInstituteId = inst.id;
+    this.selectedInstituteIdChange.emit(inst.id);
+    this.searchTerm.set(inst.name);
   }
 }

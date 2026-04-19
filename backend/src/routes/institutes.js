@@ -1663,11 +1663,11 @@ institutesRouter.get('/subject-options', requireAuth, async (req, res) => {
       streamCode: z.string().optional()
     }).parse(req.query);
 
-    let instituteId = q.instituteId;
-    if (req.auth.role === 'STUDENT') {
+    let instituteId = q.instituteId ?? null;
+    if (!instituteId && req.auth.role === 'STUDENT') {
       const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
       instituteId = student?.instituteId ?? instituteId;
-    } else if (req.auth.role === 'INSTITUTE') {
+    } else if (!instituteId && req.auth.role === 'INSTITUTE') {
       const user = await getInstituteUserWithInstitute(req.auth.userId);
       instituteId = user?.institute?.id ?? instituteId;
     }
@@ -1737,6 +1737,25 @@ institutesRouter.get('/subject-options', requireAuth, async (req, res) => {
           }))
         });
       }
+
+      // If selected institute has no subject mapping for this stream,
+      // return full subject list from database.
+      const allSubjects = await prisma.subject.findMany({
+        orderBy: [{ category: 'asc' }, { name: 'asc' }]
+      });
+      return res.json({
+        ok: true,
+        source: 'all',
+        instituteId,
+        streamId,
+        subjects: allSubjects.map((subject) => ({
+          id: subject.id,
+          name: subject.name,
+          code: subject.code,
+          category: subject.category,
+          answerLanguageCode: null
+        }))
+      });
     }
 
     const streamSubjects = await prisma.streamSubject.findMany({

@@ -28,14 +28,14 @@ import { BrandingService } from '../../../core/branding.service';
                 <div class="board-name">MAHARASHTRA HSC EXAMINATION PORTAL</div>
                 <h1>HIGHER SECONDARY CERTIFICATE EXAMINATION APPLICATION FORM </h1>
                 <hr>
-                <h1>{{ valueOrDash(a().exam?.name, 'HSC Examination') }} {{ valueOrDash(a().exam?.session) }} {{ valueOrDash(a().exam?.academicYear, '') }}</h1>
+                <h1>{{ valueOrDash(a().exam?.name) }} {{ valueOrDash(a().exam?.session) }} {{ valueOrDash(a().exam?.academicYear, '') }}</h1>
                 <h1>{{ instituteName() }} ( {{ indexNoValue() }} )</h1>
                 
                 <div class="institute-subline">{{ instituteAddress() }}</div>
                 <div class="institute-meta-row">
-                  <span><strong>Index No.:</strong> {{ a().institute?.code || a().institute?.collegeNo || '—' }}</span>
-                  <span><strong>UDISE No.:</strong> {{ udiseNoValue() }}</span>
-                  <span><strong>Centre No.:</strong> {{ centreNoValue() }}</span>
+                  <span><strong>Index No:</strong> {{ a().institute?.code || a().institute?.collegeNo || '—' }}</span>
+                  <span><strong>UDISE No:</strong> {{ udiseNoValue() }}</span>
+                  <span><strong>Centre No:</strong> {{ centreNoValue() }}</span>
                   <span><strong>Stream:</strong> {{ streamLabel() }}</span>
                 </div>
               </div>
@@ -50,61 +50,99 @@ import { BrandingService } from '../../../core/branding.service';
 
 
           <section class="section-card">
-            <div class="section-title">1. Candidate Personal Particulars</div>
+            <div class="section-title">Candidate Personal Particulars</div>
             <div class="detail-list detail-list--personal">
               <div class="detail-line"><span class="line-label">Full Name (Surname First Middle):</span><span class="line-value">{{ fullNameForPrint() }}</span></div>
               <div class="detail-line"><span class="line-label">Mother Name:</span><span class="line-value">{{ valueOrDash(s().motherName) }}</span></div>
-              <div class="detail-line"><span class="line-label">Aadhaar No:</span><span class="line-value">{{ valueOrDash(s().aadhaar) }}</span></div>
-              <div class="detail-line"><span class="line-label">Student Saral ID:</span><span class="line-value">{{ studentSaralIdValue() }}</span></div>
+              <div class="detail-line"><span class="line-label">Aadhar No:</span><span class="line-value">{{ valueOrDash(s().aadhaar) }}</span></div>
+              <div class="detail-line"><span class="line-label">Udise + PEN ID:</span><span class="line-value">{{ studentSaralIdValue() }}</span></div>
               <div class="detail-line"><span class="line-label">APAAR ID:</span><span class="line-value">{{ valueOrDash(s().apaarId) }}</span></div>
               <div class="detail-line"><span class="line-label">Mobile No:</span><span class="line-value">{{ valueOrDash(s().mobile) }}</span></div>
-              <div class="detail-line"><span class="line-label">Date of Birth:</span><span class="line-value">{{ s().dob ? (s().dob | date:'dd MMM, yyyy') : '—' }}</span></div>
+              <div class="detail-line"><span class="line-label">Date Of Birth:</span><span class="line-value">{{ s().dob ? (s().dob | date:'dd MMM, yyyy') : '—' }}</span></div>
               <div class="detail-line"><span class="line-label">Gender:</span><span class="line-value">{{ genderLabel() }}</span></div>
               <div class="detail-line"><span class="line-label">Email:</span><span class="line-value">{{ valueOrDash(s().email || a().user?.email) }}</span></div>
               <div class="detail-line"><span class="line-label">Residential Address:</span><span class="line-value">{{ valueOrDash(s().address) }}</span></div>
+              
             </div>
           </section>
 
           <section class="section-card">
-            <div class="section-title">2. Academic & Reservation Details</div>
+            <div class="section-title">Academic & Reservation Details</div>
             <div class="detail-list detail-list--academic">
               <div class="detail-line"><span class="line-label">Stream:</span><span class="line-value">{{ streamLabel() }}</span></div>
               <div class="detail-line"><span class="line-label">Minority Religion:</span><span class="line-value">{{ religionLabel() }}</span></div>
               <div class="detail-line"><span class="line-label">Category:</span><span class="line-value">{{ categoryLabel() }}</span></div>
-              <div class="detail-line"><span class="line-label">Medium:</span><span class="line-value">{{ mediumLabel() }}</span></div>
-              <div class="detail-line"><span class="line-label">Divyang Code:</span><span class="line-value">{{ s().divyangCode ? s().divyangCode : 'No' }}</span></div>
-              <div class="detail-line"><span class="line-label">SSC from Maharashtra:</span><span class="line-value">{{ yesNoOrDash(a().sscPassedFromMaharashtra) }}</span></div>
-              <div class="detail-line"><span class="line-label">Eligibility Certificate:</span><span class="line-value">{{ yesNoOrDash(a().eligibilityCertIssued) }}</span></div>
-              <div class="detail-line"><span class="line-label">Certificate No:</span><span class="line-value">{{ valueOrDash(a().eligibilityCertNo) }}</span></div>
+              <div class="detail-line"><span class="line-label">Medium of Instruction:</span><span class="line-value">{{ mediumLabel() }}</span></div>
+              <div class="detail-line"><span class="line-label">Divyang:</span><span class="line-value">{{ s().divyangCode ? s().divyangCode : 'No' }}</span></div>
+              <div class="detail-line"><span class="line-label">SSC from Maharashtra:</span><span class="line-value">{{ yesNoOrDash(s().sscPassedFromMaharashtra) }}</span></div>
+              <div class="detail-line"><span class="line-label">Eligibility Certificate:</span><span class="line-value">{{ yesNoOrDash(s().eligibilityCertIssued) }}</span></div>
+              <div class="detail-line"><span class="line-label">Certificate No:</span><span class="line-value">{{ valueOrDash(s().eligibilityCertNo) }}</span></div>
             </div>
           </section>
 
           <section class="section-card">
-            <div class="section-title">3. Subject Details</div>
+            <div class="section-title">Subject Details</div>
             <div class="table-wrap">
-              <table class="subject-table" [class.subject-table-dense]="isDenseSubjectTable()">
+              <table class="subject-table" [class.subject-table-dense]="isDenseSubjectTable()" [class.subject-table-backlog]="isBacklogCandidate()">
+                @if (isBacklogCandidate()) {
+                  <colgroup>
+                    <col style="width: 5%;" />
+                    <col style="width: 8%;" />
+                    <col style="width: 20%;" />
+                    <col style="width: 11%;" />
+                    <col style="width: 9%;" />
+                    <col style="width: 10%;" />
+                    <col style="width: 8%;" />
+                    <col style="width: 7%;" />
+                    <col style="width: 8%;" />
+                    <col style="width: 14%;" />
+                  </colgroup>
+                } @else {
+                  <colgroup>
+                    <col style="width: 6%;" />
+                    <col style="width: 12%;" />
+                    <col style="width: 42%;" />
+                    <col style="width: 20%;" />
+                    <col style="width: 20%;" />
+                  </colgroup>
+                }
                 <thead>
                   <tr>
-                    <th style="width: 7%;">Sr</th>
-                    <th style="width: 12%;">Sub. Code</th>
-                    <th>Subject Name</th>
-                    <th style="width: 20%;">Sub. Category</th>
-                    <th style="width: 15%;">Ans. Lang</th>
+                    <th>Sr.</th>
+                    <th>Code</th>
+                    <th>Subjects Name</th>
+                    <th>Category</th>
+                    <th>Ans. Lang</th>
+                    @if (isBacklogCandidate()) {
+                      <th>Seat No</th>
+                      <th>Month</th>
+                      <th>Year</th>
+                      <th>Marks Obt</th>
+                      <th>Previous Exam Seat No</th>
+                    }
                   </tr>
                 </thead>
                 <tbody>
                   @for (sub of (a().subjects ?? []); track sub.id) {
+                    @let backlog = getBacklogInfoForSubject(sub);
                     <tr>
                       <td class="cell-center">{{ $index + 1 }}</td>
                       <td>{{ valueOrDash(sub.subject?.code) }}</td>
                       <td class="subject-name-cell">{{ valueOrDash(sub.subject?.name) }}</td>
-                      <td>{{ valueOrDash(sub.subject?.category, 'General') }}</td>
+                      <td>{{ valueOrDash(sub.subject?.category) }}</td>
                       <td class="cell-center">{{ answerLanguageForPrint(sub) }}</td>
+                      @if (isBacklogCandidate()) {
+                        <td>{{ valueOrDash(backlog.seatNo || a().lastExamSeatNo) }}</td>
+                        <td>{{ valueOrDash(backlog.month || a().lastExamMonth) }}</td>
+                        <td>{{ valueOrDash(backlog.year || a().lastExamYear) }}</td>
+                        <td>{{ valueOrDash(backlog.marksObt) }}</td>
+                        <td>{{ valueOrDash(a().lastExamSeatNo) }}</td>
+                      }
                     </tr>
                   }
                   @if (!(a().subjects?.length)) {
                     <tr>
-                      <td colspan="5" class="muted center empty-table">No subjects selected yet</td>
+                      <td [attr.colspan]="isBacklogCandidate() ? 10 : 5" class="muted center empty-table">No subjects selected yet</td>
                     </tr>
                   }
                 </tbody>
@@ -112,83 +150,74 @@ import { BrandingService } from '../../../core/branding.service';
             </div>
           </section>
 
-          @if (hasOtherDetails()) {
-            <section class="section-card">
-              <div class="section-title">4. Previous Exam Details</div>
-              <div class="detail-list detail-list--academic">
-                <div class="detail-line"><span class="line-label">SSC Seat No:</span><span class="line-value">{{ valueOrDash(sscPreviousExam()?.seatNo) }}</span></div>
-                <div class="detail-line"><span class="line-label">SSC Month/Year:</span><span class="line-value">{{ formatPreviousExamMonthYear(sscPreviousExam()) }}</span></div>
-                <div class="detail-line"><span class="line-label">SSC Board:</span><span class="line-value">{{ valueOrDash(sscPreviousExam()?.boardOrCollegeName) }}</span></div>
-                <div class="detail-line"><span class="line-label">SSC Percentage:</span><span class="line-value">{{ valueOrDash(sscPreviousExam()?.percentage) }}</span></div>
-                <div class="detail-line"><span class="line-label">11th Seat No:</span><span class="line-value">{{ valueOrDash(xithPreviousExam()?.seatNo) }}</span></div>
-                <div class="detail-line"><span class="line-label">11th Month/Year:</span><span class="line-value">{{ formatPreviousExamMonthYear(xithPreviousExam()) }}</span></div>
-                <div class="detail-line"><span class="line-label">11th College:</span><span class="line-value">{{ valueOrDash(xithPreviousExam()?.boardOrCollegeName) }}</span></div>
-                <div class="detail-line"><span class="line-label">11th Percentage:</span><span class="line-value">{{ valueOrDash(xithPreviousExam()?.percentage) }}</span></div>
-              </div>
-
-              <div class="detail-grid grid-4 compact-grid">
-                <div class="detail-item">
-                  <label>Exemptions Claimed</label>
-                  <div>{{ a().totalExemptionsClaimed ?? ((a().exemptedSubjects?.length ?? 0) || 0) }}</div>
-                </div>
-                <div class="detail-item">
-                  <label>Previous Attempt</label>
-                  <div>{{ valueOrDash(a().lastExamMonth) }} {{ valueOrDash(a().lastExamYear, '') }} / {{ valueOrDash(a().lastExamSeatNo, 'No seat no') }}</div>
-                </div>
-                <div class="detail-item">
-                  <label>Enrollment Cert</label>
-                  <div>{{ valueOrDash(a().enrollmentCertMonth, '—') }} / {{ valueOrDash(a().enrollmentCertYear, '—') }} / {{ valueOrDash(a().enrollmentNo, '—') }}</div>
-                </div>
-                <div class="detail-item">
-                  <label>Special Remark</label>
-                  <div>{{ isBacklogCandidate() ? 'Backlog / Repeater candidate' : 'Regular / Fresh candidate' }}</div>
-                </div>
-              </div>
-
+          <section class="section-card">
+            <div class="section-title">Type of Candidate & Eligibility</div>
+            <div class="detail-list detail-list--academic detail-list--eligibility">
+              <div class="detail-line"><span class="line-label">Type:</span><span class="line-value">{{ typeAValue() }}</span></div>
+              <div class="detail-line"><span class="line-label">Candidate:</span><span class="line-value">{{ typeBValue() }}</span></div>
+              <div class="detail-line"><span class="line-label">Exemption Status:</span><span class="line-value">{{ typeCValue() }}</span></div>
+              <div class="detail-line"><span class="line-label">Group:</span><span class="line-value">{{ typeDValue() }}</span></div>
+              <div class="detail-line"><span class="line-label">Foreigner:</span><span class="line-value">{{ yesNoOrDash(a().isForeigner) }}</span></div>
+              <div class="detail-line"><span class="line-label">Exemptions Claimed:</span><span class="line-value">{{ valueOrDash(a().totalExemptionsClaimed) }}</span></div>
+              <div class="detail-line"><span class="line-label">Enrol. Cert No (Private):</span><span class="line-value">{{ enrollmentDetailsForPrint() }}</span></div>
               @if (isBacklogCandidate()) {
-                <table class="subject-table mini-table">
-                  <thead>
-                    <tr>
-                      <th>SR. No</th>
-                      <th>Sub. Code</th>
-                      <th>Subject Name</th>
-                      <th>Seat No</th>
-                      <th>Month</th>
-                      <th>Year</th>
-                      <th>Marks</th>
-                      <th>Previous Exam Seat No</th>
-                      <th>Previous Marks</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    @for (e of (a().exemptedSubjects ?? []); track e.id) {
-                      <tr>
-                        <td>{{ $index + 1 }}</td>
-                        <td>{{ valueOrDash(e.subjectCode) }}</td>
-                        <td>{{ valueOrDash(e.subjectName) }}</td>
-                        
-                        <td>{{ valueOrDash(e.seatNo) }}</td>
-                        <td>{{ valueOrDash(e.month) }}</td>
-                        <td>{{ valueOrDash(e.year) }}</td>
-                        <td>{{ valueOrDash(e.marksObt) }}</td>
-                        <td>{{ valueOrDash(e.previousExamSeatNo || e.seatNo || a().lastExamSeatNo) }}</td>
-                        <td>{{ valueOrDash(e.previousMarks || e.marksObt || e.marks || e.obtainedMarks) }}</td>
-                      </tr>
-                    }
-                    @if (!(a().exemptedSubjects?.length)) {
-                      <tr>
-                        <td colspan="9" class="muted center">No exempted subject details provided</td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
+                <div class="detail-line"><span class="line-label">Last Exam Seat (Repeater):</span><span class="line-value">{{ lastExamDetailsForPrint() }}</span></div>
               }
-            </section>
-          }
+              <div class="detail-line"><span class="line-label">SSC Passed (MS Board):</span><span class="line-value">{{ sscMaharashtraForPrint() }}</span></div>
+              <div class="detail-line"><span class="line-label">Eligibility Cert Issued:</span><span class="line-value">{{ eligibilityIssuedForPrint() }}</span></div>
+              <div class="detail-line"><span class="line-label">Eligibility Cert No:</span><span class="line-value">{{ eligibilityCertNoForPrint() }}</span></div>
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="section-title">Previous Examination Passing Details</div>
+            <div class="table-wrap">
+              <table class="subject-table mini-table">
+                <thead>
+                  <tr>
+                    <th style="width: 18%;">Exam</th>
+                    <th style="width: 18%;">Seat No</th>
+                    <th style="width: 16%;">Month</th>
+                    <th style="width: 12%;">Year</th>
+                    <th style="width: 12%;">Marks Obt %</th>
+                    <th>Name of Board / Jr. College</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>SSC</td>
+                    <td>{{ valueOrDash(sscPreviousExam()?.seatNo) }}</td>
+                    <td>{{ valueOrDash(sscPreviousExam()?.month) }}</td>
+                    <td>{{ valueOrDash(sscPreviousExam()?.year) }}</td>
+                    <td>{{ valueOrDash(sscPreviousExam()?.percentage) }}</td>
+                    <td>{{ valueOrDash(sscPreviousExam()?.boardOrCollegeName) }}</td>
+                  </tr>
+                  <tr>
+                    <td>XIth</td>
+                    <td>{{ valueOrDash(xithPreviousExam()?.seatNo) }}</td>
+                    <td>{{ valueOrDash(xithPreviousExam()?.month) }}</td>
+                    <td>{{ valueOrDash(xithPreviousExam()?.year) }}</td>
+                    <td>{{ valueOrDash(xithPreviousExam()?.percentage) }}</td>
+                    <td>{{ valueOrDash(xithPreviousExam()?.boardOrCollegeName) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="section-title">Details for reimbursement of fees to students of drought prone areas</div>
+            <div class="detail-list detail-list--academic">
+              <div class="detail-line"><span class="line-label">A) Revenue Circle And Village:</span><span class="line-value">{{ reimbursementRevenueCircleVillage() }}</span></div>
+              <div class="detail-line"><span class="line-label">B) Account No of Student / Parent:</span><span class="line-value">{{ reimbursementAccountNo() }}</span></div>
+              <div class="detail-line"><span class="line-label">C) IFSC CODE:</span><span class="line-value">{{ reimbursementIfscCode() }}</span></div>
+              <div class="detail-line"><span class="line-label">D) Account Holder:</span><span class="line-value">{{ reimbursementHolderRelation() }}</span></div>
+            </div>
+          </section>
 
           <section class="bottom-grid">
             <div class="declaration-box">
-              <div class="section-title small-title">5. Declaration</div>
+              <div class="section-title small-title">Declaration</div>
               <p>
                 I hereby declare that the information furnished by me in this form is true and correct to the best of my knowledge.
                             </p>
@@ -198,15 +227,30 @@ import { BrandingService } from '../../../core/branding.service';
               <div class="note-line">
                 Reference: <strong>{{ a().applicationNo || applicationSerialValue() }}</strong>
               </div>
-              <div class="sign-box declaration-signature-box">
+
+              <div class="declaration-extra-row flex">
+                
+                <div class="sign-box declaration-signature-box">
                   <div class="asset-caption">Candidate Signature</div>
                   @if (signatureUrl()) {
                     <img [src]="signatureUrl()" alt="Student signature" class="asset-image signature-image declaration-signature-image" loading="eager" (error)="onSignatureLoadError()" />
                   } @else {
                     <span class="placeholder-label">Candidate Signature</span>
                   }
-                </div>
+              </div>
+              </div>
+
+              
             </div>
+
+  <div class="verification-box">
+                  <div class="asset-caption">Verification QR</div>
+                  @if (qrCodeUrl()) {
+                    <img [src]="qrCodeUrl()!" alt="Application QR" class="asset-image qr-image declaration-qr-image" loading="eager" />
+                  } @else {
+                    <span class="placeholder-label">QR Not Available</span>
+                  }
+                </div>
 
             <div class="photo-box declaration-photo-box standalone-photo-box">
               <div class="asset-caption">Candidate Photograph</div>
@@ -388,6 +432,42 @@ import { BrandingService } from '../../../core/branding.service';
         text-transform: uppercase;
       }
 
+      .qr-image {
+        width: 36px;
+        height: 36px;
+        object-fit: contain;
+        display: block;
+        margin-left: 0;
+      }
+
+      .declaration-extra-row {
+        display: flex;
+        justify-content: flex-end;
+        align-items: flex-end;
+        gap: 4px;
+        margin-top: auto;
+        align-self: flex-end;
+      }
+
+      .verification-box {
+        border: 1px solid #000;
+        min-width: 60px;
+        min-height: 60px;
+        padding: 2px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: #fff;
+        
+      }
+
+      .declaration-qr-image {
+        width: 54px;
+        height: 54px;
+        object-fit: contain;
+      }
+
       .status-chip {
         display: inline-block;
         padding: 1px 6px;
@@ -433,19 +513,26 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       .detail-list {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
         gap: 4px 10px;
         padding: 6px;
+        border-top: 1px solid #000;
+        border-left: 1px solid #000;
       }
 
       .detail-line {
         display: grid;
-        grid-template-columns: 165px minmax(0, 1fr);
+        grid-template-columns: 128px minmax(0, 1fr);
         align-items: start;
         column-gap: 8px;
+        flex: 0 0 calc(50% - 5px);
+        box-sizing: border-box;
         min-width: 0;
-        padding: 2px 0;
+        padding: 2px 4px;
+        border-right: 1px solid #000;
+        border-bottom: 1px solid #000;
       }
 
       .line-label {
@@ -464,6 +551,20 @@ import { BrandingService } from '../../../core/branding.service';
         text-transform: uppercase;
         word-break: break-word;
         overflow-wrap: anywhere;
+      }
+
+      .detail-list--eligibility {
+        display: block;
+        column-count: 2;
+        column-gap: 10px;
+      }
+
+      .detail-list--eligibility .detail-line {
+        break-inside: avoid;
+        margin: 0 0 4px 0;
+        width: auto;
+        flex: none;
+        grid-template-columns: 110px minmax(0, 1fr);
       }
 
       .grid-4 {
@@ -515,35 +616,27 @@ import { BrandingService } from '../../../core/branding.service';
         width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
-        font-size: 8px;
+        font-size: 6.4px;
       }
 
       .subject-table th,
       .subject-table td {
         border: 1px solid #000;
-        padding: 2px 3px;
+        padding: 0.75px 1px;
         vertical-align: middle;
-        line-height: 1.15;
+        line-height: 1;
         overflow-wrap: anywhere;
         text-align: center;
       }
 
-      .subject-table tbody tr {
-        height: 18px;
-      }
-
       .subject-table.subject-table-dense {
-        font-size: 7px;
+        font-size: 6.3px;
       }
 
       .subject-table.subject-table-dense th,
       .subject-table.subject-table-dense td {
-        padding: 1px 2px;
-        line-height: 1.05;
-      }
-
-      .subject-table.subject-table-dense tbody tr {
-        height: 15px;
+        padding: 0.65px 0.9px;
+        line-height: 1;
       }
 
       .subject-table thead th {
@@ -561,11 +654,21 @@ import { BrandingService } from '../../../core/branding.service';
         font-weight: 700;
         color: #000;
         text-transform: uppercase;
+        white-space: nowrap;
+      }
+
+      .subject-table.subject-table-backlog tbody td:not(.subject-name-cell) {
+        white-space: nowrap;
+      }
+
+      .subject-table.subject-table-backlog .subject-name-cell {
+        white-space: normal;
       }
 
       .subject-name-cell {
         font-weight: 700;
         color: #111827;
+        white-space: normal !important;
         word-break: break-word;
       }
 
@@ -581,11 +684,17 @@ import { BrandingService } from '../../../core/branding.service';
       .mini-table {
         margin-top: 0;
         border-top: 0;
+        font-size: 6.5px;
+      }
+
+      .mini-table th,
+      .mini-table td {
+        padding: 1px;
       }
 
       .bottom-grid {
         display: grid;
-        grid-template-columns: 70% 15% 15%;
+        grid-template-columns: 55% 20% 10% 10%;
         gap: 4px;
         margin-top: auto;
         align-items: stretch;
@@ -599,6 +708,7 @@ import { BrandingService } from '../../../core/branding.service';
         width: 100%;
         display: flex;
         flex-direction: column;
+        position: relative;
       }
 
       .declaration-box p {
@@ -765,7 +875,7 @@ import { BrandingService } from '../../../core/branding.service';
         .document-header,
         .grid-4,
         .detail-list {
-          grid-template-columns: repeat(2, 1fr);
+          justify-content: space-between;
         }
 
         .grid-3 {
@@ -803,8 +913,12 @@ import { BrandingService } from '../../../core/branding.service';
         .document-header,
         .grid-4,
         .grid-3,
-        .detail-list {
-          grid-template-columns: 1fr;
+        .detail-line {
+          flex-basis: 100%;
+        }
+
+        .detail-list--eligibility {
+          column-count: 1;
         }
 
         .declaration-media-row {
@@ -851,17 +965,22 @@ import { BrandingService } from '../../../core/branding.service';
 
         .page {
           width: 100%;
-          min-height: calc(297mm - 10mm);
+          height: calc(297mm - 10mm);
           margin: 0;
           padding: 0;
           box-shadow: none;
           display: block;
+          overflow: hidden;
+          break-after: avoid-page;
+          page-break-after: avoid;
         }
 
         .official-sheet {
           border: 1.5px solid #000;
           padding: 2.5mm;
-          min-height: calc(297mm - 10mm);
+          height: calc(297mm - 10mm);
+          overflow: hidden;
+          zoom: 0.93;
         }
 
         .document-header {
@@ -877,14 +996,31 @@ import { BrandingService } from '../../../core/branding.service';
         }
 
         .detail-list {
-          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+          display: flex !important;
+          flex-wrap: wrap !important;
+          align-items: flex-start !important;
           gap: 3px 10px !important;
           padding: 5px 6px !important;
         }
 
         .detail-line {
-          grid-template-columns: 150px minmax(0, 1fr) !important;
+          grid-template-columns: 118px minmax(0, 1fr) !important;
+          flex: 0 0 calc(50% - 5px) !important;
           column-gap: 6px !important;
+          align-items: start !important;
+        }
+
+        .detail-list--eligibility {
+          display: block !important;
+          column-count: 2 !important;
+          column-gap: 10px !important;
+        }
+
+        .detail-list--eligibility .detail-line {
+          grid-template-columns: 100px minmax(0, 1fr) !important;
+          width: auto !important;
+          flex: none !important;
+          margin: 0 0 3px 0 !important;
         }
 
         .line-label {
@@ -901,7 +1037,7 @@ import { BrandingService } from '../../../core/branding.service';
         }
 
         .subject-table {
-          font-size: 7px !important;
+          font-size: 6px !important;
         }
 
         .detail-item {
@@ -920,30 +1056,64 @@ import { BrandingService } from '../../../core/branding.service';
 
         .subject-table th,
         .subject-table td {
-          padding: 1px 2px !important;
-          line-height: 1.05 !important;
+          padding: 0.35px 0.8px !important;
+          line-height: 0.98 !important;
+          height: auto !important;
+          min-height: 0 !important;
+          white-space: nowrap !important;
+          overflow-wrap: normal !important;
+          word-break: normal !important;
         }
 
-        .subject-table tbody tr {
-          height: 15px !important;
+        .subject-table tr {
+          height: auto !important;
+          min-height: 0 !important;
+        }
+
+        .subject-table .subject-name-cell {
+          white-space: nowrap !important;
+          line-height: 1 !important;
+          overflow: hidden !important;
+          text-overflow: ellipsis !important;
+        }
+
+        .mini-table {
+          font-size: 6.1px !important;
+        }
+
+        .mini-table th,
+        .mini-table td {
+          padding: 0.5px 1px !important;
+          height: auto !important;
+          min-height: 0 !important;
+          white-space: nowrap !important;
+          overflow-wrap: normal !important;
+          word-break: normal !important;
         }
 
         .standalone-photo-box {
-          min-height: 14mm !important;
+          min-height: 12.5mm !important;
         }
 
         .declaration-photo-box {
-          min-height: 11.5mm !important;
+          min-height: 10.5mm !important;
         }
 
         .declaration-signature-box {
-          min-height: 9mm !important;
+          min-height: 8.5mm !important;
         }
 
         .principal-sign-box,
         .signature-cell,
         .sign-box {
-          min-height: 9.5mm !important;
+          min-height: 8.5mm !important;
+        }
+
+        .declaration-extra-row {
+          margin-top: auto !important;
+          justify-content: flex-end !important;
+          align-self: flex-end !important;
+          gap: 3px !important;
         }
 
         .section-card,
@@ -979,6 +1149,7 @@ export class StudentFormPrintComponent implements OnInit {
   private closeAfterPrint = false;
   private hideActions = false;
   private autoPrintTriggered = false;
+  private cacheBustToken = Date.now();
 
   ngOnInit() {
     const routeId = Number(this.route.snapshot.paramMap.get('id'));
@@ -995,6 +1166,7 @@ export class StudentFormPrintComponent implements OnInit {
     }
 
     this.http.get<{ application: any }>(`${API_BASE_URL}/applications/${id}`).subscribe((r: any) => {
+      this.cacheBustToken = Date.now();
       const application = r?.application
         ? {
           ...r.application,
@@ -1018,6 +1190,7 @@ export class StudentFormPrintComponent implements OnInit {
       this.http.get<{ student?: any }>(`${API_BASE_URL}/me`).subscribe({
         next: (r: any) => {
           if (!r?.student) return;
+          this.cacheBustToken = Date.now();
           this.studentProfile.set({
             ...r.student,
             photoUrl: this.withCacheBust(r.student.photoUrl),
@@ -1115,7 +1288,7 @@ export class StudentFormPrintComponent implements OnInit {
     const value = String(normalized).trim();
     if (!value) return null;
 
-    const version = `v=${Date.now()}`;
+    const version = `v=${this.cacheBustToken}`;
     if (/([?&])v=/.test(value)) {
       return value.replace(/([?&])v=[^&]*/i, `$1${version}`);
     }
@@ -1128,7 +1301,7 @@ export class StudentFormPrintComponent implements OnInit {
     const value = String(url).trim();
     if (!value) return null;
 
-    const version = `v=${Date.now()}`;
+    const version = `v=${this.cacheBustToken}`;
     if (/([?&])v=/.test(value)) {
       return value.replace(/([?&])v=[^&]*/i, `$1${version}`);
     }
@@ -1210,6 +1383,75 @@ export class StudentFormPrintComponent implements OnInit {
     return this.a().studentSaralId || this.s().studentSaralId || this.s().apaarId || '—';
   }
 
+  typeAValue() {
+    if (this.a().typeA) return this.a().typeA;
+    return ['BACKLOG', 'REPEATER', 'ATKT', 'IMPROVEMENT'].includes(this.a().candidateType) ? 'Repeater' : 'Fresh';
+  }
+
+  typeBValue() {
+    if (this.a().typeB) return this.a().typeB;
+    if (this.a().candidateType === 'PRIVATE') return 'Private';
+    if (this.a().candidateType === 'IMPROVEMENT') return 'Class Improvement';
+    return 'Regular';
+  }
+
+  typeCValue() {
+    if (this.a().typeC) return this.a().typeC;
+    return (this.a().totalExemptionsClaimed || (this.a().exemptedSubjects?.length ?? 0)) > 0 ? 'Exempted' : 'Non Exempted';
+  }
+
+  typeDValue() {
+    if (this.a().typeD) return this.a().typeD;
+    const stream = String(this.s().streamCode || '').toUpperCase();
+    if (stream === 'VOCATIONAL' || stream === '4') return 'Vocational';
+    return '—';
+  }
+
+  enrollmentDetailsForPrint() {
+    const month = this.valueOrDash(this.a().enrollmentCertMonth || this.a().enrollmentMonth, '').trim();
+    const year = this.valueOrDash(this.a().enrollmentCertYear || this.a().enrollmentYear, '').trim();
+    const no = this.valueOrDash(this.a().enrollmentNo || this.a().enrollmentCertNo || this.a().enrollmentCertificateNo, '').trim();
+    const parts = [month, year].filter(Boolean).join(' ');
+    const serial = no || '—';
+    const text = [parts, serial].filter(Boolean).join(' / ');
+    return text || '—';
+  }
+
+  sscMaharashtraForPrint() {
+    const value = this.s().sscPassedFromMaharashtra ?? this.a().sscPassedFromMaharashtra ?? this.a().isSscPassedFromMaharashtra;
+    return this.yesNoOrDash(value);
+  }
+
+  eligibilityIssuedForPrint() {
+    const value = this.s().eligibilityCertIssued
+      ?? this.a().eligibilityCertIssued
+      ?? this.a().isEligibilityCertIssued
+      ?? this.a().eligibilityCertificateIssued;
+    return this.yesNoOrDash(value);
+  }
+
+  eligibilityCertNoForPrint() {
+    const certNo = this.valueOrDash(
+      this.s().eligibilityCertNo
+      || this.a().eligibilityCertNo
+      || this.a().eligibilityCertificateNo
+      || this.a().certificateNo,
+      ''
+    ).trim();
+
+    if (certNo) return certNo;
+    return this.valueOrDash(this.a().enrollmentNo || this.a().enrollmentCertNo || this.a().enrollmentCertificateNo);
+  }
+
+  lastExamDetailsForPrint() {
+    const month = this.valueOrDash(this.a().lastExamMonth, '').trim();
+    const year = this.valueOrDash(this.a().lastExamYear, '').trim();
+    const seatNo = this.valueOrDash(this.a().lastExamSeatNo, '').trim();
+    const when = [month, year].filter(Boolean).join(' ');
+    const text = [when, seatNo].filter(Boolean).join(' / ');
+    return text || '—';
+  }
+
   fullNameForPrint() {
     const surname = this.valueOrDash(this.s().lastName, '').trim();
     const first = this.valueOrDash(this.s().firstName, '').trim();
@@ -1251,7 +1493,7 @@ export class StudentFormPrintComponent implements OnInit {
   }
 
   instituteName() {
-    return this.a().institute?.name || 'Institute not assigned';
+    return this.a().institute?.name || '—';
   }
 
   instituteAddress() {
@@ -1261,7 +1503,7 @@ export class StudentFormPrintComponent implements OnInit {
 
   examDisplayTitle() {
     const exam = this.a().exam || {};
-    return [exam.name || 'HSC Examination : ', exam.session, exam.academicYear].filter(Boolean).join(' • ');
+    return [exam.name, exam.session, exam.academicYear].filter(Boolean).join(' • ');
   }
 
   statusLabel() {
@@ -1387,25 +1629,87 @@ export class StudentFormPrintComponent implements OnInit {
   }
 
   hasOtherDetails() {
-    const app = this.a();
-    return this.isPrivateCandidate() || this.isBacklogCandidate() || !!app.eligibilityCertNo || (app.eligibilityCertIssued !== null && app.eligibilityCertIssued !== undefined);
+    const student = this.s();
+    return this.isPrivateCandidate() || this.isBacklogCandidate() || !!student.eligibilityCertNo || (student.eligibilityCertIssued !== null && student.eligibilityCertIssued !== undefined);
+  }
+
+  getBacklogInfoForSubject(subjectRow: any) {
+    const byCodeOrName = (this.a().exemptedSubjects || []).find((entry: any) =>
+      (entry?.subjectCode && entry.subjectCode === subjectRow?.subject?.code)
+      || (entry?.subjectName && entry.subjectName === subjectRow?.subject?.name)
+    );
+
+    return byCodeOrName || {
+      seatNo: this.a().lastExamSeatNo || null,
+      month: this.a().lastExamMonth || null,
+      year: this.a().lastExamYear || null,
+      marksObt: null
+    };
   }
 
   sscPreviousExam() {
-    return (this.a().student?.previousExams || []).find((exam: any) => String(exam?.examType || '').toUpperCase() === 'SSC') || null;
+    return (this.s().previousExams || []).find((exam: any) => String(exam?.examType || '').toUpperCase() === 'SSC') || null;
   }
 
   xithPreviousExam() {
     const acceptedExamTypes = new Set(['XI', '11TH', '11']);
-    return (this.a().student?.previousExams || []).find((exam: any) => acceptedExamTypes.has(String(exam?.examType || '').toUpperCase())) || null;
+    return (this.s().previousExams || []).find((exam: any) => acceptedExamTypes.has(String(exam?.examType || '').toUpperCase())) || null;
   }
 
-  formatPreviousExamMonthYear(exam: any) {
-    if (!exam) return '—';
-    const month = this.valueOrDash(exam.month, '').trim();
-    const year = this.valueOrDash(exam.year, '').trim();
-    const combined = `${month} ${year}`.trim();
-    return combined || '—';
+  reimbursementDetails() {
+    return this.s().bankDetails || this.s().feeReimbursement || null;
+  }
+
+  reimbursementRevenueCircleVillage() {
+    const details = this.reimbursementDetails();
+    if (!details) return '—';
+    return this.valueOrDash(details.revenueCircleAndVillage || details.revenueCircle || details.village || this.s().village || this.s().taluka);
+  }
+
+  reimbursementAccountNo() {
+    const details = this.reimbursementDetails();
+    if (!details) return '—';
+    return this.valueOrDash(details.accountNo || details.accountNumber);
+  }
+
+  reimbursementIfscCode() {
+    const details = this.reimbursementDetails();
+    if (!details) return '—';
+    return this.valueOrDash(details.ifscCode);
+  }
+
+  reimbursementHolderRelation() {
+    const details = this.reimbursementDetails();
+    if (!details) return '—';
+    const mapping: Record<string, string> = {
+      SELF: 'Own',
+      FATHER: 'Father',
+      MOTHER: 'Mother',
+      PARENT: 'Parent',
+      GUARDIAN: 'Other Parent/Guardian'
+    };
+    const key = String(details.accountHolderRelation || '').toUpperCase();
+    return mapping[key] || this.valueOrDash(details.accountHolderRelation);
+  }
+
+  qrCodeUrl() {
+    const app = this.a();
+    const student = this.s();
+    if (!app?.applicationNo) return null;
+
+    const payload = {
+      applicationId: app.id ?? null,
+      applicationNo: app.applicationNo,
+      examId: app.examId ?? null,
+      candidateType: app.candidateType ?? null,
+      studentId: app.studentId ?? null,
+      fullName: this.fullNameForPrint(),
+      aadhaar: student?.aadhaar ?? null,
+      issuedAt: this.printedAt.toISOString()
+    };
+
+    const text = encodeURIComponent(JSON.stringify(payload));
+    return `https://quickchart.io/qr?size=110&text=${text}`;
   }
 
   useThreeColumnDetails() {

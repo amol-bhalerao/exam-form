@@ -30,7 +30,9 @@ import { I18nService } from '../../core/i18n.service';
 import { PincodeService, PostalLocation } from '../../core/pincode.service';
 import { AuthService } from '../../core/auth.service';
 import { API_BASE_URL } from '../../core/api';
+import { InstitutePickerComponent } from '../../components/institute-picker/institute-picker.component';
 import { StudentImageUploadComponent } from '../../components/student-image-upload/student-image-upload.component';
+import { EnglishOnlyDirective } from '../../directives/english-only.directive';
 
 class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
@@ -74,34 +76,21 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     MatRadioModule,
     MatProgressBarModule,
     RouterModule,
-    StudentImageUploadComponent
+    InstitutePickerComponent,
+    StudentImageUploadComponent,
+    EnglishOnlyDirective
   ],
   template: `
     <div class="student-profile-container">
-      <div class="profile-progress-strip">
-        <div class="progress-strip-top">
-          <div>
-            <div class="progress-strip-label">विद्यार्थी प्रोफाइल स्थिती</div>
-            <div class="progress-strip-meta">
-              <span>{{ profileCompletionCount }}/{{ totalProfileFields }} माहिती पूर्ण</span>
-              <strong>{{ profileCompletionPercentage }}%</strong>
-            </div>
-          </div>
-
-          <button mat-stroked-button type="button" class="instructions-trigger" (click)="openInstructionsPopup()">
-            <mat-icon>info</mat-icon>
-            कसे भरावे
-          </button>
+      <div class="registration-header">
+        <div class="registration-title">
+          <h1>Student Registration</h1>
+          <p>नोंदणीकृत सर्व विद्यार्थी व्यवस्थापित करा, त्यांचा सध्याचा डेटा पाहा आणि खालील मोडलद्वारे नवीन विद्यार्थी जोडा.</p>
         </div>
-
-        <mat-progress-bar mode="determinate" [value]="profileCompletionPercentage" color="accent"></mat-progress-bar>
-
-        <p class="progress-strip-note" *ngIf="profileCompletionPercentage < 100">
-          उरलेली माहिती पूर्ण केल्यास अर्ज भरणे अधिक सोपे होईल.
-        </p>
-        <p class="progress-strip-note success" *ngIf="profileCompletionPercentage === 100">
-          तुमची प्रोफाइल पूर्ण झाली आहे. आता तुम्ही अर्ज भरू शकता.
-        </p>
+        <button mat-stroked-button type="button" class="instructions-trigger" (click)="openInstructionsPopup()">
+          <mat-icon>info</mat-icon>
+          How to use
+        </button>
       </div>
 
       <div class="instructions-popup-backdrop" *ngIf="showInstructionsPopup">
@@ -152,6 +141,482 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
         </div>
       </div>
 
+      <div class="instructions-popup-backdrop" *ngIf="showManagedStudentModal">
+        <div class="instructions-popup info-popup managed-student-popup" role="dialog" aria-modal="true" aria-labelledby="managedStudentTitle">
+          <div class="popup-header">
+            <div>
+              <h2 id="managedStudentTitle">{{ managedStudentMode === 'edit' ? 'व्यवस्थापित विद्यार्थी संपादित करा' : 'नवीन विद्यार्थी जोडा' }}</h2>
+              <p>महाविद्यालय आणि शाखेच्या तपशीलांसह विद्यार्थ्याची नोंदणी करा.</p>
+            </div>
+            <button mat-icon-button type="button" (click)="closeManagedStudentModal()" aria-label="Close managed student popup">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+
+          <div class="popup-body managed-student-modal" [formGroup]="managedStudentForm">
+            <!-- Validation Error Summary -->
+            <div class="validation-error-summary" *ngIf="managedStudentForm.invalid && managedStudentForm.touched && selectedTabIndex === 6">
+              <mat-icon>error</mat-icon>
+              <span>जतन करण्यापूर्वी लाल रंगाने दर्शवलेली सर्व आवश्यक माहिती भरा.</span>
+            </div>
+
+            <mat-tab-group
+              class="managed-student-tabs"
+              [selectedIndex]="selectedTabIndex"
+              (selectedIndexChange)="onManagedTabIndexChange($event)"
+              animationDuration="300">
+              <!-- TAB 0: Aadhaar Lookup -->
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <mat-icon>fingerprint</mat-icon>
+                  <span>Aadhaar Lookup</span>
+                </ng-template>
+
+                <div class="form-section">
+                  <p class="tab-instruction">विद्यार्थी आधीपासून नोंदणीकृत आहे का हे तपासण्यासाठी आधार क्रमांक भरा. माहिती सापडल्यास फॉर्म आपोआप भरला जाईल.</p>
+                  
+                  <div class="form-grid-1">
+                    <mat-form-field class="form-field form-field-full" [class.error-field]="managedStudentForm.get('aadhaar')?.invalid && managedStudentForm.get('aadhaar')?.touched">
+                      <mat-label>Aadhaar Number *</mat-label>
+                      <input matInput 
+                             formControlName="aadhaar" 
+                             placeholder="12-digit Aadhaar number"
+                             maxlength="12"
+                             appEnglishOnly
+                         [readonly]="managedAadhaarLocked"
+                             (input)="onOnlyDigitsInput($event)"
+                             (blur)="onAadhaarBlur($event)" />
+                      <mat-icon matPrefix>fingerprint</mat-icon>
+                      <button mat-icon-button matSuffix type="button" 
+                             (click)="fetchStudentByAadhaar()" 
+                         [disabled]="managedStudentMode === 'edit' || !managedStudentForm.get('aadhaar')?.value || managedStudentForm.get('aadhaar')?.value.length !== 12" 
+                             aria-label="Lookup student by Aadhaar">
+                        <mat-icon>search</mat-icon>
+                      </button>
+                      <mat-error *ngIf="managedStudentForm.get('aadhaar')?.hasError('pattern')">
+                        आधार क्रमांक नेमका 12 अंकी असावा
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+
+                  <div class="lookup-result" *ngIf="managedStudentMode === 'create' && managedStudentForm.get('aadhaar')?.value?.length === 12">
+                    <p style="color: #666; font-size: 0.9rem; text-align: center;"><strong>Search</strong> वर क्लिक करून विद्यार्थ्याची माहिती शोधा किंवा नवीन नोंदणीसाठी पुढील टॅबवर जा.</p>
+                  </div>
+                </div>
+              </mat-tab>
+
+              <!-- TAB 1: Institute & Stream Selection -->
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <mat-icon>school</mat-icon>
+                  <span>Institute & Stream</span>
+                </ng-template>
+
+                <div class="form-section">
+                  <div class="form-grid-1">
+                    <div class="form-field form-field-full">
+                      <app-institute-picker [(selectedInstituteId)]="managedStudentInstituteId"></app-institute-picker>
+                    </div>
+
+                    <mat-form-field class="form-field form-field-full" [class.error-field]="managedStudentForm.get('streamCode')?.invalid && managedStudentForm.get('streamCode')?.touched">
+                      <mat-label>Stream *</mat-label>
+                      <mat-select formControlName="streamCode" required>
+                        <mat-option value="">- Select stream -</mat-option>
+                        <mat-option *ngFor="let stream of streams" [value]="stream.name">{{ stream.name }}</mat-option>
+                      </mat-select>
+                      <mat-error>Stream is required</mat-error>
+                    </mat-form-field>
+
+                    <mat-form-field class="form-field form-field-full">
+                      <mat-label>Medium</mat-label>
+                      <mat-select formControlName="mediumCode">
+                        <mat-option value="">- Select medium -</mat-option>
+                        <mat-option value="MARATHI">Marathi</mat-option>
+                        <mat-option value="HINDI">Hindi</mat-option>
+                        <mat-option value="ENGLISH">English</mat-option>
+                        <mat-option value="URDU">Urdu</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </mat-tab>
+
+              <!-- TAB 2: Personal Details -->
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <mat-icon>person</mat-icon>
+                  <span>Personal Details</span>
+                </ng-template>
+
+                <div class="form-section">
+                  <div class="form-grid-compact">
+                    <mat-form-field class="form-field" [class.error-field]="managedStudentForm.get('firstName')?.invalid && managedStudentForm.get('firstName')?.touched">
+                      <mat-label>First Name *</mat-label>
+                      <input matInput 
+                             formControlName="firstName" 
+                             appEnglishOnly 
+                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                      <mat-error *ngIf="managedStudentForm.get('firstName')?.hasError('required')">First name is required</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('firstName')?.hasError('minlength')">Minimum 2 characters</mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="form-field">
+                      <mat-label>Middle Name</mat-label>
+                      <input matInput 
+                             formControlName="middleName" 
+                             appEnglishOnly 
+                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                    </mat-form-field>
+                    <mat-form-field class="form-field" [class.error-field]="managedStudentForm.get('lastName')?.invalid && managedStudentForm.get('lastName')?.touched">
+                      <mat-label>Last Name *</mat-label>
+                      <input matInput 
+                             formControlName="lastName" 
+                             appEnglishOnly 
+                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                      <mat-error *ngIf="managedStudentForm.get('lastName')?.hasError('required')">Last name is required</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('lastName')?.hasError('minlength')">Minimum 2 characters</mat-error>
+                    </mat-form-field>
+                    <mat-form-field class="form-field">
+                      <mat-label>Mother Name</mat-label>
+                      <input matInput 
+                             formControlName="motherName" 
+                             appEnglishOnly 
+                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-grid-compact">
+                    <mat-form-field class="form-field">
+                      <mat-label>Date of Birth</mat-label>
+                      <input matInput [matDatepicker]="managedDobPicker" formControlName="dob" />
+                      <mat-datepicker-toggle matSuffix [for]="managedDobPicker"></mat-datepicker-toggle>
+                      <mat-datepicker #managedDobPicker></mat-datepicker>
+                    </mat-form-field>
+
+                    <mat-form-field class="form-field">
+                      <mat-label>Gender</mat-label>
+                      <mat-select formControlName="gender">
+                        <mat-option value="">- Select gender -</mat-option>
+                        <mat-option value="Male">Male</mat-option>
+                        <mat-option value="Female">Female</mat-option>
+                        <mat-option value="Other">Other</mat-option>
+                        <mat-option value="Prefer Not to Say">Prefer Not to Say</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field class="form-field">
+                      <mat-label>Mobile</mat-label>
+                      <input matInput 
+                             formControlName="mobile" 
+                             placeholder="10 digit mobile"
+                             maxlength="10"
+                             appEnglishOnly
+                             (input)="onOnlyDigitsInput($event)" />
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-grid-compact">
+                    <mat-form-field class="form-field">
+                      <mat-label>APAAR ID</mat-label>
+                      <input matInput 
+                             formControlName="apaarId" 
+                             appEnglishOnly 
+                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                    </mat-form-field>
+                    <mat-form-field class="form-field">
+                      <mat-label>Udise / Saral ID</mat-label>
+                      <input matInput 
+                             formControlName="studentSaralId" 
+                             appEnglishOnly 
+                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                    </mat-form-field>
+                  </div>
+
+                  <div class="form-grid-compact">
+                    <mat-form-field class="form-field">
+                      <mat-label>SSC from Maharashtra</mat-label>
+                      <mat-select formControlName="sscPassedFromMaharashtra">
+                        <mat-option [value]="null">- Select -</mat-option>
+                        <mat-option [value]="true">Yes</mat-option>
+                        <mat-option [value]="false">No</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field class="form-field">
+                      <mat-label>Eligibility Certificate Issued</mat-label>
+                      <mat-select formControlName="eligibilityCertIssued">
+                        <mat-option [value]="null">- Select -</mat-option>
+                        <mat-option [value]="true">Yes</mat-option>
+                        <mat-option [value]="false">No</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+
+                    <mat-form-field class="form-field">
+                      <mat-label>Eligibility Certificate No</mat-label>
+                      <input matInput
+                             formControlName="eligibilityCertNo"
+                             appEnglishOnly
+                             [disabled]="managedStudentForm.get('eligibilityCertIssued')?.value !== true"
+                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                      <mat-error *ngIf="managedStudentForm.get('eligibilityCertNo')?.hasError('required')">
+                        Eligibility Certificate No is required when certificate is issued
+                      </mat-error>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </mat-tab>
+
+              <!-- TAB 3: Address Information -->
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <mat-icon>location_on</mat-icon>
+                  <span>Address</span>
+                </ng-template>
+
+                <div class="form-section">
+                  <p class="form-note">पत्ता विद्यार्थ्याच्या महाविद्यालयीन जिल्ह्यानुसार ट्रॅक केला जातो. कृपया तुमचा निवासी पत्ता भरा.</p>
+                  
+                  <mat-form-field class="form-field form-field-full">
+                    <mat-label>Residential Address</mat-label>
+                    <textarea matInput rows="3" formControlName="address" placeholder="Enter complete residential address"></textarea>
+                  </mat-form-field>
+
+                  <div class="form-grid-compact">
+                    <mat-form-field class="form-field">
+                      <mat-label>PinCode</mat-label>
+                      <input matInput 
+                             formControlName="pinCode" 
+                             maxlength="6"
+                             appEnglishOnly
+                             (input)="onOnlyDigitsInput($event); onPincodeInput($event)"
+                             (blur)="onPincodeInput($event)" />
+                    </mat-form-field>
+                    <mat-form-field class="form-field">
+                      <mat-label>District</mat-label>
+                      <input matInput formControlName="district" appEnglishOnly />
+                    </mat-form-field>
+                    <mat-form-field class="form-field">
+                      <mat-label>Taluka</mat-label>
+                      <input matInput formControlName="taluka" appEnglishOnly />
+                    </mat-form-field>
+                    <mat-form-field class="form-field">
+                      <mat-label>Village</mat-label>
+                      <input matInput formControlName="village" appEnglishOnly />
+                    </mat-form-field>
+                  </div>
+                </div>
+              </mat-tab>
+
+              <!-- TAB 4: Demographics -->
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <mat-icon>category</mat-icon>
+                  <span>Demographics</span>
+                </ng-template>
+
+                <div class="form-section">
+                  <div class="form-grid-compact">
+                    <mat-form-field class="form-field">
+                      <mat-label>Category</mat-label>
+                      <mat-select formControlName="categoryCode">
+                        <mat-option value="">- Select category -</mat-option>
+                        <mat-option value="OPEN">Open</mat-option>
+                        <mat-option value="OBC">OBC</mat-option>
+                        <mat-option value="SC">SC</mat-option>
+                        <mat-option value="ST">ST</mat-option>
+                        <mat-option value="VJA">VJ/DT</mat-option>
+                        <mat-option value="NTB">NT-B</mat-option>
+                        <mat-option value="NTC">NT-C</mat-option>
+                        <mat-option value="NTD">NT-D</mat-option>
+                        <mat-option value="SBC">SBC</mat-option>
+                        <mat-option value="SEBC">SEBC</mat-option>
+                        <mat-option value="EWS">EWS</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field class="form-field">
+                      <mat-label>Minority / Religion</mat-label>
+                      <mat-select formControlName="minorityReligionCode">
+                        <mat-option value="">- Select -</mat-option>
+                        <mat-option value="HINDU_NON_MINORITY">Hindu / Non-minority</mat-option>
+                        <mat-option value="MUSLIM">Muslim</mat-option>
+                        <mat-option value="CHRISTIAN">Christian</mat-option>
+                        <mat-option value="SIKH">Sikh</mat-option>
+                        <mat-option value="BUDDHIST">Buddhist</mat-option>
+                        <mat-option value="JAIN">Jain</mat-option>
+                        <mat-option value="PARSI">Parsi</mat-option>
+                        <mat-option value="JEWISH">Jewish</mat-option>
+                        <mat-option value="OTHER">Other</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                    <mat-form-field class="form-field">
+                      <mat-label>Divyang Status</mat-label>
+                      <mat-select formControlName="divyangCode">
+                        <mat-option value="">- Select -</mat-option>
+                        <mat-option value="NONE">None</mat-option>
+                        <mat-option value="DIVYANG">Divyang</mat-option>
+                        <mat-option value="VISUALLY_IMPAIRED">Visually Impaired</mat-option>
+                        <mat-option value="HEARING_IMPAIRED">Hearing Impaired</mat-option>
+                        <mat-option value="PHYSICALLY_DISABLED">Physically Disabled</mat-option>
+                      </mat-select>
+                    </mat-form-field>
+                  </div>
+                </div>
+              </mat-tab>
+
+              <!-- TAB 5: Photo & Signature -->
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <mat-icon>badge</mat-icon>
+                  <span>Photo & Signature</span>
+                </ng-template>
+
+                <div class="form-section">
+                  <p class="tab-instruction">परीक्षा फॉर्मसाठी विद्यार्थ्याचा फोटो आणि स्वाक्षरी अपलोड करा.</p>
+                  <div class="form-grid-2 managed-assets-grid">
+                    <app-student-image-upload
+                      type="photo"
+                      title="विद्यार्थ्याचा फोटो"
+                      hint="पासपोर्ट आकाराचा फोटो, साध्या पार्श्वभूमीसह"
+                      [imageUrl]="managedPhotoPreviewUrl"
+                      [saving]="managedStudentSaving"
+                      (saved)="onManagedAssetSaved($event)"
+                      (removed)="onManagedAssetRemoved($event)">
+                    </app-student-image-upload>
+
+                    <app-student-image-upload
+                      type="signature"
+                      title="विद्यार्थ्याची स्वाक्षरी"
+                      hint="पांढऱ्या पार्श्वभूमीवर गडद शाईतील स्वाक्षरी"
+                      [imageUrl]="managedSignaturePreviewUrl"
+                      [saving]="managedStudentSaving"
+                      (saved)="onManagedAssetSaved($event)"
+                      (removed)="onManagedAssetRemoved($event)">
+                    </app-student-image-upload>
+                  </div>
+                </div>
+              </mat-tab>
+
+              <!-- TAB 6: Previous Exams -->
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <mat-icon>school</mat-icon>
+                  <span>Previous Exams</span>
+                </ng-template>
+
+                <div class="form-section">
+                  <div class="form-card form-card-compact form-card-span">
+                    <div class="card-title-row">
+                      <h3 class="card-title">SSC Details</h3>
+                    </div>
+                    <div class="form-grid-4">
+                      <mat-form-field class="form-field">
+                        <mat-label>SSC Seat No.</mat-label>
+                        <input matInput 
+                               formControlName="sscSeatNo" 
+                               appEnglishOnly 
+                               (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                      </mat-form-field>
+                      <mat-form-field class="form-field">
+                        <mat-label>SSC Month</mat-label>
+                        <mat-select formControlName="sscMonth">
+                          <mat-option value="">- Select -</mat-option>
+                          <mat-option value="JAN">January</mat-option>
+                          <mat-option value="FEB">February</mat-option>
+                          <mat-option value="MAR">March</mat-option>
+                          <mat-option value="APR">April</mat-option>
+                          <mat-option value="MAY">May</mat-option>
+                          <mat-option value="JUN">June</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <mat-form-field class="form-field">
+                        <mat-label>SSC Year</mat-label>
+                        <input type="number" matInput formControlName="sscYear" />
+                      </mat-form-field>
+                      <mat-form-field class="form-field">
+                        <mat-label>SSC Board</mat-label>
+                        <input matInput formControlName="sscBoard" appEnglishOnly />
+                      </mat-form-field>
+                    </div>
+                    <div class="form-grid-2">
+                      <mat-form-field class="form-field">
+                        <mat-label>SSC Percentage</mat-label>
+                        <input type="number" matInput formControlName="sscPercentage" min="0" max="100" step="0.01" />
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="form-card form-card-compact form-card-span">
+                    <div class="card-title-row">
+                      <h3 class="card-title">XIth Details</h3>
+                    </div>
+                    <div class="form-grid-4">
+                      <mat-form-field class="form-field">
+                        <mat-label>XI Seat No.</mat-label>
+                        <input matInput 
+                               formControlName="xithSeatNo" 
+                               appEnglishOnly 
+                               (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                      </mat-form-field>
+                      <mat-form-field class="form-field">
+                        <mat-label>XI Month</mat-label>
+                        <mat-select formControlName="xithMonth">
+                          <mat-option value="">- Select -</mat-option>
+                          <mat-option value="JAN">January</mat-option>
+                          <mat-option value="FEB">February</mat-option>
+                          <mat-option value="MAR">March</mat-option>
+                          <mat-option value="APR">April</mat-option>
+                          <mat-option value="MAY">May</mat-option>
+                          <mat-option value="JUN">June</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <mat-form-field class="form-field">
+                        <mat-label>XI Year</mat-label>
+                        <input type="number" matInput formControlName="xithYear" />
+                      </mat-form-field>
+                      <mat-form-field class="form-field">
+                        <mat-label>XI College</mat-label>
+                        <input matInput formControlName="xithCollege" appEnglishOnly />
+                      </mat-form-field>
+                    </div>
+                    <div class="form-grid-2">
+                      <mat-form-field class="form-field">
+                        <mat-label>XI Percentage</mat-label>
+                        <input type="number" matInput formControlName="xithPercentage" min="0" max="100" step="0.01" />
+                      </mat-form-field>
+                    </div>
+                  </div>
+                </div>
+              </mat-tab>
+            </mat-tab-group>
+
+            <!-- Tab Navigation Buttons with Step Counter -->
+            <div class="tab-navigation">
+              <button mat-stroked-button type="button" 
+                     [disabled]="selectedTabIndex === 0" 
+                     (click)="selectedTabIndex = selectedTabIndex - 1"
+                     class="nav-btn back-btn">
+                <mat-icon>arrow_back</mat-icon>
+                Back
+              </button>
+              <span class="tab-counter">Step {{ selectedTabIndex + 1 }} of 7</span>
+              <button mat-raised-button color="primary" type="button" 
+                [disabled]="selectedTabIndex === 6" 
+                     (click)="onNextTabClick()"
+                     class="nav-btn next-btn">
+                Next
+                <mat-icon>arrow_forward</mat-icon>
+              </button>
+            </div>
+          </div>
+
+          <div class="popup-actions">
+            <button mat-stroked-button type="button" (click)="closeManagedStudentModal()">Cancel</button>
+            <button mat-raised-button color="primary" type="button" [disabled]="managedStudentSaving" (click)="saveManagedStudent()">
+              {{ managedStudentSaving ? 'Saving...' : (managedStudentMode === 'edit' ? 'Update Student' : 'Save Student') }}
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Loading State -->
       <div class="loading-overlay" *ngIf="isLoading">
         <div class="spinner-wrapper">
@@ -188,752 +653,47 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
       <!-- Profile Content -->
       <div class="profile-content" *ngIf="profile && !isLoading">
-        <mat-tab-group
-          class="profile-tabs"
-          [selectedIndex]="selectedTabIndex"
-          (selectedIndexChange)="selectedTabIndex = $event">
-          
-          <!-- TAB 0: INSTITUTE & STREAM SELECTION -->
-          <mat-tab>
-            <ng-template mat-tab-label>
-              <mat-icon>school</mat-icon>
-              <span class="tab-title">महाविद्यालय निवडा</span>
-            </ng-template>
+        <div class="form-card managed-students-card">
+          <div class="card-title-row">
+            <h3 class="card-title">Managed Students</h3>
+            <button mat-stroked-button type="button" (click)="openManagedStudentModal('create')">
+              <mat-icon>person_add</mat-icon>
+              Add Student
+            </button>
+          </div>
+          <p class="managed-students-note">या लॉगिनखाली एकापेक्षा जास्त विद्यार्थी इथून जोडा आणि व्यवस्थापित करा.</p>
 
-            <div class="form-section">
-              <div class="form-card">
-                <div class="card-title-row">
-                  <h3 class="card-title">महाविद्यालय व शाखा निवड</h3>
-                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('महाविद्यालय व शाखा निवड', 'आपले महाविद्यालय शोधून निवडा. त्यानंतर योग्य शाखा निवडून जतन करा.')">
-                    <mat-icon>info_outline</mat-icon>
-                  </button>
-                </div>
+          <div class="managed-students-table-wrap" *ngIf="managedStudents.length; else noManagedStudents">
+            <table class="managed-students-table">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Institute</th>
+                  <th>Stream</th>
+                  <th>Mobile</th>
+                  <th>Profile</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let student of managedStudents">
+                  <td>{{ displayManagedStudentName(student) }}</td>
+                  <td>{{ student.instituteName || '-' }}</td>
+                  <td>{{ student.streamCode || '-' }}</td>
+                  <td>{{ student.mobile || '-' }}</td>
+                  <td><span class="completion-pill">{{ student.profileCompletion ?? 0 }}%</span></td>
+                  <td><button mat-stroked-button type="button" (click)="openManagedStudentModal('edit', student)">Edit</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-                <div class="form-grid-2">
-                  <mat-form-field class="example-full-width">
-                    <mat-label>महाविद्यालय निवडा</mat-label>
-                    <input 
-                    type="text" 
-                    matInput 
-                    [formControl]="selectedInstitute" 
-                    [matAutocomplete]="instituteAuto"
-                    placeholder="महाविद्यालयाचे नाव टाइप करा">
-                    <mat-autocomplete class="student-institute-autocomplete" #instituteAuto="matAutocomplete" [displayWith]="displayInstituteName.bind(this)" (optionSelected)="onInstituteAutocompleteSelected($event)">
-                      @for (inst of getFilteredInstitutes() | async; track inst) {
-                        <mat-option [value]="inst" class="institute-option">
-                          <div class="institute-option-content">
-                            <div class="institute-option-title">{{ inst.name }}</div>
-                            <div class="institute-option-meta">{{ getInstituteCode(inst) || 'Code N/A' }}<span *ngIf="inst.city"> • {{ inst.city }}</span></div>
-                          </div>
-                        </mat-option>
-                      }
-                    </mat-autocomplete>
-                  </mat-form-field>
+          <ng-template #noManagedStudents>
+            <p class="managed-students-empty">अतिरिक्त विद्यार्थी अद्याप जोडलेले नाहीत.</p>
+          </ng-template>
+        </div>
 
-                  <mat-form-field class="form-field">
-                    <mat-label>शाखा निवडा*</mat-label>
-                    <mat-icon matPrefix>layers</mat-icon>
-                    <mat-select [(ngModel)]="selectedStreamCode" required panelClass="student-profile-select-panel">
-                      <mat-option value="">- शाखा निवडा -</mat-option>
-                      <mat-option *ngFor="let stream of streams" [value]="stream.name">
-                        {{ stream.name }}
-                      </mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                </div>
-
-                <div class="form-actions">
-                  <button mat-raised-button color="primary" 
-                          (click)="saveInstituteSelection()"
-                          [disabled]="!selectedInstituteId || !selectedStreamCode || savingInstitute">
-                    <mat-icon *ngIf="!savingInstitute">check_circle</mat-icon>
-                    <mat-spinner *ngIf="savingInstitute" diameter="20"></mat-spinner>
-                    <span *ngIf="!savingInstitute">{{ profile?.instituteId ? 'महाविद्यालय अद्यतनित करा' : 'महाविद्यालय जतन करा' }}</span>
-                    <span *ngIf="savingInstitute">जतन करत आहे...</span>
-                  </button>
-
-                  <button mat-stroked-button type="button" (click)="goToNextTab(1)" [disabled]="!profile?.instituteId && !selectedInstituteId">
-                    पुढे
-                    <mat-icon>arrow_forward</mat-icon>
-                  </button>
-                  
-                  <!-- <div class="institute-info" *ngIf="profile?.instituteId">
-                    <mat-icon>check_circle</mat-icon>
-                    <span>सध्याची निवड: {{ getInstituteLabel(profile.instituteId) }} • {{ profile.streamCode }}</span>
-                  </div> -->
-                </div>
-              </div>
-            </div>
-          </mat-tab>
-          
-          <!-- TAB 1: PERSONAL DETAILS -->
-          <mat-tab>
-            <ng-template mat-tab-label>
-              <mat-icon>person</mat-icon>
-              <span class="tab-title">वैयक्तिक माहिती</span>
-            </ng-template>
-
-            <form [formGroup]="personalDetailsForm" class="form-section">
-              <div class="profile-assets-grid">
-                <app-student-image-upload
-                  title="Photograph / छायाचित्र"
-                  
-                  type="photo"
-                  [imageUrl]="profile?.photoUrl || null"
-                  [saving]="savingPhoto"
-                  (saved)="handleProfileImageSaved($event)"
-                  (removed)="handleProfileImageRemoved($event)">
-                </app-student-image-upload>
-
-                <app-student-image-upload
-                  title="Student Signature / सही"
-                  
-                  type="signature"
-                  [imageUrl]="profile?.signatureUrl || null"
-                  [saving]="savingSignature"
-                  (saved)="handleProfileImageSaved($event)"
-                  (removed)="handleProfileImageRemoved($event)">
-                </app-student-image-upload>
-              </div>
-
-              <!-- CANDIDATE IDENTIFICATION -->
-              <div class="form-card">
-                <div class="card-title-row">
-                  <h3 class="card-title">विद्यार्थ्याची ओळख माहिती</h3>
-                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('विद्यार्थ्याची ओळख माहिती', 'नाव, आईचे नाव, जन्मतारीख, लिंग आणि मोबाईल क्रमांक शैक्षणिक कागदपत्रांप्रमाणे भरा.')">
-                    <mat-icon>info_outline</mat-icon>
-                  </button>
-                </div>
-                <div class="form-grid-3">
-                  <mat-form-field class="form-field">
-                    <mat-label>आडनाव / Surname *</mat-label>
-                    <mat-icon matPrefix>person</mat-icon>
-                    <input matInput formControlName="lastName" required />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'lastName') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>विद्यार्थ्याचे नाव / First Name *</mat-label>
-                    <mat-icon matPrefix>person</mat-icon>
-                    <input matInput formControlName="firstName" required />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'firstName') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>वडिलांचे / मधले नाव</mat-label>
-                    <mat-icon matPrefix>person</mat-icon>
-                    <input matInput formControlName="middleName" />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'middleName') }}</mat-error>
-                  </mat-form-field>
-                </div>
-
-                <div class="form-grid-2">
-                  <mat-form-field class="form-field">
-                    <mat-label>आईचे नाव *</mat-label>
-                    <mat-icon matPrefix>family_restroom</mat-icon>
-                    <input matInput formControlName="motherName" required />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'motherName') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>जन्मतारीख (DD/MM/YYYY) *</mat-label>
-                    <mat-icon matPrefix>cake</mat-icon>
-                    <input matInput formControlName="dateOfBirth" [matDatepicker]="picker" />
-                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                    <mat-datepicker #picker></mat-datepicker>
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'dateOfBirth') }}</mat-error>
-                  </mat-form-field>
-                </div>
-
-                <div class="form-grid-2">
-                  <mat-form-field class="form-field">
-                    <mat-label>लिंग *</mat-label>
-                    <mat-icon matPrefix>wc</mat-icon>
-                    <mat-select formControlName="gender" required>
-                      <mat-option value="">- लिंग निवडा -</mat-option>
-                      <mat-option value="Male">Male</mat-option>
-                      <mat-option value="Female">Female</mat-option>
-                      <mat-option value="Other">Other</mat-option>
-                      <mat-option value="Prefer Not to Say">Prefer Not to Say</mat-option>
-                    </mat-select>
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'gender') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>आधार क्रमांक</mat-label>
-                    <mat-icon matPrefix>badge</mat-icon>
-                    <input matInput formControlName="aadharNumber" />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'aadharNumber') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>APAAR आयडी (12 अंकी)</mat-label>
-                    <mat-icon matPrefix>verified_user</mat-icon>
-                    <input matInput formControlName="apaarId" placeholder="e.g., APAAR123456" />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'apaarId') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>विद्यार्थी सरल आयडी</mat-label>
-                    <mat-icon matPrefix>badge</mat-icon>
-                    <input matInput formControlName="studentSaralId" placeholder="Enter Student Saral ID" />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'studentSaralId') }}</mat-error>
-                  </mat-form-field>
-                </div>
-
-                <div class="form-grid-2">
-                  <mat-form-field class="form-field">
-                    <mat-label>मोबाईल क्रमांक *</mat-label>
-                    <mat-icon matPrefix>phone</mat-icon>
-                    <input matInput formControlName="mobile" required />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'mobile') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>लॉगिन ईमेल (Google)</mat-label>
-                    <mat-icon matPrefix>email</mat-icon>
-                    <input matInput [value]="profile?.email || auth.user()?.username || ''" readonly />
-                    <mat-hint>हा ईमेल तुमच्या Google लॉगिनमधून आपोआप घेतला जातो.</mat-hint>
-                  </mat-form-field>
-                </div>
-              </div>
-
-              <!-- ADDRESS DETAILS -->
-              <div class="form-card">
-                <div class="card-title-row">
-                  <h3 class="card-title">पत्ता माहिती</h3>
-                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('पत्ता माहिती', 'पूर्ण पत्ता, पिनकोड, जिल्हा, तालुका आणि गावाची माहिती अचूक भरा. पिनकोड टाकल्यास काही माहिती आपोआप भरेल.')">
-                    <mat-icon>info_outline</mat-icon>
-                  </button>
-                </div>
-                
-                <mat-form-field class="form-field-full">
-                  <mat-label>संपूर्ण पत्ता *</mat-label>
-                  <mat-icon matPrefix>location_on</mat-icon>
-                  <textarea matInput formControlName="addressLineOne" rows="3" required></textarea>
-                  <mat-hint>पूर्ण पत्ता एका ठिकाणी भरा.</mat-hint>
-                  <mat-error>{{ getErrorMessage(personalDetailsForm, 'addressLineOne') }}</mat-error>
-                </mat-form-field>
-
-                <div class="form-grid-4">
-                  <mat-form-field class="form-field">
-                    <mat-label>पिनकोड *</mat-label>
-                    <mat-icon matPrefix>location_on</mat-icon>
-                    <input matInput 
-                           formControlName="pincode" 
- 
-                           [matAutocomplete]="pincodeAuto"
-                           (input)="onPincodeInput($event)"
-                           required />
-                    <mat-autocomplete #pincodeAuto="matAutocomplete" (optionSelected)="onPincodeSelected($event)">
-                      <mat-optgroup *ngIf="pincodeOptions.length > 0">
-                        <mat-option *ngFor="let location of pincodeOptions" 
-                                    [value]="location.pincode"
-                                    class="pincode-option">
-                          <div class="option-content">
-                            <strong>{{ location.pincode }}</strong> - {{ location.village }}
-                            <div class="option-details">
-                              {{ location.district }}, {{ location.taluka }}
-                            </div>
-                          </div>
-                        </mat-option>
-                      </mat-optgroup>
-                      <mat-option *ngIf="pincodeOptions.length === 0 && pincodeLookupLoading" disabled>
-                        <mat-spinner diameter="20"></mat-spinner> Searching...
-                      </mat-option>
-                      <mat-option *ngIf="pincodeError && pincodeOptions.length === 0" disabled>
-                        <span class="error-text">{{ pincodeError }}</span>
-                      </mat-option>
-                    </mat-autocomplete>
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'pincode') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>जिल्हा</mat-label>
-                    <mat-icon matPrefix>public</mat-icon>
-                    <input matInput formControlName="district" />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'district') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>तालुका</mat-label>
-                    <mat-icon matPrefix>public</mat-icon>
-                    <input matInput formControlName="taluka" />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'taluka') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>महसूल मंडळ</mat-label>
-                    <mat-icon matPrefix>public</mat-icon>
-                    <input matInput formControlName="revenueCircle" />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'revenueCircle') }}</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field form-full-width">
-                    <mat-label>गाव</mat-label>
-                    <mat-icon matPrefix>public</mat-icon>
-                    <input matInput formControlName="village" />
-                    <mat-error>{{ getErrorMessage(personalDetailsForm, 'village') }}</mat-error>
-                  </mat-form-field>
-                </div>
-              </div>
-
-              <!-- DEMOGRAPHICS & PERSONAL INFORMATION -->
-              <div class="form-card">
-                <div class="card-title-row">
-                  <h3 class="card-title">वैयक्तिक व सामाजिक माहिती</h3>
-                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('वैयक्तिक व सामाजिक माहिती', 'प्रवर्ग, अल्पसंख्याक धर्म आणि शिक्षणाचे माध्यम लागू असल्यासच निवडा.')">
-                    <mat-icon>info_outline</mat-icon>
-                  </button>
-                </div>
-                
-                <div class="form-grid-3">
-                  <mat-form-field class="form-field">
-                    <mat-label>प्रवर्ग</mat-label>
-                    <mat-icon matPrefix>group</mat-icon>
-                    <mat-select formControlName="categoryCode">
-                      <mat-option value="">-- Select Category --</mat-option>
-                      <mat-option value="OPEN">Open</mat-option>
-                      <mat-option value="OBC">OBC</mat-option>
-                      <mat-option value="SC">Scheduled Caste (SC)</mat-option>
-                      <mat-option value="ST">Scheduled Tribe (ST)</mat-option>
-                      <mat-option value="VJA">VJ/DT (VJ-A)</mat-option>
-                      <mat-option value="NTB">Nomadic Tribe (NT-B)</mat-option>
-                      <mat-option value="NTC">Nomadic Tribe (NT-C)</mat-option>
-                      <mat-option value="NTD">Nomadic Tribe (NT-D)</mat-option>
-                      <mat-option value="SBC">SBC</mat-option>
-                      <mat-option value="SEBC">SEBC</mat-option>
-                      <mat-option value="EWS">EWS</mat-option>
-                    </mat-select>
-                    
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>अल्पसंख्याक धर्म</mat-label>
-                    <mat-icon matPrefix>people</mat-icon>
-                    <mat-select formControlName="minorityReligionCode">
-                      <mat-option value="">-- Select Minority Religion --</mat-option>
-                      <mat-option value="HINDU_NON_MINORITY">Hindu & Other Non-Minority</mat-option>
-                      <mat-option value="MUSLIM">Muslim</mat-option>
-                      <mat-option value="CHRISTIAN">Christian</mat-option>
-                      <mat-option value="SIKH">Sikh</mat-option>
-                      <mat-option value="BUDDHIST">Buddhist</mat-option>
-                      <mat-option value="JAIN">Jain</mat-option>
-                      <mat-option value="PARSI">Parsi</mat-option>
-                      <mat-option value="JEWISH">Jewish</mat-option>
-                      <mat-option value="OTHER">Other</mat-option>
-                    </mat-select>
-                  
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>शिक्षणाचे माध्यम</mat-label>
-                    <mat-icon matPrefix>language</mat-icon>
-                    <mat-select formControlName="mediumCode">
-                      <mat-option value="">-- Select Medium of Study --</mat-option>
-                      <mat-option value="MARATHI">Marathi</mat-option>
-                      <mat-option value="HINDI">Hindi</mat-option>
-                      <mat-option value="ENGLISH">English</mat-option>
-                      <mat-option value="URDU">Urdu</mat-option>
-                    </mat-select>
-                    
-                  </mat-form-field>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <button mat-stroked-button type="button" (click)="goToPreviousTab()">
-                  <mat-icon>arrow_back</mat-icon>
-                  Back
-                </button>
-                <button mat-raised-button color="primary" (click)="savePersonalDetails()" [disabled]="personalDetailsForm.invalid || savingPersonal">
-                  <mat-icon *ngIf="!savingPersonal">save</mat-icon>
-                  <mat-spinner *ngIf="savingPersonal" diameter="20"></mat-spinner>
-                  <span *ngIf="!savingPersonal">वैयक्तिक माहिती जतन करा</span>
-                  <span *ngIf="savingPersonal">जतन करत आहे...</span>
-                </button>
-                <button mat-stroked-button type="button" (click)="goToNextTab(2)">
-                  Next
-                  <mat-icon>arrow_forward</mat-icon>
-                </button>
-              </div>
-            </form>
-          </mat-tab>
-
-          <!-- TAB 2: PREVIOUS EXAMINATION -->
-          <mat-tab>
-            <ng-template mat-tab-label>
-              <mat-icon>history</mat-icon>
-              <span class="tab-title">मागील परीक्षा</span>
-            </ng-template>
-
-            <form [formGroup]="previousExamForm" class="form-section">
-              <!-- SSC EXAMINATION -->
-              <div class="form-card">
-                <div class="card-title-row">
-                  <h3 class="card-title">SSC परीक्षा तपशील</h3>
-                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('SSC परीक्षा तपशील', 'तुमच्या शेवटच्या SSC परीक्षेचे आसन क्रमांक, महिना, वर्ष आणि बोर्ड तपशील येथे भरा.')">
-                    <mat-icon>info_outline</mat-icon>
-                  </button>
-                </div>
-
-                <div class="form-grid-4">
-                  <mat-form-field class="form-field">
-                    <mat-label>Seat Number</mat-label>
-                    <mat-icon matPrefix>confirmation_number</mat-icon>
-                    <input matInput formControlName="sscSeatNo" />
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>Month</mat-label>
-                    <mat-icon matPrefix>calendar_today</mat-icon>
-                    <mat-select formControlName="sscMonth">
-                      <mat-option value="">- Select -</mat-option>
-                      <mat-option value="JAN">January</mat-option>
-                      <mat-option value="FEB">February</mat-option>
-                      <mat-option value="MAR">March</mat-option>
-                      <mat-option value="APR">April</mat-option>
-                      <mat-option value="MAY">May</mat-option>
-                      <mat-option value="JUN">June</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>Year</mat-label>
-                    <mat-icon matPrefix>calendar_today</mat-icon>
-                    <input matInput type="number" formControlName="sscYear" />
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>Board / College</mat-label>
-                    <mat-icon matPrefix>domain</mat-icon>
-                    <input matInput formControlName="sscBoard" />
-                  </mat-form-field>
-                </div>
-
-                <div class="form-grid-2">
-                  <mat-form-field class="form-field">
-                    <mat-label>Percentage Obtained (%)</mat-label>
-                    <mat-icon matPrefix>percent</mat-icon>
-                    <input matInput type="number" formControlName="sscPercentage" min="0" max="100" step="0.01" />
-                  </mat-form-field>
-                </div>
-              </div>
-
-              <!-- XIth EXAMINATION -->
-              <div class="form-card">
-                <div class="card-title-row">
-                  <h3 class="card-title">इयत्ता ११ वी परीक्षा तपशील</h3>
-                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('इयत्ता ११ वी परीक्षा तपशील', '११ वी संबंधित माहिती लागू असल्यास येथे भरा. ही माहिती अर्ज पडताळणीसाठी उपयुक्त ठरते.')">
-                    <mat-icon>info_outline</mat-icon>
-                  </button>
-                </div>
-
-                <div class="form-grid-4">
-                  <mat-form-field class="form-field">
-                    <mat-label>Seat Number</mat-label>
-                    <mat-icon matPrefix>confirmation_number</mat-icon>
-                    <input matInput formControlName="xithSeatNo" />
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>Month</mat-label>
-                    <mat-icon matPrefix>calendar_today</mat-icon>
-                    <mat-select formControlName="xithMonth">
-                      <mat-option value="">- Select -</mat-option>
-                      <mat-option value="JAN">January</mat-option>
-                      <mat-option value="FEB">February</mat-option>
-                      <mat-option value="MAR">March</mat-option>
-                      <mat-option value="APR">April</mat-option>
-                      <mat-option value="MAY">May</mat-option>
-                      <mat-option value="JUN">June</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>Year</mat-label>
-                    <mat-icon matPrefix>calendar_today</mat-icon>
-                    <input matInput type="number" formControlName="xithYear" />
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>Jr. College</mat-label>
-                    <mat-icon matPrefix>domain</mat-icon>
-                    <input matInput formControlName="xithCollege" />
-                  </mat-form-field>
-                </div>
-
-                <div class="form-grid-2">
-                  <mat-form-field class="form-field">
-                    <mat-label>Percentage Obtained (%)</mat-label>
-                    <mat-icon matPrefix>percent</mat-icon>
-                    <input matInput type="number" formControlName="xithPercentage" min="0" max="100" step="0.01" />
-                  </mat-form-field>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <button mat-stroked-button type="button" (click)="goToPreviousTab()">
-                  <mat-icon>arrow_back</mat-icon>
-                  Back
-                </button>
-                <button mat-raised-button color="primary" (click)="savePreviousExams()" [disabled]="savingPrevious">
-                  <mat-icon *ngIf="!savingPrevious">save</mat-icon>
-                  <mat-spinner *ngIf="savingPrevious" diameter="20"></mat-spinner>
-                  <span *ngIf="!savingPrevious">मागील परीक्षा तपशील जतन करा</span>
-                  <span *ngIf="savingPrevious">जतन करत आहे...</span>
-                </button>
-                <button mat-stroked-button type="button" (click)="goToNextTab(3)">
-                  Next
-                  <mat-icon>arrow_forward</mat-icon>
-                </button>
-              </div>
-            </form>
-          </mat-tab>
-
-          <!-- TAB 4: BANK & PAYMENT -->
-          <mat-tab>
-            <ng-template mat-tab-label>
-              <mat-icon>account_balance</mat-icon>
-              <span class="tab-title">बँक तपशील</span>
-            </ng-template>
-
-            <form [formGroup]="bankDetailsForm" class="form-section">
-              <!-- BANK ACCOUNT DETAILS -->
-              <div class="form-card">
-                <div class="card-title-row">
-                  <h3 class="card-title">बँक खाते माहिती</h3>
-                  <button mat-icon-button type="button" class="section-help-btn" (click)="openInfoPopup('बँक खाते माहिती', 'परीक्षा शुल्क परतावा किंवा संबंधित प्रक्रियेसाठी आवश्यक असल्यास खातेधारक, IFSC आणि खाते क्रमांक भरा.')">
-                    <mat-icon>info_outline</mat-icon>
-                  </button>
-                </div>
-                
-                <div class="form-grid-2">
-                  <mat-form-field class="form-field">
-                    <mat-label>Account Holder Name *</mat-label>
-                    <mat-icon matPrefix>account_circle</mat-icon>
-                    <input matInput formControlName="accountHolder" required />
-                    <mat-error>Account Holder is required</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>Relation with Candidate *</mat-label>
-                    <mat-icon matPrefix>people</mat-icon>
-                    <mat-select formControlName="accountHolderRelation" required>
-                      <mat-option value="">- Select -</mat-option>
-                      <mat-option value="SELF">SELF</mat-option>
-                      <mat-option value="PARENT">Parent</mat-option>
-                      <mat-option value="GUARDIAN">Guardian</mat-option>
-                    </mat-select>
-                    <mat-error>Relation is required</mat-error>
-                  </mat-form-field>
-                </div>
-
-                <div class="form-grid-2">
-                  <mat-form-field class="form-field">
-                    <mat-label>IFSC Code *</mat-label>
-                    <mat-icon matPrefix>code</mat-icon>
-                    <input matInput formControlName="ifscCode" required style="text-transform: uppercase;" />
-                    <mat-error>IFSC Code is required</mat-error>
-                  </mat-form-field>
-
-                  <mat-form-field class="form-field">
-                    <mat-label>Account Number *</mat-label>
-                    <mat-icon matPrefix>numbers</mat-icon>
-                    <input matInput formControlName="accountNumber" required />
-                    <mat-error>Account Number is required</mat-error>
-                  </mat-form-field>
-                </div>
-              </div>
-
-              <div class="form-actions">
-                <button mat-stroked-button type="button" (click)="goToPreviousTab()">
-                  <mat-icon>arrow_back</mat-icon>
-                  Back
-                </button>
-                <button mat-raised-button color="primary" (click)="saveBankDetails()" [disabled]="bankDetailsForm.invalid || savingBank">
-                  <mat-icon *ngIf="!savingBank">save</mat-icon>
-                  <mat-spinner *ngIf="savingBank" diameter="20"></mat-spinner>
-                  <span *ngIf="!savingBank">बँक तपशील जतन करा</span>
-                  <span *ngIf="savingBank">जतन करत आहे...</span>
-                </button>
-                <button mat-stroked-button type="button" (click)="goToNextTab(4)">
-                  Next
-                  <mat-icon>arrow_forward</mat-icon>
-                </button>
-              </div>
-            </form>
-          </mat-tab>
-
-          <!-- TAB 5: SUMMARY & REVIEW -->
-          <mat-tab>
-            <ng-template mat-tab-label>
-              <mat-icon>summarize</mat-icon>
-              <span class="tab-title">सारांश</span>
-            </ng-template>
-
-            <div class="summary-content">
-              <mat-card class="summary-card">
-                <mat-card-header>
-                  <mat-card-title>Application Summary</mat-card-title>
-                </mat-card-header>
-
-                <mat-card-content>
-                  <div class="summary-sections">
-                    <!-- Personal Info Summary -->
-                    <div class="summary-section">
-                      <h3 class="summary-section-title">Personal Information</h3>
-                      <div class="summary-grid">
-                        <div class="summary-item">
-                          <label>Full Name:</label>
-                          <span>{{ profile.lastName }} {{ profile.firstName }} {{ profile.middleName }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Email:</label>
-                          <span>{{ profile.email || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Mother's Name:</label>
-                          <span>{{ profile.motherName }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Date of Birth:</label>
-                          <span>{{ profile.dob || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Gender:</label>
-                          <span>{{ profile.gender || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Mobile:</label>
-                          <span>{{ profile.mobile || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Aadhar Number:</label>
-                          <span>{{ profile.aadhaar || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>APAAR ID:</label>
-                          <span>{{ profile.apaarId || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Student Saral ID:</label>
-                          <span>{{ profile.studentSaralId || '-' }}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Demographics Summary -->
-                    <div class="summary-section">
-                      <h3 class="summary-section-title">Demographics & Personal Information</h3>
-                      <div class="summary-grid">
-                        <div class="summary-item">
-                          <label>Category:</label>
-                          <span>{{ getCategoryLabel(profile.categoryCode) }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Minority Religion:</label>
-                          <span>{{ getReligionLabel(profile.minorityReligionCode) }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Medium of Study:</label>
-                          <span>{{ getMediumLabel(profile.mediumCode) }}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Address Summary -->
-                    <div class="summary-section">
-                      <h3 class="summary-section-title">Address Details</h3>
-                      <div class="summary-grid">
-                        <div class="summary-item">
-                          <label>Address:</label>
-                          <span>{{ profile.address || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Pincode:</label>
-                          <span>{{ profile.pinCode || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>District:</label>
-                          <span>{{ profile.district || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Taluka:</label>
-                          <span>{{ profile.taluka || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Village:</label>
-                          <span>{{ profile.village || '-' }}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Education Summary -->
-                    <div class="summary-section" *ngIf="profile.previousExams && profile.previousExams.length > 0">
-                      <h3 class="summary-section-title">Previous Exam Details</h3>
-                      <div *ngFor="let exam of profile.previousExams" class="summary-subsection">
-                        <h4>{{ exam.examType === 'SSC' ? 'SSC / Equivalent' : exam.examType === 'XI' ? 'XIth Standard' : exam.examType }}</h4>
-                        <div class="summary-grid">
-                          <div class="summary-item">
-                            <label>Seat Number:</label>
-                            <span>{{ exam.seatNo || '-' }}</span>
-                          </div>
-                          <div class="summary-item">
-                            <label>Month:</label>
-                            <span>{{ exam.month || '-' }}</span>
-                          </div>
-                          <div class="summary-item">
-                            <label>Year:</label>
-                            <span>{{ exam.year || '-' }}</span>
-                          </div>
-                          <div class="summary-item">
-                            <label>Board/College:</label>
-                            <span>{{ exam.boardOrCollegeName || '-' }}</span>
-                          </div>
-                          <div class="summary-item">
-                            <label>Percentage:</label>
-                            <span>{{ exam.percentage || '-' }}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Bank Details Summary -->
-                    <div class="summary-section" *ngIf="profile.bankDetails || bankDetailsForm.get('accountHolder')?.value">
-                      <h3 class="summary-section-title">Bank Account Details</h3>
-                      <div class="summary-grid">
-                        <div class="summary-item">
-                          <label>Account Holder:</label>
-                          <span>{{ profile.bankDetails?.accountHolder || bankDetailsForm.get('accountHolder')?.value || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Relation:</label>
-                          <span>{{ profile.bankDetails?.accountHolderRelation || bankDetailsForm.get('accountHolderRelation')?.value || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>IFSC Code:</label>
-                          <span>{{ profile.bankDetails?.ifscCode || bankDetailsForm.get('ifscCode')?.value || '-' }}</span>
-                        </div>
-                        <div class="summary-item">
-                          <label>Account Number:</label>
-                          <span>{{ profile.bankDetails?.accountNo || bankDetailsForm.get('accountNumber')?.value || '-' }}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  <div class="summary-actions">
-                    <mat-icon class="success-icon">check_circle</mat-icon>
-                    <p class="summary-message">तुमची प्रोफाइल पूर्ण झाली आहे आणि अर्ज सादर करण्यासाठी तयार आहे.</p>
-                  </div>
-                </mat-card-content>
-              </mat-card>
-            </div>
-          </mat-tab>
-
-        </mat-tab-group>
+       
       </div>
     </div>
   `,
@@ -1145,6 +905,79 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       overflow: hidden;
     }
 
+    .managed-students-card {
+      margin-bottom: 12px;
+      border-left-color: #059669;
+    }
+
+    .managed-students-note {
+      margin: 0 0 10px 0;
+      color: var(--text-secondary);
+      font-size: var(--font-size-sm);
+    }
+
+    .managed-students-table-wrap {
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      overflow: auto;
+      background: #fff;
+    }
+
+    .managed-students-table {
+      width: 100%;
+      min-width: 720px;
+      border-collapse: collapse;
+    }
+
+    .managed-students-table th,
+    .managed-students-table td {
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 10px;
+      font-size: var(--font-size-sm);
+    }
+
+    .managed-students-table thead th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    .managed-students-empty {
+      margin: 0;
+      padding: 10px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      background: #fff;
+      color: var(--text-secondary);
+    }
+
+    .completion-pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #e0f2fe;
+      color: #075985;
+      font-weight: 700;
+      font-size: 0.8rem;
+    }
+
+    .managed-student-popup {
+      width: min(95vw, 1000px);
+      max-height: calc(100vh - 96px);
+      overflow: auto;
+      background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
+      border-radius: 16px;
+      box-shadow: 0 32px 64px rgba(15, 23, 42, 0.15);
+      border: 1px solid rgba(102, 126, 234, 0.1);
+    }
+
+    .managed-student-form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 10px;
+    }
+
     /* Tab Styles */
     ::ng-deep .profile-tabs .mat-mdc-tab-header {
       background: white;
@@ -1189,25 +1022,39 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     }
     /* Form Sections */
     .form-section {
-      
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
       width: 100%;
     }
 
     .form-card {
       margin-bottom: 12px;
-      padding: var(--spacing-md);
-      background: linear-gradient(180deg, #ffffff 0%, var(--bg-lighter) 100%);
-      border: 1px solid var(--border-color);
-      border-radius: 0;
+      padding: var(--spacing-lg);
+      background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+      border: 1px solid rgba(102, 126, 234, 0.08);
+      border-radius: 12px;
       border-left: 4px solid var(--primary-color);
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      animation: fadeInUp 0.35s ease-out;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .form-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), var(--primary-dark));
     }
 
     .form-card:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
+      border-color: rgba(102, 126, 234, 0.15);
     }
 
     .card-title-row {
@@ -1251,6 +1098,13 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       display: grid;
       grid-template-columns: 1fr;
       gap: var(--spacing-md);
+      margin-bottom: var(--spacing-md);
+    }
+
+    .form-grid-compact {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-sm);
       margin-bottom: var(--spacing-md);
     }
 
@@ -1426,84 +1280,184 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       margin: 0 auto var(--spacing-sm);
     }
 
-    /* Compact profile progress strip */
-    .profile-progress-strip {
-      border-top: 4px solid var(--primary-color);
-      border-bottom: 1px solid rgba(148, 163, 184, 0.3);
-      padding: 10px 0 12px;
-      margin-bottom: var(--spacing-md);
-      background: linear-gradient(180deg, rgba(239, 246, 255, 0.9) 0%, rgba(255, 255, 255, 0.98) 100%);
-    }
-
-    .progress-strip-top {
+    .registration-header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
-      gap: var(--spacing-sm);
-      margin-bottom: 8px;
-      flex-wrap: wrap;
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-lg);
+      padding: var(--spacing-md);
+      background: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 16px 30px rgba(15, 23, 42, 0.05);
     }
 
-    .progress-strip-label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-secondary);
-      margin-bottom: 4px;
-    }
-
-    .progress-strip-meta {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
+    .registration-title h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.4rem, 2.2vw, 2rem);
       color: var(--text-primary);
-      font-size: var(--font-size-sm);
     }
 
-    .progress-strip-meta strong {
-      font-size: 1rem;
-      color: var(--primary-dark);
+    .registration-title p {
+      margin: 0;
+      max-width: 640px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+
+    .page-info-card {
+      margin: var(--spacing-lg) 0;
+    }
+
+    .page-info-text {
+      margin: 0;
+      color: var(--text-secondary);
+      line-height: 1.6;
     }
 
     .instructions-trigger {
+      align-self: center;
       white-space: nowrap;
-    }
-
-    ::ng-deep .profile-progress-strip .mat-progress-bar {
-      height: 4px;
-      border-radius: 999px;
-    }
-
-    .progress-strip-note {
-      margin: 8px 0 0;
-      font-size: 0.85rem;
-      color: var(--text-secondary);
-    }
-
-    .progress-strip-note.success {
-      color: #166534;
-      font-weight: 600;
     }
 
     .instructions-popup-backdrop {
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       background: rgba(15, 23, 42, 0.6);
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 16px;
-      z-index: 1200;
+      z-index: 9999 !important;
+      overflow-y: auto;
+      width: 100vw;
+      height: 100vh;
     }
 
     .instructions-popup {
-      width: min(680px, 100%);
+      width: min(95vw, 980px);
+      max-width: 95vw;
+      max-height: min(90vh, calc(100vh - 40px));
       background: #fff;
       border-radius: var(--border-radius);
       box-shadow: 0 24px 48px rgba(15, 23, 42, 0.22);
       padding: 18px;
+      overflow: auto;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 640px) {
+      .instructions-popup {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        padding: 16px;
+      }
+
+      .instructions-popup-backdrop {
+        padding: 0;
+      }
+    }
+
+    ::ng-deep .managed-student-modal .mat-mdc-tab-header {
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+      border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+      border-radius: 12px 12px 0 0;
+      margin-bottom: 0;
+      padding: 0 1rem;
+    }
+
+    ::ng-deep .managed-student-modal .mat-mdc-tab {
+      min-height: 56px;
+      border-radius: 8px 8px 0 0;
+      margin: 0 2px;
+      transition: all 0.3s ease;
+    }
+
+    ::ng-deep .managed-student-modal .mat-mdc-tab.mdc-tab--active {
+      background: #ffffff;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+      border-top: 3px solid var(--primary-color);
+    }
+
+    ::ng-deep .managed-student-modal .mdc-tab__text-label {
+      font-weight: 600;
+      color: #64748b;
+      transition: color 0.3s ease;
+    }
+
+    ::ng-deep .managed-student-modal .mdc-tab--active .mdc-tab__text-label {
+      color: var(--primary-color);
+    }
+
+    .popup-tab-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--spacing-sm);
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .popup-tab-actions button {
+      min-width: 140px;
+    }
+
+    .managed-student-modal .form-grid-1 {
+      display: grid;
+      gap: var(--spacing-md);
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .managed-student-modal .form-grid-2,
+    .managed-student-modal .form-grid-3,
+    .managed-student-modal .form-grid-4,
+    .managed-student-modal .form-grid-compact {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (min-width: 640px) and (max-width: 1024px) {
+      .instructions-popup {
+        width: min(92vw, 700px);
+        max-width: 92vw;
+      }
+    }
+
+    .managed-student-modal .form-field,
+    .managed-student-modal .form-field-full {
+      width: 100%;
+      margin-top: 8px;
+    }
+
+    .managed-student-modal .mat-form-field .mat-mdc-form-field-flex,
+    .managed-student-modal .mat-mdc-text-field-wrapper {
+      min-height: 56px;
+    }
+
+    .managed-student-modal .mat-mdc-select .mat-mdc-select-trigger {
+      min-height: 56px;
+      align-items: center;
+    }
+
+    .managed-student-modal .mat-form-field .mat-mdc-text-field-input,
+    .managed-student-modal .mat-mdc-select .mat-mdc-select-value,
+    .managed-student-modal textarea.mat-mdc-input-element {
+      min-height: 40px;
+      box-sizing: border-box;
+    }
+
+    .managed-student-modal .form-section {
+      margin-top: 12px;
+    }
+
+    ::ng-deep .managed-student-tabs .mat-mdc-tab-body-content {
+      padding-top: 10px;
     }
 
     .popup-header {
@@ -1655,6 +1609,10 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
         grid-template-columns: repeat(2, 1fr);
       }
 
+      .form-grid-compact {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
       .summary-grid {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -1678,6 +1636,10 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
         grid-template-columns: repeat(3, 1fr);
       }
 
+      .form-grid-compact {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
       .summary-grid {
         grid-template-columns: repeat(3, 1fr);
       }
@@ -1694,6 +1656,10 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       }
 
       .form-grid-4 {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .form-grid-compact {
         grid-template-columns: repeat(4, 1fr);
       }
 
@@ -1863,6 +1829,221 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
         padding: 0;
       }
     }
+
+    /* ============================================================
+       ERROR HIGHLIGHTING & VALIDATION
+       ============================================================ */
+
+    .error-field ::ng-deep .mat-mdc-form-field-outline {
+      color: #f44336 !important;
+    }
+
+    .error-field ::ng-deep .mat-mdc-form-field-label {
+      color: #f44336 !important;
+    }
+
+    .error-field ::ng-deep .mat-form-field-wrapper {
+      padding-bottom: 0.5rem;
+    }
+
+    .error-field input, 
+    .error-field textarea {
+      border-color: #f44336 !important;
+    }
+
+    ::ng-deep .error-field .mat-mdc-text-field-wrapper {
+      border-color: #f44336 !important;
+    }
+
+    .validation-error-summary {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background-color: #ffebee;
+      border-left: 4px solid #f44336;
+      border-radius: 4px;
+      color: #c62828;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+      animation: slideInDown 0.3s ease;
+    }
+
+    .validation-error-summary mat-icon {
+      color: #f44336;
+      flex-shrink: 0;
+    }
+
+    @keyframes slideInDown {
+      from {
+        transform: translateY(-10px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* ============================================================
+       TAB IMPROVEMENTS
+       ============================================================ */
+
+    .tab-instruction {
+      color: #555;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+      padding: 10px 12px;
+      background: #f5f5f5;
+      border-left: 3px solid #667eea;
+      border-radius: 4px;
+      line-height: 1.5;
+    }
+
+    .tab-counter {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #666;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: #f5f5f5;
+      padding: 6px 12px;
+      border-radius: 4px;
+      min-width: 80px;
+    }
+
+    .tab-navigation {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border-top: 1px solid rgba(102, 126, 234, 0.1);
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+      border-radius: 0 0 12px 12px;
+    }
+
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      min-width: 120px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.2);
+    }
+
+    .back-btn {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 2px solid #e2e8f0;
+    }
+
+    .back-btn:hover:not(:disabled) {
+      background: #e2e8f0;
+      border-color: #cbd5e1;
+    }
+
+    .next-btn {
+      background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+      color: white;
+      border: 2px solid var(--primary-color);
+    }
+
+    .next-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+    }
+
+    .back-btn {
+      order: 1;
+      flex-direction: row-reverse;
+    }
+
+    .next-btn {
+      order: 3;
+    }
+
+    .tab-counter {
+      order: 2;
+      flex: 1;
+      text-align: center;
+    }
+
+    @media (max-width: 600px) {
+      .tab-navigation {
+        flex-direction: column;
+        gap: 16px;
+        padding: 1.5rem;
+      }
+
+      .nav-btn,
+      .tab-counter {
+        width: 100%;
+        order: unset !important;
+        min-height: 48px;
+      }
+
+      .back-btn {
+        order: 1;
+        flex-direction: row;
+      }
+
+      .tab-counter {
+        order: 2;
+        margin: 8px 0;
+      }
+
+      .next-btn {
+        order: 3;
+      }
+
+      .managed-student-popup {
+        max-width: 95vw;
+        max-height: 95vh;
+        overflow-y: auto;
+        border-radius: 12px;
+      }
+
+      .form-grid-compact {
+        grid-template-columns: 1fr !important;
+        gap: var(--spacing-xs);
+      }
+
+      .managed-student-modal .form-grid-1,
+      .managed-student-modal .form-grid-compact,
+      .managed-student-modal .form-grid-2,
+      .managed-student-modal .form-grid-3,
+      .managed-student-modal .form-grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+
+      .form-card {
+        padding: var(--spacing-sm);
+        margin-bottom: var(--spacing-sm);
+        border-radius: 8px;
+      }
+    }
+
+    .lookup-result {
+      margin-top: 1rem;
+      padding: 12px;
+      background: #e3f2fd;
+      border-left: 3px solid #2196f3;
+      border-radius: 4px;
+    }
   `]
 })
 export class StudentProfileComponent implements OnInit, OnDestroy {
@@ -1908,6 +2089,30 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   showInfoPopup = false;
   infoPopupTitle = '';
   infoPopupText = '';
+  managedStudents: any[] = [];
+  showManagedStudentModal = false;
+  managedStudentMode: 'create' | 'edit' = 'create';
+  managedStudentSaving = false;
+  editingManagedStudentId: number | null = null;
+  managedAadhaarLocked = false;
+  private _managedStudentInstituteId: number | null = null;
+  managedPhotoDataUrl: string | null = null;
+  managedSignatureDataUrl: string | null = null;
+  managedPhotoPreviewUrl: string | null = null;
+  managedSignaturePreviewUrl: string | null = null;
+  managedPhotoRemoved = false;
+  managedSignatureRemoved = false;
+
+  get managedStudentInstituteId(): number | null {
+    return this._managedStudentInstituteId;
+  }
+
+  set managedStudentInstituteId(value: number | null) {
+    this._managedStudentInstituteId = value;
+    if (this.managedStudentForm) {
+      this.managedStudentForm.patchValue({ instituteId: value ?? null }, { emitEvent: false });
+    }
+  }
 
   // Pincode lookup properties
   pincodeOptions: PostalLocation[] = [];
@@ -1919,6 +2124,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   personalDetailsForm: FormGroup;
   previousExamForm: FormGroup;
   bankDetailsForm: FormGroup;
+  managedStudentForm: FormGroup;
 
   constructor(private fb: FormBuilder) {
     // PERSONAL DETAILS FORM - Exact sequence: Last Name, First Name, Middle Name, Mother's Name
@@ -2036,7 +2242,10 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       // Demographics
       categoryCode: [''],
       minorityReligionCode: [''],
-      mediumCode: ['']
+      mediumCode: [''],
+      sscPassedFromMaharashtra: [null as boolean | null],
+      eligibilityCertIssued: [null as boolean | null],
+      eligibilityCertNo: ['', [Validators.maxLength(100)]]
     });
 
     // PREVIOUS EXAM FORM
@@ -2102,6 +2311,43 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         Validators.pattern(/^\d{8,18}$/)
       ]]
     });
+
+    this.managedStudentForm = this.fb.group({
+      firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      middleName: ['', [Validators.maxLength(100)]],
+      lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      motherName: ['', [Validators.maxLength(100)]],
+      dob: [null],
+      gender: [''],
+      instituteId: [null, [Validators.required]],
+      streamCode: ['', [Validators.required]],
+      mobile: ['', [Validators.pattern(/^[6-9]\d{9}$/)]],
+      aadhaar: ['', [Validators.required, Validators.pattern(/^\d{12}$/)]],
+      categoryCode: ['', [Validators.maxLength(10)]],
+      minorityReligionCode: ['', [Validators.maxLength(20)]],
+      divyangCode: ['', [Validators.maxLength(10)]],
+      mediumCode: ['', [Validators.maxLength(10)]],
+      pinCode: ['', [Validators.maxLength(10)]],
+      district: ['', [Validators.maxLength(100)]],
+      taluka: ['', [Validators.maxLength(100)]],
+      village: ['', [Validators.maxLength(100)]],
+      address: ['', [Validators.maxLength(500)]],
+      apaarId: ['', [Validators.maxLength(20)]],
+      studentSaralId: ['', [Validators.maxLength(50)]],
+      sscPassedFromMaharashtra: [null],
+      eligibilityCertIssued: [null],
+      eligibilityCertNo: ['', [Validators.maxLength(100)]],
+      sscSeatNo: ['', [Validators.maxLength(50), Validators.pattern(/^[A-Z0-9]*$/)]],
+      sscMonth: [''],
+      sscYear: ['', [Validators.minLength(4), Validators.maxLength(4), Validators.pattern(/^\d{4}$|^$/)]],
+      sscBoard: ['', [Validators.maxLength(200)]],
+      sscPercentage: ['', [Validators.minLength(1), Validators.maxLength(5), Validators.pattern(/^\d+(\.\d{1,2})?$|^$/), Validators.min(0), Validators.max(100)]],
+      xithSeatNo: ['', [Validators.maxLength(50), Validators.pattern(/^[A-Z0-9]*$/)]],
+      xithMonth: [''],
+      xithYear: ['', [Validators.minLength(4), Validators.maxLength(4), Validators.pattern(/^\d{4}$|^$/)]],
+      xithCollege: ['', [Validators.maxLength(200)]],
+      xithPercentage: ['', [Validators.minLength(1), Validators.maxLength(5), Validators.pattern(/^\d+(\.\d{1,2})?$|^$/), Validators.min(0), Validators.max(100)]]
+    });
   }
 
   /**
@@ -2147,13 +2393,597 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.setupNameFieldTransformers();
+    this.setupManagedEligibilityValidation();
     this.setupPincodeLookup();
     this.setupInstituteAutocomplete();
     // Load institutes and streams FIRST, then load profile
     // This ensures institutes array is populated before pre-population logic runs
     this.loadInstitutesAndStreams().then(() => {
       this.loadProfile();
+      this.loadManagedStudents();
     });
+  }
+
+  private setupManagedEligibilityValidation() {
+    const issuedControl = this.managedStudentForm.get('eligibilityCertIssued');
+    const certNoControl = this.managedStudentForm.get('eligibilityCertNo');
+    if (!issuedControl || !certNoControl) return;
+
+    const applyRules = (issued: unknown) => {
+      if (issued === true) {
+        certNoControl.setValidators([Validators.required, Validators.maxLength(100)]);
+      } else {
+        certNoControl.setValidators([Validators.maxLength(100)]);
+        if (certNoControl.value) {
+          certNoControl.setValue('', { emitEvent: false });
+        }
+      }
+      certNoControl.updateValueAndValidity({ emitEvent: false });
+    };
+
+    applyRules(issuedControl.value);
+    issuedControl.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((issued) => applyRules(issued));
+  }
+
+  loadManagedStudents() {
+    this.http.get<{ students: any[] }>(`${API_BASE_URL}/students/managed`).subscribe({
+      next: (response) => {
+        this.managedStudents = response?.students || [];
+      },
+      error: () => {
+        this.managedStudents = [];
+      }
+    });
+  }
+
+  displayManagedStudentName(student: any): string {
+    const fromApi = String(student?.fullName || '').trim();
+    if (fromApi) return fromApi;
+    return [student?.lastName, student?.firstName, student?.middleName].filter(Boolean).join(' ') || '-';
+  }
+
+  openManagedStudentModal(mode: 'create' | 'edit', student?: any) {
+    this.managedStudentMode = mode;
+    this.editingManagedStudentId = mode === 'edit' ? Number(student?.id || 0) : null;
+    this.managedStudentInstituteId = null;
+    this.selectedTabIndex = 0;
+    this.managedAadhaarLocked = false;
+    this.managedStudentForm.get('aadhaar')?.enable({ emitEvent: false });
+
+    if (mode === 'edit' && student) {
+      this.http.get<{ ok: boolean; student: any }>(`${API_BASE_URL}/students/managed/${student.id}`).subscribe({
+        next: (response) => {
+          const studentData = response.student;
+          this.managedStudentInstituteId = studentData.instituteId || null;
+          this.managedStudentForm.patchValue({
+            firstName: studentData.firstName || '',
+            middleName: studentData.middleName || '',
+            lastName: studentData.lastName || '',
+            motherName: studentData.motherName || '',
+            dob: studentData.dob ? new Date(studentData.dob) : null,
+            gender: studentData.gender || '',
+            instituteId: studentData.instituteId || null,
+            streamCode: studentData.streamCode || '',
+            mobile: studentData.mobile || '',
+            aadhaar: studentData.aadhaar || '',
+            categoryCode: studentData.categoryCode || '',
+            minorityReligionCode: studentData.minorityReligionCode || '',
+            divyangCode: studentData.divyangCode || '',
+            mediumCode: studentData.mediumCode || '',
+            pinCode: studentData.pinCode || '',
+            district: studentData.district || '',
+            taluka: studentData.taluka || '',
+            village: studentData.village || '',
+            address: studentData.address || '',
+            apaarId: studentData.apaarId || '',
+            studentSaralId: studentData.studentSaralId || '',
+            sscPassedFromMaharashtra: studentData.sscPassedFromMaharashtra ?? null,
+            eligibilityCertIssued: studentData.eligibilityCertIssued ?? null,
+            eligibilityCertNo: studentData.eligibilityCertNo || '',
+            sscSeatNo: studentData.previousExams?.find((e: any) => e.examType === 'SSC')?.seatNo || '',
+            sscMonth: studentData.previousExams?.find((e: any) => e.examType === 'SSC')?.month || '',
+            sscYear: studentData.previousExams?.find((e: any) => e.examType === 'SSC')?.year || '',
+            sscBoard: studentData.previousExams?.find((e: any) => e.examType === 'SSC')?.boardOrCollegeName || '',
+            sscPercentage: studentData.previousExams?.find((e: any) => e.examType === 'SSC')?.percentage || '',
+            xithSeatNo: studentData.previousExams?.find((e: any) => e.examType === 'XI')?.seatNo || '',
+            xithMonth: studentData.previousExams?.find((e: any) => e.examType === 'XI')?.month || '',
+            xithYear: studentData.previousExams?.find((e: any) => e.examType === 'XI')?.year || '',
+            xithCollege: studentData.previousExams?.find((e: any) => e.examType === 'XI')?.boardOrCollegeName || '',
+            xithPercentage: studentData.previousExams?.find((e: any) => e.examType === 'XI')?.percentage || ''
+          });
+          this.managedPhotoPreviewUrl = studentData.photoUrl || null;
+          this.managedSignaturePreviewUrl = studentData.signatureUrl || null;
+          this.managedAadhaarLocked = !!studentData.aadhaar;
+          if (this.managedAadhaarLocked) {
+            this.managedStudentForm.get('aadhaar')?.disable({ emitEvent: false });
+          } else {
+            this.managedStudentForm.get('aadhaar')?.enable({ emitEvent: false });
+          }
+          this.managedPhotoDataUrl = null;
+          this.managedSignatureDataUrl = null;
+          this.managedPhotoRemoved = false;
+          this.managedSignatureRemoved = false;
+          this.showManagedStudentModal = true;
+        },
+        error: () => {
+          this.managedStudentForm.patchValue({
+            firstName: student.firstName || '',
+            middleName: student.middleName || '',
+            lastName: student.lastName || '',
+            motherName: student.motherName || '',
+            dob: student.dob ? new Date(student.dob) : null,
+            gender: student.gender || '',
+            instituteId: student.instituteId || null,
+            streamCode: student.streamCode || '',
+            mobile: student.mobile || '',
+            aadhaar: student.aadhaar || '',
+            categoryCode: student.categoryCode || '',
+            minorityReligionCode: student.minorityReligionCode || '',
+            divyangCode: student.divyangCode || '',
+            mediumCode: student.mediumCode || '',
+            pinCode: student.pinCode || '',
+            district: student.district || '',
+            taluka: student.taluka || '',
+            village: student.village || '',
+            address: student.address || '',
+            apaarId: student.apaarId || '',
+            studentSaralId: student.studentSaralId || '',
+            sscPassedFromMaharashtra: student.sscPassedFromMaharashtra ?? null,
+            eligibilityCertIssued: student.eligibilityCertIssued ?? null,
+            eligibilityCertNo: student.eligibilityCertNo || ''
+          });
+          this.managedPhotoPreviewUrl = student.photoUrl || null;
+          this.managedSignaturePreviewUrl = student.signatureUrl || null;
+          this.managedAadhaarLocked = !!student.aadhaar;
+          if (this.managedAadhaarLocked) {
+            this.managedStudentForm.get('aadhaar')?.disable({ emitEvent: false });
+          } else {
+            this.managedStudentForm.get('aadhaar')?.enable({ emitEvent: false });
+          }
+          this.managedPhotoDataUrl = null;
+          this.managedSignatureDataUrl = null;
+          this.managedPhotoRemoved = false;
+          this.managedSignatureRemoved = false;
+          this.managedStudentInstituteId = student.instituteId || null;
+          this.showManagedStudentModal = true;
+        }
+      });
+      return;
+    }
+
+    this.managedStudentForm.reset({
+      firstName: '',
+      middleName: '',
+      lastName: '',
+      motherName: '',
+      dob: null,
+      gender: '',
+      instituteId: null,
+      streamCode: '',
+      mobile: '',
+      aadhaar: '',
+      categoryCode: '',
+      minorityReligionCode: '',
+      divyangCode: '',
+      mediumCode: '',
+      pinCode: '',
+      district: '',
+      taluka: '',
+      village: '',
+      address: '',
+      apaarId: '',
+      studentSaralId: '',
+      sscPassedFromMaharashtra: null,
+      eligibilityCertIssued: null,
+      eligibilityCertNo: '',
+      sscSeatNo: '',
+      sscMonth: '',
+      sscYear: '',
+      sscBoard: '',
+      sscPercentage: '',
+      xithSeatNo: '',
+      xithMonth: '',
+      xithYear: '',
+      xithCollege: '',
+      xithPercentage: ''
+    });
+    this.managedPhotoPreviewUrl = null;
+    this.managedSignaturePreviewUrl = null;
+    this.managedAadhaarLocked = false;
+    this.managedStudentForm.get('aadhaar')?.enable({ emitEvent: false });
+    this.managedPhotoDataUrl = null;
+    this.managedSignatureDataUrl = null;
+    this.managedPhotoRemoved = false;
+    this.managedSignatureRemoved = false;
+    this.selectedTabIndex = 0;
+    this.showManagedStudentModal = true;
+
+    // Always start Add Student from first tab with clean state.
+    if (mode === 'create') {
+      this.clearFormProgress();
+    }
+  }
+
+  closeManagedStudentModal() {
+    this.showManagedStudentModal = false;
+    this.editingManagedStudentId = null;
+  }
+
+  saveManagedStudent() {
+    if (this.managedStudentInstituteId !== null) {
+      this.managedStudentForm.patchValue({ instituteId: this.managedStudentInstituteId });
+    }
+
+    if (this.managedStudentForm.invalid) {
+      this.managedStudentForm.markAllAsTouched();
+      this.snackBar.open('Please fill required fields for managed student.', 'Close', { duration: 2500 });
+      return;
+    }
+
+    for (let tabIndex = 0; tabIndex <= 6; tabIndex++) {
+      if (!this.isManagedTabComplete(tabIndex)) {
+        this.markManagedTabTouched(tabIndex);
+        this.selectedTabIndex = tabIndex;
+        this.snackBar.open(this.getManagedTabValidationMessage(tabIndex), 'Close', { duration: 3000 });
+        return;
+      }
+    }
+
+    // Check for duplicate student in same account
+    const rawValue = this.managedStudentForm.getRawValue();
+    const aadhaar = rawValue.aadhaar;
+    if (aadhaar) {
+      const existingStudent = this.managedStudents.find(student => {
+        if (String(student?.aadhaar || '') !== String(aadhaar)) return false;
+        if (this.managedStudentMode === 'edit' && this.editingManagedStudentId) {
+          return Number(student?.id) !== Number(this.editingManagedStudentId);
+        }
+        return true;
+      });
+      if (existingStudent) {
+        this.snackBar.open('This student is already registered under your account.', 'Close', { duration: 3000 });
+        return;
+      }
+    }
+
+    const dobValue = this.managedStudentForm.value.dob;
+
+    const payload = {
+      firstName: String(rawValue.firstName || '').trim().toUpperCase(),
+      middleName: String(rawValue.middleName || '').trim().toUpperCase() || undefined,
+      lastName: String(rawValue.lastName || '').trim().toUpperCase(),
+      motherName: String(rawValue.motherName || '').trim() || undefined,
+      dob: dobValue ? (dobValue instanceof Date ? dobValue.toISOString() : String(dobValue).trim()) : undefined,
+      gender: String(rawValue.gender || '').trim() || undefined,
+      instituteId: Number(rawValue.instituteId),
+      streamCode: String(rawValue.streamCode || '').trim(),
+      mobile: String(rawValue.mobile || '').trim() || undefined,
+      aadhaar: String(rawValue.aadhaar || '').trim() || undefined,
+      address: String(rawValue.address || '').trim() || undefined,
+      pinCode: String(rawValue.pinCode || '').trim() || undefined,
+      district: String(rawValue.district || '').trim() || undefined,
+      taluka: String(rawValue.taluka || '').trim() || undefined,
+      village: String(rawValue.village || '').trim() || undefined,
+      categoryCode: String(rawValue.categoryCode || '').trim() || undefined,
+      minorityReligionCode: String(rawValue.minorityReligionCode || '').trim() || undefined,
+      divyangCode: String(rawValue.divyangCode || '').trim() || undefined,
+      mediumCode: String(rawValue.mediumCode || '').trim() || undefined,
+      apaarId: String(rawValue.apaarId || '').trim() || undefined,
+      studentSaralId: String(rawValue.studentSaralId || '').trim() || undefined,
+      sscPassedFromMaharashtra: rawValue.sscPassedFromMaharashtra ?? undefined,
+      eligibilityCertIssued: rawValue.eligibilityCertIssued ?? undefined,
+      eligibilityCertNo: rawValue.eligibilityCertIssued === true
+        ? (String(rawValue.eligibilityCertNo || '').trim().toUpperCase() || undefined)
+        : null,
+      photoDataUrl: this.managedPhotoRemoved ? null : (this.managedPhotoDataUrl || undefined),
+      signatureDataUrl: this.managedSignatureRemoved ? null : (this.managedSignatureDataUrl || undefined),
+      sscSeatNo: String(rawValue.sscSeatNo || '').trim() || undefined,
+      sscMonth: String(rawValue.sscMonth || '').trim() || undefined,
+      sscYear: rawValue.sscYear ? Number(rawValue.sscYear) : undefined,
+      sscBoard: String(rawValue.sscBoard || '').trim() || undefined,
+      sscPercentage: String(rawValue.sscPercentage || '').trim() || undefined,
+      xithSeatNo: String(rawValue.xithSeatNo || '').trim() || undefined,
+      xithMonth: String(rawValue.xithMonth || '').trim() || undefined,
+      xithYear: rawValue.xithYear ? Number(rawValue.xithYear) : undefined,
+      xithCollege: String(rawValue.xithCollege || '').trim() || undefined,
+      xithPercentage: String(rawValue.xithPercentage || '').trim() || undefined
+    };
+
+    this.managedStudentSaving = true;
+    const request$ = this.managedStudentMode === 'edit' && this.editingManagedStudentId
+      ? this.http.patch(`${API_BASE_URL}/students/managed/${this.editingManagedStudentId}`, payload)
+      : this.http.post(`${API_BASE_URL}/students/managed`, payload);
+
+    request$.subscribe({
+      next: () => {
+        this.managedStudentSaving = false;
+        this.closeManagedStudentModal();
+        this.loadManagedStudents();
+        this.snackBar.open(this.managedStudentMode === 'edit' ? 'Managed student updated.' : 'Managed student added.', 'Close', { duration: 2500 });
+        
+        // Clear form and redirect to first tab for new student
+        if (this.managedStudentMode === 'create') {
+          this.managedStudentForm.reset({
+            firstName: '',
+            middleName: '',
+            lastName: '',
+            motherName: '',
+            dob: null,
+            gender: '',
+            instituteId: null,
+            streamCode: '',
+            mobile: '',
+            aadhaar: '',
+            categoryCode: '',
+            minorityReligionCode: '',
+            divyangCode: '',
+            mediumCode: '',
+            pinCode: '',
+            district: '',
+            taluka: '',
+            village: '',
+            address: '',
+            apaarId: '',
+            studentSaralId: '',
+            sscPassedFromMaharashtra: null,
+            eligibilityCertIssued: null,
+            eligibilityCertNo: '',
+            sscSeatNo: '',
+            sscMonth: '',
+            sscYear: '',
+            sscBoard: '',
+            sscPercentage: '',
+            xithSeatNo: '',
+            xithMonth: '',
+            xithYear: '',
+            xithCollege: '',
+            xithPercentage: ''
+          });
+          this.managedPhotoPreviewUrl = null;
+          this.managedSignaturePreviewUrl = null;
+          this.managedPhotoDataUrl = null;
+          this.managedSignatureDataUrl = null;
+          this.managedPhotoRemoved = false;
+          this.managedSignatureRemoved = false;
+          this.managedStudentInstituteId = null;
+          this.selectedTabIndex = 0;
+          this.clearFormProgress(); // Clear saved progress after successful save
+          this.openManagedStudentModal('create'); // Reopen modal with cleared form
+        }
+      },
+      error: (err) => {
+        this.managedStudentSaving = false;
+        const message = err?.error?.message || err?.error?.error || 'Failed to save managed student.';
+        this.snackBar.open(message, 'Close', { duration: 3000 });
+      }
+    });
+  }
+
+  /**
+   * Fetch student by Aadhaar number from database
+   * If found, auto-fill the form with existing student data
+   */
+  async fetchStudentByAadhaar() {
+    if (this.managedStudentMode === 'edit') {
+      return;
+    }
+    const aadhaar = String(this.managedStudentForm.get('aadhaar')?.value || '').trim();
+    
+    if (!aadhaar || !/^\d{12}$/.test(aadhaar)) {
+      this.snackBar.open('कृपया वैध 12 अंकी आधार क्रमांक भरा', 'बंद', { duration: 2500 });
+      return;
+    }
+
+    try {
+      const response = await this.http.get<any>(`${API_BASE_URL}/students/lookup-by-aadhaar/${aadhaar}`).toPromise();
+      
+      if (response?.found) {
+        const student = response.fullStudent;
+        // Auto-fill the form with found student data
+        this.managedStudentForm.patchValue({
+          firstName: student.firstName || '',
+          middleName: student.middleName || '',
+          lastName: student.lastName || '',
+          motherName: student.motherName || '',
+          dob: student.dob ? new Date(student.dob) : null,
+          gender: student.gender || '',
+          mobile: student.mobile || '',
+          instituteId: student.instituteId || null,
+          streamCode: student.streamCode || '',
+          categoryCode: student.categoryCode || '',
+          minorityReligionCode: student.minorityReligionCode || '',
+          divyangCode: student.divyangCode || '',
+          mediumCode: student.mediumCode || '',
+          pinCode: student.pinCode || '',
+          district: student.district || '',
+          taluka: student.taluka || '',
+          village: student.village || '',
+          address: student.address || '',
+          apaarId: student.apaarId || '',
+          studentSaralId: student.studentSaralId || '',
+          sscPassedFromMaharashtra: student.sscPassedFromMaharashtra ?? null,
+          eligibilityCertIssued: student.eligibilityCertIssued ?? null,
+          eligibilityCertNo: student.eligibilityCertNo || ''
+        });
+        this.managedStudentInstituteId = student.instituteId || null;
+        this.snackBar.open(`विद्यार्थी सापडला: ${student.firstName} ${student.lastName}. फॉर्ममधील माहिती आपोआप भरली आहे.`, 'बंद', { duration: 4000 });
+      } else {
+        // Keep the entered Aadhaar and any already typed data intact on not-found.
+        this.snackBar.open('या आधार क्रमांकासाठी नोंद सापडली नाही. कृपया माहिती मॅन्युअली भरा.', 'बंद', { duration: 3000 });
+      }
+    } catch (err) {
+      this.snackBar.open('आधार शोधताना अडचण आली. कृपया पुन्हा प्रयत्न करा.', 'बंद', { duration: 2500 });
+    }
+  }
+
+  onNextTabClick() {
+    if (!this.isManagedTabComplete(this.selectedTabIndex)) {
+      this.markManagedTabTouched(this.selectedTabIndex);
+      this.snackBar.open(this.getManagedTabValidationMessage(this.selectedTabIndex), 'Close', { duration: 3000 });
+      return;
+    }
+    this.selectedTabIndex = Math.min(this.selectedTabIndex + 1, 6);
+    // Save progress to localStorage
+    this.saveFormProgress();
+  }
+
+  onManagedTabIndexChange(nextIndex: number) {
+    if (nextIndex <= this.selectedTabIndex) {
+      this.selectedTabIndex = nextIndex;
+      return;
+    }
+
+    for (let tabIndex = 0; tabIndex < nextIndex; tabIndex++) {
+      if (!this.isManagedTabComplete(tabIndex)) {
+        this.markManagedTabTouched(tabIndex);
+        this.snackBar.open(this.getManagedTabValidationMessage(tabIndex), 'Close', { duration: 3000 });
+        this.selectedTabIndex = tabIndex;
+        return;
+      }
+    }
+
+    this.selectedTabIndex = nextIndex;
+    this.saveFormProgress();
+  }
+
+  private markManagedTabTouched(tabIndex: number) {
+    const fieldsByTab: Record<number, string[]> = {
+      0: ['aadhaar'],
+      1: ['instituteId', 'streamCode'],
+      2: ['firstName', 'lastName', 'motherName', 'dob', 'gender', 'mobile'],
+      3: ['address', 'pinCode', 'district', 'taluka', 'village'],
+      4: ['categoryCode', 'minorityReligionCode', 'divyangCode', 'mediumCode', 'sscPassedFromMaharashtra', 'eligibilityCertIssued', 'eligibilityCertNo'],
+      5: [],
+      6: ['sscSeatNo', 'sscMonth', 'sscYear', 'sscBoard', 'sscPercentage', 'xithSeatNo', 'xithMonth', 'xithYear', 'xithCollege', 'xithPercentage']
+    };
+    for (const field of fieldsByTab[tabIndex] || []) {
+      this.managedStudentForm.get(field)?.markAsTouched();
+    }
+  }
+
+  private isManagedTabComplete(tabIndex: number): boolean {
+    const value = this.managedStudentForm.getRawValue();
+    const filled = (v: unknown) => String(v ?? '').trim() !== '';
+
+    switch (tabIndex) {
+      case 0:
+        return /^\d{12}$/.test(String(value.aadhaar || '').trim());
+      case 1:
+        return !!value.instituteId && filled(value.streamCode);
+      case 2:
+        return filled(value.firstName) && filled(value.lastName) && filled(value.motherName) && !!value.dob && filled(value.gender) && /^\d{10}$/.test(String(value.mobile || '').trim());
+      case 3:
+        return filled(value.address) && /^\d{6}$/.test(String(value.pinCode || '').trim()) && filled(value.district) && filled(value.taluka) && filled(value.village);
+      case 4:
+        if (!filled(value.categoryCode) || !filled(value.minorityReligionCode) || !filled(value.divyangCode) || !filled(value.mediumCode)) {
+          return false;
+        }
+        if (value.sscPassedFromMaharashtra === null || value.sscPassedFromMaharashtra === undefined) return false;
+        if (value.eligibilityCertIssued === null || value.eligibilityCertIssued === undefined) return false;
+        if (value.eligibilityCertIssued === true && !filled(value.eligibilityCertNo)) return false;
+        return true;
+      case 5:
+        return !!(this.managedPhotoDataUrl || this.managedPhotoPreviewUrl) && !!(this.managedSignatureDataUrl || this.managedSignaturePreviewUrl);
+      case 6:
+        return filled(value.sscSeatNo) && filled(value.sscMonth) && filled(value.sscYear) && filled(value.sscBoard) && filled(value.sscPercentage)
+          && filled(value.xithSeatNo) && filled(value.xithMonth) && filled(value.xithYear) && filled(value.xithCollege) && filled(value.xithPercentage);
+      default:
+        return true;
+    }
+  }
+
+  private getManagedTabValidationMessage(tabIndex: number): string {
+    const messages: Record<number, string> = {
+      0: 'पुढे जाण्यापूर्वी 12 अंकी आधार क्रमांक भरा.',
+      1: 'पुढे जाण्यापूर्वी महाविद्यालय आणि शाखा निवडा.',
+      2: 'पुढे जाण्यापूर्वी वैयक्तिक माहिती पूर्ण भरा.',
+      3: 'पुढे जाण्यापूर्वी पत्ता माहिती पूर्ण भरा.',
+      4: 'पुढे जाण्यापूर्वी डेमोग्राफिक माहिती पूर्ण भरा.',
+      5: 'पुढे जाण्यापूर्वी फोटो आणि स्वाक्षरी अपलोड करा.',
+      6: 'जतन करण्यापूर्वी मागील परीक्षेची माहिती पूर्ण भरा.'
+    };
+    return messages[tabIndex] || 'कृपया आवश्यक माहिती भरा.';
+  }
+
+  onManagedAssetSaved(event: { type: 'photo' | 'signature'; dataUrl: string; sizeKB: number }) {
+    if (event.type === 'photo') {
+      this.managedPhotoDataUrl = event.dataUrl;
+      this.managedPhotoPreviewUrl = event.dataUrl;
+      this.managedPhotoRemoved = false;
+    } else {
+      this.managedSignatureDataUrl = event.dataUrl;
+      this.managedSignaturePreviewUrl = event.dataUrl;
+      this.managedSignatureRemoved = false;
+    }
+  }
+
+  onManagedAssetRemoved(type: 'photo' | 'signature') {
+    if (type === 'photo') {
+      this.managedPhotoDataUrl = null;
+      this.managedPhotoPreviewUrl = null;
+      this.managedPhotoRemoved = true;
+    } else {
+      this.managedSignatureDataUrl = null;
+      this.managedSignaturePreviewUrl = null;
+      this.managedSignatureRemoved = true;
+    }
+  }
+
+  private saveFormProgress() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const userId = this.auth.user()?.userId;
+      if (userId) {
+        const progressData = {
+          formData: this.managedStudentForm.value,
+          selectedTabIndex: this.selectedTabIndex,
+          managedStudentInstituteId: this.managedStudentInstituteId,
+          timestamp: new Date().toISOString()
+        };
+        localStorage.setItem(`studentFormProgress_${userId}`, JSON.stringify(progressData));
+      }
+    }
+  }
+
+  private loadFormProgress() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const userId = this.auth.user()?.userId;
+      if (userId) {
+        const savedData = localStorage.getItem(`studentFormProgress_${userId}`);
+        if (savedData) {
+          try {
+            const progressData = JSON.parse(savedData);
+            // Check if data is not too old (24 hours)
+            const savedTime = new Date(progressData.timestamp);
+            const now = new Date();
+            const hoursDiff = (now.getTime() - savedTime.getTime()) / (1000 * 60 * 60);
+            
+            if (hoursDiff < 24) {
+              this.managedStudentForm.patchValue(progressData.formData);
+              this.selectedTabIndex = progressData.selectedTabIndex || 0;
+              this.managedStudentInstituteId = progressData.managedStudentInstituteId || null;
+              this.snackBar.open('Previous form progress restored', 'Close', { duration: 2000 });
+            } else {
+              // Clear old data
+              localStorage.removeItem(`studentFormProgress_${userId}`);
+            }
+          } catch (err) {
+            // Invalid data, clear it
+            localStorage.removeItem(`studentFormProgress_${userId}`);
+          }
+        }
+      }
+    }
+  }
+
+  private clearFormProgress() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const userId = this.auth.user()?.userId;
+      if (userId) {
+        localStorage.removeItem(`studentFormProgress_${userId}`);
+      }
+    }
   }
 
   openInstructionsPopup() {
@@ -2278,6 +3108,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
             this.pincodeLookupLoading = false;
             if (locations.length === 0) {
               this.pincodeError = 'या पिनकोडसाठी माहिती मिळाली नाही';
+            } else {
+              this.applyPincodeToAddressForms(pincode, locations[0]);
             }
           },
           error: (err) => {
@@ -2340,7 +3172,10 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           village: profile.village || '',
           categoryCode: profile.categoryCode || '',
           minorityReligionCode: profile.minorityReligionCode || '',
-          mediumCode: profile.mediumCode || ''
+          mediumCode: profile.mediumCode || '',
+          sscPassedFromMaharashtra: profile.sscPassedFromMaharashtra ?? null,
+          eligibilityCertIssued: profile.eligibilityCertIssued ?? null,
+          eligibilityCertNo: profile.eligibilityCertNo || ''
         });
 
         // Bind previous exam form from previousExams array
@@ -2784,7 +3619,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         // Ensure optional fields aren't undefined
         gender: formData.gender || null,
         email: formData.email || '',
-        mobile: formData.mobile || ''
+        mobile: formData.mobile || '',
+        sscPassedFromMaharashtra: formData.sscPassedFromMaharashtra ?? null,
+        eligibilityCertIssued: formData.eligibilityCertIssued ?? null,
+        eligibilityCertNo: formData.eligibilityCertIssued === true
+          ? (formData.eligibilityCertNo?.toUpperCase() || '')
+          : null
       };
 
       this.profileService.updatePersonalDetails(cleanedData);
@@ -2851,6 +3691,33 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     this.selectedTabIndex = Math.max(this.selectedTabIndex - 1, 0);
   }
 
+  onOnlyDigitsInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input) return;
+    const cleaned = input.value.replace(/\D+/g, '');
+
+    const controlName = input.getAttribute('formControlName');
+    if (controlName && cleaned !== input.value) {
+      const control = this.managedStudentForm.get(controlName)
+        || this.personalDetailsForm.get(controlName)
+        || this.previousExamForm.get(controlName)
+        || this.bankDetailsForm.get(controlName);
+
+      if (control) {
+        control.setValue(cleaned, { emitEvent: false });
+      }
+    }
+  }
+
+  onAadhaarBlur(event: Event) {
+    this.onOnlyDigitsInput(event);
+    if (this.managedStudentMode === 'edit') return;
+    const input = event.target as HTMLInputElement;
+    if (input?.value?.length === 12) {
+      this.fetchStudentByAadhaar();
+    }
+  }
+
   /**
    * Handle pincode input with debounce
    */
@@ -2869,19 +3736,37 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     const location = this.pincodeOptions.find(loc => loc.pincode === selectedPincode);
 
     if (location) {
-      // Auto-fill address fields
-      this.personalDetailsForm.patchValue({
-        pincode: location.pincode,
-        district: location.district,
-        taluka: location.taluka,
-        village: location.village || location.officeName || ''
-      });
+      this.applyPincodeToAddressForms(selectedPincode, location);
 
       // Clear autocomplete options and error
       this.pincodeOptions = [];
       this.pincodeError = null;
 
       this.snackBar.open('✓ पिनकोडवरून पत्ता माहिती भरली गेली', '', { duration: 2000 });
+    }
+  }
+
+  private applyPincodeToAddressForms(pincode: string, location: PostalLocation) {
+    const patchData = {
+      district: location.district || '',
+      taluka: location.taluka || '',
+      village: location.village || location.officeName || ''
+    };
+
+    const personalPincode = String(this.personalDetailsForm.get('pincode')?.value || '').trim();
+    if (personalPincode === pincode) {
+      this.personalDetailsForm.patchValue({
+        pincode: location.pincode,
+        ...patchData
+      }, { emitEvent: false });
+    }
+
+    const managedPincode = String(this.managedStudentForm.get('pinCode')?.value || '').trim();
+    if (managedPincode === pincode) {
+      this.managedStudentForm.patchValue({
+        pinCode: location.pincode,
+        ...patchData
+      }, { emitEvent: false });
     }
   }
 

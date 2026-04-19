@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, computed, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, computed, signal, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import {
@@ -16,12 +16,30 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
+import { MatChipsModule } from '@angular/material/chips';
 import { API_BASE_URL } from '../../../core/api';
 import { StudentProfileService } from '../../../core/student-profile.service';
-import { Subject as RxSubject, interval } from 'rxjs';
+import { Subject as RxSubject, interval, Observable, startWith, map } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
 
-type SubjectInfo = { id: number; code: string; name: string; category?: string };
+type SubjectInfo = {
+  id: number;
+  code: string;
+  name: string;
+  category?: string;
+  mappingId?: number;
+  answerLanguageCode?: string;
+};
+
+type SubjectOption = {
+  id: number;
+  name: string;
+  code: string;
+  category?: string;
+  mappingId?: number;
+  answerLanguageCode?: string;
+};
 
 @Component({
   selector: 'app-student-application-edit',
@@ -41,6 +59,32 @@ type SubjectInfo = { id: number; code: string; name: string; category?: string }
     MatDividerModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatAutocompleteModule,
+    MatChipsModule,
+    DatePipe,
+    TitleCasePipe,
+    LowerCasePipe
+  ],
+@Component({
+  selector: 'app-student-application-edit',
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    RouterLink,
+    CommonModule,
+    MatCardModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatStepperModule,
+    MatProgressBarModule,
+    MatIconModule,
+    MatDividerModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatAutocompleteModule,
+    MatChipsModule,
     DatePipe,
     TitleCasePipe,
     LowerCasePipe
@@ -71,92 +115,326 @@ type SubjectInfo = { id: number; code: string; name: string; category?: string }
           </div>
         </mat-card>
 
-        <!-- Profile Completion Warning -->
-        @if (showProfileWarning()) {
-          <mat-card class="warning-banner">
-            <div class="warning-content">
-              <mat-icon class="warning-icon">warning_amber</mat-icon>
-              <div class="warning-text">
-                <h3>⚠️ Incomplete Profile</h3>
-                <p>Your profile is {{ profileCompletionPercentage() }}% complete. We recommend completing your profile (100%) before submitting your application.</p>
-                <button mat-stroked-button (click)="router.navigate(['/app/student/profile'])">
-                  <mat-icon>edit</mat-icon> Complete Profile
-                </button>
+        <!-- Quick Setup Progress -->
+        @if (setupProgress() < 100) {
+          <mat-card class="setup-card">
+            <div class="setup-header">
+              <mat-icon class="setup-icon">rocket_launch</mat-icon>
+              <div>
+                <h3>Quick Setup - {{ setupProgress() }}% Complete</h3>
+                <p>Pre-filling your application with profile data...</p>
               </div>
             </div>
+            <mat-progress-bar mode="determinate" [value]="setupProgress()" class="setup-progress"></mat-progress-bar>
           </mat-card>
-        }
-
-        <!-- Auto-save Progress -->
-        @if (autoSaveProgress() > 0 && autoSaveProgress() < 100) {
-          <mat-progress-bar mode="determinate" [value]="autoSaveProgress()" class="autosave-progress"></mat-progress-bar>
         }
 
         <!-- Multi-step form -->
         <mat-card class="form-card">
           <mat-stepper #stepper [linear]="true" class="form-stepper">
-            <!-- Step 1: Personal Information -->
-            <mat-step [stepControl]="getPersonalGroup()" [editable]="true">
+            <!-- Step 1: Quick Setup & Verification -->
+            <mat-step [stepControl]="getSetupGroup()" [editable]="true">
               <ng-template matStepLabel>
                 <span class="step-label">
-                  <mat-icon>person</mat-icon>
-                  Personal Info
+                  <mat-icon>auto_fix_high</mat-icon>
+                  Quick Setup
                 </span>
               </ng-template>
 
-              <form [formGroup]="getPersonalGroup()" class="step-form">
-                <div class="form-row">
-                  <mat-form-field class="form-field">
-                    <mat-label>Full Name</mat-label>
-                    <input matInput formControlName="studentName" required placeholder="Enter your full name">
-                  </mat-form-field>
-                  <mat-form-field class="form-field">
-                    <mat-label>Date of Birth</mat-label>
-                    <input matInput [matDatepicker]="dob" formControlName="dob" required>
-                    <mat-datepicker-toggle matIconSuffix [for]="dob"></mat-datepicker-toggle>
-                    <mat-datepicker #dob></mat-datepicker>
-                  </mat-form-field>
+              <div class="setup-step">
+                <div class="setup-intro">
+                  <mat-icon class="intro-icon">lightbulb</mat-icon>
+                  <div>
+                    <h3>Smart Pre-filling</h3>
+                    <p>Your application is being pre-filled with data from your student profile. Review and update as needed.</p>
+                  </div>
                 </div>
 
-                <div class="form-row">
-                  <mat-form-field class="form-field">
-                    <mat-label>Father's Name</mat-label>
-                    <input matInput formControlName="fatherName" required>
-                  </mat-form-field>
-                  <mat-form-field class="form-field">
-                    <mat-label>Mother's Name</mat-label>
-                    <input matInput formControlName="motherName" required>
-                  </mat-form-field>
-                </div>
+                <form [formGroup]="getSetupGroup()" class="step-form">
+                  <!-- Personal Details Summary -->
+                  <div class="summary-section">
+                    <h4 class="section-title">
+                      <mat-icon>person</mat-icon>
+                      Personal Details
+                    </h4>
+                    <div class="summary-grid">
+                      <div class="summary-item">
+                        <span class="label">Name:</span>
+                        <span class="value">{{ form.get('setupGroup.studentName')?.value }}</span>
+                      </div>
+                      <div class="summary-item">
+                        <span class="label">DOB:</span>
+                        <span class="value">{{ form.get('setupGroup.dob')?.value | date:'mediumDate' }}</span>
+                      </div>
+                      <div class="summary-item">
+                        <span class="label">Gender:</span>
+                        <span class="value">{{ form.get('setupGroup.gender')?.value === 'M' ? 'Male' : form.get('setupGroup.gender')?.value === 'F' ? 'Female' : 'Other' }}</span>
+                      </div>
+                      <div class="summary-item">
+                        <span class="label">Category:</span>
+                        <span class="value">{{ form.get('setupGroup.category')?.value }}</span>
+                      </div>
+                    </div>
+                  </div>
 
-                <div class="form-row">
-                  <mat-form-field class="form-field">
-                    <mat-label>Gender</mat-label>
-                    <mat-select formControlName="gender" required>
-                      <mat-option value="M">Male</mat-option>
-                      <mat-option value="F">Female</mat-option>
-                      <mat-option value="O">Other</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                  <mat-form-field class="form-field">
-                    <mat-label>Category</mat-label>
-                    <mat-select formControlName="category" required>
-                      <mat-option value="GEN">General</mat-option>
-                      <mat-option value="OBC">OBC</mat-option>
-                      <mat-option value="SC">SC</mat-option>
-                      <mat-option value="ST">ST</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                </div>
+                  <!-- Academic Details -->
+                  <div class="summary-section">
+                    <h4 class="section-title">
+                      <mat-icon>school</mat-icon>
+                      Academic Details
+                    </h4>
+                    <div class="form-row">
+                      <mat-form-field class="form-field">
+                        <mat-label>Stream</mat-label>
+                        <mat-select formControlName="stream" required (selectionChange)="onStreamChange()">
+                          <mat-option value="SCIENCE">Science</mat-option>
+                          <mat-option value="COMMERCE">Commerce</mat-option>
+                          <mat-option value="ARTS">Arts</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                      <mat-form-field class="form-field">
+                        <mat-label>Medium</mat-label>
+                        <mat-select formControlName="medium" required>
+                          <mat-option value="ENG">English</mat-option>
+                          <mat-option value="MAR">Marathi</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+                  </div>
 
-                <div class="step-actions">
-                  <button mat-button matStepperNext [disabled]="getPersonalGroup().invalid">
-                    <span>Next: Academic Details</span>
-                    <mat-icon>arrow_forward</mat-icon>
-                  </button>
-                </div>
-              </form>
+                  <!-- Contact Details -->
+                  <div class="summary-section">
+                    <h4 class="section-title">
+                      <mat-icon>contact_phone</mat-icon>
+                      Contact Details
+                    </h4>
+                    <div class="form-row">
+                      <mat-form-field class="form-field">
+                        <mat-label>Mobile Number</mat-label>
+                        <input matInput formControlName="mobile" required pattern="[0-9]{10}">
+                      </mat-form-field>
+                      <mat-form-field class="form-field">
+                        <mat-label>Email</mat-label>
+                        <input matInput formControlName="email" required type="email">
+                      </mat-form-field>
+                    </div>
+                  </div>
+
+                  <div class="step-actions">
+                    <button mat-flat-button color="primary" matStepperNext [disabled]="getSetupGroup().invalid">
+                      <mat-icon>arrow_forward</mat-icon>
+                      <span>Continue to Subject Selection</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
             </mat-step>
+
+            <!-- Step 2: Subject Selection -->
+            <mat-step [stepControl]="getSubjectsGroup()" [editable]="true">
+              <ng-template matStepLabel>
+                <span class="step-label">
+                  <mat-icon>library_books</mat-icon>
+                  Subjects (Min 3)
+                </span>
+              </ng-template>
+
+              <div class="subjects-step">
+                <div class="subjects-header">
+                  <mat-icon class="header-icon">auto_stories</mat-icon>
+                  <div>
+                    <h3>Choose Your Subjects</h3>
+                    <p>Select at least 3 subjects from your institute's curriculum. Start typing to search.</p>
+                  </div>
+                </div>
+
+                <form [formGroup]="getSubjectsGroup()" class="step-form">
+                  <!-- Subject Search and Selection -->
+                  <div class="subject-selection">
+                    <mat-form-field class="subject-search-field">
+                      <mat-label>Search and Select Subjects</mat-label>
+                      <input matInput
+                             [formControl]="subjectSearchControl"
+                             [matAutocomplete]="subjectAuto"
+                             placeholder="Type subject name or code...">
+                      <mat-autocomplete #subjectAuto="matAutocomplete"
+                                       [displayWith]="displaySubject"
+                                       (optionSelected)="onSubjectSelected($event)">
+                        @for (subject of filteredSubjects(); track subject.id) {
+                          <mat-option [value]="subject">
+                            <div class="subject-option">
+                              <span class="subject-name">{{ subject.name }}</span>
+                              <span class="subject-code">({{ subject.code }})</span>
+                              @if (subject.category) {
+                                <span class="subject-category">{{ subject.category }}</span>
+                              }
+                            </div>
+                          </mat-option>
+                        }
+                      </mat-autocomplete>
+                    </mat-form-field>
+
+                    <!-- Selected Subjects -->
+                    @if (selectedSubjects().length > 0) {
+                      <div class="selected-subjects">
+                        <h4>Selected Subjects ({{ selectedSubjects().length }}/6)</h4>
+                        <mat-chip-set>
+                          @for (subject of selectedSubjects(); track subject.id) {
+                            <mat-chip [removable]="true" (removed)="removeSubject(subject)">
+                              {{ subject.name }} ({{ subject.code }})
+                              <mat-icon matChipRemove>cancel</mat-icon>
+                            </mat-chip>
+                          }
+                        </mat-chip-set>
+                      </div>
+                    }
+                  </div>
+
+                  <!-- Answer Language Selection -->
+                  @if (selectedSubjects().length > 0) {
+                    <div class="language-section">
+                      <h4 class="section-title">
+                        <mat-icon>language</mat-icon>
+                        Answer Language
+                      </h4>
+                      <mat-form-field class="language-field">
+                        <mat-label>Language for Answer Scripts</mat-label>
+                        <mat-select formControlName="answerLanguage" required>
+                          <mat-option value="ENG">English</mat-option>
+                          <mat-option value="MAR">Marathi</mat-option>
+                        </mat-select>
+                      </mat-form-field>
+                    </div>
+                  }
+
+                  <div class="step-actions">
+                    <button mat-button matStepperPrevious>
+                      <mat-icon>arrow_back</mat-icon>
+                      <span>Back</span>
+                    </button>
+                    <button mat-flat-button color="primary" matStepperNext
+                            [disabled]="getSubjectsGroup().invalid || selectedSubjects().length < 3">
+                      <mat-icon>check_circle</mat-icon>
+                      <span>Review & Pay (₹500)</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </mat-step>
+
+            <!-- Step 3: Review & Payment -->
+            <mat-step [editable]="false">
+              <ng-template matStepLabel>
+                <span class="step-label">
+                  <mat-icon>receipt</mat-icon>
+                  Review & Pay
+                </span>
+              </ng-template>
+
+              <div class="review-step">
+                <div class="review-header">
+                  <mat-icon class="review-icon">assignment</mat-icon>
+                  <div>
+                    <h3>Review Your Application</h3>
+                    <p>Please verify all details before proceeding to payment.</p>
+                  </div>
+                </div>
+
+                <div class="review-content">
+                  <!-- Personal & Academic Summary -->
+                  <div class="review-section">
+                    <h4>Application Summary</h4>
+                    <div class="review-grid">
+                      <div class="review-item">
+                        <span class="label">Application No:</span>
+                        <span class="value">{{ application()!.applicationNo }}</span>
+                      </div>
+                      <div class="review-item">
+                        <span class="label">Name:</span>
+                        <span class="value">{{ form.get('setupGroup.studentName')?.value }}</span>
+                      </div>
+                      <div class="review-item">
+                        <span class="label">Stream:</span>
+                        <span class="value">{{ form.get('setupGroup.stream')?.value }}</span>
+                      </div>
+                      <div class="review-item">
+                        <span class="label">Medium:</span>
+                        <span class="value">{{ form.get('setupGroup.medium')?.value === 'ENG' ? 'English' : 'Marathi' }}</span>
+                      </div>
+                      <div class="review-item">
+                        <span class="label">Answer Language:</span>
+                        <span class="value">{{ form.get('subjectsGroup.answerLanguage')?.value === 'ENG' ? 'English' : 'Marathi' }}</span>
+                      </div>
+                      <div class="review-item">
+                        <span class="label">Subjects:</span>
+                        <span class="value">{{ selectedSubjects().length }} selected</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Selected Subjects List -->
+                  <div class="review-section">
+                    <h4>Selected Subjects</h4>
+                    <div class="subjects-list">
+                      @for (subject of selectedSubjects(); track subject.id) {
+                        <div class="subject-item">
+                          <mat-icon>check_circle</mat-icon>
+                          <span>{{ subject.name }} ({{ subject.code }})</span>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Payment Section -->
+                  <div class="payment-section">
+                    <div class="payment-card">
+                      <div class="payment-header">
+                        <mat-icon class="payment-icon">payment</mat-icon>
+                        <div>
+                          <h4>Exam Fee Payment</h4>
+                          <p>Secure payment powered by Cashfree</p>
+                        </div>
+                      </div>
+                      <div class="payment-amount">
+                        <span class="amount">₹500</span>
+                        <span class="description">One-time exam fee</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="review-actions">
+                    <button mat-button matStepperPrevious>
+                      <mat-icon>arrow_back</mat-icon>
+                      <span>Back to Edit</span>
+                    </button>
+                    <button mat-flat-button color="accent" (click)="submit()" [disabled]="submitting()">
+                      <mat-icon>{{ submitting() ? 'hourglass_empty' : 'credit_card' }}</mat-icon>
+                      {{ submitting() ? 'Processing...' : 'Pay ₹500 & Submit' }}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </mat-step>
+          </mat-stepper>
+        </mat-card>
+
+        <!-- Floating Save Status -->
+        @if (saveStatus()) {
+          <div class="save-toast" [ngClass]="'status-' + saveStatus()">
+            <mat-icon>{{ saveStatus() === 'success' ? 'check_circle' : 'error' }}</mat-icon>
+            <span>{{ saveMessage() }}</span>
+          </div>
+        }
+      </div>
+    } @else {
+      <mat-card class="card">
+        <div class="loading">
+          <mat-icon class="loading-spinner">hourglass_empty</mat-icon>
+          <p>Loading application...</p>
+        </div>
+      </mat-card>
+    }
+  `,
 
             <!-- Step 2: Academic Details -->
             <mat-step [stepControl]="getAcademicGroup()" [editable]="true">
@@ -192,14 +470,97 @@ type SubjectInfo = { id: number; code: string; name: string; category?: string }
                     <span>Back</span>
                   </button>
                   <button mat-button matStepperNext [disabled]="getAcademicGroup().invalid">
-                    <span>Next: Contact Info</span>
+                    <span>Next: Verify Details</span>
                     <mat-icon>arrow_forward</mat-icon>
                   </button>
                 </div>
               </form>
             </mat-step>
 
-            <!-- Step 3: Contact Information -->
+            <!-- Step 3: Verify Details -->
+            <mat-step [editable]="true">
+              <ng-template matStepLabel>
+                <span class="step-label">
+                  <mat-icon>check_circle</mat-icon>
+                  Verify Details
+                </span>
+              </ng-template>
+
+              <div class="verification-form">
+                <div class="verification-header">
+                  <mat-icon class="header-icon">info</mat-icon>
+                  <h3>Please verify your personal and academic details</h3>
+                  <p class="verification-subtitle">These details will be used for your exam application. Make sure everything is correct before proceeding to subject selection.</p>
+                </div>
+
+                <div class="verification-section">
+                  <h4 class="section-title">
+                    <mat-icon>person</mat-icon>
+                    Personal Information
+                  </h4>
+                  <div class="verification-grid">
+                    <div class="verification-item">
+                      <span class="label">Full Name:</span>
+                      <span class="value">{{ form.get('personalGroup.studentName')?.value }}</span>
+                    </div>
+                    <div class="verification-item">
+                      <span class="label">Date of Birth:</span>
+                      <span class="value">{{ form.get('personalGroup.dob')?.value | date:'mediumDate' }}</span>
+                    </div>
+                    <div class="verification-item">
+                      <span class="label">Father's Name:</span>
+                      <span class="value">{{ form.get('personalGroup.fatherName')?.value }}</span>
+                    </div>
+                    <div class="verification-item">
+                      <span class="label">Mother's Name:</span>
+                      <span class="value">{{ form.get('personalGroup.motherName')?.value }}</span>
+                    </div>
+                    <div class="verification-item">
+                      <span class="label">Gender:</span>
+                      <span class="value">{{ form.get('personalGroup.gender')?.value === 'M' ? 'Male' : form.get('personalGroup.gender')?.value === 'F' ? 'Female' : 'Other' }}</span>
+                    </div>
+                    <div class="verification-item">
+                      <span class="label">Category:</span>
+                      <span class="value">{{ form.get('personalGroup.category')?.value }}</span>
+                    </div>
+                    <div class="verification-item">
+                      <span class="label">Divyang Status:</span>
+                      <span class="value">{{ form.get('personalGroup.divyangCode')?.value === 'DIVYANG' ? 'Yes' : 'No' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="verification-section">
+                  <h4 class="section-title">
+                    <mat-icon>school</mat-icon>
+                    Academic Details
+                  </h4>
+                  <div class="verification-grid">
+                    <div class="verification-item">
+                      <span class="label">Stream:</span>
+                      <span class="value">{{ form.get('academicGroup.stream')?.value }}</span>
+                    </div>
+                    <div class="verification-item">
+                      <span class="label">Medium:</span>
+                      <span class="value">{{ form.get('academicGroup.medium')?.value === 'ENG' ? 'English' : 'Marathi' }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="verification-actions">
+                  <button mat-button matStepperPrevious>
+                    <mat-icon>arrow_back</mat-icon>
+                    <span>Back to Edit</span>
+                  </button>
+                  <button mat-flat-button color="primary" matStepperNext>
+                    <mat-icon>check</mat-icon>
+                    <span>Details Verified - Continue to Contact Info</span>
+                  </button>
+                </div>
+              </div>
+            </mat-step>
+
+            <!-- Step 4: Contact Information -->
             <mat-step [stepControl]="getContactGroup()" [editable]="true">
               <ng-template matStepLabel>
                 <span class="step-label">
@@ -251,7 +612,7 @@ type SubjectInfo = { id: number; code: string; name: string; category?: string }
               </form>
             </mat-step>
 
-            <!-- Step 4: Subject Selection -->
+            <!-- Step 5: Subject Selection -->
             <mat-step [stepControl]="getSubjectsGroup()" [editable]="true">
               <ng-template matStepLabel>
                 <span class="step-label">
@@ -296,7 +657,7 @@ type SubjectInfo = { id: number; code: string; name: string; category?: string }
               </form>
             </mat-step>
 
-            <!-- Step 5: Review & Submit -->
+            <!-- Step 6: Review & Submit -->
             <mat-step [editable]="false">
               <ng-template matStepLabel>
                 <span class="step-label">
@@ -317,8 +678,16 @@ type SubjectInfo = { id: number; code: string; name: string; category?: string }
                     <span class="value">{{ form.get('personalGroup.dob')?.value | date }}</span>
                   </div>
                   <div class="review-item">
+                    <span class="label">Gender:</span>
+                    <span class="value">{{ form.get('personalGroup.gender')?.value === 'M' ? 'Male' : form.get('personalGroup.gender')?.value === 'F' ? 'Female' : 'Other' }}</span>
+                  </div>
+                  <div class="review-item">
                     <span class="label">Category:</span>
                     <span class="value">{{ form.get('personalGroup.category')?.value }}</span>
+                  </div>
+                  <div class="review-item">
+                    <span class="label">Divyang Status:</span>
+                    <span class="value">{{ form.get('personalGroup.divyangCode')?.value === 'DIVYANG' ? 'Yes' : 'No' }}</span>
                   </div>
                 </div>
 
@@ -748,6 +1117,126 @@ type SubjectInfo = { id: number; code: string; name: string; category?: string }
     .warning-text button:hover {
       background: #fffbeb;
     }
+
+    .verification-form {
+      padding: 20px 0;
+    }
+
+    .verification-header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding: 20px;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      border-radius: 12px;
+      border: 1px solid #0ea5e9;
+    }
+
+    .header-icon {
+      font-size: 32px;
+      width: 32px;
+      height: 32px;
+      color: #0ea5e9;
+      margin-bottom: 12px;
+    }
+
+    .verification-header h3 {
+      margin: 0 0 8px 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #0c4a6e;
+    }
+
+    .verification-subtitle {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #0369a1;
+      line-height: 1.5;
+    }
+
+    .verification-section {
+      margin-bottom: 32px;
+      padding: 20px;
+      background: #f8fafc;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .section-title mat-icon {
+      color: #64748b;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+
+    .verification-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 12px;
+    }
+
+    .verification-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      font-size: 0.9rem;
+    }
+
+    .verification-item .label {
+      font-weight: 600;
+      color: #475569;
+    }
+
+    .verification-item .value {
+      color: #0f172a;
+      font-weight: 500;
+    }
+
+    .verification-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 2px solid #e2e8f0;
+    }
+
+    .verification-actions button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+    }
+
+    @media (max-width: 600px) {
+      .verification-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .verification-actions {
+        flex-direction: column;
+      }
+
+      .verification-actions button {
+        width: 100%;
+        justify-content: center;
+      }
+    }
   `]
 })
 export class StudentApplicationEditComponent implements OnInit, OnDestroy {
@@ -760,18 +1249,25 @@ export class StudentApplicationEditComponent implements OnInit, OnDestroy {
   saveStatus = signal<'success' | 'error' | null>(null);
   saveMessage = signal('');
   lastSaved = signal<Date | null>(null);
-  availableSubjects = signal<SubjectInfo[]>([]);
   profileCompletionPercentage = signal(0);
   showProfileWarning = signal(false);
+  setupProgress = signal(0);
+
+  // Subject management
+  availableSubjects = signal<SubjectOption[]>([]);
+  selectedSubjects = signal<SubjectOption[]>([]);
+  subjectSearchControl = new FormControl('');
+  filteredSubjects = signal<SubjectOption[]>([]);
 
   private destroy$ = new RxSubject<void>();
   private autoSaveTimer$ = new RxSubject<void>();
 
+  private readonly profileService = inject(StudentProfileService);
+  private readonly router = inject(Router);
+
   constructor(
     private route: ActivatedRoute,
-    private http: HttpClient,
-    private router: Router,
-    private profileService: StudentProfileService
+    private http: HttpClient
   ) {}
 
   ngOnInit() {
@@ -780,7 +1276,7 @@ export class StudentApplicationEditComponent implements OnInit, OnDestroy {
       const completionPercentage = this.profileService.completionPercentage$();
       this.profileCompletionPercentage.set(completionPercentage);
       this.showProfileWarning.set(completionPercentage < 100 && completionPercentage >= 70);
-      
+
       if (completionPercentage < 100) {
         console.warn(`⚠️ Profile only ${completionPercentage}% complete. Consider completing your profile before submitting.`);
       }
@@ -793,8 +1289,16 @@ export class StudentApplicationEditComponent implements OnInit, OnDestroy {
       this.loadApplication();
     });
 
+    // Setup subject search filtering
+    this.subjectSearchControl.valueChanges.pipe(
+      startWith(''),
+      map(value => this._filterSubjects(value || ''))
+    ).subscribe(filtered => {
+      this.filteredSubjects.set(filtered);
+    });
+
     // Auto-save on form changes (debounced)
-    this.form.valueChanges
+    this.form?.valueChanges
       .pipe(
         debounceTime(3000),
         takeUntil(this.destroy$)
@@ -810,26 +1314,26 @@ export class StudentApplicationEditComponent implements OnInit, OnDestroy {
   }
 
   // Helper methods to safely get form groups for template binding
-  getPersonalGroup(): FormGroup {
-    return this.form?.get('personalGroup') as FormGroup;
-  }
-
-  getAcademicGroup(): FormGroup {
-    return this.form?.get('academicGroup') as FormGroup;
-  }
-
-  getContactGroup(): FormGroup {
-    return this.form?.get('contactGroup') as FormGroup;
+  getSetupGroup(): FormGroup {
+    return this.form?.get('setupGroup') as FormGroup;
   }
 
   getSubjectsGroup(): FormGroup {
     return this.form?.get('subjectsGroup') as FormGroup;
   }
 
-  private loadApplication() {
+  private async loadApplication() {
     this.http.get(`${API_BASE_URL}/applications/${this.applicationId()}`).subscribe({
-      next: (res: any) => {
+      next: async (res: any) => {
         this.application.set(res.application);
+        
+        // Ensure profile is loaded before initializing form
+        try {
+          await this.profileService.loadProfile();
+        } catch (err) {
+          console.warn('Failed to load profile for pre-filling, continuing with application data only:', err);
+        }
+        
         this.initForm(res.application);
         this.loadSubjects();
       },
@@ -841,53 +1345,105 @@ export class StudentApplicationEditComponent implements OnInit, OnDestroy {
     });
   }
 
-  private initForm(app: any) {
+  private async initForm(app: any) {
+    // Get student profile data for pre-filling
+    const studentProfile = this.profileService.profile$();
+
     this.form = new FormGroup({
-      personalGroup: new FormGroup({
-        studentName: new FormControl(app.studentName || '', Validators.required),
-        dob: new FormControl(app.dob || '', Validators.required),
-        fatherName: new FormControl(app.fatherName || '', Validators.required),
-        motherName: new FormControl(app.motherName || '', Validators.required),
-        gender: new FormControl(app.gender || '', Validators.required),
-        category: new FormControl(app.category || '', Validators.required)
+      setupGroup: new FormGroup({
+        studentName: new FormControl(app.studentName || `${studentProfile?.firstName || ''} ${studentProfile?.lastName || ''}`.trim() || '', Validators.required),
+        dob: new FormControl(app.dob || studentProfile?.dateOfBirth || '', Validators.required),
+        gender: new FormControl(app.gender || studentProfile?.gender || '', Validators.required),
+        category: new FormControl(app.category || '', Validators.required),
+        stream: new FormControl(app.stream || studentProfile?.stream || '', Validators.required),
+        medium: new FormControl(app.medium || '', Validators.required),
+        mobile: new FormControl(app.mobile || studentProfile?.mobile || '', [Validators.required, Validators.pattern('[0-9]{10}')]),
+        email: new FormControl(app.email || studentProfile?.email || '', [Validators.required, Validators.email])
       }),
-      academicGroup: new FormGroup({
-        stream: new FormControl(app.stream || '', Validators.required),
-        medium: new FormControl(app.medium || '', Validators.required)
-      }),
-      contactGroup: new FormGroup({
-        address: new FormControl(app.address || '', Validators.required),
-        city: new FormControl(app.city || '', Validators.required),
-        pin: new FormControl(app.pin || '', [Validators.required, Validators.pattern('[0-9]{6}')]),
-        mobile: new FormControl(app.mobile || '', [Validators.required, Validators.pattern('[0-9]{10}')]),
-        email: new FormControl(app.email || '', [Validators.required, Validators.email])
-      }),
-      subjectsGroup: new FormGroup({})
+      subjectsGroup: new FormGroup({
+        answerLanguage: new FormControl(app.answerLanguage || 'ENG', Validators.required)
+      })
     });
+
+    // Load subjects for the selected stream
+    if (this.form.get('setupGroup.stream')?.value) {
+      await this.loadSubjects();
+    }
+
+    // Pre-fill selected subjects if they exist
+    if (app.subjects && app.subjects.length > 0) {
+      const selectedSubjectIds = app.subjects.map((s: any) => s.id);
+      const preSelectedSubjects = this.availableSubjects().filter(subject =>
+        selectedSubjectIds.includes(subject.id)
+      );
+      this.selectedSubjects.set(preSelectedSubjects);
+    }
+
+    this.setupProgress.set(100);
   }
 
-  private loadSubjects() {
-    const stream = this.form.get('academicGroup.stream')?.value;
-    this.http.get(`${API_BASE_URL}/subjects?stream=${stream || 'SCIENCE'}`).subscribe({
-      next: (res: any) => {
-        this.availableSubjects.set(res.subjects || []);
-        this.updateSubjectCheckboxes();
-      },
-      error: (err: any) => {
-        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to load subjects';
-        console.error('Failed to load subjects:', errorMsg);
-        this.showToast('error', `Failed to load subjects: ${errorMsg}`);
+  private async loadSubjects() {
+    const stream = this.form.get('setupGroup.stream')?.value;
+    if (!stream) return;
+
+    try {
+      const response = await this.http.get(`${API_BASE_URL}/institutes/subject-options?streamCode=${stream}`).toPromise() as any;
+
+      if (response?.subjects?.length > 0) {
+        this.availableSubjects.set(response.subjects);
+        this.filteredSubjects.set(response.subjects);
+        console.log(`Loaded ${response.subjects.length} subjects from ${response.source === 'institute' ? 'institute mapping' : 'all subjects'}`);
+      } else {
+        // Fallback to all subjects if no institute mapping
+        const fallbackResponse = await this.http.get(`${API_BASE_URL}/subjects?stream=${stream}`).toPromise() as any;
+        this.availableSubjects.set(fallbackResponse?.subjects || []);
+        this.filteredSubjects.set(fallbackResponse?.subjects || []);
+        console.log(`Fallback: Loaded ${fallbackResponse?.subjects?.length || 0} subjects from all subjects`);
       }
-    });
+    } catch (error) {
+      console.error('Failed to load subjects:', error);
+      this.showToast('error', 'Failed to load subjects. Please try again.');
+    }
   }
 
-  private updateSubjectCheckboxes() {
-    const subjectsGroup = this.form.get('subjectsGroup') as FormGroup;
-    subjectsGroup.reset({}, { emitEvent: false });
+  onStreamChange() {
+    const stream = this.form.get('setupGroup.stream')?.value;
+    if (stream) {
+      this.selectedSubjects.set([]); // Clear selected subjects when stream changes
+      this.loadSubjects();
+    }
+  }
 
-    this.availableSubjects().forEach(subject => {
-      subjectsGroup.addControl(
-        `subject_${subject.id}`,
+  private _filterSubjects(value: string): SubjectOption[] {
+    const filterValue = value.toLowerCase();
+    return this.availableSubjects().filter(subject =>
+      subject.name.toLowerCase().includes(filterValue) ||
+      subject.code.toLowerCase().includes(filterValue)
+    );
+  }
+
+  displaySubject(subject: SubjectOption): string {
+    return subject ? `${subject.name} (${subject.code})` : '';
+  }
+
+  onSubjectSelected(event: any) {
+    const subject = event.option.value as SubjectOption;
+    if (subject && !this.selectedSubjects().some(s => s.id === subject.id)) {
+      if (this.selectedSubjects().length < 6) {
+        this.selectedSubjects.set([...this.selectedSubjects(), subject]);
+        this.subjectSearchControl.setValue(''); // Clear search
+        this.autoSave();
+      } else {
+        this.showToast('error', 'Maximum 6 subjects allowed');
+      }
+    }
+  }
+
+  removeSubject(subject: SubjectOption) {
+    const current = this.selectedSubjects();
+    this.selectedSubjects.set(current.filter(s => s.id !== subject.id));
+    this.autoSave();
+  }
         new FormControl(false)
       );
     });

@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -7,6 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import { API_BASE_URL } from '../../../core/api';
@@ -58,25 +59,40 @@ type Application = {
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
+    MatAutocompleteModule,
     MatSnackBarModule
   ],
   template: `
-    <mat-card class="card">
-      <div class="row">
-        <div>
-          <div class="h">My Applications</div>
-          <div class="p">Choose student, exam, and application type to start a new form.</div>
+    <mat-card class="card launcher-card">
+      <div class="launcher-header">
+        <div class="launcher-copy">
+          <div class="h">Exam Application Desk</div>
+          <div class="p">Select student, exam, and application type to start a new form quickly.</div>
         </div>
-        <div class="grow"></div>
-        <mat-form-field appearance="outline" class="w240">
+      </div>
+
+      <div class="launcher-form-grid">
+        <mat-form-field appearance="outline" class="field">
           <mat-label>Student</mat-label>
-          <mat-select [value]="selectedStudentId()" (selectionChange)="selectedStudentId.set($event.value)">
-            @for (s of managedStudents(); track s.id) {
-              <mat-option [value]="s.id">{{ displayStudentName(s) }} • {{ s.instituteName || 'Institute N/A' }}</mat-option>
+          <input
+            matInput
+            type="text"
+            [value]="studentSearchText()"
+            (input)="onStudentSearchInput($event)"
+            [matAutocomplete]="studentAuto"
+            placeholder="Type to search student"
+          />
+          <mat-autocomplete #studentAuto="matAutocomplete">
+            @for (s of filteredManagedStudents(); track s.id) {
+              <mat-option [value]="displayStudentName(s)" (onSelectionChange)="onStudentOptionPicked(s, $event.isUserInput)">{{ displayStudentName(s) }} • {{ s.instituteName || 'Institute N/A' }}</mat-option>
             }
-          </mat-select>
+            @if (!filteredManagedStudents().length) {
+              <mat-option [disabled]="true">No matching students found</mat-option>
+            }
+          </mat-autocomplete>
         </mat-form-field>
-        <mat-form-field appearance="outline" class="w240">
+
+        <mat-form-field appearance="outline" class="field">
           <mat-label>Exam</mat-label>
           <mat-select [value]="selectedExamId()" (selectionChange)="selectedExamId.set($event.value)">
             @for (e of exams(); track e.id) {
@@ -89,7 +105,8 @@ type Application = {
             }
           </mat-select>
         </mat-form-field>
-        <mat-form-field appearance="outline" class="w240">
+
+        <mat-form-field appearance="outline" class="field">
           <mat-label>Application Type</mat-label>
           <mat-select [value]="selectedCandidateType()" (selectionChange)="selectedCandidateType.set($event.value)">
             <mat-option value="REGULAR">Fresh / Regular</mat-option>
@@ -100,25 +117,17 @@ type Application = {
             <mat-option value="PRIVATE">Private</mat-option>
           </mat-select>
         </mat-form-field>
-        <button mat-stroked-button type="button" (click)="showAddStudentForm.set(!showAddStudentForm())">
-          {{ showAddStudentForm() ? 'Hide Add Student' : 'Add New Student' }}
-        </button>
-        <button mat-flat-button color="primary" (click)="create()" [disabled]="!selectedStudentId() || !selectedExamId() || creating() || selectedExamCapacityReached()">
+
+        <button
+          mat-flat-button
+          color="primary"
+          class="create-btn"
+          (click)="create()"
+          [disabled]="!selectedStudentId() || !selectedExamId() || creating() || selectedExamCapacityReached()"
+        >
           {{ creating() ? 'Creating…' : 'New application' }}
         </button>
       </div>
-
-      @if (showAddStudentForm()) {
-        <div class="managed-student-form">
-          <mat-form-field appearance="outline" class="w240"><mat-label>First Name</mat-label><input matInput [value]="newStudentFirstName()" (input)="newStudentFirstName.set($any($event.target).value)" /></mat-form-field>
-          <mat-form-field appearance="outline" class="w240"><mat-label>Middle Name</mat-label><input matInput [value]="newStudentMiddleName()" (input)="newStudentMiddleName.set($any($event.target).value)" /></mat-form-field>
-          <mat-form-field appearance="outline" class="w240"><mat-label>Last Name</mat-label><input matInput [value]="newStudentLastName()" (input)="newStudentLastName.set($any($event.target).value)" /></mat-form-field>
-          <mat-form-field appearance="outline" class="w240"><mat-label>Institute</mat-label><mat-select [value]="newStudentInstituteId()" (selectionChange)="newStudentInstituteId.set($event.value)">@for (inst of institutes(); track inst.id) { <mat-option [value]="inst.id">{{ inst.name }}</mat-option> }</mat-select></mat-form-field>
-          <mat-form-field appearance="outline" class="w240"><mat-label>Stream</mat-label><mat-select [value]="newStudentStreamCode()" (selectionChange)="newStudentStreamCode.set($event.value)"><mat-option value="SCIENCE">Science</mat-option><mat-option value="ARTS">Arts</mat-option><mat-option value="COMMERCE">Commerce</mat-option><mat-option value="VOCATIONAL">Vocational</mat-option><mat-option value="TECHNOLOGY">Technology</mat-option><mat-option value="1">1-Science</mat-option><mat-option value="2">2-Arts</mat-option><mat-option value="3">3-Commerce</mat-option><mat-option value="4">4-Vocational</mat-option><mat-option value="5">5-Technology</mat-option></mat-select></mat-form-field>
-          <mat-form-field appearance="outline" class="w240"><mat-label>Mobile</mat-label><input matInput [value]="newStudentMobile()" (input)="newStudentMobile.set($any($event.target).value)" /></mat-form-field>
-          <button mat-flat-button color="primary" type="button" (click)="createManagedStudent()" [disabled]="creatingStudent()">{{ creatingStudent() ? 'Saving…' : 'Save Student' }}</button>
-        </div>
-      }
 
       @if (selectedExamCapacityReached()) {
         <div style="margin-top:8px;color:#b91c1c;">
@@ -126,30 +135,6 @@ type Application = {
         </div>
       }
 
-      @if (managedStudents().length > 0) {
-        <div class="managed-students-table-wrap">
-          <table class="managed-students-table">
-            <thead>
-              <tr>
-                <th>Student Name</th>
-                <th>Institute</th>
-                <th>Stream</th>
-                <th>Profile %</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (s of managedStudents(); track s.id) {
-                <tr [class.active]="s.id === selectedStudentId()" (click)="selectedStudentId.set(s.id)">
-                  <td>{{ displayStudentName(s) }}</td>
-                  <td>{{ s.instituteName || '-' }}</td>
-                  <td>{{ s.streamCode || '-' }}</td>
-                  <td>{{ s.profileCompletion ?? 0 }}%</td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      }
     </mat-card>
 
     @if (error()) {
@@ -168,45 +153,40 @@ type Application = {
           <p>No applications yet. Create a new one to get started!</p>
         </div>
       } @else {
-        <div class="applications-grid">
-          @for (app of applications(); track app.id) {
-            <div class="application-tile" [class.draft-tile]="app.status === 'DRAFT'" [class.submitted-tile]="app.status === 'SUBMITTED'">
-              <div class="tile-header">
-                <div>
-                  <div class="tile-app-no">{{ app.applicationNo }}</div>
-                  <div class="tile-exam">{{ app.exam?.name }}</div>
-                  <div class="tile-student">{{ studentNameFromApplication(app) }}</div>
-                </div>
-                <span class="status-pill" [class.status-draft]="app.status === 'DRAFT'" [class.status-submitted]="app.status === 'SUBMITTED'">
-                  {{ app.status }}
-                </span>
-              </div>
-
-              <div class="tile-meta-grid">
-                <div class="tile-meta-item">
-                  <label>Session</label>
-                  <span>{{ app.exam?.session }} {{ app.exam?.academicYear }}</span>
-                </div>
-                <div class="tile-meta-item">
-                  <label>Application Type</label>
-                  <span>{{ formatCandidateType(app.candidateType) }}</span>
-                </div>
-                <div class="tile-meta-item full-width">
-                  <label>Last Updated</label>
-                  <span>{{ app.updatedAt ? (app.updatedAt | date:'medium') : '-' }}</span>
-                </div>
-              </div>
-
-              <div class="tile-actions">
-                <button mat-flat-button color="primary" (click)="openApplication(app)">
-                  {{ app.status === 'DRAFT' ? 'Continue Draft' : 'Open Application' }}
-                </button>
-                <button mat-stroked-button (click)="printApplication(app)">
-                  Print
-                </button>
-              </div>
-            </div>
-          }
+        <div class="table-wrap">
+          <table class="applications-table">
+            <thead>
+              <tr>
+                <th>Application No</th>
+                <th>Student</th>
+                <th>Exam</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Updated</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (app of applications(); track app.id) {
+                <tr>
+                  <td>{{ app.applicationNo }}</td>
+                  <td>{{ studentNameFromApplication(app) }}</td>
+                  <td>{{ app.exam?.name }} ({{ app.exam?.session }} {{ app.exam?.academicYear }})</td>
+                  <td>{{ formatCandidateType(app.candidateType) }}</td>
+                  <td>
+                    <span class="status-pill" [class.status-draft]="app.status === 'DRAFT'" [class.status-submitted]="app.status === 'SUBMITTED'">
+                      {{ app.status }}
+                    </span>
+                  </td>
+                  <td>{{ app.updatedAt ? (app.updatedAt | date:'medium') : '-' }}</td>
+                  <td class="actions-cell">
+                    <button mat-stroked-button color="primary" (click)="openApplication(app)">{{ app.status === 'DRAFT' ? 'Continue' : 'Open' }}</button>
+                    <button mat-stroked-button (click)="printApplication(app)">Print</button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
         </div>
       }
     </mat-card>
@@ -214,8 +194,34 @@ type Application = {
   styles: [
     `
       .card {
-        margin-bottom: 14px;
-        padding: 16px;
+        margin: 0 0 16px 0;
+        padding: 18px;
+        border-radius: 14px;
+      }
+      .launcher-card {
+        background: radial-gradient(circle at top left, #f8fbff 0%, #ffffff 52%, #f5fbf7 100%);
+        border: 1px solid #d8e4ef;
+      }
+      .launcher-header {
+        margin-bottom: 16px;
+      }
+      .launcher-form-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        align-items: stretch;
+        padding-top: 4px;
+      }
+      .launcher-copy {
+        min-width: 0;
+      }
+      .field {
+        width: 100%;
+        margin-top: 2px;
+      }
+      .create-btn {
+        height: 56px;
+        align-self: start;
       }
       .error-card {
         background-color: #fee;
@@ -234,15 +240,6 @@ type Application = {
         text-align: center;
         color: #999;
       }
-      .row {
-        display: flex;
-        gap: 12px;
-        align-items: center;
-        flex-wrap: wrap;
-      }
-      .grow {
-        flex: 1;
-      }
       .h {
         font-weight: 800;
       }
@@ -250,41 +247,47 @@ type Application = {
         color: #6b7280;
         margin-top: 4px;
       }
-      .w240 {
-        width: 280px;
-        max-width: 100%;
-      }
       .applications-section {
         background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
       }
-      .applications-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 16px;
+      .table-wrap {
         margin-top: 8px;
-      }
-      .application-tile {
+        overflow: auto;
         border: 1px solid #e5e7eb;
-        border-radius: 14px;
-        padding: 16px;
+        border-radius: 12px;
         background: #fff;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+      }
+      .applications-table {
+        width: 100%;
+        min-width: 920px;
+        border-collapse: collapse;
+      }
+      .applications-table th,
+      .applications-table td {
+        text-align: left;
+        padding: 10px;
+        border-bottom: 1px solid #e5e7eb;
+        vertical-align: middle;
+        font-size: 0.9rem;
+      }
+      .applications-table thead th {
+        background: #f8fafc;
+        color: #334155;
+        font-weight: 700;
+      }
+      .actions-cell {
         display: flex;
-        flex-direction: column;
-        gap: 14px;
+        gap: 8px;
+        flex-wrap: nowrap;
+        align-items: center;
+        white-space: nowrap;
       }
-      .draft-tile {
-        border-color: #fbbf24;
-        background: linear-gradient(180deg, #fffdf6 0%, #ffffff 100%);
-      }
-      .submitted-tile {
-        border-color: #86efac;
-      }
-      .tile-header {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        align-items: flex-start;
+      .actions-cell button {
+        min-width: 64px;
+        height: 30px;
+        line-height: 28px;
+        padding: 0 10px;
+        font-size: 0.78rem;
       }
       .tile-app-no {
         font-size: 1rem;
@@ -308,6 +311,12 @@ type Application = {
         gap: 10px;
         flex-wrap: wrap;
         align-items: center;
+      }
+      .student-summary-row {
+        margin-top: 12px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
       }
       .managed-students-table-wrap {
         margin-top: 12px;
@@ -333,6 +342,42 @@ type Application = {
       .managed-students-table tbody tr {
         cursor: pointer;
       }
+      .completion-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #e0f2fe;
+        color: #075985;
+        font-weight: 700;
+        font-size: 0.8rem;
+      }
+      .student-modal {
+        max-width: 860px;
+        width: calc(100vw - 24px);
+      }
+      .student-modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 14px 16px;
+      }
+      .student-modal-header h3 {
+        margin: 0;
+      }
+      .student-modal-body {
+        padding: 14px 16px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .student-modal-actions {
+        border-top: 1px solid #e2e8f0;
+        padding: 12px 16px;
+        display: flex;
+        justify-content: flex-end;
+      }
       .status-pill {
         padding: 6px 10px;
         border-radius: 999px;
@@ -348,36 +393,6 @@ type Application = {
         background: #dcfce7;
         color: #166534;
       }
-      .tile-meta-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-      }
-      .tile-meta-item {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-      .tile-meta-item.full-width {
-        grid-column: 1 / -1;
-      }
-      .tile-meta-item label {
-        font-size: 0.74rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: #6b7280;
-      }
-      .tile-meta-item span {
-        font-size: 0.95rem;
-        color: #111827;
-      }
-      .tile-actions {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: auto;
-      }
       .table {
         width: 100%;
       }
@@ -392,18 +407,19 @@ type Application = {
           border-radius: 16px;
         }
 
-        .tile-header,
-        .tile-meta-grid {
+        .launcher-form-grid {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          padding-top: 2px;
+        }
+
+        .student-summary-row {
           grid-template-columns: 1fr;
         }
 
-        .tile-header {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-
-        .tile-actions button {
-          flex: 1 1 100%;
+        .actions-cell {
+          flex-wrap: wrap;
+          white-space: normal;
         }
       }
     `
@@ -416,19 +432,32 @@ export class StudentApplicationsComponent implements OnInit {
   readonly exams = signal<Exam[]>([]);
   readonly creating = signal(false);
   readonly creatingStudent = signal(false);
-  readonly showAddStudentForm = signal(false);
+  readonly showStudentEditor = signal(false);
+  readonly studentEditorMode = signal<'create' | 'edit'>('create');
+  readonly editingStudentId = signal<number | null>(null);
   readonly selectedStudentId = signal<number | null>(null);
   readonly selectedExamId = signal<number | null>(null);
   readonly selectedCandidateType = signal<'REGULAR' | 'BACKLOG' | 'REPEATER' | 'ATKT' | 'IMPROVEMENT' | 'PRIVATE'>('REGULAR');
-  readonly newStudentFirstName = signal('');
-  readonly newStudentMiddleName = signal('');
-  readonly newStudentLastName = signal('');
-  readonly newStudentInstituteId = signal<number | null>(null);
-  readonly newStudentStreamCode = signal('');
-  readonly newStudentMobile = signal('');
+  readonly editorFirstName = signal('');
+  readonly editorMiddleName = signal('');
+  readonly editorLastName = signal('');
+  readonly editorInstituteId = signal<number | null>(null);
+  readonly editorStreamCode = signal('');
+  readonly editorMobile = signal('');
+  readonly studentSearchText = signal('');
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   selectedApplication: Application | null = null;
+
+  readonly filteredManagedStudents = computed(() => {
+    const query = this.studentSearchText().trim().toLowerCase();
+    const all = this.managedStudents();
+    if (!query) return all;
+    return all.filter((student) => {
+      const haystack = `${this.displayStudentName(student)} ${student.instituteName || ''} ${student.streamCode || ''}`.toLowerCase();
+      return haystack.includes(query);
+    });
+  });
 
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
@@ -439,7 +468,7 @@ export class StudentApplicationsComponent implements OnInit {
 
   ngOnInit() {
     this.loadManagedStudents();
-    this.loadInstitutes();
+    // this.loadInstitutes(); // Removed unnecessary institutes search call
     this.reload();
     this.loadExams();
   }
@@ -451,6 +480,7 @@ export class StudentApplicationsComponent implements OnInit {
         this.managedStudents.set(students);
         if (!this.selectedStudentId() && students.length) {
           this.selectedStudentId.set(students[0].id);
+          this.studentSearchText.set(this.displayStudentName(students[0]));
         }
       },
       error: (err: any) => {
@@ -459,15 +489,40 @@ export class StudentApplicationsComponent implements OnInit {
     });
   }
 
-  private loadInstitutes() {
-    this.http.get<{ institutes: Array<{ id: number; name: string }> }>(`${API_BASE_URL}/institutes/search`).subscribe({
-      next: (response) => this.institutes.set(response.institutes || []),
-      error: () => this.institutes.set([])
-    });
+  openCreateStudentModal() {
+    this.studentEditorMode.set('create');
+    this.editingStudentId.set(null);
+    this.editorFirstName.set('');
+    this.editorMiddleName.set('');
+    this.editorLastName.set('');
+    this.editorInstituteId.set(null);
+    this.editorStreamCode.set('');
+    this.editorMobile.set('');
+    this.showStudentEditor.set(true);
   }
 
-  createManagedStudent() {
-    if (!this.newStudentFirstName().trim() || !this.newStudentLastName().trim() || !this.newStudentInstituteId() || !this.newStudentStreamCode().trim()) {
+  openEditStudentModal(student: ManagedStudent, event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.studentEditorMode.set('edit');
+    this.editingStudentId.set(student.id);
+    this.editorFirstName.set(student.firstName || '');
+    this.editorMiddleName.set(student.middleName || '');
+    this.editorLastName.set(student.lastName || '');
+    this.editorInstituteId.set(student.instituteId || null);
+    this.editorStreamCode.set(student.streamCode || '');
+    this.editorMobile.set(student.mobile || '');
+    this.showStudentEditor.set(true);
+  }
+
+  closeStudentModal() {
+    this.showStudentEditor.set(false);
+  }
+
+  saveStudentFromModal() {
+    if (!this.editorFirstName().trim() || !this.editorLastName().trim() || !this.editorInstituteId() || !this.editorStreamCode().trim()) {
       this.error.set('Please fill First Name, Last Name, Institute and Stream for new student.');
       return;
     }
@@ -475,23 +530,23 @@ export class StudentApplicationsComponent implements OnInit {
     this.creatingStudent.set(true);
     this.error.set(null);
 
-    this.http.post(`${API_BASE_URL}/students/managed`, {
-      firstName: this.newStudentFirstName().trim(),
-      middleName: this.newStudentMiddleName().trim() || undefined,
-      lastName: this.newStudentLastName().trim(),
-      instituteId: this.newStudentInstituteId(),
-      streamCode: this.newStudentStreamCode().trim(),
-      mobile: this.newStudentMobile().trim() || undefined
-    }).subscribe({
+    const payload = {
+      firstName: this.editorFirstName().trim(),
+      middleName: this.editorMiddleName().trim() || undefined,
+      lastName: this.editorLastName().trim(),
+      instituteId: this.editorInstituteId(),
+      streamCode: this.editorStreamCode().trim(),
+      mobile: this.editorMobile().trim() || undefined
+    };
+
+    const request$ = this.studentEditorMode() === 'edit' && this.editingStudentId()
+      ? this.http.patch(`${API_BASE_URL}/students/managed/${this.editingStudentId()}`, payload)
+      : this.http.post(`${API_BASE_URL}/students/managed`, payload);
+
+    request$.subscribe({
       next: () => {
         this.creatingStudent.set(false);
-        this.newStudentFirstName.set('');
-        this.newStudentMiddleName.set('');
-        this.newStudentLastName.set('');
-        this.newStudentStreamCode.set('');
-        this.newStudentMobile.set('');
-        this.newStudentInstituteId.set(null);
-        this.showAddStudentForm.set(false);
+        this.closeStudentModal();
         this.loadManagedStudents();
       },
       error: (err: any) => {
@@ -582,6 +637,22 @@ export class StudentApplicationsComponent implements OnInit {
     this.router.navigate(['/app/student/applications', app.id]);
   }
 
+  onStudentSearchInput(event: Event) {
+    const value = (event.target as HTMLInputElement | null)?.value ?? '';
+    this.studentSearchText.set(value);
+    this.selectedStudentId.set(null);
+  }
+
+  onStudentOptionPicked(student: ManagedStudent, isUserInput: boolean) {
+    if (!isUserInput) return;
+    this.selectedStudentId.set(student.id);
+    this.studentSearchText.set(this.displayStudentName(student));
+  }
+
+  goToProfileManager() {
+    this.router.navigate(['/app/student/profile']);
+  }
+
   printApplication(app: Application | null) {
     if (!app) return;
     this.router.navigate(['/app/student/forms', app.id, 'print']);
@@ -633,6 +704,15 @@ export class StudentApplicationsComponent implements OnInit {
           this.creating.set(false);
         }
       });
+  }
+
+  selectedStudentLabel() {
+    const selected = this.managedStudents().find((student) => student.id === this.selectedStudentId());
+    return selected ? this.displayStudentName(selected) : '-';
+  }
+
+  draftApplicationsCount() {
+    return this.applications().filter((application) => application.status === 'DRAFT').length;
   }
 
   displayStudentName(student: ManagedStudent | null | undefined): string {

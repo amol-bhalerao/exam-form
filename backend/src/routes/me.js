@@ -67,6 +67,9 @@ meRouter.get('/', requireAuth, async (req, res) => {
       categoryCode: student.categoryCode,
       divyangCode: student.divyangCode,
       mediumCode: student.mediumCode,
+      sscPassedFromMaharashtra: student.sscPassedFromMaharashtra,
+      eligibilityCertIssued: student.eligibilityCertIssued,
+      eligibilityCertNo: student.eligibilityCertNo,
       previousExams: student.previousExams,
       bankDetails: student.feeReimbursement
         ? {

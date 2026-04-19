@@ -57,17 +57,21 @@ interface QuickAction {
 
       <!-- Welcome Banner -->
       <div class="welcome-banner">
-        <div class="welcome-left">
-          <div class="avatar">{{ initials() }}</div>
-          <div>
-            <h1 class="welcome-title">Welcome back, {{ (user()?.username ?? 'User') | titlecase }}!</h1>
-            <p class="welcome-sub">{{ roleLabel() }} • {{ today() }}</p>
+        <div class="welcome-content">
+          <div class="welcome-left">
+            <div class="avatar">{{ initials() }}</div>
+            <div class="welcome-text">
+              <h1 class="welcome-title">Welcome back, {{ displayName() }}!</h1>
+              <p class="welcome-sub">{{ roleLabel() }} • {{ today() }}</p>
+              <p class="welcome-email" *ngIf="user()?.email">{{ user()?.email }}</p>
+            </div>
           </div>
-        </div>
-        <div class="welcome-actions">
-          <a mat-stroked-button routerLink="/app/student/profile" class="profile-btn">
-            <mat-icon>person</mat-icon> My Profile
-          </a>
+          <div class="welcome-actions">
+            <a mat-stroked-button routerLink="/app/student/profile" class="profile-btn">
+              <mat-icon>person</mat-icon>
+              <span class="btn-text">Student Registration</span>
+            </a>
+          </div>
         </div>
       </div>
 
@@ -270,31 +274,23 @@ interface QuickAction {
       background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
       border-radius: var(--border-radius);
       padding: clamp(1.2rem, 3vw, 1.75rem);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
       color: #fff;
-      gap: var(--spacing-md);
-      flex-wrap: wrap;
-      min-height: 100px;
       box-shadow: 0 16px 30px rgba(30, 64, 175, 0.22);
       animation: slideBanner 0.5s ease-out both;
     }
 
-    @keyframes slideBanner {
-      from {
-        opacity: 0;
-        transform: translateY(-6px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    .welcome-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-md);
+      flex-wrap: wrap;
     }
 
-    @media (max-width: 640px) {
-      .welcome-banner {
-        padding: var(--spacing-sm) var(--spacing-sm);
+    @media (max-width: 768px) {
+      .welcome-content {
+        flex-direction: column;
+        align-items: flex-start;
         gap: var(--spacing-sm);
       }
     }
@@ -307,56 +303,67 @@ interface QuickAction {
       min-width: 0;
     }
 
-    .avatar {
-      width: clamp(44px, 8vw, 52px);
-      height: clamp(44px, 8vw, 52px);
-      border-radius: 50%;
-      background: rgba(255, 255, 255, 0.2);
-      display: grid;
-      place-items: center;
-      font-size: 1.1rem;
-      font-weight: 700;
+    .welcome-text {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .welcome-email {
+      margin: 4px 0 0 0;
+      font-size: clamp(0.7rem, 1.8vw, 0.8rem);
+      opacity: 0.8;
+      font-weight: 400;
+      word-break: break-all;
+    }
+
+    .welcome-actions {
       flex-shrink: 0;
-      backdrop-filter: blur(8px);
-    }
-
-    .welcome-title {
-      font-size: clamp(1.1rem, 3vw, 1.4rem);
-      font-weight: 700;
-      margin: 0 0 4px;
-      line-height: 1.3;
-      word-break: break-word;
-      color: #ffffff !important;
-      text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
-    }
-
-    .welcome-sub {
-      margin: 0;
-      font-size: clamp(0.75rem, 2vw, 0.85rem);
-      opacity: 0.75;
-      line-height: 1.4;
-      color: rgba(255, 255, 255, 0.95) !important;
-      text-shadow: 0 1px 2px rgba(15, 23, 42, 0.25);
-    }
-
-    .welcome-banner .profile-btn,
-    .welcome-banner .profile-btn mat-icon {
-      color: #ffffff !important;
+      display: flex;
+      align-items: center;
     }
 
     .profile-btn {
       border-color: rgba(255, 255, 255, 0.4) !important;
       color: #fff !important;
-      padding: 6px 16px !important;
+      padding: 8px 16px !important;
       font-size: 0.875rem !important;
       white-space: nowrap;
-      flex-shrink: 0;
+      transition: all 0.3s ease;
+    }
+
+    .profile-btn:hover {
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-color: rgba(255, 255, 255, 0.6) !important;
+    }
+
+    .btn-text {
+      margin-left: 4px;
     }
 
     @media (max-width: 640px) {
-      .profile-btn {
+      .welcome-banner {
+        padding: var(--spacing-sm);
+      }
+
+      .welcome-left {
         width: 100%;
-        flex-shrink: 1;
+      }
+
+      .welcome-actions {
+        width: 100%;
+      }
+
+      .profile-btn {
+        width: 100% !important;
+        justify-content: center;
+      }
+
+      .welcome-title {
+        font-size: 1.2rem !important;
+      }
+
+      .welcome-email {
+        font-size: 0.75rem;
       }
     }
 
@@ -1016,6 +1023,19 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   today() {
     return new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  }
+
+  displayName() {
+    const user = this.user();
+    if (!user) return 'User';
+    
+    // If username is an email, try to extract name part
+    if (user.username && user.username.includes('@')) {
+      return user.username.split('@')[0];
+    }
+    
+    // Otherwise use username or fallback to email prefix
+    return user.username || (user.email ? user.email.split('@')[0] : 'User');
   }
 
   totalApplicationsCount() {

@@ -101,9 +101,8 @@ import { API_BASE_URL } from '../../core/api';
               <span>My Studies</span>
               <div class="section-indicator"></div>
             </div>
-            <a mat-list-item routerLink="/app/student/profile" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">account_box</mat-icon><span class="label">My Profile</span></a>
-            <a mat-list-item routerLink="/app/student/applications" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">assignment</mat-icon><span class="label">My Applications</span></a>
-            <a mat-list-item routerLink="/app/student/exam-schedule" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">schedule</mat-icon><span class="label">Exam Schedule</span></a>
+            <a mat-list-item routerLink="/app/student/profile" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">account_box</mat-icon><span class="label">Student Registration</span></a>
+            <a mat-list-item routerLink="/app/student/applications" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">assignment</mat-icon><span class="label">Exam Forms</span></a>
           }
 
           <div class="nav-divider"></div>
@@ -165,6 +164,11 @@ import { API_BASE_URL } from '../../core/api';
       background: linear-gradient(135deg, #f5f7fa 0%, #fff 100%);
       border-right: 1px solid #e0e0e0;
       transition: width 0.22s ease, transform 0.22s ease;
+      z-index: 1;
+    }
+
+    ::ng-deep .mat-drawer.mat-drawer-side {
+      z-index: 1;
     }
 
     .container.sidebar-compact .sidenav {
@@ -667,16 +671,12 @@ import { API_BASE_URL } from '../../core/api';
     /* Keep page-level modal overlays inside the main content area, not under the sidenav */
     .container ::ng-deep .app-modal-backdrop,
     .container ::ng-deep .modal-backdrop,
-    .container ::ng-deep .picker-overlay {
+    .container ::ng-deep .picker-overlay,
+    .container ::ng-deep .instructions-popup-backdrop {
       z-index: 1300 !important;
     }
 
-    .container:not(.sidebar-hidden):not(.sidebar-compact) ::ng-deep .app-modal-backdrop,
-    .container:not(.sidebar-hidden):not(.sidebar-compact) ::ng-deep .modal-backdrop,
-    .container:not(.sidebar-hidden):not(.sidebar-compact) ::ng-deep .picker-overlay {
-      left: 280px !important;
-      width: calc(100vw - 280px) !important;
-    }
+    
 
     .container.sidebar-compact:not(.sidebar-hidden) ::ng-deep .app-modal-backdrop,
     .container.sidebar-compact:not(.sidebar-hidden) ::ng-deep .modal-backdrop,

@@ -236,6 +236,9 @@ model Student {
   categoryCode      String? @db.VarChar(10)
   divyangCode       String? @db.VarChar(10)
   mediumCode        String? @db.VarChar(10)
+  sscPassedFromMaharashtra Boolean?
+  eligibilityCertIssued Boolean?
+  eligibilityCertNo String? @db.VarChar(100)
 
   createdAt DateTime @default(now())
 

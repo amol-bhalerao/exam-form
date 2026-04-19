@@ -40,6 +40,9 @@ export interface StudentProfile {
   streamCode?: string; // Code for stream selection
   board?: string;
   instituteId?: number; // Institute selection
+  sscPassedFromMaharashtra?: boolean | null;
+  eligibilityCertIssued?: boolean | null;
+  eligibilityCertNo?: string | null;
   
   // Subject Marks
   subjects: SubjectMarks[];
@@ -308,7 +311,10 @@ export class StudentProfileService {
       'categoryCode': 'categoryCode',
       'minorityReligionCode': 'minorityReligionCode',
       'divyangCode': 'divyangCode',
-      'mediumCode': 'mediumCode'
+      'mediumCode': 'mediumCode',
+      'sscPassedFromMaharashtra': 'sscPassedFromMaharashtra',
+      'eligibilityCertIssued': 'eligibilityCertIssued',
+      'eligibilityCertNo': 'eligibilityCertNo'
     };
     
     for (const [key, value] of Object.entries(data)) {

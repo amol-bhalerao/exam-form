@@ -515,7 +515,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       transform: translateX(-50%);
       cursor: pointer;
       z-index: 2;
-    }
+    } 
 
     .bounce {
       font-size: 32px !important;

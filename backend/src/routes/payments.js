@@ -32,6 +32,19 @@ function getPaymentStatus(payment) {
   return 'PENDING';
 }
 
+async function getAccessibleStudentIdsForUser(userId) {
+  const students = await prisma.student.findMany({
+    where: {
+      OR: [
+        { userId },
+        { managerUserId: userId }
+      ]
+    },
+    select: { id: true }
+  });
+  return Array.from(new Set(students.map((student) => student.id).filter(Boolean)));
+}
+
 /** Create a Cashfree order via REST API (using Node 22 native fetch) */
 async function createCashfreeOrder({ orderId, amountPaise, customerName, customerEmail, customerPhone, returnUrl }) {
   const amountRupees = (amountPaise / 100).toFixed(2);
@@ -78,15 +91,25 @@ async function createCashfreeOrder({ orderId, amountPaise, customerName, custome
 paymentsRouter.post('/initiate/:applicationId', requireAuth, requireRole(['STUDENT']), async (req, res) => {
   const applicationId = z.coerce.number().int().positive().parse(req.params.applicationId);
 
-  const student = await prisma.student.findUnique({
-    where: { userId: req.auth.userId },
-    include: { user: true }
-  });
-  if (!student) return res.status(404).json({ error: 'STUDENT_PROFILE_MISSING' });
+  const normalizedUserId = Number(req.auth.userId);
+  if (!Number.isFinite(normalizedUserId) || normalizedUserId <= 0) {
+    return res.status(401).json({ error: 'UNAUTHORIZED' });
+  }
 
   const application = await prisma.examApplication.findFirst({
-    where: { id: applicationId, studentId: student.id },
-    include: { exam: true }
+    where: {
+      id: applicationId,
+      student: {
+        OR: [
+          { userId: normalizedUserId },
+          { managerUserId: normalizedUserId }
+        ]
+      }
+    },
+    include: {
+      exam: true,
+      student: { include: { user: true } }
+    }
   });
   if (!application) return res.status(404).json({ error: 'APPLICATION_NOT_FOUND' });
   if (!['DRAFT', 'SUBMITTED'].includes(application.status)) {
@@ -115,9 +138,9 @@ paymentsRouter.post('/initiate/:applicationId', requireAuth, requireRole(['STUDE
     const order = await createCashfreeOrder({
       orderId,
       amountPaise: feeAmount,
-      customerName: `${student.firstName ?? ''} ${student.lastName ?? ''}`.trim() || 'Student',
-      customerEmail: student.user?.email ?? 'noreply@hsc.msbshse.ac.in',
-      customerPhone: student.mobile ?? '9999999999',
+      customerName: `${application.student?.firstName ?? ''} ${application.student?.lastName ?? ''}`.trim() || 'Student',
+      customerEmail: application.student?.user?.email ?? 'noreply@hsc.msbshse.ac.in',
+      customerPhone: application.student?.mobile ?? '9999999999',
       returnUrl: `${env.FRONTEND_URL}/app/student/applications/${applicationId}/payment?payment_status={order_status}&order_id={order_id}`
     });
 
@@ -249,11 +272,21 @@ paymentsRouter.post('/confirm/:applicationId', requireAuth, requireRole(['STUDEN
     paymentStatus: z.string().optional()
   }).parse(req.body ?? {});
 
-  const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
-  if (!student) return res.status(404).json({ error: 'STUDENT_PROFILE_MISSING' });
+  const normalizedUserId = Number(req.auth.userId);
+  if (!Number.isFinite(normalizedUserId) || normalizedUserId <= 0) {
+    return res.status(401).json({ error: 'UNAUTHORIZED' });
+  }
 
   const application = await prisma.examApplication.findFirst({
-    where: { id: applicationId, studentId: student.id }
+    where: {
+      id: applicationId,
+      student: {
+        OR: [
+          { userId: normalizedUserId },
+          { managerUserId: normalizedUserId }
+        ]
+      }
+    }
   });
   if (!application) return res.status(404).json({ error: 'APPLICATION_NOT_FOUND' });
 
@@ -315,11 +348,21 @@ paymentsRouter.get('/status/:applicationId', requireAuth, async (req, res) => {
 paymentsRouter.post('/sandbox/complete/:applicationId', requireAuth, requireRole(['STUDENT']), async (req, res) => {
   const applicationId = z.coerce.number().int().positive().parse(req.params.applicationId);
 
-  const student = await prisma.student.findUnique({ where: { userId: req.auth.userId } });
-  if (!student) return res.status(404).json({ error: 'STUDENT_PROFILE_MISSING' });
+  const normalizedUserId = Number(req.auth.userId);
+  if (!Number.isFinite(normalizedUserId) || normalizedUserId <= 0) {
+    return res.status(401).json({ error: 'UNAUTHORIZED' });
+  }
 
   const application = await prisma.examApplication.findFirst({
-    where: { id: applicationId, studentId: student.id }
+    where: {
+      id: applicationId,
+      student: {
+        OR: [
+          { userId: normalizedUserId },
+          { managerUserId: normalizedUserId }
+        ]
+      }
+    }
   });
   if (!application) return res.status(404).json({ error: 'APPLICATION_NOT_FOUND' });
 

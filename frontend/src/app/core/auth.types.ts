@@ -3,6 +3,7 @@ export type RoleName = 'SUPER_ADMIN' | 'BOARD' | 'INSTITUTE' | 'STUDENT';
 export type AuthUser = {
   userId: number;
   username: string;
+  email?: string;
   role: RoleName;
   instituteId: number | null;
 };

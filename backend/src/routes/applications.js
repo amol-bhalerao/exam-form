@@ -575,9 +575,12 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
         lastExamMonth: body.lastExamMonth,
         lastExamYear: body.lastExamYear,
         lastExamSeatNo: body.lastExamSeatNo,
-        sscPassedFromMaharashtra: body.sscPassedFromMaharashtra,
-        eligibilityCertIssued: body.eligibilityCertIssued,
-        eligibilityCertNo: body.eligibilityCertNo
+        sscPassedFromMaharashtra: body.student?.sscPassedFromMaharashtra ?? student.sscPassedFromMaharashtra ?? null,
+        eligibilityCertIssued: body.student?.eligibilityCertIssued ?? student.eligibilityCertIssued ?? null,
+        eligibilityCertNo:
+          (body.student?.eligibilityCertIssued ?? student.eligibilityCertIssued) === true
+            ? (body.student?.eligibilityCertNo ?? student.eligibilityCertNo ?? '')
+            : ''
       }
     });
     return app2;

@@ -43,9 +43,28 @@ function studentSummaryDto(student) {
     middleName: student.middleName || null,
     lastName: student.lastName || null,
     fullName: normalizeStudentName(student) || 'Unnamed Student',
+    aadhaar: student.aadhaar || null,
+    dob: student.dob || null,
     mobile: student.mobile || null,
     gender: student.gender || null,
+    address: student.address || null,
+    pinCode: student.pinCode || null,
+    district: student.district || null,
+    taluka: student.taluka || null,
+    village: student.village || null,
+    categoryCode: student.categoryCode || null,
+    minorityReligionCode: student.minorityReligionCode || null,
+    divyangCode: student.divyangCode || null,
+    mediumCode: student.mediumCode || null,
+    apaarId: student.apaarId || null,
+    studentSaralId: student.studentSaralId || null,
+    sscPassedFromMaharashtra: student.sscPassedFromMaharashtra ?? null,
+    eligibilityCertIssued: student.eligibilityCertIssued ?? null,
+    eligibilityCertNo: student.eligibilityCertNo || null,
+    photoUrl: student.photoUrl || null,
+    signatureUrl: student.signatureUrl || null,
     profileCompletion: profileCompletionForStudent(student),
+    previousExams: student.previousExams || [],
     createdAt: student.createdAt
   };
 }
@@ -66,7 +85,8 @@ async function getAccessibleStudents(userId) {
           code: true,
           collegeNo: true
         }
-      }
+      },
+      previousExams: true
     },
     orderBy: [
       { createdAt: 'desc' }
@@ -91,10 +111,60 @@ async function getAccessibleStudentById(userId, studentId) {
           code: true,
           collegeNo: true
         }
-      }
+      },
+      previousExams: true
     }
   });
 }
+
+// Lookup student by Aadhaar number
+studentsRouter.get('/lookup-by-aadhaar/:aadhaar', requireAuth, async (req, res) => {
+  try {
+    const { aadhaar } = req.params;
+    
+    // Validate Aadhaar format
+    if (!/^\d{12}$/.test(aadhaar)) {
+      return res.status(400).json({ 
+        error: 'INVALID_AADHAAR', 
+        message: 'Aadhaar must be 12 digits' 
+      });
+    }
+
+    const student = await prisma.student.findFirst({
+      where: {
+        aadhaar: aadhaar
+      },
+      include: {
+        institute: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            collegeNo: true,
+            district: true
+          }
+        },
+        previousExams: true
+      }
+    });
+
+    if (!student) {
+      return res.json({ 
+        found: false, 
+        message: 'No student found with this Aadhaar number' 
+      });
+    }
+
+    return res.json({ 
+      found: true, 
+      student: studentSummaryDto(student),
+      fullStudent: student
+    });
+  } catch (err) {
+    console.error('Aadhaar lookup error:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
 
 studentsRouter.get('/managed', requireAuth, async (req, res) => {
   try {
@@ -102,9 +172,31 @@ studentsRouter.get('/managed', requireAuth, async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
 
     const students = await getAccessibleStudents(userId);
-    return res.json({ students: students.map(studentSummaryDto) });
+    const studentsWithAssets = await Promise.all(students.map((student) => attachStudentAssets(student)));
+    return res.json({ students: studentsWithAssets.map(studentSummaryDto) });
   } catch (err) {
     console.error('Get managed students error:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+studentsRouter.get('/managed/:id', requireAuth, async (req, res) => {
+  try {
+    const userId = req.auth?.userId;
+    if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+    const studentId = z.coerce.number().int().positive().parse(req.params.id);
+    const student = await getAccessibleStudentById(userId, studentId);
+    if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND' });
+
+    const studentWithAssets = await attachStudentAssets(student);
+    return res.json({ ok: true, student: studentWithAssets });
+  } catch (err) {
+    console.error('Get managed student by id error:', err);
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
 });
@@ -124,7 +216,7 @@ studentsRouter.post('/managed', requireAuth, async (req, res) => {
       dob: z.string().datetime().optional(),
       gender: z.string().max(20).optional(),
       mobile: z.string().regex(/^[6-9]\d{9}$/).optional(),
-      aadhaar: z.string().regex(/^\d{12}$/).optional(),
+      aadhaar: z.string().regex(/^\d{12}$/),
       address: z.string().max(500).optional(),
       pinCode: z.string().max(10).optional(),
       district: z.string().max(100).optional(),
@@ -135,11 +227,73 @@ studentsRouter.post('/managed', requireAuth, async (req, res) => {
       divyangCode: z.string().max(10).optional(),
       mediumCode: z.string().max(10).optional(),
       apaarId: z.string().max(20).optional(),
-      studentSaralId: z.string().max(50).optional()
+      studentSaralId: z.string().max(50).optional(),
+      sscPassedFromMaharashtra: z.boolean().nullable().optional(),
+      eligibilityCertIssued: z.boolean().nullable().optional(),
+      eligibilityCertNo: z.string().max(100).nullable().optional(),
+      photoDataUrl: z.string().min(40).optional(),
+      signatureDataUrl: z.string().min(40).optional(),
+      sscSeatNo: z.string().max(50).optional(),
+      sscMonth: z.string().max(10).optional(),
+      sscYear: z.coerce.number().int().positive().optional(),
+      sscBoard: z.string().max(200).optional(),
+      sscPercentage: z.string().max(10).optional(),
+      xithSeatNo: z.string().max(50).optional(),
+      xithMonth: z.string().max(10).optional(),
+      xithYear: z.coerce.number().int().positive().optional(),
+      xithCollege: z.string().max(200).optional(),
+      xithPercentage: z.string().max(10).optional()
     }).parse(req.body ?? {});
 
     const institute = await prisma.institute.findUnique({ where: { id: body.instituteId } });
     if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
+
+    const duplicateCandidates = [];
+    if (body.aadhaar) duplicateCandidates.push({ aadhaar: body.aadhaar });
+    if (body.mobile) duplicateCandidates.push({ mobile: body.mobile });
+    duplicateCandidates.push({
+      firstName: body.firstName,
+      lastName: body.lastName,
+      dob: body.dob ? new Date(body.dob) : null,
+      instituteId: body.instituteId,
+      streamCode: body.streamCode
+    });
+
+    const duplicateStudent = await prisma.student.findFirst({
+      where: {
+        managerUserId: userId,
+        OR: duplicateCandidates
+      }
+    });
+    if (duplicateStudent) {
+      return res.status(409).json({
+        error: 'DUPLICATE_STUDENT',
+        message: 'A managed student with this identity already exists.',
+        student: studentSummaryDto(duplicateStudent)
+      });
+    }
+
+    const previousExams = [];
+    if (body.sscSeatNo || body.sscMonth || body.sscYear || body.sscBoard || body.sscPercentage) {
+      previousExams.push({
+        examType: 'SSC',
+        seatNo: body.sscSeatNo || null,
+        month: body.sscMonth || null,
+        year: body.sscYear || null,
+        boardOrCollegeName: body.sscBoard || null,
+        percentage: body.sscPercentage || null
+      });
+    }
+    if (body.xithSeatNo || body.xithMonth || body.xithYear || body.xithCollege || body.xithPercentage) {
+      previousExams.push({
+        examType: 'XI',
+        seatNo: body.xithSeatNo || null,
+        month: body.xithMonth || null,
+        year: body.xithYear || null,
+        boardOrCollegeName: body.xithCollege || null,
+        percentage: body.xithPercentage || null
+      });
+    }
 
     const student = await prisma.student.create({
       data: {
@@ -165,7 +319,14 @@ studentsRouter.post('/managed', requireAuth, async (req, res) => {
         divyangCode: body.divyangCode || null,
         mediumCode: body.mediumCode || null,
         apaarId: body.apaarId ? body.apaarId.toUpperCase() : null,
-        studentSaralId: body.studentSaralId ? body.studentSaralId.toUpperCase() : null
+        studentSaralId: body.studentSaralId ? body.studentSaralId.toUpperCase() : null,
+        sscPassedFromMaharashtra: body.sscPassedFromMaharashtra ?? null,
+        eligibilityCertIssued: body.eligibilityCertIssued ?? null,
+        eligibilityCertNo:
+          body.eligibilityCertIssued === true
+            ? (body.eligibilityCertNo || null)
+            : null,
+        previousExams: previousExams.length > 0 ? { create: previousExams } : undefined
       },
       include: {
         institute: {
@@ -175,11 +336,20 @@ studentsRouter.post('/managed', requireAuth, async (req, res) => {
             code: true,
             collegeNo: true
           }
-        }
+        },
+        previousExams: true
       }
     });
 
-    return res.status(201).json({ ok: true, student: studentSummaryDto(student) });
+    if (body.photoDataUrl) {
+      await saveStudentAsset(student.id, 'photo', body.photoDataUrl);
+    }
+    if (body.signatureDataUrl) {
+      await saveStudentAsset(student.id, 'signature', body.signatureDataUrl);
+    }
+
+    const studentWithAssets = await attachStudentAssets(student);
+    return res.status(201).json({ ok: true, student: studentWithAssets });
   } catch (err) {
     console.error('Create managed student error:', err);
     if (err.name === 'ZodError') {
@@ -224,12 +394,66 @@ studentsRouter.patch('/managed/:id', requireAuth, async (req, res) => {
       divyangCode: z.string().max(10).nullable().optional(),
       mediumCode: z.string().max(10).nullable().optional(),
       apaarId: z.string().max(20).nullable().optional(),
-      studentSaralId: z.string().max(50).nullable().optional()
+      studentSaralId: z.string().max(50).nullable().optional(),
+      sscPassedFromMaharashtra: z.boolean().nullable().optional(),
+      eligibilityCertIssued: z.boolean().nullable().optional(),
+      eligibilityCertNo: z.string().max(100).nullable().optional(),
+      photoDataUrl: z.string().min(40).nullable().optional(),
+      signatureDataUrl: z.string().min(40).nullable().optional(),
+      sscSeatNo: z.string().max(50).nullable().optional(),
+      sscMonth: z.string().max(10).nullable().optional(),
+      sscYear: z.coerce.number().int().positive().nullable().optional(),
+      sscBoard: z.string().max(200).nullable().optional(),
+      sscPercentage: z.string().max(10).nullable().optional(),
+      xithSeatNo: z.string().max(50).nullable().optional(),
+      xithMonth: z.string().max(10).nullable().optional(),
+      xithYear: z.coerce.number().int().positive().nullable().optional(),
+      xithCollege: z.string().max(200).nullable().optional(),
+      xithPercentage: z.string().max(10).nullable().optional()
     }).parse(req.body ?? {});
+
+    if (student.aadhaar && body.aadhaar !== undefined && body.aadhaar !== student.aadhaar) {
+      return res.status(409).json({
+        error: 'AADHAAR_LOCKED',
+        message: 'Aadhaar cannot be changed once saved for this student.'
+      });
+    }
+
+    if (!student.aadhaar) {
+      const incomingAadhaar = typeof body.aadhaar === 'string' ? body.aadhaar.trim() : '';
+      if (!incomingAadhaar) {
+        return res.status(422).json({
+          error: 'AADHAAR_REQUIRED',
+          message: 'Aadhaar is mandatory for managed student profile.'
+        });
+      }
+    }
 
     if (body.instituteId !== undefined) {
       const institute = await prisma.institute.findUnique({ where: { id: body.instituteId } });
       if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
+    }
+
+    const previousExams = [];
+    if (body.sscSeatNo || body.sscMonth || body.sscYear || body.sscBoard || body.sscPercentage) {
+      previousExams.push({
+        examType: 'SSC',
+        seatNo: body.sscSeatNo || null,
+        month: body.sscMonth || null,
+        year: body.sscYear ?? null,
+        boardOrCollegeName: body.sscBoard || null,
+        percentage: body.sscPercentage || null
+      });
+    }
+    if (body.xithSeatNo || body.xithMonth || body.xithYear || body.xithCollege || body.xithPercentage) {
+      previousExams.push({
+        examType: 'XI',
+        seatNo: body.xithSeatNo || null,
+        month: body.xithMonth || null,
+        year: body.xithYear ?? null,
+        boardOrCollegeName: body.xithCollege || null,
+        percentage: body.xithPercentage || null
+      });
     }
 
     const updated = await prisma.student.update({
@@ -255,7 +479,17 @@ studentsRouter.patch('/managed/:id', requireAuth, async (req, res) => {
         divyangCode: body.divyangCode ?? undefined,
         mediumCode: body.mediumCode ?? undefined,
         apaarId: body.apaarId ? body.apaarId.toUpperCase() : (body.apaarId === null ? null : undefined),
-        studentSaralId: body.studentSaralId ? body.studentSaralId.toUpperCase() : (body.studentSaralId === null ? null : undefined)
+        studentSaralId: body.studentSaralId ? body.studentSaralId.toUpperCase() : (body.studentSaralId === null ? null : undefined),
+        sscPassedFromMaharashtra: body.sscPassedFromMaharashtra ?? undefined,
+        eligibilityCertIssued: body.eligibilityCertIssued ?? undefined,
+        eligibilityCertNo:
+          body.eligibilityCertIssued === true
+            ? (body.eligibilityCertNo ?? undefined)
+            : (body.eligibilityCertIssued === false ? null : undefined),
+        previousExams: previousExams.length > 0 ? {
+          deleteMany: { examType: { in: ['SSC', 'XI'] } },
+          create: previousExams
+        } : undefined
       },
       include: {
         institute: {
@@ -265,11 +499,29 @@ studentsRouter.patch('/managed/:id', requireAuth, async (req, res) => {
             code: true,
             collegeNo: true
           }
-        }
+        },
+        previousExams: true
       }
     });
 
-    return res.json({ ok: true, student: studentSummaryDto(updated) });
+    if (body.photoDataUrl !== undefined) {
+      if (body.photoDataUrl) {
+        await saveStudentAsset(updated.id, 'photo', body.photoDataUrl);
+      } else {
+        await removeStudentAsset(updated.id, 'photo');
+      }
+    }
+
+    if (body.signatureDataUrl !== undefined) {
+      if (body.signatureDataUrl) {
+        await saveStudentAsset(updated.id, 'signature', body.signatureDataUrl);
+      } else {
+        await removeStudentAsset(updated.id, 'signature');
+      }
+    }
+
+    const updatedWithAssets = await attachStudentAssets(updated);
+    return res.json({ ok: true, student: updatedWithAssets });
   } catch (err) {
     console.error('Update managed student error:', err);
     if (err.name === 'ZodError') {
@@ -407,7 +659,10 @@ studentsRouter.patch('/me', requireAuth, async (req, res) => {
       minorityReligionCode: z.string().nullable().optional(),
       categoryCode: z.string().nullable().optional(),
       divyangCode: z.string().nullable().optional(),
-      mediumCode: z.string().nullable().optional()
+      mediumCode: z.string().nullable().optional(),
+      sscPassedFromMaharashtra: z.boolean().nullable().optional(),
+      eligibilityCertIssued: z.boolean().nullable().optional(),
+      eligibilityCertNo: z.string().max(100).nullable().optional()
     });
 
     const data = updateSchema.parse(req.body);
@@ -446,7 +701,13 @@ studentsRouter.patch('/me', requireAuth, async (req, res) => {
           minorityReligionCode: data.minorityReligionCode ?? undefined,
           categoryCode: data.categoryCode ?? undefined,
           divyangCode: data.divyangCode ?? undefined,
-          mediumCode: data.mediumCode ?? undefined
+          mediumCode: data.mediumCode ?? undefined,
+          sscPassedFromMaharashtra: data.sscPassedFromMaharashtra ?? undefined,
+          eligibilityCertIssued: data.eligibilityCertIssued ?? undefined,
+          eligibilityCertNo:
+            data.eligibilityCertIssued === true
+              ? (data.eligibilityCertNo ?? undefined)
+              : (data.eligibilityCertIssued === false ? null : undefined)
         }
       });
     });

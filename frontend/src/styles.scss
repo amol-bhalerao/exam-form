@@ -949,9 +949,9 @@ table tbody tr:last-child {
 
 table td {
   padding: 12px 16px;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-secondary);
-  height: 48px;
+  height: auto;
   vertical-align: middle;
 }
 
@@ -1042,7 +1042,7 @@ h6 {
 
 p {
   color: var(--text-secondary) !important;
-  margin: 0 0 1rem 0 !important;
+  margin: 0 0 0rem 0 !important;
   line-height: 1.6;
 }
 
@@ -1361,6 +1361,11 @@ mat-sidenav-content {
   flex-direction: column;
   overflow-y: auto;
   background: var(--bg);
+}
+
+/* Override mat-drawer z-index to allow modals to appear on top */
+.mat-drawer.mat-drawer-side {
+  z-index: 1 !important;
 }
 
 /* Sidebar Header */
@@ -2631,20 +2636,21 @@ header.board-header {
   inset: 0;
   background: rgba(15, 23, 42, 0.45);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  z-index: 1300;
-  padding: 12px;
+  z-index: 1500;
+  padding: 72px 12px 12px;
+  overflow-y: auto;
 }
 
 .app-modal-panel {
   width: min(720px, calc(100vw - 24px));
-  max-height: 90vh;
+  max-height: calc(100vh - 96px);
   overflow: auto;
-  border-radius: 12px;
+  border-radius: 16px;
   background: #fff;
-  padding: 16px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
 }
 
 .app-modal-panel--sm {
