@@ -129,6 +129,10 @@ import { I18nService } from '../../core/i18n.service';
 
       <div class="footer-info">
         <p>First time user? <a href="/register">Sign up here</a></p>
+        <button mat-stroked-button class="letter-btn" (click)="navigateTo('/institute-letter')">
+          <mat-icon>description</mat-icon>
+          Generate Institute Letter Of Concern
+        </button>
       </div>
     </div>
   `,
@@ -306,6 +310,12 @@ import { I18nService } from '../../core/i18n.service';
       text-align: center;
       color: white;
       font-size: 0.95rem;
+    }
+
+    .letter-btn {
+      margin-top: 0.8rem;
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.9);
     }
 
     .footer-info a {

@@ -97,6 +97,11 @@ import { BrandingService } from '../../core/branding.service';
 
             <div class="divider">{{ i18n.t('or') }}</div>
 
+            <button mat-stroked-button class="full-width" type="button" (click)="goToLetterGenerator()">
+              <mat-icon>description</mat-icon>
+              Generate Letter Of Concern
+            </button>
+
             <button mat-stroked-button class="full-width" (click)="goBack()">
               <mat-icon>arrow_back</mat-icon>
               {{ i18n.t('backToUserSelection') }}
@@ -358,5 +363,9 @@ export class InstituteLoginComponent {
 
   goBack() {
     this.router.navigate(['/login']);
+  }
+
+  goToLetterGenerator() {
+    this.router.navigate(['/institute-letter']);
   }
 }

@@ -2209,16 +2209,28 @@ mat-form-field {
     transform: translateY(0) scale(0.85) !important;
   }
   
-  /* Placeholder visibility on focus */
+  /* Placeholder/label behavior:
+     - Untouched: only label visible (placeholder hidden)
+     - Touched or focused: placeholder visible + label floats above */
   input::placeholder,
   textarea::placeholder {
-    opacity: 0.7;
+    opacity: 0;
     transition: opacity var(--transition-fast);
   }
-  
+
+  input.ng-touched::placeholder,
+  textarea.ng-touched::placeholder,
   input:focus::placeholder,
   textarea:focus::placeholder {
-    opacity: 0.5;
+    opacity: 0.65;
+  }
+
+  &:has(input.ng-touched),
+  &:has(textarea.ng-touched) {
+    .mdc-floating-label {
+      top: -18px !important;
+      transform: translateY(0) scale(0.85) !important;
+    }
   }
   
   /* Input styling for proper appearance */

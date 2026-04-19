@@ -7,6 +7,7 @@ import { GoogleLoginComponent } from './pages/login/google-login.component';
 import { UserTypeLoginComponent } from './pages/login/user-type-login.component';
 import { InstituteLoginComponent } from './pages/login/institute-login.component';
 import { AdminLoginComponent } from './pages/login/admin-login.component';
+import { InstituteLetterGeneratorComponent } from './pages/login/institute-letter-generator.component';
 import { LandingEnhancedComponent } from './pages/landing/landing-enhanced.component';
 
 import { InstituteRegisterComponent } from './pages/institute-register/institute-register.component';
@@ -73,6 +74,7 @@ export const routes: Routes = [
   
   // Institute Portal Login
   { path: 'institute-login', component: InstituteLoginComponent, data: { title: 'Institute Portal Login' } },
+  { path: 'institute-letter', component: InstituteLetterGeneratorComponent, data: { title: 'Institute Letter Of Concern' } },
   
   // Root login - User Type Selection (shows options for all login types)
   { path: 'login', component: UserTypeLoginComponent, data: { title: 'Login' } },
