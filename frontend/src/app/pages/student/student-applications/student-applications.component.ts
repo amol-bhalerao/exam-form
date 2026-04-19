@@ -9,6 +9,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
 
 import { API_BASE_URL } from '../../../core/api';
 import { StudentProfileService } from '../../../core/student-profile.service';
@@ -62,7 +63,8 @@ type Application = {
     MatSelectModule,
     MatInputModule,
     MatAutocompleteModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatIconModule
   ],
   template: `
     <mat-card class="card launcher-card">
@@ -76,6 +78,7 @@ type Application = {
       <div class="launcher-form-grid">
         <mat-form-field appearance="outline" class="field">
           <mat-label>Student</mat-label>
+          <mat-icon matPrefix>person_search</mat-icon>
           <input
             matInput
             type="text"
@@ -96,6 +99,7 @@ type Application = {
 
         <mat-form-field appearance="outline" class="field">
           <mat-label>Exam</mat-label>
+          <mat-icon matPrefix>event</mat-icon>
           <mat-select [value]="selectedExamId()" (selectionChange)="selectedExamId.set($event.value)">
             @for (e of exams(); track e.id) {
               <mat-option [value]="e.id" [disabled]="!canCreateForExam(e)">
@@ -110,6 +114,7 @@ type Application = {
 
         <mat-form-field appearance="outline" class="field">
           <mat-label>Application Type</mat-label>
+          <mat-icon matPrefix>assignment</mat-icon>
           <mat-select [value]="selectedCandidateType()" (selectionChange)="selectedCandidateType.set($event.value)">
             <mat-option value="REGULAR">Fresh / Regular</mat-option>
             <mat-option value="BACKLOG">Backlog</mat-option>
@@ -224,6 +229,10 @@ type Application = {
         width: 100%;
         margin-top: 2px;
       }
+      .field mat-icon[matPrefix] {
+        color: #64748b;
+        margin-right: 8px;
+      }
       .create-btn {
         height: 56px;
         align-self: start;
@@ -291,7 +300,7 @@ type Application = {
       .actions-cell button {
         min-width: 64px;
         height: 28px;
-        line-height: 26px;
+        line-height: 13px;
         padding: 0 8px;
         font-size: 0.72rem;
       }

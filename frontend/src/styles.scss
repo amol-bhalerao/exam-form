@@ -100,6 +100,9 @@
   --space-xl: 24px;
   --space-2xl: 32px;
   --space-3xl: 48px;
+  --form-control-gap: 14px;
+  --form-control-gap-mobile: 10px;
+  --form-control-margin: 10px;
 
   /* ‣ Layout Sizes */
   --sidebar-width-desktop: 240px;
@@ -2187,13 +2190,16 @@ mat-sidenav-content {
 mat-form-field {
   width: 100%;
   display: block;
+  margin: 0 0 var(--form-control-margin) 0;
+  --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21a8 8 0 0 0-16 0'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E");
 
   --mdc-outlined-text-field-container-shape: 10px;
 
   .mat-mdc-text-field-wrapper {
+    position: relative;
     min-height: 46px !important;
     border-radius: 10px !important;
-    padding: 0 10px !important;
+    padding: 0 12px !important;
     background: #fff !important;
   }
 
@@ -2206,6 +2212,123 @@ mat-form-field {
     padding-top: 10px !important;
     padding-bottom: 10px !important;
     padding-left: 0 !important;
+  }
+
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-top: 1px;
+    min-height: 0;
+  }
+
+  /* Auto icon system: adds semantic leading icon when matPrefix is not present. */
+  &:not(.mat-mdc-form-field-has-icon-prefix) {
+    .mat-mdc-text-field-wrapper::before {
+      content: '';
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      width: 16px;
+      height: 16px;
+      transform: translateY(-50%);
+      opacity: 0.65;
+      pointer-events: none;
+      background-repeat: no-repeat;
+      background-position: center;
+      background-size: 16px 16px;
+      background-image: var(--auto-field-icon);
+    }
+
+    .mat-mdc-form-field-infix {
+      padding-left: 24px !important;
+    }
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[type='email']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='m3 7 9 6 9-6'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[type='tel']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[inputmode='tel']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.64 2.62a2 2 0 0 1-.45 2.11L8 9.91a16 16 0 0 0 6.09 6.09l1.46-1.25a2 2 0 0 1 2.11-.45c.84.31 1.72.52 2.62.64A2 2 0 0 1 22 16.92z'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[type='password']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input.mat-datepicker-input),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[type='date']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 6h13M8 12h13M8 18h13'/%3E%3Ccircle cx='3' cy='6' r='1'/%3E%3Ccircle cx='3' cy='12' r='1'/%3E%3Ccircle cx='3' cy='18' r='1'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(textarea) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[inputmode='numeric']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[type='number']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9h16M4 15h16M10 3 8 21M16 3l-2 18'/%3E%3C/svg%3E");
+  }
+
+  /* Field-specific semantic icon overrides for domain forms. */
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='aadhaar']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='aadharNumber']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='governmentId']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='11' width='16' height='9' rx='2'/%3E%3Cpath d='M7 11V8a5 5 0 0 1 10 0v3'/%3E%3Ccircle cx='12' cy='15.5' r='1.2'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='firstName']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='middleName']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='lastName']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='username']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21a8 8 0 0 0-16 0'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='motherName']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21a8 8 0 0 0-16 0'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3Cpath d='M8.5 5.5h7'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='studentSaralId']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='apaarId']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='collegeNo']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='udiseNo']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='code']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 18 22 12 16 6'/%3E%3Cpath d='M8 6 2 12l6 6'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='pinCode']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-6-5.5-6-10a6 6 0 1 1 12 0c0 4.5-6 10-6 10z'/%3E%3Ccircle cx='12' cy='11' r='2'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='address']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(textarea[formControlName='address']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 9.5 12 4l9 5.5'/%3E%3Cpath d='M5 10v10h14V10'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='district']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='taluka']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='village']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-7-4.35-7-10a7 7 0 1 1 14 0c0 5.65-7 10-7 10z'/%3E%3Ccircle cx='12' cy='11' r='2.5'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(select[formControlName='gender']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='gender']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='8' r='3'/%3E%3Cpath d='M8 11v8M5 16h6'/%3E%3Ccircle cx='17' cy='7' r='2.5'/%3E%3Cpath d='M17 9.5V15M17 15l2 2M17 15l-2 2'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='streamCode']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='mediumCode']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='categoryCode']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='minorityReligionCode']),
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='divyangCode']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h16M4 12h16M4 18h16'/%3E%3C/svg%3E");
+  }
+
+  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='dob']) {
+    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
   }
 
   .mat-mdc-form-field-icon-prefix,
@@ -2310,14 +2433,100 @@ mat-form-field {
   }
 }
 
+/* Shared spacing rhythm for form layouts across the app */
+.form-field,
+mat-form-field {
+  margin-bottom: var(--form-control-margin);
+}
+
+.form-field:last-child,
+mat-form-field:last-child {
+  margin-bottom: 0;
+}
+
+.form-row,
+.filter-row,
+.managed-student-form,
+.student-summary-row,
+.launcher-form-grid,
+[class*='form-grid'] {
+  gap: var(--form-control-gap) !important;
+}
+
+[class*='form-grid'] > .form-field,
+[class*='form-grid'] > mat-form-field,
+.form-row > .form-field,
+.form-row > mat-form-field,
+.filter-row > .form-field,
+.filter-row > mat-form-field,
+.launcher-form-grid > .form-field,
+.launcher-form-grid > mat-form-field {
+  margin: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .form-field,
+  mat-form-field {
+    margin-bottom: var(--form-control-gap-mobile);
+  }
+
+  .form-row,
+  .filter-row,
+  .managed-student-form,
+  .student-summary-row,
+  .launcher-form-grid,
+  [class*='form-grid'] {
+    gap: var(--form-control-gap-mobile) !important;
+  }
+}
+
 /* Ensure error messages display under all Material form field appearances */
+.mat-mdc-form-field-subscript-wrapper {
+  display: grid !important;
+  height: auto !important;
+  margin-top: 1px !important;
+  row-gap: 2px;
+  min-height: 0 !important;
+}
+
 .mat-mdc-form-field-error-wrapper {
   display: block !important;
   height: auto !important;
-  padding-top: 4px;
-  margin-top: 4px;
+  padding-top: 0;
+  margin-top: 0 !important;
+  line-height: 1.2;
+  font-size: 0.8rem;
+  white-space: normal;
+  word-break: break-word;
   opacity: 1 !important;
   visibility: visible !important;
+}
+
+.mat-mdc-form-field-hint-wrapper {
+  display: block !important;
+  margin-top: 0 !important;
+  line-height: 1.2;
+}
+
+.mat-mdc-form-field-hint-wrapper,
+.mat-mdc-form-field-error-wrapper {
+  position: relative;
+  top: -20px;
+  left: 0;
+  right: 0;
+  padding: 0 16px;
+}
+
+@media (max-width: 768px) {
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-top: 0 !important;
+    min-height: 0 !important;
+  }
+
+  .mat-mdc-form-field-error-wrapper,
+  .mat-mdc-form-field-hint-wrapper {
+    line-height: 1.25;
+  }
 }
 
 /* Material Select dropdown styling */

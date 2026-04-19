@@ -14,8 +14,8 @@ import { BrandingService } from '../../../core/branding.service';
   template: `
     @if (showActions()) {
       <div class="no-print actions">
-        <button mat-stroked-button type="button" (click)="goBack()">Back</button>
-        <button mat-flat-button color="primary" (click)="print()">Print Form</button>
+        <button mat-stroked-button type="button" class="action-btn" (click)="goBack()">Back</button>
+        <button mat-flat-button color="primary" class="action-btn" (click)="print()">Print Form</button>
       </div>
     }
 
@@ -296,11 +296,17 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       .actions {
-        width: 210mm;
+        width: min(210mm, calc(100% - 16px));
         margin: 12px auto 0;
         display: flex;
         justify-content: flex-end;
         gap: 8px;
+        flex-wrap: wrap;
+        box-sizing: border-box;
+      }
+
+      .actions .action-btn {
+        min-width: 124px;
       }
 
       .page {
@@ -893,6 +899,17 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       @media (max-width: 900px) {
+        .actions {
+          margin: 10px auto 6px;
+          justify-content: stretch;
+          gap: 10px;
+        }
+
+        .actions .action-btn {
+          flex: 1 1 calc(50% - 10px);
+          min-width: 0;
+        }
+
         .page {
           width: 100%;
           min-height: auto;
@@ -934,6 +951,16 @@ import { BrandingService } from '../../../core/branding.service';
       }
 
       @media (max-width: 520px) {
+        .actions {
+          width: calc(100% - 10px);
+          margin: 8px auto 6px;
+        }
+
+        .actions .action-btn {
+          flex: 1 1 100%;
+          width: 100%;
+        }
+
         .page {
           padding: 8px;
         }

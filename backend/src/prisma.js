@@ -1,7 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaMariaDb } from '@prisma/adapter-mariadb';
+import { env } from './env.js';
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL || env.DATABASE_URL;
 
 if (!databaseUrl) {
   throw new Error('DATABASE_URL environment variable is not set');

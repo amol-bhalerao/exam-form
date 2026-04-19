@@ -34,7 +34,11 @@ import { API_BASE_URL } from '../../core/api';
               <div class="logo-sub">Management</div>
             </div>
           </div>
-          @if (!isMobile()) {
+          @if (isMobile()) {
+            <button mat-icon-button type="button" class="sidebar-close-btn" (click)="closeOnMobile()" aria-label="Close sidebar">
+              <mat-icon>close</mat-icon>
+            </button>
+          } @else {
             <button mat-icon-button type="button" class="sidebar-control-btn" (click)="toggleCompactSidebar()" [attr.aria-label]="sidebarCompact() ? 'Expand sidebar' : 'Compact sidebar'">
               <mat-icon>{{ sidebarCompact() ? 'last_page' : 'first_page' }}</mat-icon>
             </button>
@@ -263,6 +267,16 @@ import { API_BASE_URL } from '../../core/api';
       height: 34px;
       min-width: 34px;
       min-height: 34px;
+    }
+
+    .sidebar-close-btn {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      min-height: 36px;
     }
 
     .nav-list {

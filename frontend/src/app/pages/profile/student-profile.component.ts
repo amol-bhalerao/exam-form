@@ -220,6 +220,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
                     <mat-form-field class="form-field form-field-full" [class.error-field]="managedStudentForm.get('streamCode')?.invalid && managedStudentForm.get('streamCode')?.touched">
                       <mat-label>Stream *</mat-label>
+                      <mat-icon matPrefix>school</mat-icon>
                       <mat-select formControlName="streamCode" required>
                         <mat-option value="">- Select stream -</mat-option>
                         <mat-option *ngFor="let stream of streams" [value]="stream.name">{{ stream.name }}</mat-option>
@@ -229,6 +230,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
                     <mat-form-field class="form-field form-field-full">
                       <mat-label>Medium</mat-label>
+                      <mat-icon matPrefix>translate</mat-icon>
                       <mat-select formControlName="mediumCode">
                         <mat-option value="">- Select medium -</mat-option>
                         <mat-option value="MARATHI">Marathi</mat-option>
@@ -252,6 +254,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                   <div class="form-grid-compact">
                     <mat-form-field class="form-field" [class.error-field]="managedStudentForm.get('firstName')?.invalid && managedStudentForm.get('firstName')?.touched">
                       <mat-label>First Name *</mat-label>
+                      <mat-icon matPrefix>person</mat-icon>
                       <input matInput 
                              formControlName="firstName" 
                              appEnglishOnly 
@@ -261,6 +264,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Middle Name</mat-label>
+                      <mat-icon matPrefix>badge</mat-icon>
                       <input matInput 
                              formControlName="middleName" 
                              appEnglishOnly 
@@ -268,6 +272,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     </mat-form-field>
                     <mat-form-field class="form-field" [class.error-field]="managedStudentForm.get('lastName')?.invalid && managedStudentForm.get('lastName')?.touched">
                       <mat-label>Last Name *</mat-label>
+                      <mat-icon matPrefix>person</mat-icon>
                       <input matInput 
                              formControlName="lastName" 
                              appEnglishOnly 
@@ -277,6 +282,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Mother Name</mat-label>
+                      <mat-icon matPrefix>female</mat-icon>
                       <input matInput 
                              formControlName="motherName" 
                              appEnglishOnly 
@@ -287,6 +293,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                   <div class="form-grid-compact">
                     <mat-form-field class="form-field">
                       <mat-label>Date of Birth</mat-label>
+                      <mat-icon matPrefix>calendar_month</mat-icon>
                       <input matInput [matDatepicker]="managedDobPicker" formControlName="dob" />
                       <mat-datepicker-toggle matSuffix [for]="managedDobPicker"></mat-datepicker-toggle>
                       <mat-datepicker #managedDobPicker></mat-datepicker>
@@ -294,6 +301,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
                     <mat-form-field class="form-field">
                       <mat-label>Gender</mat-label>
+                      <mat-icon matPrefix>wc</mat-icon>
                       <mat-select formControlName="gender">
                         <mat-option value="">- Select gender -</mat-option>
                         <mat-option value="Male">Male</mat-option>
@@ -305,6 +313,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
                     <mat-form-field class="form-field">
                       <mat-label>Mobile</mat-label>
+                      <mat-icon matPrefix>call</mat-icon>
                       <input matInput 
                              formControlName="mobile" 
                              placeholder="10 digit mobile"
@@ -317,6 +326,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                   <div class="form-grid-compact">
                     <mat-form-field class="form-field">
                       <mat-label>APAAR ID</mat-label>
+                      <mat-icon matPrefix>badge</mat-icon>
                       <input matInput 
                              formControlName="apaarId" 
                              appEnglishOnly 
@@ -324,6 +334,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Udise / Saral ID</mat-label>
+                      <mat-icon matPrefix>assignment_ind</mat-icon>
                       <input matInput 
                              formControlName="studentSaralId" 
                              appEnglishOnly 
@@ -334,6 +345,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                   <div class="form-grid-compact">
                     <mat-form-field class="form-field">
                       <mat-label>SSC from Maharashtra</mat-label>
+                      <mat-icon matPrefix>verified_user</mat-icon>
                       <mat-select formControlName="sscPassedFromMaharashtra">
                         <mat-option [value]="null">- Select -</mat-option>
                         <mat-option [value]="true">Yes</mat-option>
@@ -343,6 +355,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
                     <mat-form-field class="form-field">
                       <mat-label>Eligibility Certificate Issued</mat-label>
+                      <mat-icon matPrefix>fact_check</mat-icon>
                       <mat-select formControlName="eligibilityCertIssued">
                         <mat-option [value]="null">- Select -</mat-option>
                         <mat-option [value]="true">Yes</mat-option>
@@ -352,6 +365,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
                     <mat-form-field class="form-field">
                       <mat-label>Eligibility Certificate No</mat-label>
+                      <mat-icon matPrefix>confirmation_number</mat-icon>
                       <input matInput
                              formControlName="eligibilityCertNo"
                              appEnglishOnly
@@ -377,12 +391,14 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                   
                   <mat-form-field class="form-field form-field-full">
                     <mat-label>Residential Address</mat-label>
+                    <mat-icon matPrefix>home</mat-icon>
                     <textarea matInput rows="3" formControlName="address" placeholder="Enter complete residential address"></textarea>
                   </mat-form-field>
 
                   <div class="form-grid-compact">
                     <mat-form-field class="form-field">
                       <mat-label>PinCode</mat-label>
+                      <mat-icon matPrefix>pin_drop</mat-icon>
                       <input matInput 
                              formControlName="pinCode" 
                              maxlength="6"
@@ -392,14 +408,17 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>District</mat-label>
+                      <mat-icon matPrefix>map</mat-icon>
                       <input matInput formControlName="district" appEnglishOnly />
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Taluka</mat-label>
+                      <mat-icon matPrefix>location_city</mat-icon>
                       <input matInput formControlName="taluka" appEnglishOnly />
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Village</mat-label>
+                      <mat-icon matPrefix>cottage</mat-icon>
                       <input matInput formControlName="village" appEnglishOnly />
                     </mat-form-field>
                   </div>
@@ -417,6 +436,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                   <div class="form-grid-compact">
                     <mat-form-field class="form-field">
                       <mat-label>Category</mat-label>
+                      <mat-icon matPrefix>groups</mat-icon>
                       <mat-select formControlName="categoryCode">
                         <mat-option value="">- Select category -</mat-option>
                         <mat-option value="OPEN">Open</mat-option>
@@ -434,6 +454,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Minority / Religion</mat-label>
+                      <mat-icon matPrefix>account_balance</mat-icon>
                       <mat-select formControlName="minorityReligionCode">
                         <mat-option value="">- Select -</mat-option>
                         <mat-option value="HINDU_NON_MINORITY">Hindu / Non-minority</mat-option>
@@ -449,6 +470,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Divyang Status</mat-label>
+                      <mat-icon matPrefix>accessible</mat-icon>
                       <mat-select formControlName="divyangCode">
                         <mat-option value="">- Select -</mat-option>
                         <mat-option value="NONE">None</mat-option>
@@ -510,6 +532,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     <div class="form-grid-4">
                       <mat-form-field class="form-field">
                         <mat-label>SSC Seat No.</mat-label>
+                        <mat-icon matPrefix>badge</mat-icon>
                         <input matInput 
                                formControlName="sscSeatNo" 
                                appEnglishOnly 
@@ -517,6 +540,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       </mat-form-field>
                       <mat-form-field class="form-field">
                         <mat-label>SSC Month</mat-label>
+                        <mat-icon matPrefix>calendar_month</mat-icon>
                         <mat-select formControlName="sscMonth">
                           <mat-option value="">- Select -</mat-option>
                           <mat-option value="JAN">January</mat-option>
@@ -529,16 +553,19 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       </mat-form-field>
                       <mat-form-field class="form-field">
                         <mat-label>SSC Year</mat-label>
+                        <mat-icon matPrefix>event</mat-icon>
                         <input type="number" matInput formControlName="sscYear" />
                       </mat-form-field>
                       <mat-form-field class="form-field">
                         <mat-label>SSC Board</mat-label>
+                        <mat-icon matPrefix>account_balance</mat-icon>
                         <input matInput formControlName="sscBoard" appEnglishOnly />
                       </mat-form-field>
                     </div>
                     <div class="form-grid-2">
                       <mat-form-field class="form-field">
                         <mat-label>SSC Percentage</mat-label>
+                        <mat-icon matPrefix>percent</mat-icon>
                         <input type="number" matInput formControlName="sscPercentage" min="0" max="100" step="0.01" />
                       </mat-form-field>
                     </div>
@@ -551,6 +578,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     <div class="form-grid-4">
                       <mat-form-field class="form-field">
                         <mat-label>XI Seat No.</mat-label>
+                        <mat-icon matPrefix>badge</mat-icon>
                         <input matInput 
                                formControlName="xithSeatNo" 
                                appEnglishOnly 
@@ -558,6 +586,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       </mat-form-field>
                       <mat-form-field class="form-field">
                         <mat-label>XI Month</mat-label>
+                        <mat-icon matPrefix>calendar_month</mat-icon>
                         <mat-select formControlName="xithMonth">
                           <mat-option value="">- Select -</mat-option>
                           <mat-option value="JAN">January</mat-option>
@@ -570,16 +599,19 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       </mat-form-field>
                       <mat-form-field class="form-field">
                         <mat-label>XI Year</mat-label>
+                        <mat-icon matPrefix>event</mat-icon>
                         <input type="number" matInput formControlName="xithYear" />
                       </mat-form-field>
                       <mat-form-field class="form-field">
                         <mat-label>XI College</mat-label>
+                        <mat-icon matPrefix>school</mat-icon>
                         <input matInput formControlName="xithCollege" appEnglishOnly />
                       </mat-form-field>
                     </div>
                     <div class="form-grid-2">
                       <mat-form-field class="form-field">
                         <mat-label>XI Percentage</mat-label>
+                        <mat-icon matPrefix>percent</mat-icon>
                         <input type="number" matInput formControlName="xithPercentage" min="0" max="100" step="0.01" />
                       </mat-form-field>
                     </div>
@@ -1412,6 +1444,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       display: grid;
       gap: var(--spacing-md);
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      margin-bottom: var(--spacing-sm);
     }
 
     .managed-student-modal .form-grid-2,
@@ -1420,6 +1453,8 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     .managed-student-modal .form-grid-compact {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--spacing-md);
+      margin-bottom: var(--spacing-sm);
     }
 
     @media (min-width: 640px) and (max-width: 1024px) {
@@ -1432,7 +1467,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     .managed-student-modal .form-field,
     .managed-student-modal .form-field-full {
       width: 100%;
-      margin-top: 8px;
+      margin: 0;
     }
 
     .managed-student-modal .mat-form-field .mat-mdc-form-field-flex,
@@ -1453,7 +1488,8 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     }
 
     .managed-student-modal .form-section {
-      margin-top: 12px;
+      margin-top: 8px;
+      gap: var(--spacing-md);
     }
 
     ::ng-deep .managed-student-tabs .mat-mdc-tab-body-content {
@@ -1491,9 +1527,11 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     .popup-actions {
       display: flex;
       justify-content: flex-end;
-      gap: 10px;
+      gap: 12px;
       flex-wrap: wrap;
-      margin-top: 16px;
+      margin-top: 18px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.22);
     }
 
     /* Instructions Card */
@@ -2045,6 +2083,37 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     @media (max-width: 480px) {
       .managed-students-table {
         min-width: 560px;
+      }
+
+      ::ng-deep .managed-student-modal .mat-mdc-tab-header {
+        padding: 0 0.35rem;
+      }
+
+      ::ng-deep .managed-student-modal .mat-mdc-tab {
+        min-height: 48px;
+        margin: 0 1px;
+      }
+
+      ::ng-deep .managed-student-modal .mdc-tab__content {
+        gap: 0.3rem;
+      }
+
+      ::ng-deep .managed-student-modal .mdc-tab__text-label {
+        font-size: 0.74rem;
+      }
+
+      .popup-actions {
+        gap: 8px;
+        margin-top: 12px;
+        padding-top: 8px;
+      }
+
+      .popup-actions button {
+        width: 100%;
+      }
+
+      .managed-student-popup {
+        padding: 10px;
       }
     }
 

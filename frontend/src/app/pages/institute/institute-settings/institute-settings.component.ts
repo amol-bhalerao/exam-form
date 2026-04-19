@@ -22,7 +22,7 @@ import { API_BASE_URL } from '../../../core/api';
         </div>
       </div>
 
-      <form [formGroup]="detailsForm" (ngSubmit)="saveDetails()">
+      <form [formGroup]="detailsForm" (ngSubmit)="saveDetails()" class="details-form">
         <div class="grid">
           <mat-form-field appearance="outline" class="full-width"><mat-label>Institute Name</mat-label><input matInput formControlName="name" /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>College No (Unique No)</mat-label><input matInput formControlName="collegeNo" /></mat-form-field>
@@ -55,15 +55,25 @@ import { API_BASE_URL } from '../../../core/api';
 
   `,
   styles: [`
-    .card { margin-bottom: 14px; padding: 18px; }
+    .card { margin-bottom: 14px; padding: 20px; border-radius: 14px; }
     .header-row { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
     .h { font-weight: 800; margin-bottom: 4px; }
     .p { color: #6b7280; margin-bottom: 0; line-height: 1.45; }
-    .grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 12px; }
+    .details-form { display: grid; gap: 14px; }
+    .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 0; }
     .full-width { grid-column: 1 / -1; }
-    .actions { display: flex; justify-content: flex-start; margin-top: 8px; }
+    .actions { display: flex; justify-content: flex-start; margin-top: 4px; padding-top: 4px; }
+    .actions button { min-height: 40px; }
     .success { color: #065f46; font-size: 13px; margin-top: 10px; }
     .error { color: #b91c1c; font-size: 13px; margin-top: 10px; }
+
+    @media (max-width: 768px) {
+      .card { padding: 14px; }
+      .details-form { gap: 10px; }
+      .grid { gap: 10px; }
+      .actions { width: 100%; }
+      .actions button { width: 100%; }
+    }
   `]
 })
 export class InstituteSettingsComponent implements OnInit {

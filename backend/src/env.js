@@ -24,8 +24,12 @@ const envSchema = z.object({
   ),
 
   // JWT
-  JWT_ACCESS_SECRET: z.string().min(6),
-  JWT_REFRESH_SECRET: z.string().min(6),
+  JWT_ACCESS_SECRET: isProd
+    ? z.string().min(6)
+    : z.string().min(6).default('dev_access_secret_change_me'),
+  JWT_REFRESH_SECRET: isProd
+    ? z.string().min(6)
+    : z.string().min(6).default('dev_refresh_secret_change_me'),
   ACCESS_TOKEN_TTL: z.string().default('60m'),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(30),
 

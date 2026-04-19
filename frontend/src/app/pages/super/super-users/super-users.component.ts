@@ -138,11 +138,12 @@ type User = {
     `
       .card {
         margin-bottom: 14px;
-        padding: 16px;
+        padding: 18px;
+        border-radius: 14px;
       }
       .row {
         display: grid;
-        gap: 12px;
+        gap: 14px;
       }
       .header-copy {
         max-width: 900px;
@@ -160,17 +161,18 @@ type User = {
       .form-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-top: 10px;
+        gap: 14px;
+        margin-top: 12px;
       }
       .form-grid mat-form-field {
         width: 100%;
         margin: 0;
       }
       .card-actions {
-        margin-top: 10px;
+        margin-top: 12px;
         display: flex;
-        gap: 8px;
+        gap: 10px;
+        flex-wrap: wrap;
       }
       .msg {
         margin-top: 8px;
@@ -188,13 +190,15 @@ type User = {
         margin: 0;
       }
       .selected-row {
-        margin-top: 10px;
-        padding: 8px;
+        margin-top: 12px;
+        padding: 12px;
         background: #f3f4f6;
-        border-radius: 4px;
+        border-radius: 8px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
       }
       @media (max-width: 860px) {
         .header-cta, .w260 {
@@ -202,6 +206,24 @@ type User = {
         }
         .form-grid {
           grid-template-columns: 1fr;
+          gap: 10px;
+        }
+        .card { padding: 14px; }
+        .card-actions button { width: 100%; }
+      }
+
+      @media (max-width: 480px) {
+        .card {
+          padding: 12px;
+        }
+
+        .row {
+          gap: 10px;
+        }
+
+        .selected-row {
+          padding: 10px;
+          align-items: stretch;
         }
       }
     `
