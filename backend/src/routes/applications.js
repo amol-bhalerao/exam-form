@@ -609,7 +609,9 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
   const app = await prisma.examApplication.findFirst({
     where: { id: applicationId, studentId: { in: accessibleStudentIds } },
     include: {
-      subjects: { include: { subject: true } }
+      subjects: { include: { subject: true } },
+      student: { select: { instituteId: true } },
+      exam: { select: { streamId: true } }
     }
   });
   if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
@@ -629,14 +631,46 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
         .map((entry) => String(entry.subject?.category || '').trim().toLowerCase())
         .filter(Boolean)
     )];
+
+    const instituteId = app.student?.instituteId ?? app.instituteId ?? null;
+    const streamId = app.exam?.streamId ?? null;
+
+    const availableCategories = [];
+    if (instituteId && streamId) {
+      const instituteMappedSubjects = await prisma.instituteStreamSubject.findMany({
+        where: { instituteId, streamId },
+        include: { subject: { select: { category: true } } }
+      });
+
+      if (instituteMappedSubjects.length > 0) {
+        availableCategories.push(...instituteMappedSubjects.map((row) => String(row.subject?.category || '').trim().toLowerCase()).filter(Boolean));
+      } else {
+        const streamMappedSubjects = await prisma.streamSubject.findMany({
+          where: { streamId },
+          include: { subject: { select: { category: true } } }
+        });
+        availableCategories.push(...streamMappedSubjects.map((row) => String(row.subject?.category || '').trim().toLowerCase()).filter(Boolean));
+      }
+    }
+
+    const normalizedAvailableCategories = [...new Set(availableCategories)];
+
+    // Enforce language/compulsory only if these categories are available for this institute/stream.
+    // If available categories are unknown, keep legacy strict behavior.
+    const languageAvailable = normalizedAvailableCategories.some((category) => category === 'language' || category.includes('lang'));
+    const compulsoryAvailable = normalizedAvailableCategories.some((category) => category === 'compulsory' || category.includes('compulsory'));
+    const requireLanguage = languageAvailable || normalizedAvailableCategories.length === 0;
+    const requireCompulsory = compulsoryAvailable || normalizedAvailableCategories.length === 0;
+
     const hasLanguage = selectedCategories.some((category) => category === 'language' || category.includes('lang'));
     const hasCompulsory = selectedCategories.some((category) => category === 'compulsory' || category.includes('compulsory'));
 
-    if (!hasLanguage || !hasCompulsory) {
+    if ((requireLanguage && !hasLanguage) || (requireCompulsory && !hasCompulsory)) {
       return res.status(400).json({
         error: 'INVALID_SUBJECT_CATEGORY',
         message: 'Please select at least one language and one compulsory subject before submitting.',
-        selectedCategories
+        selectedCategories,
+        availableCategories: normalizedAvailableCategories
       });
     }
   }

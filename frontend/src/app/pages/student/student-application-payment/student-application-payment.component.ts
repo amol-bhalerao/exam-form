@@ -386,7 +386,13 @@ export class StudentApplicationPaymentComponent implements OnInit {
   }
 
   private finalizeSubmission(applicationId: number): void {
-    this.http.post<any>(`${API_BASE_URL}/applications/${applicationId}/submit`, {}).subscribe({
+    const submitPayload = {
+      applicationId,
+      source: 'student-payment-finalization',
+      submittedAt: new Date().toISOString()
+    };
+
+    this.http.post<any>(`${API_BASE_URL}/applications/${applicationId}/submit`, submitPayload).subscribe({
       next: () => {
         this.success.set(true);
         this.loading.set(false);
