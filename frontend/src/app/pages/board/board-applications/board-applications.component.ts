@@ -9,20 +9,18 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { AgGridModule } from 'ag-grid-angular';
-import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import type { ColDef } from 'ag-grid-community';
 import * as XLSX from 'xlsx';
+import { BoardExamSelectorComponent } from '../../../components/board-exam-selector/board-exam-selector.component';
 
 import { API_BASE_URL } from '../../../core/api';
-
-ModuleRegistry.registerModules([AllCommunityModule]);
 
 type Exam = {
   id: number;
   name: string;
   session: string;
   academicYear: string;
-  _count: { applications: number };
+  _count?: { applications: number };
 };
 
 type Row = {
@@ -33,12 +31,27 @@ type Row = {
   student: { firstName?: string; lastName?: string };
   exam: { name: string; session: string; academicYear: string };
   updatedAt: string;
+  candidateType?: string;
+  subjects?: Array<{ subject?: { name?: string; code?: string } }>;
+};
+
+type GroupSummary = { name: string; count: number };
+type DashboardSummary = {
+  totalCapacity: number | null;
+  totalReceived: number;
+  byStatus: GroupSummary[];
+  byInstitute: GroupSummary[];
+  bySubject: GroupSummary[];
+  byCaste: GroupSummary[];
+  byGender: GroupSummary[];
+  byDistrict: GroupSummary[];
+  byExamType: GroupSummary[];
 };
 
 @Component({
   selector: 'app-board-applications',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, AgGridModule],
+  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, AgGridModule, BoardExamSelectorComponent],
   template: `
     <mat-card class="card">
       <div class="row">
@@ -46,21 +59,34 @@ type Row = {
           <div class="h">Verified Applications</div>
           <div class="p">Only institute-verified forms are visible here.</div>
         </div>
+        <div class="grow"></div>
+        <app-board-exam-selector
+          [exams]="exams()"
+          [selectedExamId]="selectedExam?.id || ''"
+          label="Exam"
+          allLabel="Select exam"
+          [compact]="true"
+          (selectedExamIdChange)="onExamChange($event)">
+        </app-board-exam-selector>
       </div>
     </mat-card>
 
-    <!-- Exam Selection -->
-    <mat-card class="card" *ngIf="!selectedExam">
-      <div class="h">Select Exam</div>
-      <div class="p">Choose an exam to view applications</div>
-      <div class="exam-grid">
-        <mat-card class="exam-card" *ngFor="let exam of exams()" (click)="selectExam(exam)">
-          <div class="exam-name">{{ exam.name }}</div>
-          <div class="exam-details">{{ exam.session }} {{ exam.academicYear }}</div>
-          <div class="exam-count">{{ exam._count.applications }} applications</div>
-        </mat-card>
-      </div>
-    </mat-card>
+    @if (error()) {
+      <mat-card class="card error-card">
+        <div class="error-message">
+          <mat-icon>error_outline</mat-icon>
+          <div>
+            <strong>Error:</strong> {{ error() }}
+          </div>
+        </div>
+      </mat-card>
+    }
+
+    @if (loading()) {
+      <mat-card class="card">
+        <div class="loading-text">Loading...</div>
+      </mat-card>
+    }
 
     <!-- Applications List -->
     <ng-container *ngIf="selectedExam">
@@ -78,7 +104,44 @@ type Row = {
           <mat-form-field appearance="outline" class="w160"><mat-label>Status</mat-label><mat-select [(ngModel)]="status" (selectionChange)="load()"><mat-option value="">All</mat-option><mat-option value="INSTITUTE_VERIFIED">Institute Verified</mat-option><mat-option value="BOARD_APPROVED">Board Approved</mat-option><mat-option value="REJECTED_BY_BOARD">Rejected</mat-option></mat-select></mat-form-field>
           <div class="grow"></div>
           <button mat-flat-button color="primary" (click)="exportExcel()">Export Excel</button>
-          <button mat-stroked-button color="primary" (click)="printList()">Print</button>
+          <button mat-stroked-button color="primary" (click)="printList()">Print List</button>
+          <button mat-stroked-button color="primary" (click)="printAllExamForms()">Print All Exam Forms</button>
+        </div>
+
+        <div class="summary-grid app-summary-grid" *ngIf="summary() as s">
+          <div class="summary-card hero app-summary-card app-summary-card--hero">
+            <div class="summary-title app-summary-title">Capacity vs Received</div>
+            <div class="big">{{ s.totalCapacity ?? 'N/A' }} / {{ s.totalReceived }}</div>
+            <div class="muted">Total capacity / applications received</div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Exam Type-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byExamType"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Subject-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.bySubject"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Caste-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byCaste"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Gender-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byGender"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">District-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byDistrict"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Status-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byStatus"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
+          <div class="summary-card app-summary-card">
+            <div class="summary-title app-summary-title">Institute-wise</div>
+            <div class="app-summary-scroll"><div class="summary-item app-summary-item" *ngFor="let item of s.byInstitute"><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div></div>
+          </div>
         </div>
       </mat-card>
 
@@ -92,12 +155,14 @@ type Row = {
             (rowClicked)="selectRow($event)"
           ></ag-grid-angular>
         </div>
-        <div style="margin-top: 10px; display:flex; gap: 8px; align-items:center;">
+        <div class="grid-footer">
           <button mat-flat-button color="primary" (click)="decide(selectedRow?.id, 'APPROVE')" [disabled]="!selectedRow || selectedRow.status !== 'INSTITUTE_VERIFIED'">Approve Selected</button>
           <button mat-stroked-button color="warn" (click)="decide(selectedRow?.id, 'REJECT')" [disabled]="!selectedRow || selectedRow.status !== 'INSTITUTE_VERIFIED'">Reject Selected</button>
-          <span style="margin-left:auto;">Page {{ page }} of {{ totalPages }} ({{ totalApplications }} total) 
-            <button mat-stroked-button (click)="prevPage()" [disabled]="page <= 1">Prev</button>
-            <button mat-stroked-button (click)="nextPage()" [disabled]="page >= totalPages">Next</button>
+          <span class="pager-inline">Page {{ page }} of {{ totalPages }} ({{ totalApplications }} total)
+            <span class="pager-btns">
+              <button mat-stroked-button (click)="prevPage()" [disabled]="page <= 1">Prev</button>
+              <button mat-stroked-button (click)="nextPage()" [disabled]="page >= totalPages">Next</button>
+            </span>
           </span>
         </div>
       </mat-card>
@@ -175,19 +240,91 @@ type Row = {
         gap: 10px;
         align-items: center;
       }
+      .error-card {
+        background-color: #fee;
+        border: 1px solid #fcc;
+      }
+      .error-message {
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        color: #c33;
+      }
+      .error-message mat-icon {
+        color: #c33;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      .loading-text {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+      }
+      .grid-footer {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .pager-inline {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .pager-btns {
+        display: inline-flex;
+        gap: 6px;
+      }
+      .big { font-size: 1.12rem; font-weight: 800; color: #0f172a; }
+      .muted { color: #64748b; font-size: 12px; margin-top: 3px; }
+
+      @media (max-width: 768px) {
+        .row {
+          align-items: stretch;
+        }
+
+        .row > button,
+        .grid-footer > button {
+          width: 100%;
+        }
+
+        .pager-inline {
+          margin-left: 0;
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        .ag-theme-alpine {
+          height: 320px !important;
+        }
+      }
     `
   ]
 })
 export class BoardApplicationsComponent implements OnInit {
   readonly rows = signal<Row[]>([]);
   readonly exams = signal<Exam[]>([]);
+  readonly summary = signal<DashboardSummary | null>(null);
+  readonly loading = signal(false);
+  readonly error = signal<string | null>(null);
   selectedRow: Row | null = null;
   selectedExam: Exam | null = null;
   totalApplications = 0;
   totalPages = 1;
   readonly columnDefs: ColDef[] = [
     { field: 'applicationNo', headerName: 'App No', flex: 1 },
-    { field: 'student.lastName', headerName: 'Student', flex: 1, valueGetter: (p) => `${p.data.student.lastName || ''}, ${p.data.student.firstName || ''}` },
+    {
+      field: 'student.lastName',
+      headerName: 'Student',
+      flex: 1,
+      valueGetter: (p) => {
+        const student = p?.data?.student || {};
+        return `${student.lastName || ''}, ${student.firstName || ''}`.replace(/^,\s*/, '').trim();
+      }
+    },
     { field: 'institute.name', headerName: 'Institute', flex: 1 },
     { field: 'exam.name', headerName: 'Exam', flex: 1 },
     { field: 'status', headerName: 'Status', flex: 1 },
@@ -205,8 +342,23 @@ export class BoardApplicationsComponent implements OnInit {
   }
 
   loadExams() {
-    this.http.get<{ exams: Exam[] }>(`${API_BASE_URL}/applications/board/exams`).subscribe((r) => {
-      this.exams.set(r.exams);
+    this.loading.set(true);
+    this.error.set(null);
+    this.http.get<{ exams: Exam[] }>(`${API_BASE_URL}/applications/board/exams`).subscribe({
+      next: (r) => {
+        const examList = r.exams || [];
+        this.exams.set(examList);
+        if (!this.selectedExam && examList.length > 0) {
+          this.selectExam(examList[0]);
+        }
+        this.loading.set(false);
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to load exams';
+        console.error('Failed to load exams:', errorMsg);
+        this.error.set(errorMsg);
+        this.loading.set(false);
+      }
     });
   }
 
@@ -218,9 +370,21 @@ export class BoardApplicationsComponent implements OnInit {
     this.load();
   }
 
+  onExamChange(examId: string | number) {
+    if (!examId) {
+      this.clearExamSelection();
+      return;
+    }
+    const selected = this.exams().find((exam) => exam.id === Number(examId));
+    if (selected) {
+      this.selectExam(selected);
+    }
+  }
+
   clearExamSelection() {
     this.selectedExam = null;
     this.rows.set([]);
+    this.summary.set(null);
     this.selectedRow = null;
     this.totalApplications = 0;
     this.totalPages = 1;
@@ -230,6 +394,8 @@ export class BoardApplicationsComponent implements OnInit {
   load() {
     if (!this.selectedExam) return;
 
+    this.loading.set(true);
+    this.error.set(null);
     const p = new URLSearchParams();
     p.set('examId', `${this.selectedExam.id}`);
     if (this.search) p.set('search', this.search);
@@ -237,10 +403,20 @@ export class BoardApplicationsComponent implements OnInit {
     p.set('page', `${this.page}`);
     p.set('limit', '25');
 
-    this.http.get<{ applications: Row[]; metadata: { total: number; page: number; limit: number } }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe((r) => {
-      this.rows.set(r.applications);
-      this.totalApplications = r.metadata.total;
-      this.totalPages = Math.ceil(r.metadata.total / r.metadata.limit);
+    this.http.get<{ applications: Row[]; metadata: { total: number; page: number; limit: number; dashboard?: DashboardSummary } }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe({
+      next: (r) => {
+        this.rows.set(r.applications || []);
+        this.totalApplications = r.metadata.total;
+        this.totalPages = Math.ceil(r.metadata.total / r.metadata.limit);
+        this.summary.set(r.metadata.dashboard || null);
+        this.loading.set(false);
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to load applications';
+        console.error('Failed to load applications:', errorMsg);
+        this.error.set(errorMsg);
+        this.loading.set(false);
+      }
     });
   }
 
@@ -250,49 +426,151 @@ export class BoardApplicationsComponent implements OnInit {
 
   decide(id: number | undefined, action: 'APPROVE' | 'REJECT') {
     if (!id) return;
-    this.http.post(`${API_BASE_URL}/applications/${id}/board/decision`, { action }).subscribe(() => this.load());
+    this.loading.set(true);
+    this.error.set(null);
+    this.http.post(`${API_BASE_URL}/applications/${id}/board/decision`, { action }).subscribe({
+      next: () => {
+        this.loading.set(false);
+        this.error.set(null);
+        this.load();
+      },
+      error: (err: any) => {
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to process decision';
+        console.error('Failed to process decision:', errorMsg);
+        this.error.set(errorMsg);
+        this.loading.set(false);
+      }
+    });
   }
 
   exportExcel() {
     if (!this.selectedExam) return;
-    if (!this.selectedExam) return;
+    
+    this.loading.set(true);
+    this.error.set(null);
+    
+    this.fetchAllApplicationsForSelectedExam((applications) => {
+      if (!applications.length) {
+        this.loading.set(false);
+        return;
+      }
+        const data = applications.map((r) => ({
+          'Application No': r.applicationNo,
+          'Student Name': `${r.student.lastName || ''}, ${r.student.firstName || ''}`.trim(),
+          'Institute': r.institute.name,
+          'Exam': `${r.exam.name} ${r.exam.session} ${r.exam.academicYear}`,
+          'Status': r.status,
+          'Updated At': new Date(r.updatedAt).toLocaleString()
+        }));
 
-    // Export all applications for the selected exam
-    const p = new URLSearchParams();
-    p.set('examId', `${this.selectedExam.id}`);
-    if (this.status) p.set('status', this.status);
-    p.set('limit', '10000'); // Export up to 10k records
-
-    this.http.get<{ applications: Row[] }>(`${API_BASE_URL}/applications/board/list?${p.toString()}`).subscribe((r) => {
-      const applications = r.applications;
-      const data = applications.map((r) => ({
-        'Application No': r.applicationNo,
-        'Student Name': `${r.student.lastName || ''}, ${r.student.firstName || ''}`.trim(),
-        'Institute': r.institute.name,
-        'Exam': `${r.exam.name} ${r.exam.session} ${r.exam.academicYear}`,
-        'Status': r.status,
-        'Updated At': new Date(r.updatedAt).toLocaleString()
-      }));
-
-      // Create Excel file
-      const worksheet = XLSX.utils.json_to_sheet(data);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Applications');
-      XLSX.writeFile(workbook, `applications-${this.selectedExam!.name}-${Date.now()}.xlsx`);
+        // Create Excel file
+        const worksheet = XLSX.utils.json_to_sheet(data);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Applications');
+        XLSX.writeFile(workbook, `applications-${this.selectedExam!.name}-${Date.now()}.xlsx`);
+        this.loading.set(false);
     });
   }
 
   printList() {
     if (!this.selectedExam) return;
 
-    const header = `<h2>Applications for ${this.selectedExam.name} ${this.selectedExam.session} ${this.selectedExam.academicYear}</h2><p>Status: ${this.status || 'All'} | Search: ${this.search || 'All'} | Total: ${this.totalApplications}</p>`;
-    const rowsHtml = this.rows().map((r) => `<tr><td>${r.applicationNo}</td><td>${r.student.lastName || ''}, ${r.student.firstName || ''}</td><td>${r.institute.name}</td><td>${r.exam.name} ${r.exam.session} ${r.exam.academicYear}</td><td>${r.status}</td><td>${new Date(r.updatedAt).toLocaleString()}</td></tr>`).join('');
-    const content = `<html><head><title>Applications - ${this.selectedExam.name}</title><style>table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border:1px solid #666;padding:4px;text-align:left;}th{background:#f5f5f5;font-weight:bold;}</style></head><body>${header}<table><thead><tr><th>App No</th><th>Student</th><th>Institute</th><th>Exam</th><th>Status</th><th>Updated</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
-    const w = window.open('', '_blank');
-    if (!w) return;
-    w.document.write(content);
-    w.document.close();
-    w.print();
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.fetchAllApplicationsForSelectedExam((printableRows) => {
+        if (!printableRows.length) {
+          this.loading.set(false);
+          return;
+        }
+        const header = `<h2>Applications for ${this.selectedExam!.name} ${this.selectedExam!.session} ${this.selectedExam!.academicYear}</h2><p>Status: ${this.status || 'All'} | Search: ${this.search || 'All'} | Total: ${printableRows.length}</p>`;
+        const rowsHtml = printableRows
+          .map((r) => `<tr><td>${this.htmlEscape(r.applicationNo)}</td><td>${this.htmlEscape(`${r.student.lastName || ''}, ${r.student.firstName || ''}`)}</td><td>${this.htmlEscape(r.institute.name)}</td><td>${this.htmlEscape(`${r.exam.name} ${r.exam.session} ${r.exam.academicYear}`)}</td><td>${this.htmlEscape(r.status)}</td><td>${this.htmlEscape(new Date(r.updatedAt).toLocaleString())}</td></tr>`)
+          .join('');
+        const content = `<html><head><title>Applications - ${this.selectedExam!.name}</title><style>table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border:1px solid #666;padding:4px;text-align:left;}th{background:#f5f5f5;font-weight:bold;}</style></head><body>${header}<table><thead><tr><th>App No</th><th>Student</th><th>Institute</th><th>Exam</th><th>Status</th><th>Updated</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+        const w = window.open('', '_blank');
+        if (!w) {
+          this.loading.set(false);
+          return;
+        }
+        w.document.write(content);
+        w.document.close();
+        w.print();
+        this.loading.set(false);
+    });
+  }
+
+  printAllExamForms() {
+    if (!this.selectedExam) return;
+
+    this.loading.set(true);
+    this.error.set(null);
+
+    this.fetchAllApplicationsForSelectedExam((applications) => {
+      if (!applications.length) {
+        this.loading.set(false);
+        return;
+      }
+
+      const ids = applications.map((row) => row.id).join(',');
+      const popup = window.open(`/print/board/forms?ids=${encodeURIComponent(ids)}`, '_blank');
+      if (!popup) {
+        this.error.set('Print window was blocked by browser popup settings. Please allow popups and try again.');
+        this.loading.set(false);
+        return;
+      }
+      this.loading.set(false);
+    });
+  }
+
+  private fetchAllApplicationsForSelectedExam(onDone: (applications: Row[]) => void) {
+    if (!this.selectedExam) return;
+
+    const pageSize = 500;
+    const allRows: Row[] = [];
+
+    const fetchPage = (page: number) => {
+      const params = new URLSearchParams();
+      params.set('examId', `${this.selectedExam!.id}`);
+      if (this.status) params.set('status', this.status);
+      if (this.search) params.set('search', this.search);
+      params.set('page', `${page}`);
+      params.set('limit', `${pageSize}`);
+
+      this.http
+        .get<{ applications: Row[]; metadata: { total: number; page: number; limit: number } }>(`${API_BASE_URL}/applications/board/list?${params.toString()}`)
+        .subscribe({
+          next: (response) => {
+            const rows = response.applications || [];
+            allRows.push(...rows);
+
+            const total = response.metadata?.total ?? allRows.length;
+            if (allRows.length < total && rows.length > 0) {
+              fetchPage(page + 1);
+              return;
+            }
+
+            onDone(allRows);
+          },
+          error: (err: any) => {
+            const errorMsg = err?.error?.error || err?.error?.message || 'Failed to fetch applications';
+            console.error('Failed to fetch applications:', errorMsg);
+            this.error.set(errorMsg);
+            this.loading.set(false);
+          }
+        });
+    };
+
+    fetchPage(1);
+  }
+
+  private htmlEscape(value: string) {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   nextPage() {

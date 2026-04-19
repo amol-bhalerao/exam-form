@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -8,6 +8,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { AgGridModule } from 'ag-grid-angular';
+import type { ColDef } from 'ag-grid-community';
 import { API_BASE_URL } from '../../../core/api';
 import { InstituteSearchModalComponent } from '../../../components/institute-search-modal/institute-search-modal.component';
 
@@ -30,35 +32,93 @@ interface InstituteUser {
 @Component({
   selector: 'app-super-institute-users',
   standalone: true,
-  imports: [MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, NgIf, NgFor, FormsModule, InstituteSearchModalComponent],
+  imports: [
+    MatCardModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatSelectModule,
+    AgGridModule,
+    NgIf,
+    NgFor,
+    FormsModule,
+    InstituteSearchModalComponent
+  ],
   styles: [`
-    .header-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:10px; }
-    .header-row .title { font-size:1.15rem; font-weight:700; }
-    .header-row .subtitle { color:#4b5563; margin-top:4px; }
-    .invite-block { margin-top:12px; border-top:1px solid #e5e7eb; padding-top:12px; }
+    .header-row { display:grid; gap:12px; margin-bottom:14px; }
+    .header-copy { max-width: 900px; }
+    .header-cta { justify-self: start; }
+    .title { font-size:1.2rem; font-weight:700; }
+    .subtitle { color:#4b5563; margin-top:4px; }
+    .filter-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+    .filter-row mat-form-field, .invite-grid mat-form-field, .edit-grid mat-form-field { margin: 0; width: 100%; }
+    .w240 { width: 240px; max-width: 100%; }
+    .table-box { width:100%; height:430px; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; }
+    .invite-block { margin-top:16px; border-top:1px solid #e5e7eb; padding-top:14px; }
     .invite-title { font-weight:700; margin-bottom:8px; }
     .invite-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px; }
-    .invite-actions { margin-top:8px; display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
-    .invite-link { color:#065f46; font-size:.9rem; }
-    .full { width: 100%; }
+    .invite-link { color:#065f46; font-size:.9rem; word-break: break-all; }
+    .error { margin-top:10px; color:#b91c1c; }
+    .selected-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .edit-grid { display:grid; gap:8px; grid-template-columns:1fr 1fr; margin-top:8px; }
     @media (max-width: 900px) { .invite-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      .filter-row, .selected-actions { align-items: stretch; }
+      .filter-row .w240, .filter-row button, .selected-actions button { width: 100%; }
+      .header-cta { width: 100%; }
+      .edit-grid { grid-template-columns: 1fr; }
+    }
   `],
   template: `
     <mat-card>
       <div class="header-row">
-        <div>
-          <div style="font-size:1.2rem;font-weight:700;">Institute User Approvals</div>
-          <div style="color:#6b7280;">Approve institute admin accounts and activate institutes.</div>
+        <div class="header-copy">
+          <div class="title">Institute Users</div>
+          <div class="subtitle">View, filter, approve, and manage all institute login users in one grid.</div>
         </div>
-        <button mat-flat-button color="primary" (click)="load()">Refresh</button>
+        <button class="header-cta" mat-flat-button color="primary" (click)="load()">Refresh</button>
+      </div>
+
+      <div class="filter-row">
+        <mat-form-field appearance="outline" class="w240">
+          <mat-label>Search user or institute</mat-label>
+          <input matInput [ngModel]="searchText()" (ngModelChange)="searchText.set($event)" placeholder="username, email, institute" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="w240">
+          <mat-label>Status</mat-label>
+          <mat-select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)">
+            <mat-option value="">All</mat-option>
+            <mat-option value="ACTIVE">Active</mat-option>
+            <mat-option value="PENDING">Pending</mat-option>
+            <mat-option value="DISABLED">Disabled</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="loading()" style="color:#2563eb; margin-bottom:8px;">Loading institute users...</div>
+      <div *ngIf="!loading() && users().length === 0" style="color:#4b5563; margin-bottom:8px;">No institute users found.</div>
+
+      <div class="ag-theme-alpine table-box">
+        <ag-grid-angular
+          [rowData]="filteredUsers()"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          [pagination]="true"
+          [paginationPageSize]="20"
+          [paginationPageSizeSelector]="[10, 20, 50, 100]"
+          style="width:100%; height:100%;"
+          class="ag-theme-alpine"
+          (cellClicked)="onGridAction($event)">
+        </ag-grid-angular>
       </div>
 
       <div class="invite-block">
         <div class="invite-title">Create Institute User + Activation Link</div>
         <div class="invite-grid">
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <button mat-flat-button color="secondary" type="button" (click)="showInstituteFinder.set(true)">Search institute</button>
-            <div *ngIf="inviteInstituteId">Selected: {{ selectedInstituteName || 'ID ' + inviteInstituteId }}</div>
+            <button mat-flat-button color="primary" type="button" (click)="showInstituteFinder.set(true)">Search institute</button>
+            <div *ngIf="inviteInstituteId">Selected: {{ selectedInstituteName || ('ID ' + inviteInstituteId) }}</div>
           </div>
         </div>
 
@@ -70,7 +130,7 @@ interface InstituteUser {
 
         <div *ngIf="inviteInstituteId" style="margin-top: 10px; border:1px solid #e5e7eb; border-radius:8px; padding:10px; background:#f9fafb;">
           <div style="font-weight:700; margin-bottom:6px;">Actions for selected institute</div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <div class="selected-actions">
             <button mat-flat-button color="primary" (click)="createInvite()">Create Invite Link</button>
             <button mat-flat-button color="accent" (click)="showCreateUser.set(true)">Create User</button>
             <span class="invite-link" *ngIf="inviteLink">Link: <a [href]="inviteLink" target="_blank">{{ inviteLink }}</a></span>
@@ -83,8 +143,8 @@ interface InstituteUser {
           </div>
         </div>
 
-        <div *ngIf="showCreateUser()" class="picker-overlay">
-          <mat-card class="picker-card">
+        <div *ngIf="showCreateUser()" class="app-modal-backdrop">
+          <mat-card class="app-modal-panel app-modal-panel--sm app-modal-panel--tight">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
               <div><strong>Create institute user</strong></div>
               <button mat-icon-button type="button" (click)="showCreateUser.set(false)"><mat-icon>close</mat-icon></button>
@@ -102,38 +162,29 @@ interface InstituteUser {
         </div>
       </div>
 
-      <div style="margin-top:10px;">
-        <div *ngIf="!loading() && users().length===0" style="color:#4b5563;">No institute users found.</div>
-        <div *ngIf="loading()" style="color:#2563eb;">Loading...</div>
-      </div>
-      <div style="margin-top:10px;display:grid;gap:10px;" *ngFor="let user of users()">
-        <div style="border:1px solid #e5e7eb;border-radius:8px;padding:10px;display:grid;grid-template-columns:1fr auto;gap:10px;">
-          <div>
-            <div><strong>{{ user.username }}</strong> ({{ user.status }})</div>
-            <div style="font-size:.9rem;color:#4b5563;">{{ user.email || 'No email' }} · {{ user.mobile || 'No mobile' }}</div>
-            <div style="margin-top:6px;"><strong>Institute:</strong> {{ user.institute?.name || 'Unknown' }} ({{ user.institute?.status || 'Unknown' }})</div>
-            <div style="font-size:.85rem;color:#4b5563;">Code: {{ user.institute?.code || '–' }}, College: {{ user.institute?.collegeNo || '–' }}, UDISE: {{ user.institute?.udiseNo || '–' }}</div>
+      <div *ngIf="editingUser" class="app-modal-backdrop">
+        <mat-card class="app-modal-panel app-modal-panel--md app-modal-panel--tight">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+            <strong>Edit user {{ editingUser.username }} (id {{ editingUser.id }})</strong>
+            <button mat-icon-button (click)="editingUser = null"><mat-icon>close</mat-icon></button>
           </div>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-            <button mat-flat-button color="primary" (click)="setStatus(user, 'ACTIVE')" [disabled]="user.status === 'ACTIVE'">Activate</button>
-            <button mat-flat-button color="accent" (click)="setStatus(user, 'PENDING')" [disabled]="user.status === 'PENDING'">Pending</button>
-            <button mat-stroked-button color="warn" (click)="setStatus(user, 'DISABLED')" [disabled]="user.status === 'DISABLED'">Disable</button>
-            <button mat-stroked-button color="primary" (click)="startEdit(user)">Edit</button>
+          <div class="edit-grid">
+            <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="editUsername" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput [(ngModel)]="editEmail" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="editMobile" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Password (optional)</mat-label><input matInput type="password" [(ngModel)]="editPassword" /></mat-form-field>
           </div>
-        </div>
+          <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button mat-stroked-button type="button" (click)="editingUser = null">Cancel</button>
+            <button mat-flat-button color="primary" (click)="updateUser()">Save</button>
+            <span style="color:#065f46;" *ngIf="editMsg()">{{ editMsg() }}</span>
+            <span style="color:#b91c1c;" *ngIf="editError()">{{ editError() }}</span>
+          </div>
+        </mat-card>
       </div>
-      <div *ngIf="editingUser" style="margin-top:10px;border:1px solid #e5e7eb;border-radius:8px;padding:10px;background:#fff9db;">
-        <div style="display:flex;justify-content:space-between;align-items:center;"><strong>Edit user {{ editingUser.username }} (id {{ editingUser.id }})</strong><button mat-icon-button (click)="editingUser=null"><mat-icon>close</mat-icon></button></div>
-        <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr; margin-top:8px;">
-          <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="editUsername" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput [(ngModel)]="editEmail" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="editMobile" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Password (optional)</mat-label><input matInput type="password" [(ngModel)]="editPassword" /></mat-form-field>
-        </div>
-        <div style="margin-top:8px;"><button mat-flat-button color="primary" (click)="updateUser()">Save</button> <span style="color:#065f46;" *ngIf="editMsg()">{{ editMsg() }}</span> <span style="color:#b91c1c;" *ngIf="editError()">{{ editError() }}</span></div>
-      </div>
-      <div *ngIf="error()" style="margin-top:10px;color:#b91c1c;">{{ error() }}</div>
-      <div *ngIf="inviteError()" style="margin-top:6px;color:#b91c1c;">{{ inviteError() }}</div>
+
+      <div *ngIf="error()" class="error">{{ error() }}</div>
+      <div *ngIf="inviteError()" class="error">{{ inviteError() }}</div>
     </mat-card>
   `
 })
@@ -142,6 +193,9 @@ export class SuperInstituteUsersComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly inviteError = signal<string | null>(null);
+  readonly searchText = signal('');
+  readonly statusFilter = signal('');
+
   inviteLink = '';
   inviteInstituteId: number | null = null;
   selectedInstituteName = '';
@@ -163,7 +217,55 @@ export class SuperInstituteUsersComponent implements OnInit {
   editMsg = signal<string | null>(null);
   editError = signal<string | null>(null);
 
-  constructor(private readonly http: HttpClient) {}
+  readonly filteredUsers = computed(() => {
+    const search = this.searchText().trim().toLowerCase();
+    const status = this.statusFilter();
+    return this.users().filter((user) => {
+      const matchesStatus = !status || user.status === status;
+      const haystack = [
+        user.username,
+        user.email,
+        user.mobile,
+        user.status,
+        user.institute?.name,
+        user.institute?.code,
+        user.institute?.collegeNo,
+        user.institute?.udiseNo
+      ]
+        .join(' ')
+        .toLowerCase();
+      const matchesSearch = !search || haystack.includes(search);
+      return matchesStatus && matchesSearch;
+    });
+  });
+
+  readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true, minWidth: 120, flex: 1 };
+  readonly columnDefs: ColDef[] = [
+    { field: 'username', headerName: 'Username', pinned: 'left', minWidth: 140 },
+    { field: 'email', headerName: 'Email', minWidth: 180 },
+    { field: 'mobile', headerName: 'Mobile', minWidth: 130 },
+    { field: 'status', headerName: 'User Status', minWidth: 120 },
+    { headerName: 'Institute', valueGetter: (params: any) => params.data?.institute?.name ?? '-', minWidth: 200 },
+    { headerName: 'Institute Status', valueGetter: (params: any) => params.data?.institute?.status ?? '-', minWidth: 130 },
+    { headerName: 'Center No', valueGetter: (params: any) => params.data?.institute?.code ?? '-', minWidth: 120 },
+    { headerName: 'College No (Unique)', valueGetter: (params: any) => params.data?.institute?.collegeNo ?? '-', minWidth: 140 },
+    { headerName: 'UDISE', valueGetter: (params: any) => params.data?.institute?.udiseNo ?? '-', minWidth: 140 },
+    {
+      headerName: 'Actions',
+      field: 'actions',
+      pinned: 'right',
+      minWidth: 250,
+      cellRenderer: () => `
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+          <button data-action="activate" style="border:none;background:#dcfce7;color:#166534;padding:3px 6px;border-radius:4px;">Activate</button>
+          <button data-action="pending" style="border:none;background:#fef3c7;color:#92400e;padding:3px 6px;border-radius:4px;">Pending</button>
+          <button data-action="disable" style="border:none;background:#fee2e2;color:#b91c1c;padding:3px 6px;border-radius:4px;">Disable</button>
+          <button data-action="edit" style="border:none;background:#dbeafe;color:#1d4ed8;padding:3px 6px;border-radius:4px;">Edit</button>
+        </div>`
+    }
+  ];
+
+  private readonly http = inject(HttpClient);
 
   ngOnInit() {
     this.load();
@@ -171,7 +273,7 @@ export class SuperInstituteUsersComponent implements OnInit {
 
   selectedPendingUsers() {
     if (!this.inviteInstituteId) return [];
-    return this.users().filter((u) => u.institute?.id === this.inviteInstituteId);
+    return this.users().filter((user) => user.institute?.id === this.inviteInstituteId && user.status === 'PENDING');
   }
 
   load() {
@@ -182,7 +284,7 @@ export class SuperInstituteUsersComponent implements OnInit {
         this.users.set(res.users || []);
         this.loading.set(false);
       },
-      error: (e) => {
+      error: (e: any) => {
         this.error.set(e?.error?.error || 'Could not load users');
         this.loading.set(false);
       }
@@ -192,15 +294,26 @@ export class SuperInstituteUsersComponent implements OnInit {
   approve(id: number) {
     this.http.patch(`${API_BASE_URL}/institutes/users/${id}/status`, { status: 'ACTIVE' }).subscribe({
       next: () => this.load(),
-      error: (e) => (this.error.set(e?.error?.error || 'Approval failed'))
+      error: (e: any) => this.error.set(e?.error?.error || 'Approval failed')
     });
   }
 
   setStatus(user: InstituteUser, status: 'ACTIVE' | 'PENDING' | 'DISABLED') {
     this.http.patch(`${API_BASE_URL}/institutes/users/${user.id}/status`, { status }).subscribe({
       next: () => this.load(),
-      error: (e) => (this.error.set(e?.error?.error || 'Failed to update status'))
+      error: (e: any) => this.error.set(e?.error?.error || 'Failed to update status')
     });
+  }
+
+  onGridAction(event: any) {
+    const action = (event.event?.target as HTMLElement)?.closest('button')?.dataset?.['action'];
+    const user = event.data as InstituteUser | undefined;
+    if (!action || !user) return;
+
+    if (action === 'activate') return this.setStatus(user, 'ACTIVE');
+    if (action === 'pending') return this.setStatus(user, 'PENDING');
+    if (action === 'disable') return this.setStatus(user, 'DISABLED');
+    if (action === 'edit') return this.startEdit(user);
   }
 
   startEdit(user: InstituteUser) {
@@ -215,15 +328,20 @@ export class SuperInstituteUsersComponent implements OnInit {
 
   updateUser() {
     if (!this.editingUser) return;
-    const payload: any = { username: this.editUsername.trim(), email: this.editEmail.trim(), mobile: this.editMobile.trim() };
+    const payload: any = {
+      username: this.editUsername.trim(),
+      email: this.editEmail.trim(),
+      mobile: this.editMobile.trim()
+    };
     if (this.editPassword.trim()) payload.password = this.editPassword.trim();
+
     this.http.patch<{ user: InstituteUser }>(`${API_BASE_URL}/institutes/users/${this.editingUser.id}`, payload).subscribe({
       next: () => {
         this.editMsg.set('User updated successfully');
         this.load();
         this.editingUser = null;
       },
-      error: (e) => {
+      error: (e: any) => {
         this.editError.set(e?.error?.error || 'Failed to update user');
       }
     });
@@ -243,11 +361,11 @@ export class SuperInstituteUsersComponent implements OnInit {
     }
     const payload: any = { instituteId: this.inviteInstituteId };
     this.http.post<{ activationLink: string }>(`${API_BASE_URL}/institutes/users/invite`, payload).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.inviteLink = `${window.location.origin}${res.activationLink}`;
         this.load();
       },
-      error: (e) => {
+      error: (e: any) => {
         this.inviteError.set(e?.error?.error || 'Failed to create invite');
       }
     });
@@ -281,7 +399,7 @@ export class SuperInstituteUsersComponent implements OnInit {
         this.createMobile = '';
         this.load();
       },
-      error: (e) => {
+      error: (e: any) => {
         const err = e?.error;
         if (err?.error === 'INSTITUTE_ADMIN_ALREADY_EXISTS') {
           const existing = err?.existingUser;
@@ -296,3 +414,4 @@ export class SuperInstituteUsersComponent implements OnInit {
     });
   }
 }
+

@@ -1,11 +1,11 @@
 generator client {
   provider      = "prisma-client-js"
-  binaryTargets = ["native", "linux-musl", "debian-openssl-1.0.x", "debian-openssl-3.0.x"]
+  engineType    = "binary"
+  binaryTargets = ["native", "linux-musl", "debian-openssl-1.0.x", "debian-openssl-3.0.x", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
   provider = "mysql"
-  url      = env("DATABASE_URL")
 }
 
 enum UserStatus {
@@ -73,6 +73,7 @@ model Institute {
   teachers     Teacher[]
   instituteStreamSubjects InstituteStreamSubject[]
   instituteInvites InstituteInvite[]
+  examCapacities InstituteExamCapacity[]
 
   @@index([status])
   @@map("institutes")
@@ -87,6 +88,8 @@ model User {
   email        String?    @db.VarChar(150)
   mobile       String?    @db.VarChar(15)
   status       UserStatus @default(PENDING)
+  googleId     String?    @unique @db.VarChar(200)
+  authProvider String?    @db.VarChar(20)
   createdAt    DateTime   @default(now())
 
   role      Role      @relation(fields: [roleId], references: [id])
@@ -96,7 +99,8 @@ model User {
 
   examsCreated Exam[] @relation("ExamCreatedBy")
   newsCreated News[] @relation("NewsCreatedBy")
-  studentProfile Student?
+  studentProfile Student? @relation("PrimaryStudentProfile")
+  managedStudents Student[] @relation("ManagedStudents")
 
   auditLogs AuditLog[]
   statusEvents StatusHistory[] @relation("StatusActor")
@@ -143,6 +147,7 @@ model Stream {
   exams Exam[]
   streamSubjects StreamSubject[]
   instituteStreamSubjects InstituteStreamSubject[]
+  instituteExamCapacities InstituteExamCapacity[]
 
   @@map("streams")
 }
@@ -177,16 +182,38 @@ model Exam {
   stream Stream @relation(fields: [streamId], references: [id])
   createdBy User @relation("ExamCreatedBy", fields: [createdByUserId], references: [id])
   applications ExamApplication[]
+  instituteCapacities InstituteExamCapacity[]
 
   @@index([streamId])
   @@index([applicationOpen, applicationClose])
   @@map("exams")
 }
 
+model InstituteExamCapacity {
+  id            Int      @id @default(autoincrement())
+  instituteId   Int
+  examId        Int
+  streamId      Int
+  totalStudents Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  institute Institute @relation(fields: [instituteId], references: [id])
+  exam      Exam      @relation(fields: [examId], references: [id])
+  stream    Stream    @relation(fields: [streamId], references: [id])
+
+  @@unique([instituteId, examId, streamId])
+  @@index([instituteId])
+  @@index([examId])
+  @@index([streamId])
+  @@map("institute_exam_capacities")
+}
+
 model Student {
   id           Int      @id @default(autoincrement())
   instituteId  Int
   userId       Int?     @unique
+  managerUserId Int?
   firstName    String?  @db.VarChar(100)
   middleName   String?  @db.VarChar(100)
   lastName     String?  @db.VarChar(100)
@@ -194,7 +221,12 @@ model Student {
   dob          DateTime?
   gender       String?  @db.VarChar(20)
   aadhaar      String?  @db.VarChar(20)
+  apaarId      String?  @db.VarChar(20)
+  studentSaralId String? @db.VarChar(50)
   address      String?  @db.Text
+  district     String?  @db.VarChar(100)
+  taluka       String?  @db.VarChar(100)
+  village      String?  @db.VarChar(100)
   pinCode      String?  @db.VarChar(10)
   mobile       String?  @db.VarChar(15)
 
@@ -204,16 +236,21 @@ model Student {
   categoryCode      String? @db.VarChar(10)
   divyangCode       String? @db.VarChar(10)
   mediumCode        String? @db.VarChar(10)
+  sscPassedFromMaharashtra Boolean?
+  eligibilityCertIssued Boolean?
+  eligibilityCertNo String? @db.VarChar(100)
 
   createdAt DateTime @default(now())
 
   institute Institute @relation(fields: [instituteId], references: [id])
-  user      User?     @relation(fields: [userId], references: [id])
+  user      User?     @relation("PrimaryStudentProfile", fields: [userId], references: [id])
+  managerUser User?   @relation("ManagedStudents", fields: [managerUserId], references: [id])
   previousExams PreviousExam[]
   feeReimbursement FeeReimbursement?
   applications ExamApplication[]
 
   @@index([instituteId])
+  @@index([managerUserId])
   @@index([lastName, firstName])
   @@map("students")
 }
@@ -320,6 +357,7 @@ model PreviousExam {
   seatNo    String? @db.VarChar(50)
   month     String? @db.VarChar(10)
   year      Int?
+  percentage String? @db.VarChar(10) // Store as string to handle decimal values
   boardOrCollegeName String? @db.VarChar(200)
 
   student Student @relation(fields: [studentId], references: [id])
@@ -329,12 +367,13 @@ model PreviousExam {
 }
 
 model FeeReimbursement {
-  id           Int    @id @default(autoincrement())
-  studentId    Int    @unique
+  id                    Int    @id @default(autoincrement())
+  studentId             Int    @unique
   revenueCircleAndVillage String? @db.VarChar(200)
-  accountNo    String? @db.VarChar(30)
-  ifscCode     String? @db.VarChar(15)
-  accountHolder String? @db.VarChar(20) // OWN/FATHER/MOTHER/OTHER
+  accountNo             String? @db.VarChar(30)
+  ifscCode              String? @db.VarChar(15)
+  accountHolder         String? @db.VarChar(100)
+  accountHolderRelation String? @db.VarChar(20)
 
   student Student @relation(fields: [studentId], references: [id])
 
@@ -443,8 +482,20 @@ model Teacher {
   disclosureNotes       String?   @db.Text
 
   active      Boolean   @default(true)
-  email       String?    @db.VarChar(150)
-  mobile      String?    @db.VarChar(15)
+  email       String?   @db.VarChar(150)
+  mobile      String?   @db.VarChar(15)
+
+  examinerExperienceYears      Float?
+  previousExaminerAppointmentNo String? @db.VarChar(100)
+  moderatorExperienceYears     Float?
+  lastModeratorName            String? @db.VarChar(150)
+  lastModeratorAppointmentNo   String? @db.VarChar(100)
+  lastModeratorCollegeName     String? @db.VarChar(200)
+  chiefModeratorExperienceYears   Float?
+  lastChiefModeratorName          String? @db.VarChar(150)
+  lastChiefModeratorAppointmentNo String? @db.VarChar(100)
+  lastChiefModeratorCollegeName   String? @db.VarChar(200)
+
   createdAt   DateTime   @default(now())
 
   institute Institute @relation(fields: [instituteId], references: [id])
@@ -456,11 +507,12 @@ model Teacher {
 }
 
 model InstituteStreamSubject {
-  id          Int      @id @default(autoincrement())
-  instituteId Int
-  streamId    Int
-  subjectId   Int
-  createdAt   DateTime @default(now())
+  id                 Int      @id @default(autoincrement())
+  instituteId        Int
+  streamId           Int
+  subjectId          Int
+  answerLanguageCode String?  @db.VarChar(10)
+  createdAt          DateTime @default(now())
 
   institute Institute @relation(fields: [instituteId], references: [id])
   stream    Stream    @relation(fields: [streamId], references: [id])

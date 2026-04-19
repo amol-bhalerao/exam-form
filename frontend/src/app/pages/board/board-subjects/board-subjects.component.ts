@@ -9,11 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatIconModule } from '@angular/material/icon';
 import { AgGridModule } from 'ag-grid-angular';
-import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import type { ColDef } from 'ag-grid-community';
 import { API_BASE_URL } from '../../../core/api';
-
-ModuleRegistry.registerModules([AllCommunityModule]);
 
 type SubjectRow = { id: number; code: string; name: string; category: string };
 @Component({
@@ -23,20 +20,11 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
   template: `
     <mat-card class="card">
       <div class="header-row">
-        <div>
+        <div class="header-copy">
           <div class="h">Subject Master</div>
           <div class="p">Board can add/edit/delete subjects with category.</div>
         </div>
-      </div>
-
-      <div class="form-grid">
-        <mat-form-field appearance="outline"><mat-label>Code</mat-label><input matInput [(ngModel)]="edit.code" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="edit.name" /></mat-form-field>
-        <mat-form-field appearance="outline"><mat-label>Category</mat-label><mat-select [(ngModel)]="edit.category"><mat-option *ngFor="let c of categories" [value]="c">{{ c }}</mat-option></mat-select></mat-form-field>
-      </div>
-      <div class="card-actions">
-        <button mat-flat-button color="primary" (click)="save()">{{ edit.id ? 'Update Subject' : 'Add Subject' }}</button>
-        <button mat-stroked-button color="warn" *ngIf="edit.id" (click)="reset()">Cancel</button>
+        <button class="header-cta" mat-flat-button color="primary" (click)="openForm()">Add Subject</button>
       </div>
       <div class="msg error" *ngIf="error">{{ error }}</div>
       <div class="msg success" *ngIf="success">{{ success }}</div>
@@ -61,24 +49,51 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
         <button mat-stroked-button color="warn" (click)="deleteSelected()" [disabled]="!selectedRow">Delete Selected</button>
       </div>
     </mat-card>
+
+    <div class="app-modal-backdrop" *ngIf="showForm()">
+      <div class="app-modal-panel app-modal-panel--md">
+        <div class="app-modal-header">
+          <div class="h">{{ edit.id ? 'Update Subject' : 'Add Subject' }}</div>
+          <button mat-icon-button type="button" (click)="closeForm()"><mat-icon>close</mat-icon></button>
+        </div>
+        <div class="form-grid">
+          <mat-form-field appearance="outline"><mat-label>Code</mat-label><input matInput [(ngModel)]="edit.code" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="edit.name" /></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Category</mat-label><mat-select [(ngModel)]="edit.category"><mat-option *ngFor="let c of categories" [value]="c">{{ c }}</mat-option></mat-select></mat-form-field>
+        </div>
+        <div class="card-actions">
+          <button mat-stroked-button (click)="closeForm()">Cancel</button>
+          <button mat-flat-button color="primary" (click)="save()">{{ edit.id ? 'Update Subject' : 'Add Subject' }}</button>
+        </div>
+      </div>
+    </div>
   `,
   styles: [`
     .card { margin-bottom: 14px; padding: 16px; }
-    .header-row { display: flex; justify-content: space-between; align-items: center; }
+    .header-row { display: grid; gap: 12px; }
+    .header-copy { max-width: 840px; }
+    .header-cta { justify-self: start; }
     .h { font-weight: 900; font-size: 1rem; }
     .p { color: #6b7280; margin-top: 4px; }
-    .form-grid { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 10px; margin-top: 10px; }
+    .form-grid { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 12px; margin-top: 10px; }
+    .form-grid mat-form-field { width: 100%; margin: 0; }
     .card-actions { margin-top: 10px; display: flex; gap: 8px; }
     .msg { margin-top: 10px; font-weight: 700; }
     .error { color: #b91c1c; }
     .success { color: #065f46; }
     .table { width: 100%; margin-top: 10px; }
-    .table-header { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
-    .search { width: 250px; }
+    .table-header { display: grid; gap: 10px; }
+    .search { width: min(320px, 100%); margin: 0; }
+    @media (max-width: 860px) {
+      .header-cta { width: 100%; }
+      .search { width: 100%; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
   `]
 })
 export class BoardSubjectsComponent implements OnInit {
   readonly subjects = signal<SubjectRow[]>([]);
+  readonly showForm = signal(false);
   selectedRow: SubjectRow | null = null;
   edit: Partial<SubjectRow> = { id: 0, code: '', name: '', category: 'language' };
   search = '';
@@ -102,6 +117,16 @@ export class BoardSubjectsComponent implements OnInit {
     this.load();
   }
 
+  openForm() {
+    this.reset();
+    this.showForm.set(true);
+  }
+
+  closeForm() {
+    this.showForm.set(false);
+    this.reset();
+  }
+
   load() {
     const params = this.search ? `?search=${encodeURIComponent(this.search)}` : '';
     this.http.get<{ subjects: SubjectRow[] }>(`${API_BASE_URL}/masters/subjects${params}`).subscribe((r) => this.subjects.set(r.subjects));
@@ -122,9 +147,9 @@ export class BoardSubjectsComponent implements OnInit {
     };
 
     if (this.edit.id) {
-      this.http.put(`${API_BASE_URL}/masters/subjects/${this.edit.id}`, payload).subscribe({ next: () => { this.success = 'Updated'; this.reset(); this.load(); }, error: (e) => { this.error = e?.error?.error || 'Update failed'; } });
+      this.http.put(`${API_BASE_URL}/masters/subjects/${this.edit.id}`, payload).subscribe({ next: () => { this.success = 'Updated'; this.closeForm(); this.load(); }, error: (e) => { this.error = e?.error?.error || 'Update failed'; } });
     } else {
-      this.http.post(`${API_BASE_URL}/masters/subjects`, payload).subscribe({ next: () => { this.success = 'Added'; this.reset(); this.load(); }, error: (e) => { this.error = e?.error?.error || 'Add failed'; } });
+      this.http.post(`${API_BASE_URL}/masters/subjects`, payload).subscribe({ next: () => { this.success = 'Added'; this.closeForm(); this.load(); }, error: (e) => { this.error = e?.error?.error || 'Add failed'; } });
     }
   }
 
@@ -137,6 +162,7 @@ export class BoardSubjectsComponent implements OnInit {
     this.edit = { ...this.selectedRow };
     this.error = '';
     this.success = '';
+    this.showForm.set(true);
   }
 
   deleteSelected() {
@@ -159,10 +185,12 @@ export class BoardSubjectsComponent implements OnInit {
     if (!action || !row) return;
     if (action === 'view') {
       this.edit = { ...row };
+      this.showForm.set(true);
       return;
     }
     if (action === 'edit') {
       this.edit = { ...row };
+      this.showForm.set(true);
       return;
     }
     if (action === 'delete') {

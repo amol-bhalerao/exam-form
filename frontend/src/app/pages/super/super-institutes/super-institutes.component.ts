@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, inject } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -7,12 +7,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
 import { AgGridModule } from 'ag-grid-angular';
-import { ModuleRegistry, AllCommunityModule } from 'ag-grid-community';
 import type { ColDef } from 'ag-grid-community';
 import { API_BASE_URL } from '../../../core/api';
-
-ModuleRegistry.registerModules([AllCommunityModule]);
 
 type Institute = {
   id: number;
@@ -36,51 +34,68 @@ type Institute = {
 @Component({
   selector: 'app-super-institutes',
   standalone: true,
-  imports: [FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, AgGridModule, NgIf],
+  imports: [FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule, MatIconModule, AgGridModule],
   template: `
-    <mat-card class="card">
-      <div class="row">
-        <div>
-          <div class="h">Institutes</div>
-          <div class="p">Manage institutes - create new ones and approve pending registrations.</div>
+    <mat-card class="card grid-panel">
+      <div class="grid-panel__header">
+        <div class="header-copy">
+          <div class="grid-panel__title">
+            <mat-icon>school</mat-icon>
+            Institutes
+          </div>
+          <div class="grid-panel__subtitle">Manage institute approvals, contact details, and activation links from one place.</div>
         </div>
-        <div class="grow"></div>
-        <button mat-flat-button color="primary" (click)="showCreateInstitute.set(true)">Add New Institute</button>
-        <mat-form-field appearance="outline" class="w260">
-          <mat-label>Search</mat-label>
-          <input matInput [(ngModel)]="search" (input)="load()" />
-        </mat-form-field>
+        <div class="grid-panel__actions">
+          <span class="grid-pill">{{ institutes().length }} institutes</span>
+          <button mat-flat-button color="primary" (click)="showCreateInstitute.set(true)">Add New Institute</button>
+          <mat-form-field appearance="outline" class="table-search-field">
+            <mat-label>Search institutes</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <input matInput [(ngModel)]="search" (input)="load()" placeholder="Name, city, mobile or email" />
+          </mat-form-field>
+        </div>
       </div>
     </mat-card>
 
-    <mat-card class="card">
-      <div class="ag-theme-alpine" style="width:100%; height:360px; margin-top:10px;">
+    <mat-card class="card grid-panel">
+      <div class="grid-panel__header">
+        <div class="header-copy">
+          <div class="grid-panel__title">Institute Directory</div>
+          <div class="grid-panel__subtitle">Select a row to view details or update institute configuration.</div>
+        </div>
+      </div>
+      <div class="grid-panel__table grid-panel__table--lg">
         <ag-grid-angular
           [rowData]="institutes()"
           [columnDefs]="columnDefs"
           [defaultColDef]="defaultColDef"
           [rowSelection]="{ mode: 'singleRow' }"
           class="ag-theme-alpine"
-          style="width:100%; height:280px;"
+          style="width:100%; height:100%;"
           (cellClicked)="onGridCellClicked($event)"
         ></ag-grid-angular>
       </div>
-      <div *ngIf="selectedInstitute" class="selected-row">
-        <span><strong>Selected:</strong> {{ selectedInstitute.name }} ({{ selectedInstitute.status }})</span>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <button mat-stroked-button color="accent" (click)="generateInvite(selectedInstitute.id)">Generate Activation Link</button>
-          <button mat-flat-button color="primary" (click)="openEditInstitute()">Edit Institute</button>
+      @if (selectedInstitute) {
+        <div class="selected-row">
+          <span><strong>Selected:</strong> {{ selectedInstitute.name }} ({{ selectedInstitute.status }})</span>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <button mat-stroked-button color="accent" (click)="generateInvite(selectedInstitute.id)">Generate Activation Link</button>
+            <button mat-flat-button color="primary" (click)="openEditInstitute()">Edit Institute</button>
+          </div>
         </div>
-      </div>
-      <div *ngIf="inviteLink" style="margin-top:8px; font-size:.9rem; color:#065f46;">Activation Link: <a [href]="inviteLink" target="_blank">{{ inviteLink }}</a></div>
+      }
+      @if (inviteLink) {
+        <div style="margin-top:8px; font-size:.9rem; color:#065f46;">Activation Link: <a [href]="inviteLink" target="_blank">{{ inviteLink }}</a></div>
+      }
     </mat-card>
 
-    <div class="modal-backdrop" *ngIf="viewingInstitute">
-      <div class="modal">
-        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
-          <div style="font-weight: 700;">Institute Details</div>
-          <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="closeView()">&times;</button>
-        </div>
+    @if (viewingInstitute) {
+      <div class="app-modal-backdrop">
+        <div class="app-modal-panel app-modal-panel--md">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div style="font-weight: 700;">Institute Details</div>
+            <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="closeView()">&times;</button>
+          </div>
         <div style="margin-bottom:8px;"><strong>Name:</strong> {{ viewingInstitute.name }}</div>
         <div style="margin-bottom:8px;"><strong>Code:</strong> {{ viewingInstitute.code || '—' }}</div>
         <div style="margin-bottom:8px;"><strong>Status:</strong> {{ viewingInstitute.status }}</div>
@@ -97,58 +112,67 @@ type Institute = {
         <div style="margin-bottom:8px;"><strong>Accepting Applications:</strong> {{ viewingInstitute.acceptingApplications ? 'Yes' : 'No' }}</div>
         <div style="margin-bottom:8px;"><strong>Created At:</strong> {{ viewingInstitute.createdAt }}</div>
         <div style="text-align:right;"><button mat-flat-button color="primary" (click)="closeView()">Close</button></div>
+        </div>
       </div>
-    </div>
+    }
 
-    <div class="modal-backdrop" *ngIf="showCreateInstitute()">
-      <div class="modal" style="max-width: 700px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div style="font-weight:700;">Create New Institute</div>
-          <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showCreateInstitute.set(false); resetCreateForm()">&times;</button>
+    @if (showCreateInstitute()) {
+      <div class="app-modal-backdrop">
+        <div class="app-modal-panel app-modal-panel--md">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-weight:700;">Create New Institute</div>
+            <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showCreateInstitute.set(false); resetCreateForm()">&times;</button>
+          </div>
+          <div class="form-grid">
+            <mat-form-field appearance="outline"><mat-label>Institute Name</mat-label><input matInput [(ngModel)]="createForm.name" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Institute Code</mat-label><input matInput [(ngModel)]="createForm.code" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Address</mat-label><input matInput [(ngModel)]="createForm.address" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Contact Person</mat-label><input matInput [(ngModel)]="createForm.contactPerson" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Contact Email</mat-label><input matInput type="email" [(ngModel)]="createForm.contactEmail" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Contact Mobile</mat-label><input matInput [(ngModel)]="createForm.contactMobile" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="createForm.username" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Password</mat-label><input matInput type="password" [(ngModel)]="createForm.password" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="createForm.status"><mat-option value="PENDING">Pending</mat-option><mat-option value="APPROVED">Approved</mat-option></mat-select></mat-form-field>
+          </div>
+          <div class="card-actions">
+            <button mat-flat-button color="primary" (click)="createInstitute()">Create Institute</button>
+            <button mat-stroked-button (click)="resetCreateForm()">Reset</button>
+          </div>
+          @if (createError) {
+            <div class="msg error">{{ createError }}</div>
+          }
+          @if (createSuccess) {
+            <div class="msg success">{{ createSuccess }}</div>
+          }
         </div>
-        <div class="form-grid">
-          <mat-form-field appearance="outline"><mat-label>Institute Name</mat-label><input matInput [(ngModel)]="createForm.name" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Institute Code</mat-label><input matInput [(ngModel)]="createForm.code" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Address</mat-label><input matInput [(ngModel)]="createForm.address" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Contact Person</mat-label><input matInput [(ngModel)]="createForm.contactPerson" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Contact Email</mat-label><input matInput type="email" [(ngModel)]="createForm.contactEmail" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Contact Mobile</mat-label><input matInput [(ngModel)]="createForm.contactMobile" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="createForm.username" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Password</mat-label><input matInput type="password" [(ngModel)]="createForm.password" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="createForm.status"><mat-option value="PENDING">Pending</mat-option><mat-option value="APPROVED">Approved</mat-option></mat-select></mat-form-field>
-        </div>
-        <div class="card-actions">
-          <button mat-flat-button color="primary" (click)="createInstitute()">Create Institute</button>
-          <button mat-stroked-button (click)="resetCreateForm()">Reset</button>
-        </div>
-        <div class="msg error" *ngIf="createError">{{ createError }}</div>
-        <div class="msg success" *ngIf="createSuccess">{{ createSuccess }}</div>
       </div>
-    </div>
+    }
 
-    <div class="modal-backdrop" *ngIf="showEditInstitute()">
-      <div class="modal" style="max-width: 700px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-          <div style="font-weight:700;">Edit Institute</div>
-          <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showEditInstitute.set(false)">&times;</button>
+    @if (showEditInstitute()) {
+      <div class="app-modal-backdrop">
+        <div class="app-modal-panel app-modal-panel--md">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <div style="font-weight:700;">Edit Institute</div>
+            <button style="border:none;background:transparent;font-size:1.1rem;cursor:pointer;" (click)="showEditInstitute.set(false)">&times;</button>
+          </div>
+          <div class="admin-form-grid">
+            <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="editInstituteForm.name" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Code</mat-label><input matInput [(ngModel)]="editInstituteForm.code" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>College No</mat-label><input matInput [(ngModel)]="editInstituteForm.collegeNo" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>UDISE No</mat-label><input matInput [(ngModel)]="editInstituteForm.udiseNo" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Contact Person</mat-label><input matInput [(ngModel)]="editInstituteForm.contactPerson" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Contact Email</mat-label><input matInput type="email" [(ngModel)]="editInstituteForm.contactEmail" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Contact Mobile</mat-label><input matInput [(ngModel)]="editInstituteForm.contactMobile" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Pincode</mat-label><input matInput [(ngModel)]="editInstituteForm.pincode" /></mat-form-field>
+            <mat-form-field appearance="outline" class="full"><mat-label>Address</mat-label><input matInput [(ngModel)]="editInstituteForm.address" /></mat-form-field>
+            <mat-form-field appearance="outline" class="full"><mat-label>City</mat-label><input matInput [(ngModel)]="editInstituteForm.city" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="editInstituteForm.status"><mat-option value="APPROVED">Approved</mat-option><mat-option value="PENDING">Pending</mat-option><mat-option value="DISABLED">Disabled</mat-option><mat-option value="REJECTED">Rejected</mat-option></mat-select></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Accepting Applications</mat-label><mat-select [(ngModel)]="editInstituteForm.acceptingApplications"><mat-option [value]="true">Yes</mat-option><mat-option [value]="false">No</mat-option></mat-select></mat-form-field>
+          </div>
+          <div style="margin-top:10px;display:flex;gap:8px;align-items:center;"><button mat-flat-button color="primary" (click)="saveEditedInstitute()">Save</button><span style="color:#065f46;">{{ editInstituteSuccess }}</span><span style="color:#b91c1c;">{{ editInstituteError }}</span></div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="editInstituteForm.name" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Code</mat-label><input matInput [(ngModel)]="editInstituteForm.code" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>College No</mat-label><input matInput [(ngModel)]="editInstituteForm.collegeNo" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>UDISE No</mat-label><input matInput [(ngModel)]="editInstituteForm.udiseNo" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Contact Person</mat-label><input matInput [(ngModel)]="editInstituteForm.contactPerson" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Contact Email</mat-label><input matInput type="email" [(ngModel)]="editInstituteForm.contactEmail" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Contact Mobile</mat-label><input matInput [(ngModel)]="editInstituteForm.contactMobile" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Phone</mat-label><input matInput [(ngModel)]="editInstituteForm.pincode" /></mat-form-field>
-          <mat-form-field appearance="outline" class="full"><mat-label>Address</mat-label><input matInput [(ngModel)]="editInstituteForm.address" /></mat-form-field>
-          <mat-form-field appearance="outline" class="full"><mat-label>City</mat-label><input matInput [(ngModel)]="editInstituteForm.city" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="editInstituteForm.status"><mat-option value="APPROVED">Approved</mat-option><mat-option value="PENDING">Pending</mat-option><mat-option value="DISABLED">Disabled</mat-option><mat-option value="REJECTED">Rejected</mat-option></mat-select></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Accepting Applications</mat-label><mat-select [(ngModel)]="editInstituteForm.acceptingApplications"><mat-option [value]="true">Yes</mat-option><mat-option [value]="false">No</mat-option></mat-select></mat-form-field>
-        </div>
-        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;"><button mat-flat-button color="primary" (click)="saveEditedInstitute()">Save</button><span style="color:#065f46;">{{ editInstituteSuccess }}</span><span style="color:#b91c1c;">{{ editInstituteError }}</span></div>
       </div>
-    </div>
+    }
   `,
   styles: [
     `
@@ -156,32 +180,78 @@ type Institute = {
         margin-bottom: 14px;
         padding: 16px;
       }
-      .row {
-        display: flex;
+      .grid-panel__header {
+        display: grid;
         gap: 12px;
+      }
+      .header-copy {
+        max-width: 920px;
+      }
+      .grid-panel__title {
+        display: flex;
         align-items: center;
+        gap: 6px;
+        font-weight: 800;
+      }
+      .grid-panel__subtitle {
+        color: #64748b;
+        margin-top: 4px;
+        font-size: 13px;
+      }
+      .grid-panel__actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
         flex-wrap: wrap;
       }
-      .grow {
-        flex: 1;
+      .grid-pill {
+        border: 1px solid #dbeafe;
+        background: #f8fbff;
+        color: #1e3a8a;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
       }
-      .h {
-        font-weight: 900;
+      .table-search-field {
+        width: min(320px, 100%);
+        margin: 0;
       }
-      .p {
-        color: #6b7280;
-        margin-top: 4px;
+      .grid-panel__table {
+        margin-top: 10px;
+        width: 100%;
+        min-height: 460px;
+        height: 460px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
       }
       .form-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
         margin-top: 10px;
+      }
+      .form-grid mat-form-field,
+      .admin-form-grid mat-form-field {
+        width: 100%;
+        margin: 0;
+      }
+      .admin-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 10px;
+      }
+      .admin-form-grid .full {
+        grid-column: 1 / -1;
       }
       .card-actions {
         margin-top: 10px;
         display: flex;
         gap: 8px;
+        flex-wrap: wrap;
       }
       .msg {
         margin-top: 8px;
@@ -193,37 +263,34 @@ type Institute = {
       .success {
         color: #065f46;
       }
-      .table {
-        width: 100%;
-      }
-      .w260 {
-        width: 280px;
-        max-width: 100%;
-      }
       .selected-row {
-        margin-top: 10px;
-        padding: 8px;
-        background: #f3f4f6;
-        border-radius: 4px;
+        margin-top: 12px;
+        padding: 12px 14px;
+        background: #eef6ff;
+        border: 1px solid #bfdbfe;
+        border-radius: 12px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
       }
-      .modal-backdrop {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.35);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-      }
-      .modal {
-        background: #fff;
-        border-radius: 8px;
-        padding: 16px;
-        width: min(500px, 90vw);
-        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      @media (max-width: 768px) {
+        .grid-panel__actions {
+          align-items: stretch;
+        }
+        .grid-panel__actions > button {
+          width: 100%;
+        }
+        .table-search-field {
+          width: 100%;
+        }
+        .admin-form-grid {
+          grid-template-columns: 1fr;
+        }
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
       }
     `
   ]
@@ -233,14 +300,17 @@ export class SuperInstitutesComponent implements OnInit {
   selectedInstitute: Institute | null = null;
   viewingInstitute: Institute | null = null;
   readonly columnDefs: ColDef[] = [
-    { field: 'name', headerName: 'Name', flex: 1, sortable: true, filter: true },
-    { field: 'code', headerName: 'Code', flex: 1, sortable: true, filter: true, valueGetter: (params: any) => params.data.code || '—' },
-    { field: 'status', headerName: 'Status', flex: 1, sortable: true, filter: true },
-    { headerName: 'Actions', field: 'actions', flex: 1, minWidth: 140, cellRenderer: (params: any) => {
-        return `<div style="display:flex;flex-wrap:wrap;gap:4px;"><button data-action=view style="border:none;background:#dbeafe;color:#1d4ed8;padding:3px 8px;border-radius:4px;">View</button></div>`;
+    { field: 'name', headerName: 'Name', flex: 1.5, sortable: true, filter: true, minWidth: 200 },
+    { field: 'collegeNo', headerName: 'College No', flex: 1, sortable: true, filter: true, minWidth: 120, valueGetter: (params: any) => params.data.collegeNo || '—' },
+    { field: 'udiseNo', headerName: 'UDISE No', flex: 1, sortable: true, filter: true, minWidth: 120, valueGetter: (params: any) => params.data.udiseNo || '—' },
+    { field: 'city', headerName: 'City', flex: 1, sortable: true, filter: true, minWidth: 120, valueGetter: (params: any) => params.data.city || '—' },
+    { field: 'contactMobile', headerName: 'Mobile', flex: 1, sortable: true, filter: true, minWidth: 130, valueGetter: (params: any) => params.data.contactMobile || '—' },
+    { field: 'contactEmail', headerName: 'Email', flex: 1.2, sortable: true, filter: true, minWidth: 180, valueGetter: (params: any) => params.data.contactEmail || '—' },
+    { headerName: 'Actions', field: 'actions', flex: 0.8, minWidth: 110, cellRenderer: () => {
+        return `<div style="display:flex;flex-wrap:wrap;gap:6px;"><button data-action="view" class="grid-action-btn grid-action-btn--view">View</button></div>`;
       } }
   ];
-  readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true, minWidth: 120, flex: 1 };
+  readonly defaultColDef: ColDef = { sortable: true, filter: true, floatingFilter: true, resizable: true, minWidth: 120, flex: 1 };
   search = '';
 
   createForm = {
@@ -279,15 +349,24 @@ export class SuperInstitutesComponent implements OnInit {
   editInstituteError = '';
   editInstituteSuccess = '';
 
-  constructor(private readonly http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   ngOnInit() {
     this.load();
   }
 
   load() {
-    const params = this.search ? `?search=${encodeURIComponent(this.search)}` : '';
-    this.http.get<{ institutes: Institute[] }>(`${API_BASE_URL}/institutes${params}`).subscribe((r) => this.institutes.set(r.institutes));
+    // For super admin, get ALL institutes (including PENDING)
+    this.http.get<{ institutes: Institute[] }>(`${API_BASE_URL}/institutes/all`).subscribe({
+      next: (r) => this.institutes.set(r.institutes),
+      error: (err) => {
+        // Error loading institutes handled silently
+        // Fallback to regular endpoint if /all is not available
+        this.http.get<{ institutes: Institute[] }>(`${API_BASE_URL}/institutes`).subscribe(
+          (r) => this.institutes.set(r.institutes)
+        );
+      }
+    });
   }
 
   createInstitute() {

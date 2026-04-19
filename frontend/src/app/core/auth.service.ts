@@ -2,7 +2,8 @@ import { Injectable, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
 import { API_BASE_URL } from './api';
-import type { AuthUser, LoginResponse } from './auth.types';
+import type { AuthUser, LoginResponse, GoogleLoginResponse } from './auth.types';
+import { rateLimiter } from './rate-limiter';
 
 type StoredAuth = {
   accessToken: string;
@@ -22,8 +23,16 @@ export class AuthService {
 
   constructor(private readonly http: HttpClient) {}
 
+  /** Credential login (BOARD, SUPER_ADMIN, INSTITUTE, and legacy students) */
   login(username: string, password: string) {
     return this.http.post<LoginResponse>(`${API_BASE_URL}/auth/login`, { username, password }).pipe(
+      tap((resp) => this.setAuth({ accessToken: resp.accessToken, refreshToken: resp.refreshToken, user: resp.user }))
+    );
+  }
+
+  /** Google SSO login (students only) — sends Google credential to backend for verification */
+  googleLogin(credential: string) {
+    return this.http.post<GoogleLoginResponse>(`${API_BASE_URL}/auth/google`, { credential }).pipe(
       tap((resp) => this.setAuth({ accessToken: resp.accessToken, refreshToken: resp.refreshToken, user: resp.user }))
     );
   }
@@ -32,6 +41,8 @@ export class AuthService {
     const current = this._auth();
     this._auth.set(null);
     localStorage.removeItem(STORAGE_KEY);
+    // Clear rate limiter on logout
+    rateLimiter.clearAll();
     if (!current) return;
     this.http.post(`${API_BASE_URL}/auth/logout`, { refreshToken: current.refreshToken }).subscribe({ error: () => {} });
   }
@@ -48,6 +59,13 @@ export class AuthService {
         return resp.accessToken;
       })
       .catch(() => null);
+  }
+
+  /** Update access token and user info (used after institute selection) */
+  updateAccessToken(accessToken: string, user?: AuthUser) {
+    const current = this._auth();
+    if (!current) return;
+    this.setAuth({ ...current, accessToken, user: user || current.user });
   }
 
   private setAuth(auth: StoredAuth) {
