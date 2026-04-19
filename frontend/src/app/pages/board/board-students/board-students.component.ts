@@ -227,7 +227,8 @@ type ExportColumn = {
     `.w220 { width: 220px; max-width: 100%; }`,
     `.w260 { width: 260px; max-width: 100%; }`,
     `@media (max-width: 1280px) { .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }`,
-    `@media (max-width: 1080px) { .summary-grid { grid-template-columns: 1fr; } .title-row { align-items: flex-start; } .stats-chip { margin-top: 2px; } }`
+    `@media (max-width: 1080px) { .summary-grid { grid-template-columns: 1fr; } .title-row { align-items: flex-start; } .stats-chip { margin-top: 2px; } }`,
+    `@media (max-width: 768px) { .filters, .actions { align-items: stretch; } .filters button, .actions button { width: 100%; } .table-wrap { height: 360px; min-height: 360px; } .pager { justify-content: flex-start; } }`
   ]
 })
 export class BoardStudentsComponent implements OnInit {

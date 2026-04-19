@@ -459,6 +459,18 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
           padding: 14px;
         }
 
+        .row {
+          align-items: stretch;
+        }
+
+        .w260 {
+          width: 100%;
+        }
+
+        .row > button {
+          width: 100%;
+        }
+
         .item-grid {
           grid-template-columns: 1fr;
         }

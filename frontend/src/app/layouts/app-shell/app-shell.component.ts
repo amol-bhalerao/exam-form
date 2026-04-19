@@ -53,12 +53,12 @@ import { API_BASE_URL } from '../../core/api';
               <span>System Management</span>
               <div class="section-indicator"></div>
             </div>
-            <a mat-list-item routerLink="/app/super/health" routerLinkActive="active" class="nav-item"><mat-icon class="icon">health_and_safety</mat-icon><span class="label">Health Monitor</span></a>
-            <a mat-list-item routerLink="/app/super/payments" routerLinkActive="active" class="nav-item"><mat-icon class="icon">payments</mat-icon><span class="label">Payments Dashboard</span></a>
-            <a mat-list-item routerLink="/app/super/institutes" routerLinkActive="active" class="nav-item"><mat-icon class="icon">apartment</mat-icon><span class="label">Institutes</span></a>
-            <a mat-list-item routerLink="/app/super/institute-users" routerLinkActive="active" class="nav-item"><mat-icon class="icon">person_add</mat-icon><span class="label">Institute Users</span></a>
-            <a mat-list-item routerLink="/app/super/users" routerLinkActive="active" class="nav-item"><mat-icon class="icon">admin_panel_settings</mat-icon><span class="label">Admin Users</span></a>
-            <a mat-list-item routerLink="/app/super/masters" routerLinkActive="active" class="nav-item"><mat-icon class="icon">tune</mat-icon><span class="label">Master Data</span></a>
+            <a mat-list-item routerLink="/app/super/health" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">health_and_safety</mat-icon><span class="label">Health Monitor</span></a>
+            <a mat-list-item routerLink="/app/super/payments" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">payments</mat-icon><span class="label">Payments Dashboard</span></a>
+            <a mat-list-item routerLink="/app/super/institutes" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">apartment</mat-icon><span class="label">Institutes</span></a>
+            <a mat-list-item routerLink="/app/super/institute-users" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">person_add</mat-icon><span class="label">Institute Users</span></a>
+            <a mat-list-item routerLink="/app/super/users" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">admin_panel_settings</mat-icon><span class="label">Admin Users</span></a>
+            <a mat-list-item routerLink="/app/super/masters" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">tune</mat-icon><span class="label">Master Data</span></a>
           }
 
           @if (role() === 'BOARD') {

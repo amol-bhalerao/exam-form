@@ -55,14 +55,14 @@ import { StudentProfileService } from '../../core/student-profile.service';
               }
 
               @if (!loading()) {
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;">
+                <div class="account-form-grid" style="margin-top:16px;">
                   <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="username" /></mat-form-field>
                   <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" [(ngModel)]="email" /></mat-form-field>
                   <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="mobile" /></mat-form-field>
                   <mat-form-field appearance="outline"><mat-label>New Password (optional)</mat-label><input matInput type="password" [(ngModel)]="password" placeholder="Leave blank to keep current" /></mat-form-field>
                 </div>
 
-                <div style="margin-top:16px;display:flex;gap:8px;align-items:center;">
+                <div class="account-actions" style="margin-top:16px;">
                   <button mat-flat-button color="primary" (click)="save()">Save Account Settings</button>
                   @if (success()) {
                     <span style="color:#065f46;">✓ {{ success() }}</span>
@@ -134,14 +134,14 @@ import { StudentProfileService } from '../../core/student-profile.service';
           }
 
           @if (!loading()) {
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="account-form-grid">
               <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="username" /></mat-form-field>
               <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" [(ngModel)]="email" /></mat-form-field>
               <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="mobile" /></mat-form-field>
               <mat-form-field appearance="outline"><mat-label>Password (leave blank to keep current)</mat-label><input matInput type="password" [(ngModel)]="password" /></mat-form-field>
             </div>
 
-            <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+            <div class="account-actions" style="margin-top:10px;">
               <button mat-flat-button color="primary" (click)="save()">Save Profile</button>
               @if (success()) {
                 <span style="color:#065f46;">{{ success() }}</span>
@@ -171,6 +171,19 @@ import { StudentProfileService } from '../../core/student-profile.service';
       margin-top: 16px;
     }
 
+    .account-form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .account-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
     .info-row {
       display: grid;
       grid-template-columns: 180px 1fr;
@@ -190,6 +203,33 @@ import { StudentProfileService } from '../../core/student-profile.service';
 
     .info-value {
       color: #6b7280;
+    }
+
+    @media (max-width: 768px) {
+      .profile-container {
+        padding: 12px;
+      }
+
+      .tab-card {
+        padding: 14px;
+      }
+
+      .account-form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .account-actions {
+        align-items: stretch;
+      }
+
+      .account-actions button {
+        width: 100%;
+      }
+
+      .info-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
     }
   `]
 })

@@ -998,6 +998,53 @@ table td {
   }
 }
 
+@media (max-width: 768px) {
+  .row,
+  .head-row,
+  .header-row,
+  .filter-row,
+  .filters,
+  .actions,
+  .grid-panel__actions {
+    align-items: stretch !important;
+  }
+
+  .w260,
+  .w240,
+  .w220,
+  .w180,
+  .w160,
+  .status-filter,
+  .date-filter,
+  .table-search-field {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .table-wrap,
+  .mini-table-wrap,
+  .managed-students-table-wrap {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .applications-table,
+  .payments-table,
+  .mini-table,
+  .managed-students-table {
+    min-width: 640px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .applications-table,
+  .payments-table,
+  .mini-table,
+  .managed-students-table {
+    min-width: 560px !important;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════════ */
 /*  TYPOGRAPHY - CONSISTENT SIZING & SCALING                               */
 /* ═══════════════════════════════════════════════════════════════════════ */

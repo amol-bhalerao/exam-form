@@ -98,7 +98,7 @@ import { SubjectMarks } from '../../core/student-profile.service';
   `,
   styles: [`
     .dialog-container {
-      min-width: 400px;
+      width: min(520px, 100%);
       padding: 0;
     }
 
@@ -156,12 +156,19 @@ import { SubjectMarks } from '../../core/student-profile.service';
 
     @media (max-width: 600px) {
       .dialog-container {
-        min-width: auto;
-        width: 90%;
+        width: 100%;
       }
 
       .form-row {
         grid-template-columns: 1fr;
+      }
+
+      mat-dialog-actions {
+        flex-direction: column;
+      }
+
+      mat-dialog-actions button {
+        width: 100%;
       }
     }
   `]

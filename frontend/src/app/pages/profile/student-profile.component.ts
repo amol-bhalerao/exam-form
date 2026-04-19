@@ -925,7 +925,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
     .managed-students-table {
       width: 100%;
-      min-width: 720px;
+      min-width: 640px;
       border-collapse: collapse;
     }
 
@@ -2027,13 +2027,24 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       .managed-student-modal .form-grid-2,
       .managed-student-modal .form-grid-3,
       .managed-student-modal .form-grid-4 {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        grid-template-columns: 1fr !important;
+      }
+
+      .popup-tab-actions button {
+        min-width: 0;
+        width: 100%;
       }
 
       .form-card {
         padding: var(--spacing-sm);
         margin-bottom: var(--spacing-sm);
         border-radius: 8px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .managed-students-table {
+        min-width: 560px;
       }
     }
 

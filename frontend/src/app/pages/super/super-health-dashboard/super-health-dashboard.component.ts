@@ -567,6 +567,28 @@ import { HealthService, HealthCheckResult, ApiHealthCheck } from '../../../servi
       .legend {
         flex-wrap: wrap;
       }
+
+      .status-time {
+        white-space: normal;
+      }
+
+      .panel-header {
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .endpoint-name {
+        white-space: normal;
+      }
+
+      .response-time {
+        min-width: 0;
+        text-align: left;
+      }
+
+      .detail-row .label {
+        min-width: 0;
+      }
     }
   `]
 })

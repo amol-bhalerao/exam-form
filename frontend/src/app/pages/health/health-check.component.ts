@@ -566,6 +566,14 @@ interface SessionStats {
       .role-grid {
         grid-template-columns: 1fr;
       }
+
+      .status-header {
+        align-items: flex-start;
+      }
+
+      .detail-row .label {
+        min-width: 0;
+      }
     }
   `]
 })

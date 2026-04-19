@@ -144,7 +144,7 @@ type PaymentRow = {
     .kpi-total { border-color: #bfdbfe; }
 
     .table-wrap { overflow: auto; border: 1px solid #e5e7eb; border-radius: 10px; }
-    .payments-table { width: 100%; min-width: 980px; border-collapse: collapse; }
+    .payments-table { width: 100%; min-width: 760px; border-collapse: collapse; }
     .payments-table th, .payments-table td {
       padding: 8px;
       border-bottom: 1px solid #e5e7eb;
@@ -166,6 +166,13 @@ type PaymentRow = {
 
     @media (max-width: 800px) {
       .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .status-filter { width: 100%; min-width: 0; }
+      .head-row { align-items: stretch; }
+      .payments-table { min-width: 640px; }
+    }
+
+    @media (max-width: 520px) {
+      .kpi-row { grid-template-columns: 1fr; }
     }
   `]
 })

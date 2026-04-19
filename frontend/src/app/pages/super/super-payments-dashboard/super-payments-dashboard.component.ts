@@ -158,6 +158,7 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
     .sub { font-size: 0.84rem; color: #64748b; margin-top: 2px; }
     .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
     .status-filter { min-width: 170px; }
+    .date-filter { min-width: 150px; }
 
     .kpi-grid { margin-top: 10px; display: grid; gap: 8px; grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .kpi { border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; background: #fff; }
@@ -179,6 +180,12 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
     @media (max-width: 980px) {
       .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .grid-two { grid-template-columns: 1fr; }
+      .filter-row { align-items: stretch; }
+      .status-filter, .date-filter { width: 100%; min-width: 0; }
+    }
+
+    @media (max-width: 520px) {
+      .kpi-grid { grid-template-columns: 1fr; }
     }
   `]
 })
@@ -252,9 +259,10 @@ export class SuperPaymentsDashboardComponent implements OnInit {
   }
 
   private loadExams(): void {
-    this.http.get<any[]>(`${API_BASE_URL}/exams`).subscribe({
-      next: (rows) => {
-        this.exams.set((rows || []).map((row) => ({
+    this.http.get<{ exams?: any[] } | any[]>(`${API_BASE_URL}/exams`).subscribe({
+      next: (response) => {
+        const rows = Array.isArray(response) ? response : (response?.exams || []);
+        this.exams.set(rows.map((row) => ({
           id: Number(row.id),
           name: String(row.name || ''),
           session: String(row.session || ''),

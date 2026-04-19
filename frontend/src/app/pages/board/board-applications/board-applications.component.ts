@@ -155,12 +155,14 @@ type DashboardSummary = {
             (rowClicked)="selectRow($event)"
           ></ag-grid-angular>
         </div>
-        <div style="margin-top: 10px; display:flex; gap: 8px; align-items:center;">
+        <div class="grid-footer">
           <button mat-flat-button color="primary" (click)="decide(selectedRow?.id, 'APPROVE')" [disabled]="!selectedRow || selectedRow.status !== 'INSTITUTE_VERIFIED'">Approve Selected</button>
           <button mat-stroked-button color="warn" (click)="decide(selectedRow?.id, 'REJECT')" [disabled]="!selectedRow || selectedRow.status !== 'INSTITUTE_VERIFIED'">Reject Selected</button>
-          <span style="margin-left:auto;">Page {{ page }} of {{ totalPages }} ({{ totalApplications }} total) 
-            <button mat-stroked-button (click)="prevPage()" [disabled]="page <= 1">Prev</button>
-            <button mat-stroked-button (click)="nextPage()" [disabled]="page >= totalPages">Next</button>
+          <span class="pager-inline">Page {{ page }} of {{ totalPages }} ({{ totalApplications }} total)
+            <span class="pager-btns">
+              <button mat-stroked-button (click)="prevPage()" [disabled]="page <= 1">Prev</button>
+              <button mat-stroked-button (click)="nextPage()" [disabled]="page >= totalPages">Next</button>
+            </span>
           </span>
         </div>
       </mat-card>
@@ -258,8 +260,47 @@ type DashboardSummary = {
         padding: 20px;
         color: #666;
       }
+      .grid-footer {
+        margin-top: 10px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .pager-inline {
+        margin-left: auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .pager-btns {
+        display: inline-flex;
+        gap: 6px;
+      }
       .big { font-size: 1.12rem; font-weight: 800; color: #0f172a; }
       .muted { color: #64748b; font-size: 12px; margin-top: 3px; }
+
+      @media (max-width: 768px) {
+        .row {
+          align-items: stretch;
+        }
+
+        .row > button,
+        .grid-footer > button {
+          width: 100%;
+        }
+
+        .pager-inline {
+          margin-left: 0;
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        .ag-theme-alpine {
+          height: 320px !important;
+        }
+      }
     `
   ]
 })

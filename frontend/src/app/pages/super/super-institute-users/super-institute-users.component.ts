@@ -57,7 +57,14 @@ interface InstituteUser {
     .invite-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:10px; }
     .invite-link { color:#065f46; font-size:.9rem; word-break: break-all; }
     .error { margin-top:10px; color:#b91c1c; }
+    .selected-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .edit-grid { display:grid; gap:8px; grid-template-columns:1fr 1fr; margin-top:8px; }
     @media (max-width: 900px) { .invite-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) {
+      .filter-row, .selected-actions { align-items: stretch; }
+      .filter-row .w240, .filter-row button, .selected-actions button { width: 100%; }
+      .edit-grid { grid-template-columns: 1fr; }
+    }
   `],
   template: `
     <mat-card>
@@ -119,7 +126,7 @@ interface InstituteUser {
 
         <div *ngIf="inviteInstituteId" style="margin-top: 10px; border:1px solid #e5e7eb; border-radius:8px; padding:10px; background:#f9fafb;">
           <div style="font-weight:700; margin-bottom:6px;">Actions for selected institute</div>
-          <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <div class="selected-actions">
             <button mat-flat-button color="primary" (click)="createInvite()">Create Invite Link</button>
             <button mat-flat-button color="accent" (click)="showCreateUser.set(true)">Create User</button>
             <span class="invite-link" *ngIf="inviteLink">Link: <a [href]="inviteLink" target="_blank">{{ inviteLink }}</a></span>
@@ -157,7 +164,7 @@ interface InstituteUser {
             <strong>Edit user {{ editingUser.username }} (id {{ editingUser.id }})</strong>
             <button mat-icon-button (click)="editingUser = null"><mat-icon>close</mat-icon></button>
           </div>
-          <div style="display:grid;gap:8px;grid-template-columns:1fr 1fr; margin-top:8px;">
+          <div class="edit-grid">
             <mat-form-field appearance="outline"><mat-label>Username</mat-label><input matInput [(ngModel)]="editUsername" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput [(ngModel)]="editEmail" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="editMobile" /></mat-form-field>

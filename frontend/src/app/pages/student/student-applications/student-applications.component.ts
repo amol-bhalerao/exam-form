@@ -264,7 +264,7 @@ type Application = {
       }
       .applications-table {
         width: 100%;
-        min-width: 920px;
+        min-width: 760px;
         border-collapse: collapse;
       }
       .applications-table th,
@@ -429,6 +429,15 @@ type Application = {
         .actions-cell {
           flex-wrap: wrap;
           white-space: normal;
+        }
+
+        .actions-cell button {
+          min-width: 100%;
+          height: 34px;
+        }
+
+        .applications-table {
+          min-width: 680px;
         }
       }
     `

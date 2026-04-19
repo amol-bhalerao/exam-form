@@ -20,7 +20,8 @@
     "format:check": "prettier --check src/**/*.js",
     "test": "vitest",
     "test:flow": "vitest tests/flow-verification.test.js --run",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "verify:predeploy": "node scripts/predeploy-e2e.mjs"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.6.0",
