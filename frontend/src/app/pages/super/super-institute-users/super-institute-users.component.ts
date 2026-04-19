@@ -46,10 +46,13 @@ interface InstituteUser {
     InstituteSearchModalComponent
   ],
   styles: [`
-    .header-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
+    .header-row { display:grid; gap:12px; margin-bottom:14px; }
+    .header-copy { max-width: 900px; }
+    .header-cta { justify-self: start; }
     .title { font-size:1.2rem; font-weight:700; }
     .subtitle { color:#4b5563; margin-top:4px; }
     .filter-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+    .filter-row mat-form-field, .invite-grid mat-form-field, .edit-grid mat-form-field { margin: 0; width: 100%; }
     .w240 { width: 240px; max-width: 100%; }
     .table-box { width:100%; height:430px; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; }
     .invite-block { margin-top:16px; border-top:1px solid #e5e7eb; padding-top:14px; }
@@ -63,17 +66,18 @@ interface InstituteUser {
     @media (max-width: 768px) {
       .filter-row, .selected-actions { align-items: stretch; }
       .filter-row .w240, .filter-row button, .selected-actions button { width: 100%; }
+      .header-cta { width: 100%; }
       .edit-grid { grid-template-columns: 1fr; }
     }
   `],
   template: `
     <mat-card>
       <div class="header-row">
-        <div>
+        <div class="header-copy">
           <div class="title">Institute Users</div>
           <div class="subtitle">View, filter, approve, and manage all institute login users in one grid.</div>
         </div>
-        <button mat-flat-button color="primary" (click)="load()">Refresh</button>
+        <button class="header-cta" mat-flat-button color="primary" (click)="load()">Refresh</button>
       </div>
 
       <div class="filter-row">

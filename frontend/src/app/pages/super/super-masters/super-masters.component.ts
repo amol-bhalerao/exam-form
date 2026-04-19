@@ -23,7 +23,7 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
   template: `
     <mat-card class="card grid-panel">
       <div class="grid-panel__header">
-        <div>
+        <div class="header-copy">
           <div class="grid-panel__title">
             <mat-icon>dataset</mat-icon>
             Master Data Management
@@ -41,7 +41,7 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
       <mat-tab label="Streams">
         <mat-card class="card grid-panel">
           <div class="grid-panel__header">
-            <div>
+            <div class="header-copy">
               <div class="grid-panel__title">Streams</div>
               <div class="grid-panel__subtitle">Search, edit, and maintain available academic streams.</div>
             </div>
@@ -90,7 +90,7 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
       <mat-tab label="Subjects">
         <mat-card class="card grid-panel">
           <div class="grid-panel__header">
-            <div>
+            <div class="header-copy">
               <div class="grid-panel__title">Subjects</div>
               <div class="grid-panel__subtitle">Quickly search, edit, and organize subject master records.</div>
             </div>
@@ -141,7 +141,16 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
   `,
   styles: [`
     .card { margin-bottom: 14px; padding: 16px; }
+    .grid-panel__header { display: grid; gap: 12px; }
+    .header-copy { max-width: 900px; }
+    .grid-panel__actions { display: flex; align-items: center; justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
+    .grid-panel__title { display: flex; align-items: center; gap: 6px; font-weight: 800; }
+    .grid-panel__subtitle { color: #64748b; margin-top: 4px; font-size: 13px; }
+    .grid-pill { border: 1px solid #dbeafe; background: #f8fbff; color: #1e3a8a; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .grid-panel__table { margin-top: 10px; width: 100%; min-height: 400px; height: 400px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+    .grid-panel__table--lg { min-height: 460px; height: 460px; }
     .form-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 10px; }
+    .form-grid mat-form-field { width: 100%; margin: 0; }
     .card-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
     .msg { margin-top: 8px; font-weight: 700; }
     .error { color: #b91c1c; }
@@ -150,6 +159,10 @@ type SubjectRow = { id: number; code: string; name: string; category: string };
     @media (max-width: 900px) {
       .form-grid { grid-template-columns: 1fr; }
       .search { width: 100%; }
+      .grid-panel__actions { align-items: stretch; }
+      .grid-panel__actions > button { width: 100%; }
+      .grid-panel__table,
+      .grid-panel__table--lg { min-height: 360px; height: 360px; }
     }
   `]
 })

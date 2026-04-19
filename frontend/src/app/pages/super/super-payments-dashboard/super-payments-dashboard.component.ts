@@ -39,7 +39,7 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
   template: `
     <mat-card class="card">
       <div class="head-row">
-        <div>
+        <div class="header-copy">
           <div class="title">Payments Dashboard</div>
           <div class="sub">Collection, failures, and payment trends by district, institute, and exam.</div>
         </div>
@@ -153,12 +153,14 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
   `,
   styles: [`
     .card { margin: 0 0 14px 0; padding: 14px; border-radius: 12px; }
-    .head-row { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .head-row { display: grid; gap: 12px; }
+    .header-copy { max-width: 920px; }
     .title { font-size: 1.12rem; font-weight: 800; }
     .sub { font-size: 0.84rem; color: #64748b; margin-top: 2px; }
-    .filter-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .filter-row { display: flex; gap: 10px; align-items: center; justify-content: flex-start; flex-wrap: wrap; }
     .status-filter { min-width: 170px; }
     .date-filter { min-width: 150px; }
+    .filter-row mat-form-field { margin: 0; }
 
     .kpi-grid { margin-top: 10px; display: grid; gap: 8px; grid-template-columns: repeat(5, minmax(0, 1fr)); }
     .kpi { border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; background: #fff; }
@@ -181,6 +183,7 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
       .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .grid-two { grid-template-columns: 1fr; }
       .filter-row { align-items: stretch; }
+      .filter-row > button { width: 100%; }
       .status-filter, .date-filter { width: 100%; min-width: 0; }
     }
 

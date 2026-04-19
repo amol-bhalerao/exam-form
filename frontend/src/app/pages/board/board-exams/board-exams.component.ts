@@ -24,7 +24,7 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
   template: `
     <mat-card class="card grid-panel">
       <div class="grid-panel__header">
-        <div>
+        <div class="header-copy">
           <div class="grid-panel__title">
             <mat-icon>event_note</mat-icon>
             Exams
@@ -42,7 +42,7 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
 
     <mat-card class="card grid-panel">
       <div class="grid-panel__header">
-        <div>
+        <div class="header-copy">
           <div class="grid-panel__title">Exam List</div>
           <div class="grid-panel__subtitle">Use the search and stream filter to find records quickly.</div>
         </div>
@@ -94,12 +94,14 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
     `
       .card { margin-bottom: 14px; padding: 16px; }
       .grid-panel { overflow: visible; }
-      .grid-panel__header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap; }
+      .grid-panel__header { display: grid; gap: 12px; }
+      .header-copy { max-width: 900px; }
       .grid-panel__title { display: flex; align-items: center; gap: 6px; font-weight: 800; }
       .grid-panel__subtitle { color: #64748b; margin-top: 4px; font-size: 13px; }
-      .grid-panel__actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .grid-panel__actions { display: flex; align-items: center; justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
       .grid-pill { border: 1px solid #dbeafe; background: #f8fbff; color: #1e3a8a; padding: 4px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
       .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+      .grid mat-form-field { width: 100%; margin: 0; }
       .actions { margin-top: 10px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
       .status { color: #166534; font-weight: 600; }
       .status--error { color: #b91c1c; }
@@ -111,6 +113,8 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
       .pager { margin-top: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
       @media (max-width: 980px) {
         .grid { grid-template-columns: 1fr; }
+        .grid-panel__actions { align-items: stretch; }
+        .grid-panel__actions > button { width: 100%; }
         .w180 { width: 100%; }
         .table-search-field { width: 100%; }
         .grid-panel__table,

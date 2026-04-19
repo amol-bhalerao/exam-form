@@ -44,26 +44,26 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
     <div class="page-wrap">
     <mat-card class="card">
       <div class="header-row">
-        <div>
+        <div class="header-copy">
           <div class="h">Teachers & Staff</div>
           <p class="p">Track registered teachers and open the registration form only when required.</p>
         </div>
-        <button mat-flat-button color="primary" type="button" (click)="openFormModal()">Add Teacher / Staff</button>
+        <button class="header-cta" mat-flat-button color="primary" type="button" (click)="openFormModal()">Add Teacher / Staff</button>
       </div>
 
-      <div class="teacher-dashboard" *ngIf="teachers().length > 0">
-        <div class="dash-card primary"><span>Total Teachers</span><strong>{{ teachers().length }}</strong></div>
-        <div class="dash-card"><span>Active</span><strong>{{ activeTeacherCount() }}</strong></div>
-        <div class="dash-card"><span>Inactive</span><strong>{{ inactiveTeacherCount() }}</strong></div>
-        <div class="dash-card"><span>Examiner Experienced</span><strong>{{ examinerReadyCount() }}</strong></div>
-        <div class="dash-card"><span>Moderator Experienced</span><strong>{{ moderatorReadyCount() }}</strong></div>
-        <div class="dash-card"><span>Chief Moderator</span><strong>{{ chiefModeratorReadyCount() }}</strong></div>
-      </div>
-
-      <div class="teacher-dashboard" *ngIf="teachers().length > 0">
-        <div class="dash-card"><span>Top Subject</span><strong>{{ topSubjectLabel() }}</strong></div>
-        <div class="dash-card"><span>Top District</span><strong>{{ topDistrictLabel() }}</strong></div>
-        <div class="dash-card"><span>Avg Service</span><strong>{{ averageServiceYears() }} yrs</strong></div>
+      <div class="teacher-summary-card" *ngIf="teachers().length > 0">
+        <div class="summary-title">Teacher Summary</div>
+        <div class="summary-grid">
+          <div class="summary-item"><span>Total Teachers</span><strong>{{ teachers().length }}</strong></div>
+          <div class="summary-item"><span>Total Examiners</span><strong>{{ examinerReadyCount() }}</strong></div>
+          <div class="summary-item"><span>Total Moderators</span><strong>{{ moderatorReadyCount() }}</strong></div>
+          <div class="summary-item"><span>Total Chief Moderators</span><strong>{{ chiefModeratorReadyCount() }}</strong></div>
+          <div class="summary-item"><span>Active</span><strong>{{ activeTeacherCount() }}</strong></div>
+          <div class="summary-item"><span>Inactive</span><strong>{{ inactiveTeacherCount() }}</strong></div>
+          <div class="summary-item"><span>Average Service</span><strong>{{ averageServiceYears() }} yrs</strong></div>
+          <div class="summary-item"><span>Top Subject</span><strong>{{ topSubjectLabel() }}</strong></div>
+          <div class="summary-item"><span>Top District</span><strong>{{ topDistrictLabel() }}</strong></div>
+        </div>
       </div>
 
       <div class="error" *ngIf="error()">{{ error() }}</div>
@@ -145,10 +145,10 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
             <mat-form-field appearance="outline"><mat-label>Examiner Experience (Years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="examinerExperienceYears" /><mat-hint>{{ hasExaminerExperience() ? 'Examiner details are enabled below' : 'Set 0 if no examiner experience' }}</mat-hint></mat-form-field>
             <mat-form-field appearance="outline" *ngIf="hasExaminerExperience()"><mat-label>Previous Examiner Appointment No.</mat-label><input matInput formControlName="previousExaminerAppointmentNo" /></mat-form-field>
 
-            <mat-form-field appearance="outline"><mat-label>Moderator Experience (Years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="moderatorExperienceYears" /><mat-hint>{{ hasModeratorExperience() ? 'Moderator details are required below' : 'Set 0 if no moderator experience' }}</mat-hint></mat-form-field>
-            <mat-form-field appearance="outline" *ngIf="hasModeratorExperience()"><mat-label>Last Moderator Name</mat-label><input matInput formControlName="lastModeratorName" /></mat-form-field>
-            <mat-form-field appearance="outline" *ngIf="hasModeratorExperience()"><mat-label>Last Moderator Appointment No.</mat-label><input matInput formControlName="lastModeratorAppointmentNo" /></mat-form-field>
-            <mat-form-field appearance="outline" class="span-2" *ngIf="hasModeratorExperience()"><mat-label>Last Moderator College Name</mat-label><input matInput formControlName="lastModeratorCollegeName" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Moderator Experience (Years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="moderatorExperienceYears" /><mat-hint>{{ showModeratorDetailCapture() ? 'Moderator details can be recorded below' : 'Set 0 if no moderator experience' }}</mat-hint></mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="showModeratorDetailCapture()"><mat-label>Last Moderator Name</mat-label><input matInput formControlName="lastModeratorName" /></mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="showModeratorDetailCapture()"><mat-label>Last Moderator Appointment No.</mat-label><input matInput formControlName="lastModeratorAppointmentNo" /></mat-form-field>
+            <mat-form-field appearance="outline" class="span-2" *ngIf="showModeratorDetailCapture()"><mat-label>Last Moderator College Name</mat-label><input matInput formControlName="lastModeratorCollegeName" /></mat-form-field>
 
             <mat-form-field appearance="outline"><mat-label>Chief Moderator Experience (Years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="chiefModeratorExperienceYears" /><mat-hint>{{ hasChiefModeratorExperience() ? 'Chief moderator details are required below' : 'Set 0 if no chief moderator experience' }}</mat-hint></mat-form-field>
             <mat-form-field appearance="outline" *ngIf="hasChiefModeratorExperience()"><mat-label>Last Chief Moderator Name</mat-label><input matInput formControlName="lastChiefModeratorName" /></mat-form-field>
@@ -225,7 +225,9 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
   styles: [`
     .page-wrap { position: relative; min-height: calc(100vh - 130px); }
     .card { margin-bottom: 14px; margin-top: 10px; padding: 20px; }
-    .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .header-row { display: grid; gap: 12px; }
+    .header-copy { max-width: 860px; }
+    .header-cta { justify-self: start; }
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
     .section-grid { padding-top: 10px; }
     .form-section { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 14px; margin: 0 0 14px; }
@@ -246,18 +248,21 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
     .history-item { color: #334155; margin-bottom: 4px; }
     .error { color: #b91c1c; margin-top: 8px; }
     .search { width: min(360px, 100%); }
-    .teacher-dashboard { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
-    .dash-card { border: 1px solid #dbeafe; border-radius: 10px; padding: 10px 12px; background: #f8fbff; display: grid; gap: 2px; }
-    .dash-card span { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; font-weight: 700; }
-    .dash-card strong { font-size: 1.05rem; color: #0f172a; }
-    .dash-card.primary { background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%); border-color: #1d4ed8; }
-    .dash-card.primary span, .dash-card.primary strong { color: #eff6ff; }
+    .teacher-summary-card { margin-top: 12px; border: 1px solid #dbeafe; border-radius: 12px; padding: 12px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); }
+    .summary-title { font-weight: 800; color: #0f172a; margin-bottom: 8px; }
+    .summary-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
+    .summary-item { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; background: #fff; display: grid; gap: 2px; }
+    .summary-item span { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; font-weight: 700; }
+    .summary-item strong { font-size: 1.02rem; color: #0f172a; }
     .table-box { width: 100%; height: 380px; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
     .modal { background: white; border-radius: 12px; width: min(680px, calc(100vw - 24px)); max-height: 80vh; overflow: auto; }
     .form-modal { width: min(1080px, calc(100vw - 24px)); max-height: 90vh; }
     .form-modal-content { padding: 0 16px 16px; }
     .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; }
     .modal-content { display: grid; gap: 8px; padding: 16px; }
+    @media (max-width: 860px) {
+      .header-cta { width: 100%; }
+    }
     @media (max-width: 768px) {
       .span-2 { grid-column: span 1; }
       .derived-table th { width: 40%; }
@@ -349,6 +354,10 @@ export class InstituteAddTeacherComponent implements OnInit {
     return (this.toNumberOrUndefined(this.form.controls.chiefModeratorExperienceYears.value) ?? 0) > 0;
   }
 
+  showModeratorDetailCapture(): boolean {
+    return this.hasModeratorExperience() || this.hasExaminerExperience();
+  }
+
   private calculateExperienceYears(serviceStartDate: Date | string | null | undefined): number | null {
     if (!serviceStartDate) return null;
     const date = new Date(serviceStartDate);
@@ -382,7 +391,7 @@ export class InstituteAddTeacherComponent implements OnInit {
       this.form.controls.previousExaminerAppointmentNo.setValue('', { emitEvent: false });
     }
 
-    if (!this.hasModeratorExperience()) {
+    if (!this.showModeratorDetailCapture()) {
       this.form.patchValue({
         lastModeratorName: '',
         lastModeratorAppointmentNo: '',
@@ -650,9 +659,9 @@ export class InstituteAddTeacherComponent implements OnInit {
       examinerExperienceYears,
       previousExaminerAppointmentNo: (examinerExperienceYears ?? 0) > 0 ? (this.form.value.previousExaminerAppointmentNo || undefined) : undefined,
       moderatorExperienceYears,
-      lastModeratorName: (moderatorExperienceYears ?? 0) > 0 ? (this.form.value.lastModeratorName || undefined) : undefined,
-      lastModeratorAppointmentNo: (moderatorExperienceYears ?? 0) > 0 ? (this.form.value.lastModeratorAppointmentNo || undefined) : undefined,
-      lastModeratorCollegeName: (moderatorExperienceYears ?? 0) > 0 ? (this.form.value.lastModeratorCollegeName || undefined) : undefined,
+      lastModeratorName: this.showModeratorDetailCapture() ? (this.form.value.lastModeratorName || undefined) : undefined,
+      lastModeratorAppointmentNo: this.showModeratorDetailCapture() ? (this.form.value.lastModeratorAppointmentNo || undefined) : undefined,
+      lastModeratorCollegeName: this.showModeratorDetailCapture() ? (this.form.value.lastModeratorCollegeName || undefined) : undefined,
       chiefModeratorExperienceYears,
       lastChiefModeratorName: (chiefModeratorExperienceYears ?? 0) > 0 ? (this.form.value.lastChiefModeratorName || undefined) : undefined,
       lastChiefModeratorAppointmentNo: (chiefModeratorExperienceYears ?? 0) > 0 ? (this.form.value.lastChiefModeratorAppointmentNo || undefined) : undefined,

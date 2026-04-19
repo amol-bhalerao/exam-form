@@ -38,7 +38,7 @@ type Institute = {
   template: `
     <mat-card class="card grid-panel">
       <div class="grid-panel__header">
-        <div>
+        <div class="header-copy">
           <div class="grid-panel__title">
             <mat-icon>school</mat-icon>
             Institutes
@@ -59,7 +59,7 @@ type Institute = {
 
     <mat-card class="card grid-panel">
       <div class="grid-panel__header">
-        <div>
+        <div class="header-copy">
           <div class="grid-panel__title">Institute Directory</div>
           <div class="grid-panel__subtitle">Select a row to view details or update institute configuration.</div>
         </div>
@@ -180,11 +180,72 @@ type Institute = {
         margin-bottom: 14px;
         padding: 16px;
       }
+      .grid-panel__header {
+        display: grid;
+        gap: 12px;
+      }
+      .header-copy {
+        max-width: 920px;
+      }
+      .grid-panel__title {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 800;
+      }
+      .grid-panel__subtitle {
+        color: #64748b;
+        margin-top: 4px;
+        font-size: 13px;
+      }
+      .grid-panel__actions {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .grid-pill {
+        border: 1px solid #dbeafe;
+        background: #f8fbff;
+        color: #1e3a8a;
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+      }
+      .table-search-field {
+        width: min(320px, 100%);
+        margin: 0;
+      }
+      .grid-panel__table {
+        margin-top: 10px;
+        width: 100%;
+        min-height: 460px;
+        height: 460px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+      }
       .form-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 12px;
         margin-top: 10px;
+      }
+      .form-grid mat-form-field,
+      .admin-form-grid mat-form-field {
+        width: 100%;
+        margin: 0;
+      }
+      .admin-form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 10px;
+      }
+      .admin-form-grid .full {
+        grid-column: 1 / -1;
       }
       .card-actions {
         margin-top: 10px;
@@ -215,6 +276,18 @@ type Institute = {
         flex-wrap: wrap;
       }
       @media (max-width: 768px) {
+        .grid-panel__actions {
+          align-items: stretch;
+        }
+        .grid-panel__actions > button {
+          width: 100%;
+        }
+        .table-search-field {
+          width: 100%;
+        }
+        .admin-form-grid {
+          grid-template-columns: 1fr;
+        }
         .form-grid {
           grid-template-columns: 1fr;
         }

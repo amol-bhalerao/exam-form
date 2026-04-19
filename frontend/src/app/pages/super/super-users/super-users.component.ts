@@ -29,12 +29,11 @@ type User = {
   template: `
     <mat-card class="card">
       <div class="row">
-        <div>
+        <div class="header-copy">
           <div class="h">Board Users Management</div>
           <div class="p">Manage board users and super administrators.</div>
         </div>
-        <div class="grow"></div>
-        <button mat-flat-button color="primary" (click)="showCreateUser.set(true)">Add New User</button>
+        <button class="header-cta" mat-flat-button color="primary" (click)="showCreateUser.set(true)">Add New User</button>
         <mat-form-field appearance="outline" class="w260">
           <mat-label>Search</mat-label>
           <input matInput [(ngModel)]="search" (input)="load()" />
@@ -142,13 +141,14 @@ type User = {
         padding: 16px;
       }
       .row {
-        display: flex;
+        display: grid;
         gap: 12px;
-        align-items: center;
-        flex-wrap: wrap;
       }
-      .grow {
-        flex: 1;
+      .header-copy {
+        max-width: 900px;
+      }
+      .header-cta {
+        justify-self: start;
       }
       .h {
         font-weight: 900;
@@ -162,6 +162,10 @@ type User = {
         grid-template-columns: 1fr 1fr;
         gap: 12px;
         margin-top: 10px;
+      }
+      .form-grid mat-form-field {
+        width: 100%;
+        margin: 0;
       }
       .card-actions {
         margin-top: 10px;
@@ -181,6 +185,7 @@ type User = {
       .w260 {
         width: 280px;
         max-width: 100%;
+        margin: 0;
       }
       .selected-row {
         margin-top: 10px;
@@ -190,6 +195,14 @@ type User = {
         display: flex;
         justify-content: space-between;
         align-items: center;
+      }
+      @media (max-width: 860px) {
+        .header-cta, .w260 {
+          width: 100%;
+        }
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
       }
     `
   ]

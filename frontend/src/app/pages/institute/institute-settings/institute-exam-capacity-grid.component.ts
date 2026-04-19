@@ -30,7 +30,7 @@ type ExamCapacityGridRow = {
   template: `
     <mat-card class="card">
       <div class="header-row">
-        <div>
+        <div class="header-copy">
           <div class="h">Exam-wise Student Capacity by Stream</div>
           <div class="p">Use Set Exam Limit for a guided update, or edit directly in the table and click Save in that row.</div>
         </div>
@@ -122,26 +122,32 @@ type ExamCapacityGridRow = {
     </mat-card>
   `,
   styles: [
-    `.card { margin-bottom: 14px; padding: 18px; }`,
-    `.header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 12px; }`,
-    `.header-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }`,
+    `.card { margin-bottom: 14px; padding: 18px; border: 1px solid #e5e7eb; background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); }`,
+    `.header-row { display: grid; gap: 12px; margin-bottom: 12px; }`,
+    `.header-copy { max-width: 900px; }`,
+    `.header-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-start; }`,
     `.h { font-weight: 800; margin-bottom: 4px; }`,
     `.p { color: #6b7280; margin-bottom: 8px; line-height: 1.45; }`,
     `.quick-set-panel { border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px; margin-bottom: 12px; background: #f9fafb; }`,
     `.quick-set-title { font-weight: 700; color: #111827; margin-bottom: 4px; }`,
     `.quick-set-help { font-size: 13px; color: #4b5563; margin-bottom: 10px; }`,
     `.quick-set-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }`,
-    `.quick-field { display: grid; gap: 4px; }`,
-    `.quick-field label { font-size: 12px; font-weight: 600; color: #374151; }`,
-    `.quick-input { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 10px; font: inherit; background: #fff; }`,
-    `.quick-set-actions { margin-top: 10px; display: flex; gap: 8px; }`,
+    `.quick-field { display: grid; gap: 6px; align-content: start; }`,
+    `.quick-field label { font-size: 12px; font-weight: 600; color: #374151; margin-top: 2px; }`,
+    `.quick-input { width: 100%; border: 1px solid #d1d5db; border-radius: 8px; padding: 10px 10px; font: inherit; line-height: 1.4; background: #fff; }`,
+    `.quick-set-actions { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }`,
     `.tables-stack { display: grid; gap: 18px; }`,
     `.table-section { display: grid; gap: 8px; }`,
     `.section-title { font-weight: 700; color: #111827; }`,
     `.table-box { width: 100%; height: 430px; border: 1px solid #e5e7eb; border-radius: 10px; overflow: hidden; }`,
     `.success { color: #065f46; font-size: 13px; margin-bottom: 8px; }`,
     `.error { color: #b91c1c; font-size: 13px; margin-bottom: 8px; }`,
-    `@media (max-width: 860px) { .quick-set-grid { grid-template-columns: 1fr; } }`
+    `@media (max-width: 860px) {
+      .quick-set-grid { grid-template-columns: 1fr; }
+      .header-actions { flex-direction: column; align-items: stretch; }
+      .header-actions button, .quick-set-actions button { width: 100%; }
+      .quick-set-actions { flex-direction: column; align-items: stretch; }
+    }`
   ]
 })
 export class InstituteExamCapacityGridComponent implements OnInit {

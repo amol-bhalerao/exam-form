@@ -20,11 +20,11 @@ type StreamRow = { id: number; name: string; createdAt: string };
   template: `
     <mat-card class="card">
       <div class="header">
-        <div>
+        <div class="header-copy">
           <div class="h">Board Streams</div>
           <div class="p">Add, update and delete board streams. Cannot delete stream with bound subjects.</div>
         </div>
-        <button mat-flat-button color="primary" (click)="openForm()">Add Stream</button>
+        <button class="header-cta" mat-flat-button color="primary" (click)="openForm()">Add Stream</button>
       </div>
       <div class="msg error" *ngIf="error">{{ error }}</div>
       <div class="msg success" *ngIf="success">{{ success }}</div>
@@ -64,16 +64,23 @@ type StreamRow = { id: number; name: string; createdAt: string };
   `,
   styles: [`
     .card { margin-bottom: 14px; padding: 16px; }
-    .header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .header { display: grid; gap: 12px; }
+    .header-copy { max-width: 840px; }
+    .header-cta { justify-self: start; }
     .h { font-weight: 900; font-size: 1rem; }
     .p { color: #6b7280; margin-top: 4px; }
-    .form-grid { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 10px; }
+    .form-grid { display: grid; grid-template-columns: 1fr; gap: 12px; margin-top: 10px; }
+    .form-grid mat-form-field { width: 100%; margin: 0; }
     .card-actions { margin-top: 10px; display: flex; gap: 8px; }
     .msg { margin-top: 8px; font-weight: 700; }
     .error { color: #b91c1c; }
     .success { color: #065f46; }
-    .table-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-    .search { width: 240px; }
+    .table-header { display: grid; gap: 10px; }
+    .search { width: min(320px, 100%); margin: 0; }
+    @media (max-width: 860px) {
+      .header-cta { width: 100%; }
+      .search { width: 100%; }
+    }
   `]
 })
 export class BoardStreamsComponent implements OnInit {

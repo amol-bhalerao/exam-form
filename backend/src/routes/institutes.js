@@ -1378,6 +1378,7 @@ institutesRouter.post('/me/teachers', requireAuth, requireRole(['INSTITUTE']), a
     const examinerExperienceYears = parseOptionalNumber(body.examinerExperienceYears);
     const moderatorExperienceYears = parseOptionalNumber(body.moderatorExperienceYears);
     const chiefModeratorExperienceYears = parseOptionalNumber(body.chiefModeratorExperienceYears);
+    const shouldKeepModeratorDetails = (moderatorExperienceYears ?? 0) > 0 || (examinerExperienceYears ?? 0) > 0;
 
     const teacher = await prisma.teacher.create({
       data: {
@@ -1401,9 +1402,9 @@ institutesRouter.post('/me/teachers', requireAuth, requireRole(['INSTITUTE']), a
         examinerExperienceYears,
         previousExaminerAppointmentNo: (examinerExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.previousExaminerAppointmentNo) : null,
         moderatorExperienceYears,
-        lastModeratorName: (moderatorExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.lastModeratorName) : null,
-        lastModeratorAppointmentNo: (moderatorExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.lastModeratorAppointmentNo) : null,
-        lastModeratorCollegeName: (moderatorExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.lastModeratorCollegeName) : null,
+        lastModeratorName: shouldKeepModeratorDetails ? normalizeOptionalText(body.lastModeratorName) : null,
+        lastModeratorAppointmentNo: shouldKeepModeratorDetails ? normalizeOptionalText(body.lastModeratorAppointmentNo) : null,
+        lastModeratorCollegeName: shouldKeepModeratorDetails ? normalizeOptionalText(body.lastModeratorCollegeName) : null,
         chiefModeratorExperienceYears,
         lastChiefModeratorName: (chiefModeratorExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.lastChiefModeratorName) : null,
         lastChiefModeratorAppointmentNo: (chiefModeratorExperienceYears ?? 0) > 0 ? normalizeOptionalText(body.lastChiefModeratorAppointmentNo) : null,
@@ -1499,7 +1500,10 @@ institutesRouter.put('/me/teachers/:id', requireAuth, requireRole(['INSTITUTE'])
     if (body.moderatorExperienceYears !== undefined) {
       const moderatorExperienceYears = parseOptionalNumber(body.moderatorExperienceYears);
       updateData.moderatorExperienceYears = moderatorExperienceYears;
-      if ((moderatorExperienceYears ?? 0) <= 0) {
+      const effectiveExaminerExperienceYears = body.examinerExperienceYears !== undefined
+        ? parseOptionalNumber(body.examinerExperienceYears)
+        : (existingTeacher.examinerExperienceYears ?? 0);
+      if ((moderatorExperienceYears ?? 0) <= 0 && (effectiveExaminerExperienceYears ?? 0) <= 0) {
         updateData.lastModeratorName = null;
         updateData.lastModeratorAppointmentNo = null;
         updateData.lastModeratorCollegeName = null;

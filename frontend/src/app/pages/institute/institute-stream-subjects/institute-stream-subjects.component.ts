@@ -37,11 +37,11 @@ type MappingRow = {
   template: `
     <mat-card class="card">
       <div class="header-row">
-        <div>
+        <div class="header-copy">
           <div class="h">Stream Subject Mapping</div>
           <p class="p">Map subjects to stream and answer language when required. Default view focuses on current mappings.</p>
         </div>
-        <button mat-flat-button color="primary" (click)="openForm()">Add Mapping</button>
+        <button class="header-cta" mat-flat-button color="primary" (click)="openForm()">Add Mapping</button>
       </div>
 
       <div class="error" *ngIf="error()">{{ error() }}</div>
@@ -127,11 +127,13 @@ type MappingRow = {
   `,
   styles: [`
     .card { margin-bottom: 14px; padding: 16px; }
-    .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+    .header-row { display: grid; gap: 12px; }
+    .header-copy { max-width: 860px; }
+    .header-cta { justify-self: start; }
     .h { font-weight: 800; }
     .p { color: #6b7280; margin: 6px 0 12px; line-height: 1.45; }
-    .row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
-    .field { min-width: 220px; width: 280px; }
+    .row { display: grid; grid-template-columns: repeat(3, minmax(220px, 1fr)); gap: 12px; margin-bottom: 12px; align-items: start; }
+    .field { min-width: 0; width: 100%; margin: 0; }
     .field-wide { width: min(480px, 100%); }
     .chips-row { gap: 6px; }
     .chip { background: #e2e8f0; color: #1f2937; padding: 4px 10px; border-radius: 999px; font-size: .85rem; }
@@ -141,6 +143,11 @@ type MappingRow = {
     .empty { margin-top: 8px; color: #b91c1c; font-weight: 600; }
     .error { color: #b91c1c; margin-top: 8px; }
     .success { color: #065f46; margin-top: 8px; }
+    @media (max-width: 860px) {
+      .header-cta { width: 100%; }
+      .row { grid-template-columns: 1fr; }
+      .field-wide { width: 100%; }
+    }
   `]
 })
 export class InstituteStreamSubjectsComponent implements OnInit {
