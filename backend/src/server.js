@@ -5,6 +5,7 @@ import compression from 'compression';
 import pinoHttp from 'pino-http';
 import swaggerUi from 'swagger-ui-express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 import { env } from './env.js';
@@ -119,9 +120,15 @@ app.use('/api', apiLimiter);
 app.use('/api', auditMiddleware);
 
 // ── Serve Static Frontend Files (Angular Build) ─────────────────────────
-// Priority: Serve static files before API routes so assets are cached efficiently
-// The frontend build output is at: frontend/dist/exam-form/browser
-const frontendPath = path.join(__dirname, '../../frontend/dist/exam-form/browser');
+// Priority: Serve static files before API routes so assets are cached efficiently.
+// Angular may output to either dist/exam-form or dist/exam-form/browser.
+const frontendPathCandidates = [
+  path.join(__dirname, '../../frontend/dist/exam-form/browser'),
+  path.join(__dirname, '../../frontend/dist/exam-form')
+];
+const frontendPath = frontendPathCandidates.find((candidatePath) =>
+  fs.existsSync(path.join(candidatePath, 'index.html'))
+) || frontendPathCandidates[0];
 const frontendIndexPath = path.join(frontendPath, 'index.html');
 const uploadsPath = path.join(__dirname, '../uploads');
 
