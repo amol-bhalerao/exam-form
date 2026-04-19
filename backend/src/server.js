@@ -66,15 +66,42 @@ app.use(
 );
 
 // ── CORS ────────────────────────────────────────────────────────────────
-const allowedOrigins = Array.isArray(env.CORS_ORIGIN)
-  ? env.CORS_ORIGIN
-  : [env.CORS_ORIGIN, 'http://localhost:4200', 'http://localhost:4201'];
+const configuredOrigins = String(env.CORS_ORIGIN || '')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const normalizeOrigin = (origin) => {
+  try {
+    const url = new URL(origin);
+    return `${url.protocol}//${url.host}`;
+  } catch {
+    return origin.replace(/\/+$/, '');
+  }
+};
+
+const allowedOrigins = [
+  ...new Set([
+    ...configuredOrigins,
+    env.FRONTEND_URL,
+    'https://www.hscexam.in',
+    'https://hscexam.in',
+    'http://localhost:4200',
+    'http://localhost:4201'
+  ].filter(Boolean).map(normalizeOrigin))
+];
 
 app.use(
   cors({
     origin: (origin, cb) => {
-      if (!origin || allowedOrigins.some((o) => origin.startsWith(o))) return cb(null, true);
-      cb(new Error(`CORS: origin ${origin} not allowed`));
+      if (!origin) return cb(null, true);
+
+      const normalizedIncomingOrigin = normalizeOrigin(origin);
+      if (allowedOrigins.includes(normalizedIncomingOrigin)) return cb(null, true);
+
+      const corsError = new Error(`CORS: origin ${origin} not allowed`);
+      corsError.status = 403;
+      cb(corsError);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
