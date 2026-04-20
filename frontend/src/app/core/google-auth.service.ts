@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import type { GoogleLoginResponse } from './auth.types';
 import { rateLimiter } from './rate-limiter';
+import { environment } from '../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -10,8 +11,8 @@ import { rateLimiter } from './rate-limiter';
 export class GoogleAuthService {
   private authService = inject(AuthService);
 
-  // Google OAuth Client ID - from Google Cloud Console
-  private googleClientId = '260515642590-5ipgojov7maa51m9j8hutpcu01dckkui.apps.googleusercontent.com';
+  // Google OAuth Client ID - from environment/build config
+  private readonly googleClientId = environment.googleClientId || '260515642590-5ipgojov7maa51m9j8hutpcu01dckkui.apps.googleusercontent.com';
   
   // Load script from CDN
   private googleScriptLoaded = signal(false);

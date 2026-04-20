@@ -8,7 +8,7 @@ export const environment = {
   apiTimeout: 30000,
 
   // Google OAuth Configuration
-  googleClientId: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+  googleClientId: '__GOOGLE_CLIENT_ID__',
   googleScope: 'profile email',
 
   // Application Configuration
