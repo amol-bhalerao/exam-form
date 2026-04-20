@@ -53,16 +53,55 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
 
       <div class="teacher-summary-card" *ngIf="teachers().length > 0">
         <div class="summary-title">Teacher Summary</div>
-        <div class="summary-grid">
-          <div class="summary-item"><span>Total Teachers</span><strong>{{ teachers().length }}</strong></div>
-          <div class="summary-item"><span>Total Examiners</span><strong>{{ examinerReadyCount() }}</strong></div>
-          <div class="summary-item"><span>Total Moderators</span><strong>{{ moderatorReadyCount() }}</strong></div>
-          <div class="summary-item"><span>Total Chief Moderators</span><strong>{{ chiefModeratorReadyCount() }}</strong></div>
-          <div class="summary-item"><span>Active</span><strong>{{ activeTeacherCount() }}</strong></div>
-          <div class="summary-item"><span>Inactive</span><strong>{{ inactiveTeacherCount() }}</strong></div>
-          <div class="summary-item"><span>Average Service</span><strong>{{ averageServiceYears() }} yrs</strong></div>
-          <div class="summary-item"><span>Top Subject</span><strong>{{ topSubjectLabel() }}</strong></div>
-          <div class="summary-item"><span>Top District</span><strong>{{ topDistrictLabel() }}</strong></div>
+        <div class="summary-layout">
+          <div class="summary-block summary-block--highlight">
+            <div class="summary-block-title">Duty Readiness</div>
+            <div class="summary-role-grid">
+              <div><span>Total Teachers</span><strong>{{ teachers().length }}</strong></div>
+              <div><span>Examiners</span><strong>{{ examinerReadyCount() }}</strong></div>
+              <div><span>Moderators</span><strong>{{ moderatorReadyCount() }}</strong></div>
+              <div><span>Chief Moderators</span><strong>{{ chiefModeratorReadyCount() }}</strong></div>
+            </div>
+          </div>
+
+          <div class="summary-block">
+            <div class="summary-block-title">Subject Wise Teachers</div>
+            <div class="summary-list" *ngIf="subjectWiseSummary().length > 0; else noSubjects">
+              <div class="summary-row" *ngFor="let item of subjectWiseSummary()">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.count }}</strong>
+              </div>
+            </div>
+            <ng-template #noSubjects>
+              <div class="summary-empty">No subject data available.</div>
+            </ng-template>
+          </div>
+
+          <div class="summary-block">
+            <div class="summary-block-title">Designation Wise Count</div>
+            <div class="summary-list" *ngIf="designationWiseSummary().length > 0; else noDesignations">
+              <div class="summary-row" *ngFor="let item of designationWiseSummary()">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.count }}</strong>
+              </div>
+            </div>
+            <ng-template #noDesignations>
+              <div class="summary-empty">No designation data available.</div>
+            </ng-template>
+          </div>
+
+          <div class="summary-block">
+            <div class="summary-block-title">Teacher Type Wise Count</div>
+            <div class="summary-list" *ngIf="teacherTypeWiseSummary().length > 0; else noTeacherTypes">
+              <div class="summary-row" *ngFor="let item of teacherTypeWiseSummary()">
+                <span>{{ item.label }}</span>
+                <strong>{{ item.count }}</strong>
+              </div>
+            </div>
+            <ng-template #noTeacherTypes>
+              <div class="summary-empty">No teacher type data available.</div>
+            </ng-template>
+          </div>
         </div>
       </div>
 
@@ -93,7 +132,7 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
           <button mat-icon-button type="button" (click)="closeFormModal()"><mat-icon>close</mat-icon></button>
         </div>
         <div class="form-modal-content">
-          <form [formGroup]="form" (ngSubmit)="save()">
+          <form class="teacher-form" [formGroup]="form" (ngSubmit)="save()">
         <section class="form-section">
           <div class="section-title">1. Identity & Aadhaar Lookup</div>
           <div class="section-sub">Lookup uses existing teacher records across institutes; if no history is found, enter details manually and continue.</div>
@@ -145,10 +184,10 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
             <mat-form-field appearance="outline"><mat-label>Examiner Experience (Years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="examinerExperienceYears" /><mat-hint>{{ hasExaminerExperience() ? 'Examiner details are enabled below' : 'Set 0 if no examiner experience' }}</mat-hint></mat-form-field>
             <mat-form-field appearance="outline" *ngIf="hasExaminerExperience()"><mat-label>Previous Examiner Appointment No.</mat-label><input matInput formControlName="previousExaminerAppointmentNo" /></mat-form-field>
 
-            <mat-form-field appearance="outline"><mat-label>Moderator Experience (Years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="moderatorExperienceYears" /><mat-hint>{{ showModeratorDetailCapture() ? 'Moderator details can be recorded below' : 'Set 0 if no moderator experience' }}</mat-hint></mat-form-field>
-            <mat-form-field appearance="outline" *ngIf="showModeratorDetailCapture()"><mat-label>Last Moderator Name</mat-label><input matInput formControlName="lastModeratorName" /></mat-form-field>
-            <mat-form-field appearance="outline" *ngIf="showModeratorDetailCapture()"><mat-label>Last Moderator Appointment No.</mat-label><input matInput formControlName="lastModeratorAppointmentNo" /></mat-form-field>
-            <mat-form-field appearance="outline" class="span-2" *ngIf="showModeratorDetailCapture()"><mat-label>Last Moderator College Name</mat-label><input matInput formControlName="lastModeratorCollegeName" /></mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="showExaminerLinkedModeratorHistory()"><mat-label>Last Moderator Name</mat-label><input matInput formControlName="lastModeratorName" /></mat-form-field>
+            <mat-form-field appearance="outline" *ngIf="showExaminerLinkedModeratorHistory()"><mat-label>Last Moderator Appointment No.</mat-label><input matInput formControlName="lastModeratorAppointmentNo" /></mat-form-field>
+            <mat-form-field appearance="outline" class="span-2" *ngIf="showExaminerLinkedModeratorHistory()"><mat-label>Last Moderator College Name</mat-label><input matInput formControlName="lastModeratorCollegeName" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Moderator Experience (Years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="moderatorExperienceYears" /><mat-hint>Track experience only; examiner-linked moderator history appears above</mat-hint></mat-form-field>
 
             <mat-form-field appearance="outline"><mat-label>Chief Moderator Experience (Years)</mat-label><input matInput type="number" min="0" step="0.5" formControlName="chiefModeratorExperienceYears" /><mat-hint>{{ hasChiefModeratorExperience() ? 'Chief moderator details are required below' : 'Set 0 if no chief moderator experience' }}</mat-hint></mat-form-field>
             <mat-form-field appearance="outline" *ngIf="hasChiefModeratorExperience()"><mat-label>Last Chief Moderator Name</mat-label><input matInput formControlName="lastChiefModeratorName" /></mat-form-field>
@@ -224,49 +263,98 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
   `,
   styles: [`
     .page-wrap { position: relative; min-height: calc(100vh - 130px); }
-    .card { margin-bottom: 14px; margin-top: 10px; padding: 20px; }
+    .card { margin-bottom: 14px; margin-top: 10px; padding: 20px; border: 1px solid #dbe4f0; border-radius: 16px; box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08); background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); }
     .header-row { display: grid; gap: 12px; }
     .header-copy { max-width: 860px; }
-    .header-cta { justify-self: start; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+    .header-cta { justify-self: start; border-radius: 10px !important; font-weight: 700 !important; letter-spacing: 0.01em; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
     .section-grid { padding-top: 10px; }
-    .form-section { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; padding: 14px; margin: 0 0 14px; }
-    .section-title { font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+    .form-section { border: 1px solid #dbe4f0; border-radius: 14px; background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%); padding: 16px; margin: 0 0 16px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 8px 24px rgba(15, 23, 42, 0.05); }
+    .section-title { font-weight: 800; color: #0f172a; margin-bottom: 4px; font-size: 1rem; letter-spacing: 0.01em; }
     .section-sub { color: #64748b; font-size: 0.86rem; line-height: 1.4; }
-    .h { font-weight: 800; }
+    .h { font-weight: 800; font-size: 1.1rem; color: #0f172a; }
     .p { color: #6b7280; margin-top: 4px; line-height: 1.45; }
     .span-2 { grid-column: span 2; }
-    .derived-table { margin: 8px 0 14px; border: 1px solid #dbeafe; border-radius: 10px; overflow: hidden; }
+    .derived-table { margin: 8px 0 14px; border: 1px solid #bfdbfe; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 20px rgba(30, 64, 175, 0.08); }
     .derived-table table { width: 100%; border-collapse: collapse; }
     .derived-table th, .derived-table td { border-bottom: 1px solid #e2e8f0; padding: 10px 12px; text-align: left; font-size: 0.9rem; }
-    .derived-table th { width: 240px; background: #f8fafc; color: #334155; font-weight: 700; }
+    .derived-table th { width: 240px; background: #eff6ff; color: #1e3a8a; font-weight: 700; }
     .derived-table tr:last-child th, .derived-table tr:last-child td { border-bottom: 0; }
-    .form-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
+    .form-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 6px; padding-top: 8px; border-top: 1px solid #e2e8f0; }
     .action-spacer { flex: 1 1 auto; }
-    .history-box { background: #f8fafc; border: 1px solid #dbeafe; border-radius: 8px; padding: 12px; margin: 8px 0 14px; }
+    .history-box { background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%); border: 1px solid #dbeafe; border-radius: 10px; padding: 12px; margin: 8px 0 14px; }
     .history-title { font-weight: 700; color: #1d4ed8; margin-bottom: 6px; }
     .history-item { color: #334155; margin-bottom: 4px; }
     .error { color: #b91c1c; margin-top: 8px; }
     .search { width: min(360px, 100%); }
-    .teacher-summary-card { margin-top: 12px; border: 1px solid #dbeafe; border-radius: 12px; padding: 12px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%); }
+    .teacher-summary-card { margin-top: 12px; border: 1px solid #bfdbfe; border-radius: 14px; padding: 12px; background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%); box-shadow: 0 10px 24px rgba(30, 64, 175, 0.08); }
     .summary-title { font-weight: 800; color: #0f172a; margin-bottom: 8px; }
-    .summary-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
-    .summary-item { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px; background: #fff; display: grid; gap: 2px; }
-    .summary-item span { font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; font-weight: 700; }
-    .summary-item strong { font-size: 1.02rem; color: #0f172a; }
-    .table-box { width: 100%; height: 380px; margin-top: 10px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
-    .modal { background: white; border-radius: 12px; width: min(680px, calc(100vw - 24px)); max-height: 80vh; overflow: auto; }
+    .summary-layout { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+    .summary-block { border: 1px solid #dbe4f0; border-radius: 10px; background: #fff; padding: 10px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05); }
+    .summary-block--highlight { background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%); }
+    .summary-block-title { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; color: #475569; font-weight: 800; margin-bottom: 8px; }
+    .summary-role-grid { display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .summary-role-grid div { border: 1px solid #dbeafe; border-radius: 8px; padding: 8px; background: #fff; display: grid; gap: 2px; }
+    .summary-role-grid span { font-size: 0.74rem; color: #475569; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+    .summary-role-grid strong { font-size: 1.04rem; color: #0f172a; }
+    .summary-list { display: grid; gap: 6px; max-height: 188px; overflow-y: auto; padding-right: 2px; }
+    .summary-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 4px; font-size: 0.9rem; color: #334155; }
+    .summary-row:last-child { border-bottom: 0; padding-bottom: 0; }
+    .summary-row strong { color: #0f172a; font-weight: 700; }
+    .summary-empty { color: #64748b; font-size: 0.86rem; }
+    .table-box { width: 100%; height: 380px; margin-top: 10px; border: 1px solid #dbe4f0; border-radius: 10px; overflow: hidden; box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05); }
+    .modal { background: white; border-radius: 14px; width: min(680px, calc(100vw - 24px)); max-height: 80vh; overflow: auto; border: 1px solid #dbe4f0; box-shadow: 0 30px 70px rgba(15, 23, 42, 0.24); }
     .form-modal { width: min(1080px, calc(100vw - 24px)); max-height: 90vh; }
-    .form-modal-content { padding: 0 16px 16px; }
-    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #e2e8f0; }
+    .form-modal-content { padding: 10px 20px 20px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 30%); }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 18px; border-bottom: 1px solid #dbe4f0; background: linear-gradient(90deg, #f8fafc 0%, #eff6ff 100%); position: sticky; top: 0; z-index: 2; }
+    .modal-header h3 { margin: 0; font-size: 1.05rem; letter-spacing: 0.01em; color: #0f172a; }
     .modal-content { display: grid; gap: 8px; padding: 16px; }
+
+    :host ::ng-deep .teacher-form .mat-mdc-form-field {
+      margin-bottom: 2px;
+    }
+
+    /* Improve spacing between auto icon and field text/label for better readability */
+    :host ::ng-deep .teacher-form mat-form-field:not(.mat-mdc-form-field-has-icon-prefix) .mat-mdc-text-field-wrapper::before {
+      left: 12px !important;
+    }
+
+    :host ::ng-deep .teacher-form mat-form-field:not(.mat-mdc-form-field-has-icon-prefix) .mat-mdc-form-field-infix {
+      padding-left: 30px !important;
+    }
+
+    :host ::ng-deep .teacher-form mat-form-field:not(.mat-mdc-form-field-has-icon-prefix) .mdc-floating-label {
+      margin-left: 2px;
+    }
+
+    :host ::ng-deep .teacher-form .mat-mdc-text-field-wrapper {
+      border-radius: 10px !important;
+    }
+
+    :host ::ng-deep .teacher-form .mat-mdc-form-field-subscript-wrapper {
+      margin-top: 2px !important;
+    }
+
+    :host ::ng-deep .teacher-form .mdc-text-field__input::placeholder {
+      opacity: 0.72;
+    }
+
     @media (max-width: 860px) {
       .header-cta { width: 100%; }
     }
     @media (max-width: 768px) {
+      .grid { grid-template-columns: 1fr; gap: 10px; }
+      .summary-layout { grid-template-columns: 1fr; }
+      .summary-role-grid { grid-template-columns: 1fr 1fr; }
       .span-2 { grid-column: span 1; }
+      .form-section { padding: 12px; margin-bottom: 12px; }
+      .form-modal-content { padding: 8px 12px 14px; }
       .derived-table th { width: 40%; }
       .form-actions { flex-direction: column; align-items: stretch; }
+
+      :host ::ng-deep .teacher-form mat-form-field:not(.mat-mdc-form-field-has-icon-prefix) .mat-mdc-form-field-infix {
+        padding-left: 28px !important;
+      }
     }
   `]
 })
@@ -342,6 +430,10 @@ export class InstituteAddTeacherComponent implements OnInit {
   readonly moderatorReadyCount = computed(() => this.teachers().filter((teacher) => (teacher.moderatorExperienceYears || 0) > 0).length);
   readonly chiefModeratorReadyCount = computed(() => this.teachers().filter((teacher) => (teacher.chiefModeratorExperienceYears || 0) > 0).length);
 
+  readonly subjectWiseSummary = computed(() => this.buildCountSummary((teacher) => this.toSubjectSelection(teacher.subjectSpecialization)));
+  readonly designationWiseSummary = computed(() => this.buildCountSummary((teacher) => teacher.designation));
+  readonly teacherTypeWiseSummary = computed(() => this.buildCountSummary((teacher) => teacher.teacherType));
+
   hasExaminerExperience(): boolean {
     return (this.toNumberOrUndefined(this.form.controls.examinerExperienceYears.value) ?? 0) > 0;
   }
@@ -354,8 +446,8 @@ export class InstituteAddTeacherComponent implements OnInit {
     return (this.toNumberOrUndefined(this.form.controls.chiefModeratorExperienceYears.value) ?? 0) > 0;
   }
 
-  showModeratorDetailCapture(): boolean {
-    return this.hasModeratorExperience() || this.hasExaminerExperience();
+  showExaminerLinkedModeratorHistory(): boolean {
+    return this.hasExaminerExperience();
   }
 
   private calculateExperienceYears(serviceStartDate: Date | string | null | undefined): number | null {
@@ -391,7 +483,7 @@ export class InstituteAddTeacherComponent implements OnInit {
       this.form.controls.previousExaminerAppointmentNo.setValue('', { emitEvent: false });
     }
 
-    if (!this.showModeratorDetailCapture()) {
+    if (!this.showExaminerLinkedModeratorHistory()) {
       this.form.patchValue({
         lastModeratorName: '',
         lastModeratorAppointmentNo: '',
@@ -659,9 +751,9 @@ export class InstituteAddTeacherComponent implements OnInit {
       examinerExperienceYears,
       previousExaminerAppointmentNo: (examinerExperienceYears ?? 0) > 0 ? (this.form.value.previousExaminerAppointmentNo || undefined) : undefined,
       moderatorExperienceYears,
-      lastModeratorName: this.showModeratorDetailCapture() ? (this.form.value.lastModeratorName || undefined) : undefined,
-      lastModeratorAppointmentNo: this.showModeratorDetailCapture() ? (this.form.value.lastModeratorAppointmentNo || undefined) : undefined,
-      lastModeratorCollegeName: this.showModeratorDetailCapture() ? (this.form.value.lastModeratorCollegeName || undefined) : undefined,
+      lastModeratorName: this.showExaminerLinkedModeratorHistory() ? (this.form.value.lastModeratorName || undefined) : undefined,
+      lastModeratorAppointmentNo: this.showExaminerLinkedModeratorHistory() ? (this.form.value.lastModeratorAppointmentNo || undefined) : undefined,
+      lastModeratorCollegeName: this.showExaminerLinkedModeratorHistory() ? (this.form.value.lastModeratorCollegeName || undefined) : undefined,
       chiefModeratorExperienceYears,
       lastChiefModeratorName: (chiefModeratorExperienceYears ?? 0) > 0 ? (this.form.value.lastChiefModeratorName || undefined) : undefined,
       lastChiefModeratorAppointmentNo: (chiefModeratorExperienceYears ?? 0) > 0 ? (this.form.value.lastChiefModeratorAppointmentNo || undefined) : undefined,
@@ -818,6 +910,25 @@ export class InstituteAddTeacherComponent implements OnInit {
       .split(',')
       .map((entry) => entry.trim())
       .filter(Boolean);
+  }
+
+  private buildCountSummary(selector: (teacher: any) => unknown): Array<{ label: string; count: number }> {
+    const grouped = new Map<string, number>();
+
+    for (const teacher of this.teachers()) {
+      const selected = selector(teacher);
+      const values = Array.isArray(selected) ? selected : [selected];
+
+      for (const raw of values) {
+        const label = String(raw || '').trim();
+        if (!label) continue;
+        grouped.set(label, (grouped.get(label) || 0) + 1);
+      }
+    }
+
+    return [...grouped.entries()]
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([label, count]) => ({ label, count }));
   }
 }
 
