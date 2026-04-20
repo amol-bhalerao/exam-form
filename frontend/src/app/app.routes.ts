@@ -30,6 +30,7 @@ import { StudentExamScheduleComponent } from './pages/student/student-exam-sched
 import { ContactUsComponent } from './pages/public/contact-us/contact-us.component';
 import { TermsAndConditionsComponent } from './pages/public/terms-and-conditions/terms-and-conditions.component';
 import { RefundPolicyComponent } from './pages/public/refund-policy/refund-policy.component';
+import { MarketingLandingComponent } from './pages/marketing-landing.component';
 import { DocumentVerificationComponent } from './pages/public/document-verification/document-verification.component';
 import { SuperInstitutesComponent } from './pages/super/super-institutes/super-institutes.component';
 import { SuperInstituteUsersComponent } from './pages/super/super-institute-users/super-institute-users.component';

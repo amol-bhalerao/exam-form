@@ -36,7 +36,7 @@ import { MatCardModule } from '@angular/material/card';
 
         <section>
           <h2>5. Support</h2>
-          <p>For refund-related queries, contact <a href="mailto:support@hisofttechnology.com">support&#64;hisofttechnology.com</a> with the student details, application ID, and payment reference number.</p>
+          <p>For refund-related queries, contact <a href="mailto:contact@hscexam.in">contact&#64;hscexam.in</a> with the student details, application ID, and payment reference number.</p>
         </section>
       </mat-card>
     </div>

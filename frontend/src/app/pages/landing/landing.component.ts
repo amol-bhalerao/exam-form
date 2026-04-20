@@ -246,7 +246,7 @@ interface RegisterData {
             <ul>
               <li><a href="#features">Features</a></li>
               <li><a href="#about">How It Works</a></li>
-              <li><a href="mailto:support@msbshse.edu.in">Contact</a></li>
+              <li><a href="mailto:contact@hscexam.in">Contact</a></li>
             </ul>
           </div>
           <div class="footer-section">
@@ -259,8 +259,8 @@ interface RegisterData {
           </div>
           <div class="footer-section">
             <h4>Contact</h4>
-            <p>📧 support&#64;msbshse.edu.in</p>
-            <p>📞 1800-XXX-XXXX</p>
+            <p>📧 contact&#64;hscexam.in</p>
+            <p>📞 +91 99227 74144</p>
           </div>
         </div>
         <div class="footer-bottom">

@@ -21,7 +21,7 @@ import { MatIconModule } from '@angular/material/icon';
             <mat-icon>mail</mat-icon>
             <div>
               <h3>Email</h3>
-              <p><a href="mailto:support@hisofttechnology.com">support&#64;hisofttechnology.com</a></p>
+              <p><a href="mailto:contact@hscexam.in">contact&#64;hscexam.in</a></p>
             </div>
           </div>
 

@@ -24,8 +24,8 @@ export class BrandingService {
     address: 'Developed by Hisoft IT Solutions | Pune, Maharashtra',
     addressMarathi: 'Hisoft IT Solutions द्वारे विकसित | पुणे, महाराष्ट्र',
     contactNumber: '',
-    email: 'support@hisofttechnology.com',
-    website: 'https://hisofttechnology.com/'
+    email: 'contact@hscexam.in',
+    website: 'https://hscexam.in/'
   };
 
   constructor() {}
