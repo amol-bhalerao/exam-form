@@ -129,7 +129,7 @@ import { BrandingService } from '../../core/branding.service';
                 <li>Download and print the generated letter</li>
                 <li>Print the letter on your college letterhead</li>
                 <li>Sign and stamp the letter by authorized personnel</li>
-                <li>Send the signed letter to: <a href="mailto:contact@hscexam.in" class="email-link"><strong>contact@hscexam.in</strong></a></li>
+                <li>Send the signed letter to: <a href="mailto:contact@hscexam.in" class="email-link"><strong>contact[at]hscexam.in</strong></a></li>
               </ol>
               <p><strong>For any queries, contact us on WhatsApp:</strong></p>
               <a href="https://wa.me/919922774144" target="_blank" class="whatsapp-link">
