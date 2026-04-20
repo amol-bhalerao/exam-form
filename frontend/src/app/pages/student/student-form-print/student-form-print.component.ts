@@ -132,7 +132,7 @@ import { BrandingService } from '../../../core/branding.service';
                   </tr>
                 </thead>
                 <tbody>
-                  @for (sub of (a().subjects ?? []); track sub.id) {
+                  @for (sub of orderedPrintSubjects(); track sub.id) {
                     @let backlog = getBacklogInfoForSubject(sub);
                     <tr>
                       <td class="cell-center">{{ $index + 1 }}</td>
@@ -149,7 +149,7 @@ import { BrandingService } from '../../../core/branding.service';
                       }
                     </tr>
                   }
-                  @if (!(a().subjects?.length)) {
+                  @if (!orderedPrintSubjects().length) {
                     <tr>
                       <td [attr.colspan]="isBacklogCandidate() ? 10 : 5" class="muted center empty-table">No subjects selected yet</td>
                     </tr>
@@ -1551,6 +1551,65 @@ export class StudentFormPrintComponent implements OnInit {
     if (medium) return this.formatLanguageCode(medium);
 
     return '—';
+  }
+
+  private codeSortKey(code: unknown): number {
+    const parsed = Number(String(code || '').trim());
+    return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+  }
+
+  private normalizedCategory(category: unknown): string {
+    return String(category || '').trim().toLowerCase();
+  }
+
+  private isLanguageCategory(category: unknown): boolean {
+    const normalized = this.normalizedCategory(category);
+    return normalized === 'language' || normalized.includes('lang');
+  }
+
+  private isCompulsoryCategory(category: unknown): boolean {
+    const normalized = this.normalizedCategory(category);
+    return normalized === 'compulsory' || normalized.includes('compulsory');
+  }
+
+  orderedPrintSubjects() {
+    const rows = [...(this.a().subjects || [])];
+    if (!rows.length || this.isBacklogCandidate()) {
+      return rows;
+    }
+
+    const english = rows.find((row) => {
+      const code = String(row?.subject?.code || '').trim();
+      return code === '1' && this.isCompulsoryCategory(row?.subject?.category);
+    });
+
+    const languageRows = rows
+      .filter((row) => {
+        if (!row?.subject) return false;
+        const code = String(row.subject.code || '').trim();
+        if (english && code === '1') return false;
+        return this.isLanguageCategory(row.subject.category);
+      })
+      .sort((a, b) => this.codeSortKey(a?.subject?.code) - this.codeSortKey(b?.subject?.code));
+    const primaryLanguage = languageRows[0];
+
+    const tailRows = rows
+      .filter((row) => {
+        const code = String(row?.subject?.code || '').trim();
+        return code === '30' || code === '31';
+      })
+      .sort((a, b) => this.codeSortKey(a?.subject?.code) - this.codeSortKey(b?.subject?.code));
+
+    const excluded = new Set<any>();
+    if (english) excluded.add(english);
+    if (primaryLanguage) excluded.add(primaryLanguage);
+    for (const row of tailRows) excluded.add(row);
+
+    const middle = rows
+      .filter((row) => !excluded.has(row))
+      .sort((a, b) => this.codeSortKey(a?.subject?.code) - this.codeSortKey(b?.subject?.code));
+
+    return [english, primaryLanguage, ...middle, ...tailRows].filter(Boolean);
   }
 
   showApplicationSerial() {

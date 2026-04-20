@@ -21,6 +21,10 @@ import { API_BASE_URL } from '../../../core/api';
 
 type Subject = { id: number; code: string; name: string; category?: string; answerLanguageCode?: string | null; mappingId?: number };
 
+const COMPULSORY_SUBJECT_CODES = ['1', '30', '31'];
+const ENGLISH_COMPULSORY_CODE = '1';
+const TAIL_COMPULSORY_CODES = ['30', '31'];
+
 @Component({
   selector: 'app-student-application-edit',
   standalone: true,
@@ -529,6 +533,12 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
               <div class="step-content">
                 <h3 class="step-title">{{ examType() === 'backlog' ? 'Selected Subjects & Previous Marks / मागील गुण' : 'Subject Selection / विषय निवड' }}</h3>
                 <p class="step-desc">{{ examType() === 'backlog' ? 'Select backlog subjects and marks if needed.' : 'Select subjects for this application.' }}</p>
+                @if (examType() !== 'backlog') {
+                  <div class="readonly-note">
+                    <mat-icon>verified</mat-icon>
+                    <span>Compulsory subjects are auto-selected: 1-English, 30-Health & Physical Education, 31-Env.Edu. & Water Security.</span>
+                  </div>
+                }
 
                 <div class="subjects-list">
                   <div class="subject-item-grid">
@@ -559,7 +569,14 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
                             </mat-select>
                           </mat-form-field>
                         }
-                        <button mat-icon-button type="button" (click)="removeSubject(idx)" [disabled]="!isEditable()" class="remove-btn">
+                        <button
+                          mat-icon-button
+                          type="button"
+                          (click)="removeSubject(idx)"
+                          [disabled]="!isEditable() || isCompulsorySubjectRow(idx)"
+                          class="remove-btn"
+                          [matTooltip]="isCompulsorySubjectRow(idx) ? 'Compulsory subject cannot be removed' : 'Remove subject'"
+                          matTooltipPosition="above">
                           <mat-icon>delete</mat-icon>
                         </button>
                       </div>
@@ -929,6 +946,27 @@ type Subject = { id: number; code: string; name: string; category?: string; answ
       display: grid;
       gap: 12px;
       margin-bottom: 20px;
+    }
+
+    .readonly-note {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #ecfeff;
+      border: 1px solid #bae6fd;
+      border-left: 4px solid #0284c7;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #0c4a6e;
+      font-size: 0.88rem;
+      margin-bottom: 12px;
+    }
+
+    .readonly-note mat-icon {
+      color: #0284c7;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
     }
 
     .subject-row {
@@ -1411,18 +1449,36 @@ export class StudentApplicationEditComponent implements OnInit {
     return this.form.get('subjects') as FormArray;
   }
 
-  addSubject() {
+  addSubject(initial?: { subjectId?: number | null; langOfAnsCode?: string; marks?: string | number }) {
     const group = new FormGroup({
-      subjectId: new FormControl<number | null>(null, { validators: [Validators.required] }),
-      langOfAnsCode: new FormControl(''),
-      marks: new FormControl('', [Validators.min(0), Validators.max(100)])
+      subjectId: new FormControl<number | null>(initial?.subjectId ?? null, { validators: [Validators.required] }),
+      langOfAnsCode: new FormControl(initial?.langOfAnsCode ?? ''),
+      marks: new FormControl(initial?.marks ?? '', [Validators.min(0), Validators.max(100)])
     });
     this.subjects().push(group);
+    if (initial?.subjectId) {
+      this.onSubjectSelectionChange(this.subjects().length - 1);
+    }
     this.updateLanguageControlState(group);
   }
 
   removeSubject(i: number) {
+    if (this.isCompulsorySubjectRow(i)) {
+      return;
+    }
     this.subjects().removeAt(i);
+  }
+
+  isCompulsorySubjectRow(index: number): boolean {
+    const subjectId = this.getSubjectFormGroup(index).get('subjectId')?.value;
+    return this.isCompulsorySubjectId(subjectId);
+  }
+
+  private isCompulsorySubjectId(subjectId: number | null | undefined): boolean {
+    if (!subjectId) return false;
+    const subject = this.masterSubjects().find((entry) => entry.id === subjectId);
+    if (!subject) return false;
+    return COMPULSORY_SUBJECT_CODES.includes(String(subject.code || '').trim());
   }
 
   selectInstitute(inst: any) {
@@ -1570,6 +1626,96 @@ export class StudentApplicationEditComponent implements OnInit {
     return this.masterSubjects();
   }
 
+  private codeToSortKey(code: string | null | undefined): number {
+    const parsed = Number(String(code || '').trim());
+    return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+  }
+
+  private isLanguageCategory(category: string | null | undefined): boolean {
+    const normalized = String(category || '').trim().toLowerCase();
+    return normalized === 'language' || normalized.includes('lang');
+  }
+
+  private orderedSubjectsForSubmission(rows: Array<{ subjectId: number; langOfAnsCode?: string; isExemptedClaim?: boolean }>) {
+    const subjectById = new Map(this.masterSubjects().map((subject) => [subject.id, subject]));
+    const selectedById = new Map(rows.map((row) => [row.subjectId, row]));
+
+    const english = rows.find((row) => String(subjectById.get(row.subjectId)?.code || '') === ENGLISH_COMPULSORY_CODE);
+    const languageRows = rows.filter((row) => {
+      const subject = subjectById.get(row.subjectId);
+      if (!subject) return false;
+      if (String(subject.code || '') === ENGLISH_COMPULSORY_CODE) return false;
+      return this.isLanguageCategory(subject.category);
+    });
+    languageRows.sort((a, b) => this.codeToSortKey(subjectById.get(a.subjectId)?.code) - this.codeToSortKey(subjectById.get(b.subjectId)?.code));
+    const primaryLanguage = languageRows[0];
+
+    const tailRows = rows.filter((row) => {
+      const code = String(subjectById.get(row.subjectId)?.code || '').trim();
+      return TAIL_COMPULSORY_CODES.includes(code);
+    });
+    tailRows.sort((a, b) => this.codeToSortKey(subjectById.get(a.subjectId)?.code) - this.codeToSortKey(subjectById.get(b.subjectId)?.code));
+
+    const excludedIds = new Set<number>();
+    if (english) excludedIds.add(english.subjectId);
+    if (primaryLanguage) excludedIds.add(primaryLanguage.subjectId);
+    for (const tail of tailRows) excludedIds.add(tail.subjectId);
+
+    const middleRows = rows
+      .filter((row) => !excludedIds.has(row.subjectId))
+      .sort((a, b) => this.codeToSortKey(subjectById.get(a.subjectId)?.code) - this.codeToSortKey(subjectById.get(b.subjectId)?.code));
+
+    const ordered = [english, primaryLanguage, ...middleRows, ...tailRows].filter((row): row is { subjectId: number; langOfAnsCode?: string; isExemptedClaim?: boolean } => !!row);
+
+    // Keep any orphan rows (subject not present in current master list) at the end without losing data.
+    const includedIds = new Set(ordered.map((row) => row.subjectId));
+    const orphanRows = rows.filter((row) => !includedIds.has(row.subjectId));
+    return [...ordered, ...orphanRows].map((row) => selectedById.get(row.subjectId) || row);
+  }
+
+  private ensureCompulsorySubjectsSelected() {
+    if (this.examType() === 'backlog') {
+      return;
+    }
+
+    const compulsorySubjects = this.masterSubjects()
+      .filter((subject) => COMPULSORY_SUBJECT_CODES.includes(String(subject.code || '').trim()))
+      .sort((a, b) => this.codeToSortKey(a.code) - this.codeToSortKey(b.code));
+
+    if (!compulsorySubjects.length) {
+      return;
+    }
+
+    const selectedIds = new Set(
+      this.getSubjectIndices()
+        .map((idx) => this.getSubjectFormGroup(idx).get('subjectId')?.value)
+        .filter((id): id is number => typeof id === 'number' && id > 0)
+    );
+
+    const emptyIndices = this.getSubjectIndices().filter((idx) => !this.getSubjectFormGroup(idx).get('subjectId')?.value);
+
+    for (const subject of compulsorySubjects) {
+      if (selectedIds.has(subject.id)) continue;
+
+      if (emptyIndices.length) {
+        const index = emptyIndices.shift() as number;
+        const group = this.getSubjectFormGroup(index);
+        group.patchValue({
+          subjectId: subject.id,
+          langOfAnsCode: this.getMappedLanguage(subject.id) || ''
+        }, { emitEvent: false });
+        this.onSubjectSelectionChange(index);
+      } else {
+        this.addSubject({
+          subjectId: subject.id,
+          langOfAnsCode: this.getMappedLanguage(subject.id) || ''
+        });
+      }
+
+      selectedIds.add(subject.id);
+    }
+  }
+
   getAvailableSubjectsForIndex(index: number): Subject[] {
     const currentSubjectId = this.getSubjectFormGroup(index).get('subjectId')?.value;
     const selectedIds = new Set(
@@ -1663,6 +1809,7 @@ export class StudentApplicationEditComponent implements OnInit {
       next: (response: any) => {
         this.masterSubjects.set(response.subjects || []);
         this.subjectSource.set(response.source || 'all');
+        this.ensureCompulsorySubjectsSelected();
         this.applyMappedLanguagesToSelectedRows();
       },
       error: (err: any) => {
@@ -1742,7 +1889,26 @@ export class StudentApplicationEditComponent implements OnInit {
     const raw: any = this.form.getRawValue();
     const candidateType = this.candidateType() || (raw.examType === 'backlog' ? 'BACKLOG' : 'REGULAR');
     const isBacklogFlow = ['BACKLOG', 'ATKT', 'REPEATER', 'IMPROVEMENT'].includes(candidateType);
-    const selectedSubjects = (raw.subjects ?? []).filter((s: any) => !!s.subjectId);
+    let selectedSubjects = (raw.subjects ?? []).filter((s: any) => !!s.subjectId);
+
+    if (!isBacklogFlow) {
+      const selectedIds = new Set<number>(selectedSubjects.map((s: any) => Number(s.subjectId)).filter((id: number) => Number.isFinite(id)));
+      const compulsoryToAdd = this.masterSubjects().filter((subject) =>
+        COMPULSORY_SUBJECT_CODES.includes(String(subject.code || '').trim()) && !selectedIds.has(subject.id)
+      );
+
+      for (const subject of compulsoryToAdd) {
+        selectedSubjects.push({ subjectId: subject.id, langOfAnsCode: this.getMappedLanguage(subject.id) || '' });
+      }
+
+      selectedSubjects = this.orderedSubjectsForSubmission(
+        selectedSubjects.map((s: any) => ({
+          subjectId: Number(s.subjectId),
+          langOfAnsCode: s.langOfAnsCode,
+          isExemptedClaim: false
+        }))
+      );
+    }
 
     const exemptedSubjects = isBacklogFlow
       ? selectedSubjects.map((s: any) => {

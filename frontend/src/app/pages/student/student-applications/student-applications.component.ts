@@ -76,7 +76,7 @@ type Application = {
       </div>
 
       <div class="launcher-form-grid">
-        <mat-form-field appearance="outline" class="field">
+        <mat-form-field appearance="outline" class="field student-field">
           <mat-label>Student</mat-label>
           <mat-icon matPrefix>person_search</mat-icon>
           <input
@@ -85,7 +85,7 @@ type Application = {
             [value]="studentSearchText()"
             (input)="onStudentSearchInput($event)"
             [matAutocomplete]="studentAuto"
-            placeholder="Type to search student"
+            placeholder="Search by name, institute, or stream"
           />
           <mat-autocomplete #studentAuto="matAutocomplete">
             @for (s of filteredManagedStudents(); track s.id) {
@@ -228,6 +228,9 @@ type Application = {
       .field {
         width: 100%;
         margin-top: 2px;
+      }
+      .student-field {
+        grid-column: 1 / -1;
       }
       .field mat-icon[matPrefix] {
         color: #64748b;
@@ -507,7 +510,8 @@ export class StudentApplicationsComponent implements OnInit {
         this.managedStudents.set(students);
         if (!this.selectedStudentId() && students.length) {
           this.selectedStudentId.set(students[0].id);
-          this.studentSearchText.set(this.displayStudentName(students[0]));
+          // Keep search empty so dropdown shows all students by default.
+          this.studentSearchText.set('');
         }
       },
       error: (err: any) => {

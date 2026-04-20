@@ -13,6 +13,53 @@ const STUDENT_STREAM_CODE_LOOKUP = {
   '5': 'Technology'
 };
 
+const COMPULSORY_SUBJECT_CODES = ['1', '30', '31'];
+const ENGLISH_COMPULSORY_CODE = '1';
+const TAIL_COMPULSORY_CODES = ['30', '31'];
+const BACKLOG_CANDIDATE_TYPES = ['BACKLOG', 'ATKT', 'REPEATER', 'IMPROVEMENT'];
+
+function codeSortKey(code) {
+  const parsed = Number(String(code || '').trim());
+  return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER;
+}
+
+function isLanguageCategory(category) {
+  const normalized = String(category || '').trim().toLowerCase();
+  return normalized === 'language' || normalized.includes('lang');
+}
+
+function orderedSubjectsForExamSequence(subjectRows = [], subjectById = new Map()) {
+  const english = subjectRows.find((row) => String(subjectById.get(row.subjectId)?.code || '').trim() === ENGLISH_COMPULSORY_CODE);
+
+  const languageRows = subjectRows
+    .filter((row) => {
+      const subject = subjectById.get(row.subjectId);
+      if (!subject) return false;
+      if (String(subject.code || '').trim() === ENGLISH_COMPULSORY_CODE) return false;
+      return isLanguageCategory(subject.category);
+    })
+    .sort((a, b) => codeSortKey(subjectById.get(a.subjectId)?.code) - codeSortKey(subjectById.get(b.subjectId)?.code));
+  const primaryLanguage = languageRows[0];
+
+  const tailRows = subjectRows
+    .filter((row) => TAIL_COMPULSORY_CODES.includes(String(subjectById.get(row.subjectId)?.code || '').trim()))
+    .sort((a, b) => codeSortKey(subjectById.get(a.subjectId)?.code) - codeSortKey(subjectById.get(b.subjectId)?.code));
+
+  const excluded = new Set();
+  if (english) excluded.add(english.subjectId);
+  if (primaryLanguage) excluded.add(primaryLanguage.subjectId);
+  for (const row of tailRows) excluded.add(row.subjectId);
+
+  const middleRows = subjectRows
+    .filter((row) => !excluded.has(row.subjectId))
+    .sort((a, b) => codeSortKey(subjectById.get(a.subjectId)?.code) - codeSortKey(subjectById.get(b.subjectId)?.code));
+
+  const ordered = [english, primaryLanguage, ...middleRows, ...tailRows].filter(Boolean);
+  const includedIds = new Set(ordered.map((row) => row.subjectId));
+  const orphanRows = subjectRows.filter((row) => !includedIds.has(row.subjectId));
+  return [...ordered, ...orphanRows];
+}
+
 function resolveStreamIdFromStudentCode(streamCode, streams = [], fallbackStreamId = null) {
   if (streamCode === undefined || streamCode === null || streamCode === '') return fallbackStreamId;
 
@@ -489,6 +536,8 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
   const institute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
   if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
 
+  let orderedSubjectsForPersist = null;
+
   if (body.subjects && body.subjects.length > 0) {
     const subjectIds = body.subjects.map((s) => s.subjectId);
     const instituteMappedSubjects = await prisma.instituteStreamSubject.findMany({
@@ -525,6 +574,37 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
 
     // Draft save is allowed even when the final Language/Compulsory combination is not complete yet.
     // The final category mix is validated again at submit time.
+
+    const subjectById = new Map(validStream.map((row) => [row.subject.id, row.subject]));
+    const candidateType = String(body.candidateType || app.candidateType || '').toUpperCase();
+    const isBacklogStyle = BACKLOG_CANDIDATE_TYPES.includes(candidateType);
+
+    let normalizedRows = body.subjects.map((row) => ({
+      subjectId: row.subjectId,
+      langOfAnsCode: row.langOfAnsCode,
+      isExemptedClaim: row.isExemptedClaim ?? false
+    }));
+
+    if (!isBacklogStyle) {
+      const selectedIds = new Set(normalizedRows.map((row) => row.subjectId));
+      const compulsorySubjects = [...subjectById.values()]
+        .filter((subject) => COMPULSORY_SUBJECT_CODES.includes(String(subject.code || '').trim()))
+        .sort((a, b) => codeSortKey(a.code) - codeSortKey(b.code));
+
+      for (const subject of compulsorySubjects) {
+        if (selectedIds.has(subject.id)) continue;
+        normalizedRows.push({
+          subjectId: subject.id,
+          langOfAnsCode: undefined,
+          isExemptedClaim: false
+        });
+        selectedIds.add(subject.id);
+      }
+
+      normalizedRows = orderedSubjectsForExamSequence(normalizedRows, subjectById);
+    }
+
+    orderedSubjectsForPersist = normalizedRows;
   }
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -541,9 +621,10 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
 
     if (body.subjects) {
       await tx.examApplicationSubject.deleteMany({ where: { applicationId } });
-      if (body.subjects.length) {
+      const subjectRows = orderedSubjectsForPersist ?? body.subjects;
+      if (subjectRows.length) {
         await tx.examApplicationSubject.createMany({
-          data: body.subjects.map((s) => ({
+          data: subjectRows.map((s) => ({
             applicationId,
             subjectId: s.subjectId,
             langOfAnsCode: s.langOfAnsCode,
