@@ -517,7 +517,78 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                 </div>
               </mat-tab>
 
-              <!-- TAB 6: Previous Exams -->
+              <!-- TAB 6: Bank Details -->
+              <mat-tab>
+                <ng-template mat-tab-label>
+                  <mat-icon>account_balance</mat-icon>
+                  <span>Bank Details</span>
+                </ng-template>
+
+                <div class="form-section">
+                  <p class="tab-instruction">शिक्षण शुल्क परिणामांसाठी बँक खाते तपशील भरा (वैकल्पिक).</p>
+                  <form [formGroup]="bankDetailsForm">
+                    <div class="form-card form-card-compact form-card-span">
+                      <div class="form-grid-2">
+                        <mat-form-field class="form-field">
+                          <mat-label>Account Holder Name</mat-label>
+                          <mat-icon matPrefix>person</mat-icon>
+                          <input matInput formControlName="accountHolder" appEnglishOnly />
+                          <mat-error *ngIf="bankDetailsForm.get('accountHolder')?.hasError('required')">Required</mat-error>
+                          <mat-error *ngIf="bankDetailsForm.get('accountHolder')?.hasError('minlength')">Minimum 3 characters</mat-error>
+                        </mat-form-field>
+
+                        <mat-form-field class="form-field">
+                          <mat-label>Account Holder Relation</mat-label>
+                          <mat-icon matPrefix>family_restroom</mat-icon>
+                          <mat-select formControlName="accountHolderRelation">
+                            <mat-option value="">- Select -</mat-option>
+                            <mat-option value="SELF">Self</mat-option>
+                            <mat-option value="FATHER">Father</mat-option>
+                            <mat-option value="MOTHER">Mother</mat-option>
+                            <mat-option value="GUARDIAN">Guardian</mat-option>
+                            <mat-option value="SIBLING">Sibling</mat-option>
+                            <mat-option value="SPOUSE">Spouse</mat-option>
+                          </mat-select>
+                          <mat-error *ngIf="bankDetailsForm.get('accountHolderRelation')?.hasError('required')">Required</mat-error>
+                        </mat-form-field>
+                      </div>
+
+                      <div class="form-grid-2">
+                        <mat-form-field class="form-field">
+                          <mat-label>IFSC Code</mat-label>
+                          <mat-icon matPrefix>code</mat-icon>
+                          <input matInput formControlName="ifscCode" (input)="$event.target.value = $event.target.value.toUpperCase()" appEnglishOnly placeholder="e.g., SBIN0001234" />
+                          <mat-error *ngIf="bankDetailsForm.get('ifscCode')?.hasError('required')">Required</mat-error>
+                          <mat-error *ngIf="bankDetailsForm.get('ifscCode')?.hasError('minlength') || bankDetailsForm.get('ifscCode')?.hasError('maxlength')">Must be 11 characters</mat-error>
+                          <mat-error *ngIf="bankDetailsForm.get('ifscCode')?.hasError('pattern')">Invalid IFSC format</mat-error>
+                        </mat-form-field>
+
+                        <mat-form-field class="form-field">
+                          <mat-label>Account Number</mat-label>
+                          <mat-icon matPrefix>badge</mat-icon>
+                          <input matInput formControlName="accountNumber" placeholder="e.g., 12345678901234" />
+                          <mat-error *ngIf="bankDetailsForm.get('accountNumber')?.hasError('required')">Required</mat-error>
+                          <mat-error *ngIf="bankDetailsForm.get('accountNumber')?.hasError('minlength') || bankDetailsForm.get('accountNumber')?.hasError('maxlength')">Must be 8-18 digits</mat-error>
+                          <mat-error *ngIf="bankDetailsForm.get('accountNumber')?.hasError('pattern')">Must contain only digits</mat-error>
+                        </mat-form-field>
+                      </div>
+                    </div>
+                  </form>
+
+                  <div class="form-actions">
+                    <button mat-raised-button color="primary" type="button" 
+                            [disabled]="!bankDetailsForm.valid || savingBank"
+                            (click)="saveBankDetails()"
+                            class="save-btn">
+                      <mat-icon *ngIf="!savingBank">save</mat-icon>
+                      <mat-spinner *ngIf="savingBank" diameter="20" class="button-spinner"></mat-spinner>
+                      {{ savingBank ? 'Saving...' : 'Save Bank Details' }}
+                    </button>
+                  </div>
+                </div>
+              </mat-tab>
+
+              <!-- TAB 7: Previous Exams -->
               <mat-tab>
                 <ng-template mat-tab-label>
                   <mat-icon>school</mat-icon>
@@ -629,9 +700,9 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                 <mat-icon>arrow_back</mat-icon>
                 Back
               </button>
-              <span class="tab-counter">Step {{ selectedTabIndex + 1 }} of 7</span>
+              <span class="tab-counter">Step {{ selectedTabIndex + 1 }} of 8</span>
               <button mat-raised-button color="primary" type="button" 
-                [disabled]="selectedTabIndex === 6" 
+                [disabled]="selectedTabIndex === 7" 
                      (click)="onNextTabClick()"
                      class="nav-btn next-btn">
                 Next
@@ -3755,7 +3826,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   }
 
   goToNextTab(targetIndex?: number) {
-    const maxTabIndex = 4;
+    const maxTabIndex = 7;
     if (typeof targetIndex === 'number') {
       this.selectedTabIndex = Math.min(targetIndex, maxTabIndex);
       return;

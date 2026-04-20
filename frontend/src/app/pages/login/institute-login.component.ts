@@ -114,6 +114,31 @@ import { BrandingService } from '../../core/branding.service';
           <span>•</span>
           <a href="#support">{{ i18n.t('contactSupport') }}</a>
         </div>
+
+        <!-- Concern Letter Instructions -->
+        <div class="concern-letter-section">
+          <div class="concern-letter-card">
+            <div class="letter-header">
+              <mat-icon>description</mat-icon>
+              <h3>Letter of Concern Instructions</h3>
+            </div>
+            <div class="letter-content">
+              <p><strong>How to Submit:</strong></p>
+              <ol>
+                <li>Click on "Generate Letter Of Concern" button</li>
+                <li>Download and print the generated letter</li>
+                <li>Print the letter on your college letterhead</li>
+                <li>Sign and stamp the letter by authorized personnel</li>
+                <li>Send the signed letter to: <a href="mailto:contact@hscexam.in" class="email-link"><strong>contact@hscexam.in</strong></a></li>
+              </ol>
+              <p><strong>For any queries, contact us on WhatsApp:</strong></p>
+              <a href="https://wa.me/919922774144" target="_blank" class="whatsapp-link">
+                <mat-icon>whatsapp</mat-icon>
+                +91 99227 74144
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   `,
@@ -193,6 +218,8 @@ import { BrandingService } from '../../core/branding.service';
       justify-content: center;
       align-items: center;
       padding: 2rem;
+      overflow-y: auto;
+      max-height: 100vh;
     }
 
     .login-card {
@@ -281,6 +308,93 @@ import { BrandingService } from '../../core/branding.service';
       margin: 0 0.5rem;
     }
 
+    .concern-letter-section {
+      width: 100%;
+      max-width: 400px;
+      margin-top: 2rem;
+    }
+
+    .concern-letter-card {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .letter-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .letter-header mat-icon {
+      color: #2196f3;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+
+    .letter-header h3 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .letter-content {
+      font-size: 0.85rem;
+      line-height: 1.6;
+      color: #555;
+    }
+
+    .letter-content p {
+      margin: 0.75rem 0;
+    }
+
+    .letter-content ol {
+      margin: 0.75rem 0;
+      padding-left: 1.5rem;
+    }
+
+    .letter-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .email-link {
+      color: #2196f3;
+      text-decoration: none;
+      font-weight: 500;
+      word-break: break-all;
+    }
+
+    .email-link:hover {
+      text-decoration: underline;
+    }
+
+    .whatsapp-link {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #25d366;
+      text-decoration: none;
+      font-weight: 500;
+      margin-top: 0.75rem;
+      transition: opacity 0.2s;
+    }
+
+    .whatsapp-link:hover {
+      opacity: 0.8;
+    }
+
+    .whatsapp-link mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #25d366;
+    }
+
     @media (max-width: 968px) {
       .institute-login-container {
         grid-template-columns: 1fr;
@@ -297,6 +411,10 @@ import { BrandingService } from '../../core/branding.service';
 
       .benefits li {
         font-size: 0.9rem;
+      }
+
+      .concern-letter-card {
+        margin-top: 1.5rem;
       }
     }
 
@@ -315,6 +433,14 @@ import { BrandingService } from '../../core/branding.service';
 
       .login-card {
         max-width: 100%;
+      }
+
+      .concern-letter-card {
+        padding: 1rem;
+      }
+
+      .letter-content {
+        font-size: 0.8rem;
       }
     }
   `]

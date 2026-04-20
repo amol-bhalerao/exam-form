@@ -15,6 +15,13 @@ import { AgGridModule } from 'ag-grid-angular';
 import type { ColDef } from 'ag-grid-community';
 import { API_BASE_URL } from '../../../core/api';
 
+type SubjectOption = {
+  id?: number;
+  code?: string | null;
+  name: string;
+  category?: string | null;
+};
+
 const CASTE_OPTIONS = [
   'OPEN',
   'SC',
@@ -163,10 +170,20 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
             </mat-form-field>
             <mat-form-field appearance="outline">
               <mat-label>Subject Specialization</mat-label>
-              <mat-select formControlName="subjectSpecialization" multiple>
-                <mat-option *ngFor="let subject of availableSubjects()" [value]="subject">{{ subject }}</mat-option>
+              <mat-select formControlName="subjectSpecialization" multiple (openedChange)="onSubjectSelectOpened($event)" panelClass="teacher-subject-panel">
+                <mat-option disabled class="subject-search-option" (click)="$event.stopPropagation()">
+                  <input
+                    matInput
+                    placeholder="Search subject"
+                    [value]="subjectSearchText()"
+                    (input)="onSubjectSearchInput($event)"
+                    (keydown)="$event.stopPropagation()"
+                    (click)="$event.stopPropagation()"
+                  />
+                </mat-option>
+                <mat-option *ngFor="let subject of filteredAvailableSubjects()" [value]="subject.name">{{ subject.code || '-' }} - {{ subject.name }} ({{ subject.category || 'General' }})</mat-option>
               </mat-select>
-              <mat-hint>Select one or more subjects</mat-hint>
+              <mat-hint>Compulsory subjects are auto-selected. You can search and add more.</mat-hint>
             </mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Teacher Type</mat-label><mat-select formControlName="teacherType"><mat-option *ngFor="let type of teacherTypeOptions" [value]="type">{{ type }}</mat-option></mat-select></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Joining Date of This Institute</mat-label><input matInput [matDatepicker]="dojPicker" formControlName="appointmentDate" /><mat-datepicker-toggle matSuffix [for]="dojPicker"></mat-datepicker-toggle><mat-datepicker #dojPicker></mat-datepicker></mat-form-field>
@@ -302,6 +319,27 @@ const MAHARASHTRA_TEACHER_RETIREMENT_AGE = 58;
     .summary-row:last-child { border-bottom: 0; padding-bottom: 0; }
     .summary-row strong { color: #0f172a; font-weight: 700; }
     .summary-empty { color: #64748b; font-size: 0.86rem; }
+    :host ::ng-deep .teacher-subject-panel .subject-search-option.mat-mdc-option.mdc-list-item--disabled {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      cursor: default;
+      min-height: auto;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 6px 8px;
+    }
+    :host ::ng-deep .teacher-subject-panel .subject-search-option .mdc-list-item__primary-text {
+      width: 100%;
+    }
+    :host ::ng-deep .teacher-subject-panel .subject-search-option input {
+      width: 100%;
+      border: 1px solid #dbe4f0;
+      border-radius: 8px;
+      padding: 6px 8px;
+      background: #fff;
+      font-size: 0.88rem;
+      line-height: 1.2;
+    }
     .table-box { width: 100%; height: 380px; margin-top: 10px; border: 1px solid #dbe4f0; border-radius: 10px; overflow: hidden; box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05); }
     .modal { background: white; border-radius: 14px; width: min(680px, calc(100vw - 24px)); max-height: 80vh; overflow: auto; border: 1px solid #dbe4f0; box-shadow: 0 30px 70px rgba(15, 23, 42, 0.24); }
     .form-modal { width: min(1080px, calc(100vw - 24px)); max-height: 90vh; }
@@ -398,7 +436,14 @@ export class InstituteAddTeacherComponent implements OnInit {
   readonly casteOptions = CASTE_OPTIONS;
   readonly designationOptions = DESIGNATION_OPTIONS;
   readonly teacherTypeOptions = TEACHER_TYPE_OPTIONS;
-  readonly availableSubjects = signal<string[]>([]);
+  readonly availableSubjects = signal<SubjectOption[]>([]);
+  readonly subjectSearchText = signal('');
+  readonly filteredAvailableSubjects = computed(() => {
+    const q = this.subjectSearchText().trim().toLowerCase();
+    const subjects = this.availableSubjects();
+    if (!q) return subjects;
+    return subjects.filter((subject) => `${subject.code || ''} ${subject.name} ${subject.category || ''}`.toLowerCase().includes(q));
+  });
   readonly maharashtraRetirementAge = MAHARASHTRA_TEACHER_RETIREMENT_AGE;
   readonly experience = signal('');
   readonly retirementDateDisplay = signal('');
@@ -592,21 +637,58 @@ export class InstituteAddTeacherComponent implements OnInit {
   }
 
   loadSubjects() {
-    this.http.get<{ subjects: Array<{ name?: string | null }> }>(`${API_BASE_URL}/masters/subjects`).subscribe({
+    this.http.get<{ subjects: Array<{ id?: number; code?: string | null; name?: string | null; category?: string | null }> }>(`${API_BASE_URL}/masters/subjects`).subscribe({
       next: (response) => {
-        const subjects = Array.from(
-          new Set(
-            (response?.subjects || [])
-              .map((subject) => String(subject?.name || '').trim())
-              .filter(Boolean)
-          )
-        ).sort((a, b) => a.localeCompare(b));
+        const dedup = new Map<string, SubjectOption>();
+        for (const subject of response?.subjects || []) {
+          const name = String(subject?.name || '').trim();
+          if (!name) continue;
+          const key = `${String(subject?.code || '').trim()}::${name}::${String(subject?.category || '').trim()}`;
+          dedup.set(key, {
+            id: subject?.id,
+            code: subject?.code ?? null,
+            name,
+            category: subject?.category ?? null
+          });
+        }
+        const subjects = [...dedup.values()].sort((a, b) => {
+          const ac = Number(String(a.code || '').trim());
+          const bc = Number(String(b.code || '').trim());
+          if (Number.isFinite(ac) && Number.isFinite(bc)) return ac - bc;
+          if (Number.isFinite(ac)) return -1;
+          if (Number.isFinite(bc)) return 1;
+          return a.name.localeCompare(b.name);
+        });
         this.availableSubjects.set(subjects);
+        this.applyDefaultCompulsorySubjects();
       },
       error: () => {
         this.availableSubjects.set([]);
       }
     });
+  }
+
+  onSubjectSearchInput(event: Event) {
+    const value = (event.target as HTMLInputElement | null)?.value ?? '';
+    this.subjectSearchText.set(value);
+  }
+
+  onSubjectSelectOpened(opened: boolean) {
+    if (!opened) {
+      this.subjectSearchText.set('');
+    }
+  }
+
+  private applyDefaultCompulsorySubjects() {
+    const compulsoryNames = this.availableSubjects()
+      .filter((subject) => String(subject.category || '').trim().toLowerCase().includes('compulsory'))
+      .map((subject) => subject.name);
+
+    if (!compulsoryNames.length) return;
+
+    const current = this.form.controls.subjectSpecialization.value || [];
+    const merged = Array.from(new Set([...current, ...compulsoryNames]));
+    this.form.controls.subjectSpecialization.setValue(merged, { emitEvent: false });
   }
 
   topSubjectLabel(): string {
@@ -712,6 +794,7 @@ export class InstituteAddTeacherComponent implements OnInit {
           lastChiefModeratorCollegeName: existing.lastChiefModeratorCollegeName || '',
           active: true
         });
+        this.applyDefaultCompulsorySubjects();
         this.snackBar.open('Aadhaar history found and prefilled. Please review and update fields as needed.', 'Close', { duration: 2600 });
       },
       error: (err) => {
@@ -810,6 +893,8 @@ export class InstituteAddTeacherComponent implements OnInit {
       lastChiefModeratorCollegeName: '',
       active: true
     });
+    this.applyDefaultCompulsorySubjects();
+    this.subjectSearchText.set('');
   }
 
   onTeacherCellClicked(event: any) {
@@ -853,6 +938,7 @@ export class InstituteAddTeacherComponent implements OnInit {
         lastChiefModeratorCollegeName: teacher.lastChiefModeratorCollegeName ?? '',
         active: teacher.active ?? true
       });
+      this.applyDefaultCompulsorySubjects();
       return;
     }
 

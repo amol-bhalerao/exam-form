@@ -56,12 +56,14 @@ INSERT IGNORE INTO subjects (code, name, category) VALUES
 INSERT IGNORE INTO subjects (code, name, category) VALUES
 ('MHL01', 'Marathi', 'LANGUAGE'),
 ('MHL02', 'Hindi', 'LANGUAGE'),
-('MHL03', 'English', 'LANGUAGE'),
 ('MHL04', 'Sanskrit', 'LANGUAGE'),
 ('MHL05', 'French', 'LANGUAGE'),
 ('MHL06', 'German', 'LANGUAGE'),
 ('MHL07', 'Spanish', 'LANGUAGE'),
 ('MHL08', 'Arabic', 'LANGUAGE');
+
+-- Cleanup: remove English from LANGUAGE category if already present
+DELETE FROM subjects WHERE code = 'MHL03' AND category = 'LANGUAGE';
 
 -- Electives - SCIENCE
 INSERT IGNORE INTO subjects (code, name, category) VALUES
