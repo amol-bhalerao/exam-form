@@ -1,0 +1,408 @@
+<div class="marketing-landing">
+  <!-- Hero Section -->
+  <section class="hero-section" data-animate>
+    <div class="hero-bg"></div>
+    <div class="container hero-content">
+      <div class="hero-left" data-animate>
+        <h1 class="hero-title">HSC परीक्षा व्यवस्थापन प्रणाली</h1>
+        <p class="hero-subtitle">Digital Exam Registration & Management Portal</p>
+        <p class="hero-description">
+          एक संपूर्ण डिजिटल मंच जो HSC परीक्षा नोंदणी, व्यवस्थापन आणि निरीक्षण सुलभ, वेगवान आणि पारदर्शक बनवतो.
+        </p>
+        <div class="hero-cta">
+          <button mat-raised-button color="primary" (click)="navigateTo('/google-login')" class="cta-btn">
+            <mat-icon>arrow_forward</mat-icon>
+            विद्यार्थी लॉगिन
+          </button>
+          <button mat-stroked-button (click)="scrollToSection('benefits')" class="cta-btn-secondary">
+            <mat-icon>info</mat-icon>
+            अधिक जाणून घ्या
+          </button>
+        </div>
+      </div>
+      <div class="hero-right" data-animate>
+        <div class="floating-card">
+          <div class="floating-icon">
+            <mat-icon>school</mat-icon>
+          </div>
+        </div>
+        <div class="floating-card card-2">
+          <mat-icon>security</mat-icon>
+        </div>
+        <div class="floating-card card-3">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Key Benefits Section -->
+  <section id="benefits" class="benefits-section" data-animate>
+    <div class="container">
+      <h2 class="section-title">Key Benefits</h2>
+      <p class="section-subtitle">Make your exam journey simple and secure</p>
+      
+      <div class="benefits-grid">
+        <div class="benefit-card" data-animate>
+          <div class="icon-wrapper">
+            <mat-icon class="benefit-icon">speed</mat-icon>
+          </div>
+          <h3>वेगवान नोंदणी </h3>
+          <p>5 मिनिटांत संपूर्ण परीक्षा नोंदणी पूर्ण करा. Google Sign-In सह तात्क्षणिक प्रमाणीकरण.</p>
+        </div>
+
+        <div class="benefit-card" data-animate>
+          <div class="icon-wrapper">
+            <mat-icon class="benefit-icon">security</mat-icon>
+          </div>
+          <h3>सुरक्षित डेटा</h3>
+          <p>Enterprise‑grade security, OAuth authentication, encrypted storage.</p>
+        </div>
+
+        <div class="benefit-card" data-animate>
+          <div class="icon-wrapper">
+            <mat-icon class="benefit-icon">language</mat-icon>
+          </div>
+          <h3>बहुभाषिक समर्थन</h3>
+          <p>मराठी आणि इंग्रजी, दोन्ही भाषांमध्ये सर्व सुविधा उपलब्ध आहेत.</p>
+        </div>
+
+        <div class="benefit-card" data-animate>
+          <div class="icon-wrapper">
+            <mat-icon class="benefit-icon">print</mat-icon>
+          </div>
+          <h3>फॉर्म प्रिंट</h3>
+          <p>एका क्लिकवर परीक्षा फॉर्म व पेमेंट पावती, आणि सर्व प्रकारचे रिपोर्ट.</p>
+        </div>
+
+        <div class="benefit-card" data-animate>
+          <div class="icon-wrapper">
+            <mat-icon class="benefit-icon">trending_up</mat-icon>
+          </div>
+          <h3>रिअल-टाइम अपडेट्स</h3>
+          <p>लॉगीन केल्यास सर्व स्टेटस अपडेट्स उपलब्ध असतात.</p>
+        </div>
+
+        <div class="benefit-card" data-animate>
+          <div class="icon-wrapper">
+            <mat-icon class="benefit-icon">support_agent</mat-icon>
+          </div>
+          <h3>24/7 सेवा</h3>
+          <p>WhatsApp, ईमेल, आणि फोन वरून आम्ही आपल्यासाठी 24 X 7 उपलब्ध आहोत.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- User Roles Section -->
+  <section id="roles" class="roles-section" data-animate>
+    <div class="container">
+      <h2 class="section-title">User Roles</h2>
+      <p class="section-subtitle">Special features for each Role</p>
+
+      <mat-tab-group class="roles-tabs">
+        <!-- STUDENT ROLE -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>school</mat-icon>
+            <span>विद्यार्थी</span>
+          </ng-template>
+          <div class="role-content">
+            <div class="role-header">
+              <h3>विद्यार्थी पोर्टल</h3>
+              <p class="role-description">HSC परीक्षार्थीयांसाठी संपूर्ण समाधान</p>
+            </div>
+            <div class="role-features">
+              <div class="feature-group">
+                <h4>⭐ मुख्य सुविधाएं</h4>
+                <ul>
+                  <li><mat-icon>check_circle</mat-icon> Google Sign-In सह सोपी नोंदणी</li>
+                  <li><mat-icon>check_circle</mat-icon> परीक्षा फॉर्म भरणे व कॉलेजमध्ये जमा करणे</li>
+                  <li><mat-icon>check_circle</mat-icon> व्यक्तिगत माहिती व्यवस्थापन</li>
+                  <li><mat-icon>check_circle</mat-icon> बँक तपशील जोडणे</li>
+                  <li><mat-icon>check_circle</mat-icon> आधार, SSC आणि मागील परीक्षेची माहिती</li>
+                  <li><mat-icon>check_circle</mat-icon> विषय निवड</li>
+                  <li><mat-icon>check_circle</mat-icon> फोटो आणि स्वाक्षरी अपलोड करणे</li>
+                  <li><mat-icon>check_circle</mat-icon> आवेदन स्थिती ट्रॅकिंग</li>
+                </ul>
+              </div>
+              <div class="feature-group">
+                <h4>🎯 विद्यार्थीयांचे लाभ</h4>
+                <ul>
+                  <li>⚡ 5 मिनिटांत संपूर्ण नोंदणी</li>
+                  <li>📱 कधीही फॉर्म व्यवस्थापित करा</li>
+                  <li>🔔 तात्काळ सूचना आणि अपडेट्स</li>
+                  <li>📄 व्यावहारिक प्रिंट फॉर्मेटिंग</li>
+                  <li>🔐 संपूर्ण डेटा सुरक्षा</li>
+                  <li>💳 सुरक्षित ऑनलाइन पेमेंट</li>
+                </ul>
+              </div>
+            </div>
+            <div class="role-cta">
+              <button mat-raised-button color="primary" (click)="navigateTo('/google-login')">
+                <mat-icon>arrow_forward</mat-icon>
+                विद्यार्थी लॉगिन शुरू करा
+              </button>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- INSTITUTE ROLE -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>apartment</mat-icon>
+            <span>इन्स्टिट्यूट</span>
+          </ng-template>
+          <div class="role-content">
+            <div class="role-header">
+              <h3>इन्स्टिट्यूट पोर्टल</h3>
+              <p class="role-description">कॉलेज आणि शाळांसाठी संपूर्ण व्यवस्थापन समाधान</p>
+            </div>
+            <div class="role-features">
+              <div class="feature-group">
+                <h4>⭐ मुख्य सुविधाएं</h4>
+                <ul>
+                  <li><mat-icon>check_circle</mat-icon> इन्स्टिट्यूट माहिती व्यवस्थापन</li>
+                  <li><mat-icon>check_circle</mat-icon> सर्व विद्यार्थी आवेदन एक जागेवर</li>
+                  <li><mat-icon>check_circle</mat-icon> Application verification and modification</li>
+                  <li><mat-icon>check_circle</mat-icon> Streams व विषयांचे व्यवस्थापन</li>
+                  <li><mat-icon>check_circle</mat-icon> शिक्षकांचे आणि कर्मचाऱ्यांचे व्यवस्थापन</li>
+                  <li><mat-icon>check_circle</mat-icon> विस्तृत रिपोर्ट आणि विश्लेषण</li>
+                  <li><mat-icon>check_circle</mat-icon> विद्यार्थी डेटा निर्यात</li>
+                  <li><mat-icon>check_circle</mat-icon> परीक्षा क्षमता व्यवस्थापन</li>
+                </ul>
+              </div>
+              <div class="feature-group">
+                <h4>🎯Institute Benefits</h4>
+                <ul>
+                  <li>📊 All applications in one place</li>
+                  <li>✅ Fast verification process</li>
+                  <li>📈 Student data analysis</li>
+                  <li>👥 Employee management</li>
+                  <li>🔐 Enterprise-grade security</li>
+                  <li>📱 Mobile-responsive interface</li>
+                </ul>
+              </div>
+            </div>
+            <div class="role-cta">
+              <button mat-raised-button color="accent" (click)="navigateTo('/institute-login')">
+                <mat-icon>arrow_forward</mat-icon>
+                इन्स्टिट्यूट लॉगिन शुरू करा
+              </button>
+            </div>
+          </div>
+        </mat-tab>
+
+        <!-- BOARD ROLE -->
+        <mat-tab>
+          <ng-template mat-tab-label>
+            <mat-icon>admin_panel_settings</mat-icon>
+            <span>बोर्ड</span>
+          </ng-template>
+          <div class="role-content">
+            <div class="role-header">
+              <h3>बोर्ड पोर्टल</h3>
+              <p class="role-description">परीक्षा व्यवस्थापन करण्यासाठीचे संपूर्ण समाधान</p>
+            </div>
+            <div class="role-features">
+              <div class="feature-group">
+                <h4>⭐ प्रमुख सुविधा</h4>
+                <ul>
+                  <li><mat-icon>check_circle</mat-icon> परीक्षा निर्माण व व्यवस्थापन</li>
+                  <li><mat-icon>check_circle</mat-icon> Streams आणि विषयांचे व्यवस्थापन</li>
+                  <li><mat-icon>check_circle</mat-icon> Dashboard for all application</li>
+                  <li><mat-icon>check_circle</mat-icon> Application verification and modification</li>
+                  <li><mat-icon>check_circle</mat-icon> नवीन इन्स्टिट्यूट नोंदणी</li>
+                  <li><mat-icon>check_circle</mat-icon> वापरकर्ता आणि भूमिका व्यवस्थापन</li>
+                  <li><mat-icon>check_circle</mat-icon> विस्तृत रिपोर्टिंग आणि विश्लेषण</li>
+                  <li><mat-icon>check_circle</mat-icon> ऑडिट व्यवस्थापन</li>
+                </ul>
+              </div>
+              <div class="feature-group">
+                <h4>🎯 बोर्डचे लाभ</h4>
+                <ul>
+                  <li>🎯 सर्व माहितींचे एकेत्रीत संकलन व ग्राफिकल मांडणी</li>
+                  <li>📊 संपूर्ण रियल-टाइम विश्लेषण</li>
+                  <li>✅ वेगवान व रियल-टाइम अपडेट्स</li>
+                  <li>🔍 व्यापक ऑडिट ट्रॅकिंग</li>
+                  <li>📈 डेटा-व्यवस्थापन</li>
+                  <li>🤝 रिपोर्ट्स व अनुसंधान</li>
+                </ul>
+              </div>
+            </div>
+            <div class="role-cta">
+              <button mat-raised-button color="warn" (click)="navigateTo('/board-login')">
+                <mat-icon>arrow_forward</mat-icon>
+                बोर्ड लॉगिन शुरू करा
+              </button>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </section>
+
+  <!-- How It Works Section -->
+  <section id="how-it-works" class="how-it-works" data-animate>
+    <div class="container">
+      <h2 class="section-title">कसे काम करते</h2>
+      <p class="section-subtitle">सरल 4 चरणांमध्ये शुरू करा</p>
+      
+      <div class="steps-grid">
+        <div class="step-card" data-animate>
+          <div class="step-number">1</div>
+          <h3>लॉगिन करा</h3>
+          <p>आपली भूमिका निवडा आणि लॉगिन करा. विद्यार्थीयांसाठी Google Sign-In उपलब्ध आहे.</p>
+          <div class="step-icon">
+            <mat-icon>login</mat-icon>
+          </div>
+        </div>
+
+        <div class="step-card" data-animate>
+          <div class="step-number">2</div>
+          <h3>विवरण भरा</h3>
+          <p>आपली व्यक्तिगत माहिती, परीक्षा तपशील आणि विषय निवड करा.</p>
+          <div class="step-icon">
+            <mat-icon>edit_note</mat-icon>
+          </div>
+        </div>
+
+        <div class="step-card" data-animate>
+          <div class="step-number">3</div>
+          <h3>सबमिट करा</h3>
+          <p>फॉर्म सत्यापित करा आणि सबमिट करा व फॉर्म ची प्रिंट घ्या.</p>
+          <div class="step-icon">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+        </div>
+
+        <div class="step-card" data-animate>
+          <div class="step-number">4</div>
+          <h3>Verification</h3>
+          <p>आपल्या फॉर्म ची प्रिंट कॉलेजमध्ये नेऊन तपासुन घ्या.</p>
+          <div class="step-icon">
+            <mat-icon>track_changes</mat-icon>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section id="faq" class="faq-section" data-animate>
+    <div class="container">
+      <h2 class="section-title">वारंवार विचारले जाणारे प्रश्न</h2>
+      <p class="section-subtitle">आपल्या सर्व प्रश्नांची उत्तरे येथे आहेत</p>
+
+      <mat-accordion class="faq-accordion">
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-icon>help_outline</mat-icon>
+            <span>यशस्वीरीत्या नोंदणी करण्यासाठी काही विशेष आवश्यकता आहेत का?  </span>
+          </mat-expansion-panel-header>
+          <p>फक्त Google Sign‑In वापरून लॉगिन करा, Aadhaar/SSC माहिती, फोटो आणि स्वाक्षरी अपलोड करा. याशिवाय कोणतीही अतिरिक्त अट नाही.</p>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-icon>help_outline</mat-icon>
+            <span>फॉर्म जमा केल्यानंतर मी त्याचे संपादन करू शकतो का?  </span>
+          </mat-expansion-panel-header>
+          <p>होय, तुम्ही फॉर्म सबमिट केल्यानंतर “Edit Application” पर्यायाद्वारे मर्यादित बदल करू शकता. मात्र, अंतिम सबमिशन झाल्यानंतर बदल शक्य नाहीत.</p>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-icon>help_outline</mat-icon>
+            <span>जर मी प्रवेश परीक्षेची माहिती विसरलो तर काय करावे?</span>
+          </mat-expansion-panel-header>
+          <p>चिंता करू नका. आप्पण आपल्या शाळा किंवा कॉलेजला हे माहिती सत्यापित करू शकता. आमचा समर्थन दल आपल्याला मिनिटांत मदत करू शकतो.</p>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-icon>help_outline</mat-icon>
+            <span>आवेदन शुल्क आहे का?  </span>
+          </mat-expansion-panel-header>
+          <p>होय, प्रत्येक अर्जासाठी निश्चित शुल्क आहे. सुरक्षित online payment gateway द्वारे तुम्ही ते भरू शकता.</p>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-icon>help_outline</mat-icon>
+            <span>मी आवेदन स्वीकार न झाल्यास काय करावे?  </span>
+          </mat-expansion-panel-header>
+          <p>अस्वीकृतीचे कारण पाहण्यासाठी आपल्या आवेदनाची स्थिती तपासा. आपण आवेदन पुन्हा जमा करू शकता किंवा आमच्या समर्थन दलाला संपर्क करू शकता.</p>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel>
+          <mat-expansion-panel-header>
+            <mat-icon>help_outline</mat-icon>
+            <span>संस्थानसाठी नोंदणी कसे करावी?</span>
+          </mat-expansion-panel-header>
+          <p>संस्थाला "संस्थान लॉगिन" वर जाणे, "अधिकृत पत्र" तयार करणे, आपल्या संस्थाच्या लेटरहेडवर प्रिंट करणे, हस्ताक्षर करणे आणि contact&#64;hscexam.in ला पाठवणे आवश्यक आहे.</p>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="contact-section" data-animate>
+    <div class="container">
+      <h2 class="section-title">आमच्याशी संपर्क साधा</h2>
+      <p class="section-subtitle">आपल्या सर्व प्रश्नांसाठी आम्ही येथे आहोत</p>
+
+      <div class="contact-grid">
+        <div class="contact-card" data-animate>
+          <mat-icon>email</mat-icon>
+          <h3>ईमेल</h3>
+          <p><a href="mailto:contact@hscexam.in">contact&#64;hscexam.in</a></p>
+        </div>
+
+        <div class="contact-card" data-animate>
+          <mat-icon>phone</mat-icon>
+          <h3>फोन</h3>
+          <p><a href="tel:+919922774144">+91 99227 74144</a></p>
+          <p>सोमवार - रविवार: 9AM - 7PM IST</p>
+        </div>
+
+        <div class="contact-card" data-animate>
+          <mat-icon>whatsapp</mat-icon>
+          <h3>WhatsApp</h3>
+          <p><a href="https://wa.me/919922774144" target="_blank">+91 99227 74144</a></p>
+          <p>तात्काळ समर्थनासाठी संपर्क करा</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Final CTA Section -->
+  <section class="final-cta" data-animate>
+    <div class="container">
+      <h2>आताच सुरु करा</h2>
+      <p>आपल्या HSC परीक्षा आवेदन आजच जमा करा</p>
+      <div class="cta-divider"></div>
+      <div class="final-cta-buttons">
+        <button mat-raised-button color="primary" class="large-btn" (click)="navigateTo('/google-login')">
+          <mat-icon>school</mat-icon>
+          विद्यार्थी लॉगिन
+        </button>
+        <button mat-raised-button color="accent" class="large-btn" (click)="navigateTo('/institute-login')">
+          <mat-icon>apartment</mat-icon>
+          संस्थान लॉगिन
+        </button>
+        <button mat-raised-button color="warn" class="large-btn" (click)="navigateTo('/board-login')">
+          <mat-icon>admin_panel_settings</mat-icon>
+          बोर्ड लॉगिन
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 HSC परीक्षा व्यवस्थापन प्रणाली. सर्व अधिकार सुरक्षित.</p>
+    </div>
+  </footer>
+</div>

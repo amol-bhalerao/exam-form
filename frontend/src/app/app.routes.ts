@@ -53,6 +53,7 @@ import { HealthCheckComponent } from './pages/health/health-check.component';
 
 export const routes: Routes = [
   { path: '', component: LandingEnhancedComponent },
+  { path: 'marketing', component: MarketingLandingComponent, data: { title: 'About HSC Exam Portal' } },
   
   // Public Health Check (no auth required)
   { path: 'health', component: HealthCheckComponent, data: { title: 'System Health Monitor' } },

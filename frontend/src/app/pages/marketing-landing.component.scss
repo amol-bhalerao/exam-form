@@ -1,0 +1,995 @@
+// ===== Variables & Colors =====
+$primary-color: #667eea;
+$secondary-color: #764ba2;
+$accent-color: #f093fb;
+$success-color: #4caf50;
+$warning-color: #ff9800;
+$danger-color: #f44336;
+$dark-text: #1a1a1a;
+$light-text: #666666;
+$light-bg: #f5f5f5;
+$white: #ffffff;
+
+// ===== Global Styles =====
+.marketing-landing {
+  width: 100%;
+  overflow: hidden;
+  background: $white;
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  width: 100%;
+}
+
+// ===== Hero Section =====
+.hero-section {
+  position: relative;
+  background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+  color: $white;
+  padding: 8rem 2rem;
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: rgba($white, 0.05);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -10%;
+    width: 600px;
+    height: 600px;
+    background: rgba($white, 0.03);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite reverse;
+  }
+}
+
+.hero-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.hero-left {
+  animation: slideInLeft 0.8s ease-out;
+}
+
+.hero-title {
+  font-size: 3.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  line-height: 1.2;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.hero-subtitle {
+  font-size: 1.6rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.95;
+  font-weight: 600;
+}
+
+.hero-description {
+  font-size: 1.1rem;
+  margin-bottom: 2.5rem;
+  opacity: 0.9;
+  line-height: 1.8;
+  max-width: 500px;
+}
+
+.hero-cta {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+
+  .cta-btn,
+  .cta-btn-secondary {
+    padding: 1rem 2rem !important;
+    font-size: 1.05rem !important;
+    font-weight: 600;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+
+    mat-icon {
+      margin-right: 0.5rem;
+    }
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .cta-btn-secondary {
+    color: $white;
+    border-color: $white;
+
+    &:hover {
+      background: rgba($white, 0.2);
+    }
+  }
+}
+
+.hero-right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  animation: slideInRight 0.8s ease-out;
+  height: 400px;
+}
+
+.floating-card {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  background: rgba($white, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: float 4s ease-in-out infinite;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba($white, 0.2);
+
+  mat-icon {
+    font-size: 60px !important;
+    width: 60px !important;
+    height: 60px !important;
+    color: rgba($white, 0.9);
+  }
+
+  &.card-2 {
+    top: 50%;
+    left: 20%;
+    animation-delay: 0.5s;
+  }
+
+  &.card-3 {
+    bottom: 10%;
+    right: 15%;
+    animation-delay: 1s;
+  }
+}
+
+// ===== Benefits Section =====
+.benefits-section {
+  padding: 6rem 2rem;
+  background: $white;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, $primary-color, transparent);
+  }
+}
+
+.section-title {
+  text-align: center;
+  font-size: 2.8rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  color: $dark-text;
+  position: relative;
+  display: inline-block;
+  width: 100%;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 4px;
+    background: linear-gradient(90deg, $primary-color, $secondary-color);
+    border-radius: 2px;
+  }
+}
+
+.section-subtitle {
+  text-align: center;
+  font-size: 1.2rem;
+  color: $light-text;
+  margin-bottom: 4rem;
+  margin-top: 2rem;
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2.5rem;
+  margin-top: 3rem;
+}
+
+.benefit-card {
+  background: $white;
+  padding: 2.5rem;
+  border-radius: 16px;
+  text-align: center;
+  border: 1px solid #f0f0f0;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, $primary-color, $secondary-color);
+    transition: left 0.4s ease;
+  }
+
+  &:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba($primary-color, 0.15);
+    border-color: $primary-color;
+
+    &::before {
+      left: 0;
+    }
+
+    .icon-wrapper {
+      transform: scale(1.1) rotateY(10deg);
+    }
+  }
+
+  &.animate-in {
+    animation: fadeInUp 0.6s ease-out;
+  }
+}
+
+.icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 70px;
+  height: 70px;
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+  border-radius: 16px;
+  margin: 0 auto 1.5rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba($primary-color, 0.25);
+}
+
+.benefit-icon {
+  font-size: 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+  color: $white;
+}
+
+.benefit-card h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
+  color: $dark-text;
+}
+
+.benefit-card p {
+  color: $light-text;
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+
+// ===== Roles Section =====
+.roles-section {
+  padding: 6rem 2rem;
+  background: linear-gradient(180deg, #fafafa 0%, $light-bg 100%);
+
+  &.animate-in {
+    animation: fadeInUp 0.8s ease-out;
+  }
+}
+
+.roles-tabs {
+  background: $white;
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  margin-top: 3rem;
+
+  ::ng-deep .mdc-tab {
+    flex: 1;
+    min-width: 150px !important;
+
+    .mdc-tab__text-label {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: $light-text;
+      transition: color 0.3s ease;
+    }
+
+    &.mdc-tab--active .mdc-tab__text-label {
+      color: $primary-color;
+    }
+  }
+
+  ::ng-deep .mdc-tab-indicator__content--underline {
+    border-color: $primary-color;
+  }
+}
+
+.role-content {
+  padding: 3rem 0;
+
+  &.animate-in {
+    animation: fadeIn 0.6s ease-out;
+  }
+}
+
+.role-header {
+  margin-bottom: 2.5rem;
+  text-align: center;
+
+  h3 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: $dark-text;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.role-description {
+  font-size: 1.2rem;
+  color: $light-text;
+  margin-top: 0.5rem;
+}
+
+.role-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.feature-group {
+  h4 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: $primary-color;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  li {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    color: $light-text;
+    line-height: 1.6;
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: $primary-color;
+      transform: translateX(5px);
+    }
+
+    mat-icon {
+      color: $success-color;
+      flex-shrink: 0;
+      font-size: 20px !important;
+      width: 20px !important;
+      height: 20px !important;
+      margin-top: 2px;
+    }
+  }
+}
+
+.role-cta {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e0e0e0;
+
+  button {
+    padding: 1rem 2.5rem !important;
+    font-size: 1.05rem !important;
+    font-weight: 600;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+// ===== How It Works Section =====
+.how-it-works {
+  padding: 6rem 2rem;
+  background: $white;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, $secondary-color, transparent);
+  }
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 2rem;
+  margin-top: 3rem;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 80px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, $primary-color, $secondary-color);
+    opacity: 0.3;
+    z-index: 0;
+
+    @media (max-width: 768px) {
+      display: none;
+    }
+  }
+}
+
+.step-card {
+  background: linear-gradient(135deg, rgba($primary-color, 0.08) 0%, rgba($secondary-color, 0.08) 100%);
+  padding: 2.5rem;
+  border-radius: 16px;
+  text-align: center;
+  border: 2px solid transparent;
+  transition: all 0.4s ease;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    border-color: $primary-color;
+    box-shadow: 0 15px 35px rgba($primary-color, 0.15);
+    transform: translateY(-8px);
+
+    .step-icon {
+      transform: scale(1.15) rotate(10deg);
+      background: linear-gradient(135deg, $primary-color, $secondary-color);
+      color: $white;
+    }
+  }
+
+  &.animate-in {
+    animation: fadeInUp 0.6s ease-out;
+  }
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, $primary-color, $secondary-color);
+  color: $white;
+  border-radius: 50%;
+  font-size: 1.8rem;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 20px rgba($primary-color, 0.25);
+}
+
+.step-icon {
+  width: 80px;
+  height: 80px;
+  background: #f0f0f0;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.5rem auto 1rem;
+  transition: all 0.3s ease;
+  color: $primary-color;
+
+  mat-icon {
+    font-size: 40px !important;
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
+
+.step-card h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: $dark-text;
+  margin-bottom: 0.75rem;
+}
+
+.step-card p {
+  color: $light-text;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+// ===== FAQ Section =====
+.faq-section {
+  padding: 6rem 2rem;
+  background: linear-gradient(180deg, #f9f9f9 0%, $light-bg 100%);
+}
+
+.faq-accordion {
+  max-width: 900px;
+  margin: 3rem auto 0;
+
+  ::ng-deep mat-expansion-panel {
+    margin-bottom: 1rem !important;
+    border-radius: 12px !important;
+    overflow: hidden !important;
+
+    &.mat-expanded {
+      box-shadow: 0 8px 20px rgba($primary-color, 0.15) !important;
+    }
+
+    .mat-expansion-panel-header {
+      padding: 0 2rem;
+      height: 70px;
+      background: $white;
+      border-bottom: none !important;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: rgba($primary-color, 0.05);
+      }
+
+      mat-icon {
+        margin-right: 1rem;
+        color: $primary-color;
+        transition: transform 0.3s ease;
+      }
+
+      span {
+        font-weight: 600;
+        color: $dark-text;
+        font-size: 1rem;
+      }
+    }
+
+    .mat-expansion-panel-body {
+      padding: 2rem;
+      background: $white;
+      color: $light-text;
+      line-height: 1.8;
+    }
+  }
+}
+
+// ===== Contact Section =====
+.contact-section {
+  padding: 6rem 2rem;
+  background: $white;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, $primary-color, transparent);
+  }
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 2.5rem;
+  margin-top: 3rem;
+}
+
+.contact-card {
+  background: linear-gradient(135deg, rgba($primary-color, 0.1) 0%, rgba($secondary-color, 0.1) 100%);
+  padding: 2.5rem;
+  border-radius: 16px;
+  text-align: center;
+  transition: all 0.4s ease;
+  border: 1px solid rgba($primary-color, 0.1);
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba($primary-color, 0.2);
+    border-color: $primary-color;
+
+    mat-icon {
+      transform: scale(1.2) rotate(10deg);
+    }
+  }
+
+  &.animate-in {
+    animation: fadeInUp 0.6s ease-out;
+  }
+
+  mat-icon {
+    font-size: 50px !important;
+    width: 50px !important;
+    height: 50px !important;
+    color: $primary-color;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: $dark-text;
+    margin-bottom: 0.75rem;
+  }
+
+  p {
+    color: $light-text;
+    margin: 0.5rem 0;
+    font-size: 0.95rem;
+
+    a {
+      color: $primary-color;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s ease;
+
+      &:hover {
+        text-decoration: underline;
+        color: $secondary-color;
+      }
+    }
+  }
+}
+
+// ===== Final CTA Section =====
+.final-cta {
+  background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+  color: $white;
+  padding: 6rem 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 400px;
+    height: 400px;
+    background: rgba($white, 0.05);
+    border-radius: 50%;
+    animation: float 6s ease-in-out infinite;
+    z-index: 0;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -50%;
+    left: -10%;
+    width: 500px;
+    height: 500px;
+    background: rgba($white, 0.03);
+    border-radius: 50%;
+    animation: float 8s ease-in-out infinite reverse;
+    z-index: 0;
+  }
+
+  &.animate-in {
+    animation: fadeInUp 0.8s ease-out;
+  }
+
+  h2 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+    position: relative;
+    z-index: 1;
+  }
+}
+
+.cta-divider {
+  width: 80px;
+  height: 4px;
+  background: rgba($white, 0.5);
+  border-radius: 2px;
+  margin: 1.5rem auto 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.final-cta-buttons {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.large-btn {
+  padding: 1.2rem 2.5rem !important;
+  font-size: 1.1rem !important;
+  font-weight: 700;
+  border-radius: 50px;
+  min-width: 220px;
+  transition: all 0.4s ease;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  }
+
+  mat-icon {
+    margin-right: 0.5rem;
+  }
+}
+
+// ===== Footer =====
+.footer {
+  background: $dark-text;
+  color: $white;
+  padding: 2rem;
+  text-align: center;
+  border-top: 1px solid #333;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+// ===== Animations =====
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+// ===== Responsive Design =====
+@media (max-width: 1024px) {
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .hero-right {
+    height: 300px;
+    margin-top: 2rem;
+  }
+
+  .hero-title {
+    font-size: 2.5rem;
+  }
+
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .role-features {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero-section {
+    padding: 4rem 1.5rem;
+    min-height: auto;
+  }
+
+  .hero-title {
+    font-size: 2rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.2rem;
+  }
+
+  .hero-description {
+    font-size: 1rem;
+  }
+
+  .hero-cta {
+    flex-direction: column;
+    width: 100%;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .hero-right {
+    display: none;
+  }
+
+  .section-title {
+    font-size: 1.8rem;
+
+    &::after {
+      width: 60px;
+    }
+  }
+
+  .benefits-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .steps-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+
+  .final-cta-buttons {
+    flex-direction: column;
+
+    .large-btn {
+      width: 100%;
+      min-width: unset;
+    }
+  }
+
+  .faq-accordion {
+    ::ng-deep .mat-expansion-panel-header {
+      padding: 0 1rem !important;
+      height: auto !important;
+      min-height: 60px;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 3rem 1rem;
+  }
+
+  .hero-title {
+    font-size: 1.6rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+
+  .section-title {
+    font-size: 1.5rem;
+  }
+
+  .container {
+    padding: 0 1rem;
+  }
+
+  .benefit-card {
+    padding: 1.5rem;
+  }
+
+  .step-card {
+    padding: 1.5rem;
+  }
+
+  .role-features {
+    gap: 1rem;
+  }
+
+  .final-cta h2 {
+    font-size: 1.8rem;
+  }
+
+  .final-cta p {
+    font-size: 1rem;
+  }
+
+  .cta-btn,
+  .cta-btn-secondary {
+    padding: 0.8rem 1.2rem !important;
+    font-size: 0.9rem !important;
+  }
+}
