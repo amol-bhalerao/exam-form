@@ -136,7 +136,10 @@ import { rateLimiter } from '../../core/rate-limiter';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background:
+        radial-gradient(circle at 12% 14%, rgba(242, 169, 59, 0.32), transparent 28%),
+        radial-gradient(circle at 88% 16%, rgba(93, 183, 159, 0.26), transparent 30%),
+        linear-gradient(135deg, #102a43 0%, #0f5f6f 58%, #7a4b17 100%);
       position: relative;
       overflow: hidden;
       padding: 20px;
@@ -195,7 +198,7 @@ import { rateLimiter } from '../../core/rate-limiter';
     .login-content {
       position: relative;
       z-index: 10;
-      max-width: 600px;
+      max-width: 680px;
       width: 100%;
       animation: slideUp 0.6s ease-out;
     }
@@ -214,7 +217,7 @@ import { rateLimiter } from '../../core/rate-limiter';
     .board-branding {
       text-align: center;
       color: white;
-      margin-bottom: 30px;
+      margin-bottom: 24px;
       animation: zoomIn 0.8s ease-out;
     }
 
@@ -250,9 +253,12 @@ import { rateLimiter } from '../../core/rate-limiter';
     }
 
     .login-card {
-      border-radius: 12px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+      border-radius: 28px;
+      box-shadow: 0 34px 90px rgba(0, 0, 0, 0.24);
       margin-bottom: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
       animation: slideIn 0.7s ease-out 0.2s both;
     }
 
@@ -276,11 +282,13 @@ import { rateLimiter } from '../../core/rate-limiter';
 
     mat-card-title {
       font-size: 1.5rem;
-      color: #333;
+      color: #102033;
+      font-weight: 900;
+      letter-spacing: -0.035em;
     }
 
     mat-card-subtitle {
-      color: #999;
+      color: #58677a;
       font-size: 0.9rem;
     }
 
@@ -379,8 +387,8 @@ import { rateLimiter } from '../../core/rate-limiter';
     }
 
     .info-box {
-      background: #f0f4ff;
-      border-left: 4px solid #667eea;
+      background: #eef7f5;
+      border-left: 4px solid #f2a93b;
       padding: 16px;
       border-radius: 6px;
       margin: 20px 0;
@@ -389,19 +397,19 @@ import { rateLimiter } from '../../core/rate-limiter';
     }
 
     .info-icon {
-      color: #667eea;
+      color: #0f5f6f;
       flex-shrink: 0;
     }
 
     .info-content h3 {
       margin: 0 0 8px;
-      color: #333;
+      color: #102033;
       font-size: 1rem;
     }
 
     .info-content p {
       margin: 4px 0;
-      color: #666;
+      color: #58677a;
       font-size: 0.85rem;
       line-height: 1.4;
     }
@@ -423,7 +431,7 @@ import { rateLimiter } from '../../core/rate-limiter';
       justify-content: center;
       gap: 6px;
       margin: 0;
-      color: #666;
+      color: #58677a;
       font-size: 0.85rem;
     }
 
@@ -432,7 +440,7 @@ import { rateLimiter } from '../../core/rate-limiter';
       height: 18px;
       font-size: 18px;
       line-height: 18px;
-      color: #4caf50;
+      color: #1b7f5a;
     }
 
     /* Features Section */
@@ -455,12 +463,12 @@ import { rateLimiter } from '../../core/rate-limiter';
     }
 
     .feature-card {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 250, 241, 0.14);
       backdrop-filter: blur(10px);
       padding: 16px;
-      border-radius: 8px;
+      border-radius: 18px;
       text-align: center;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.24);
       transition: all 0.3s ease;
     }
 

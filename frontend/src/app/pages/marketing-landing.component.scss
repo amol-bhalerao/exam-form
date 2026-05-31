@@ -1,20 +1,20 @@
 // ===== Variables & Colors =====
-$primary-color: #667eea;
-$secondary-color: #764ba2;
-$accent-color: #f093fb;
+$primary-color: #0f5f6f;
+$secondary-color: #102a43;
+$accent-color: #f2a93b;
 $success-color: #4caf50;
 $warning-color: #ff9800;
 $danger-color: #f44336;
 $dark-text: #1a1a1a;
 $light-text: #666666;
-$light-bg: #f5f5f5;
+$light-bg: #f8f1e4;
 $white: #ffffff;
 
 // ===== Global Styles =====
 .marketing-landing {
   width: 100%;
   overflow: hidden;
-  background: $white;
+  background: #fffaf1;
 
   * {
     box-sizing: border-box;
@@ -31,7 +31,10 @@ $white: #ffffff;
 // ===== Hero Section =====
 .hero-section {
   position: relative;
-  background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+  background:
+    radial-gradient(circle at 14% 18%, rgba(242, 169, 59, 0.32), transparent 28%),
+    radial-gradient(circle at 86% 16%, rgba(93, 183, 159, 0.24), transparent 30%),
+    linear-gradient(135deg, $secondary-color 0%, $primary-color 56%, #7a4b17 100%);
   color: $white;
   padding: 8rem 2rem;
   min-height: 90vh;
@@ -182,7 +185,9 @@ $white: #ffffff;
 // ===== Benefits Section =====
 .benefits-section {
   padding: 6rem 2rem;
-  background: $white;
+  background:
+    radial-gradient(circle at top left, rgba(242, 169, 59, 0.08), transparent 26%),
+    linear-gradient(180deg, #fffaf1 0%, #ffffff 100%);
   position: relative;
 
   &::before {
@@ -237,11 +242,11 @@ $white: #ffffff;
 .benefit-card {
   background: $white;
   padding: 2.5rem;
-  border-radius: 16px;
+  border-radius: 24px;
   text-align: center;
   border: 1px solid #f0f0f0;
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 20px 48px rgba(16, 42, 67, 0.1);
   position: relative;
   overflow: hidden;
 
@@ -282,7 +287,7 @@ $white: #ffffff;
   width: 70px;
   height: 70px;
   background: linear-gradient(135deg, $primary-color, $secondary-color);
-  border-radius: 16px;
+  border-radius: 20px;
   margin: 0 auto 1.5rem;
   transition: all 0.3s ease;
   box-shadow: 0 8px 20px rgba($primary-color, 0.25);
@@ -311,7 +316,7 @@ $white: #ffffff;
 // ===== Roles Section =====
 .roles-section {
   padding: 6rem 2rem;
-  background: linear-gradient(180deg, #fafafa 0%, $light-bg 100%);
+  background: linear-gradient(180deg, #eef7f5 0%, $light-bg 100%);
 
   &.animate-in {
     animation: fadeInUp 0.8s ease-out;
@@ -320,7 +325,7 @@ $white: #ffffff;
 
 .roles-tabs {
   background: $white;
-  border-radius: 16px;
+  border-radius: 24px;
   padding: 2rem;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   margin-top: 3rem;
@@ -444,7 +449,7 @@ $white: #ffffff;
 // ===== How It Works Section =====
 .how-it-works {
   padding: 6rem 2rem;
-  background: $white;
+  background: #fffaf1;
   position: relative;
 
   &::after {
@@ -559,7 +564,7 @@ $white: #ffffff;
 // ===== FAQ Section =====
 .faq-section {
   padding: 6rem 2rem;
-  background: linear-gradient(180deg, #f9f9f9 0%, $light-bg 100%);
+  background: linear-gradient(180deg, #eef7f5 0%, $light-bg 100%);
 }
 
 .faq-accordion {
@@ -611,7 +616,7 @@ $white: #ffffff;
 // ===== Contact Section =====
 .contact-section {
   padding: 6rem 2rem;
-  background: $white;
+  background: #fffaf1;
   position: relative;
 
   &::before {
@@ -691,7 +696,9 @@ $white: #ffffff;
 
 // ===== Final CTA Section =====
 .final-cta {
-  background: linear-gradient(135deg, $primary-color 0%, $secondary-color 100%);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(242, 169, 59, 0.24), transparent 28%),
+    linear-gradient(135deg, $secondary-color 0%, $primary-color 100%);
   color: $white;
   padding: 6rem 2rem;
   text-align: center;

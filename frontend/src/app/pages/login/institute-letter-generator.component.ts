@@ -182,30 +182,40 @@ import { API_BASE_URL } from '../../core/api';
     `
       :host {
         display: block;
-        background: #f3f5f7;
+        background:
+          radial-gradient(circle at 10% 8%, rgba(241, 176, 72, 0.2), transparent 28%),
+          radial-gradient(circle at 90% 12%, rgba(29, 111, 130, 0.18), transparent 32%),
+          linear-gradient(135deg, #f8f1e4 0%, #eef7f5 52%, #fbf5e8 100%);
         min-height: 100vh;
       }
 
       .page-wrap {
         max-width: 1100px;
         margin: 0 auto;
-        padding: 20px;
+        padding: 28px 20px;
         display: grid;
-        gap: 16px;
+        gap: 22px;
       }
 
       .form-card {
-        padding: 16px;
+        padding: 22px;
+        border-radius: 24px;
+        border: 1px solid rgba(16, 42, 67, 0.1);
+        box-shadow: 0 24px 64px rgba(23, 44, 70, 0.14);
+        background: rgba(255, 255, 255, 0.86);
+        backdrop-filter: blur(14px);
       }
 
       .card-header h1 {
         margin: 0;
-        font-size: 22px;
+        font-size: clamp(24px, 4vw, 34px);
+        letter-spacing: -0.04em;
+        color: #102a43;
       }
 
       .card-header p {
-        margin: 6px 0 16px;
-        color: #556070;
+        margin: 8px 0 20px;
+        color: #526274;
       }
 
       .grid-form {
@@ -219,7 +229,7 @@ import { API_BASE_URL } from '../../core/api';
       }
 
       .actions {
-        margin-top: 8px;
+        margin-top: 12px;
         display: flex;
         justify-content: space-between;
         gap: 10px;
@@ -251,13 +261,14 @@ import { API_BASE_URL } from '../../core/api';
         min-height: 297mm;
         margin: 0 auto;
         background: #fff;
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 28px 70px rgba(18, 38, 63, 0.18);
         box-sizing: border-box;
         padding: 12mm 14mm 14mm;
+        border-radius: 4px;
       }
 
       .letterhead-space {
-        height: 50mm;
+        height: 68mm;
         border: 0 !important;
         outline: 0 !important;
         box-shadow: none !important;
@@ -319,7 +330,7 @@ import { API_BASE_URL } from '../../core/api';
         }
 
         .letterhead-space {
-          height: 60px;
+          height: 120px;
           margin-bottom: 8px;
         }
       }
@@ -350,10 +361,11 @@ import { API_BASE_URL } from '../../core/api';
           width: 210mm;
           min-height: 297mm;
           padding: 12mm 14mm 14mm;
+          border-radius: 0;
         }
 
         .letterhead-space {
-          height: 28mm;
+          height: 46mm;
           border: 0 !important;
           outline: 0 !important;
           box-shadow: none !important;

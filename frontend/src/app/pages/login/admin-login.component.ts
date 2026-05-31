@@ -125,11 +125,15 @@ import { BrandingService } from '../../core/branding.service';
       display: grid;
       grid-template-columns: 1fr 1fr;
       min-height: 100vh;
-      background: #f5f5f5;
+      background:
+        radial-gradient(circle at 12% 12%, rgba(242, 169, 59, 0.18), transparent 28%),
+        linear-gradient(135deg, #f8f1e4 0%, #eef7f5 100%);
     }
 
     .left-section {
-      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      background:
+        radial-gradient(circle at 22% 18%, rgba(255, 255, 255, 0.14), transparent 26%),
+        linear-gradient(145deg, #102a43 0%, #8a4f12 100%);
       color: white;
       padding: 3rem;
       display: flex;
@@ -200,9 +204,10 @@ import { BrandingService } from '../../core/branding.service';
 
     .login-card {
       width: 100%;
-      max-width: 400px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-      border-top: 4px solid #ff9800;
+      max-width: 440px;
+      border-radius: 28px;
+      box-shadow: 0 32px 84px rgba(16, 42, 67, 0.18);
+      border-top: 4px solid #f2a93b;
     }
 
     mat-card-header {
@@ -216,7 +221,7 @@ import { BrandingService } from '../../core/branding.service';
     .admin-badge {
       width: 60px;
       height: 60px;
-      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      background: linear-gradient(135deg, #102a43 0%, #f2a93b 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -233,11 +238,12 @@ import { BrandingService } from '../../core/branding.service';
 
     mat-card-title {
       font-size: 1.5rem;
-      color: #333;
+      color: #102033;
+      font-weight: 900;
     }
 
     mat-card-subtitle {
-      color: #ff6f00;
+      color: #8a4f12;
       font-weight: 600;
       font-size: 0.9rem;
     }
@@ -289,10 +295,10 @@ import { BrandingService } from '../../core/branding.service';
     .security-notice {
       margin-top: 2rem;
       padding: 1rem;
-      background-color: #fff3e0;
-      border-left: 4px solid #ff9800;
-      border-radius: 4px;
-      color: #e65100;
+      background-color: #fff8e8;
+      border-left: 4px solid #f2a93b;
+      border-radius: 14px;
+      color: #7a4b17;
       font-size: 0.9rem;
       display: flex;
       gap: 1rem;
@@ -301,7 +307,7 @@ import { BrandingService } from '../../core/branding.service';
 
     .warning-icon {
       flex-shrink: 0;
-      color: #ff9800;
+      color: #f2a93b;
     }
 
     .footer-links {
@@ -312,7 +318,7 @@ import { BrandingService } from '../../core/branding.service';
     }
 
     .footer-links a {
-      color: #ff9800;
+      color: #8a4f12;
       text-decoration: none;
       transition: opacity 0.2s;
       font-weight: 600;

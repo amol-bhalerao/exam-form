@@ -317,7 +317,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
        ============================================================ */
     :host {
       display: block;
-      background: #f8f9fa;
+      background: #f8f1e4;
       --spacing-xs: 0.5rem;
       --spacing-sm: 1rem;
       --spacing-md: 1.5rem;
@@ -325,10 +325,13 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       --spacing-xl: 2.5rem;
       --border-radius: 12px;
       --border-radius-sm: 8px;
-      --primary-color: #667eea;
-      --primary-dark: #764ba2;
-      --text-primary: #1a1a1a;
-      --text-secondary: #666;
+      --primary-color: #0f5f6f;
+      --primary-dark: #102a43;
+      --accent-gold: #f2a93b;
+      --accent-mint: #5db79f;
+      --surface-warm: #fffaf1;
+      --text-primary: #102033;
+      --text-secondary: #58677a;
       --font-size-base: 1rem;
       --font-size-sm: 0.95rem;
       --font-size-xs: 0.85rem;
@@ -372,7 +375,10 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+      background:
+        radial-gradient(circle at 14% 18%, rgba(242, 169, 59, 0.35), transparent 28%),
+        radial-gradient(circle at 84% 20%, rgba(93, 183, 159, 0.26), transparent 30%),
+        linear-gradient(135deg, #102a43 0%, #0f5f6f 54%, #7a4b17 100%);
       overflow: hidden;
       padding: clamp(60px, 10vw, 80px) var(--spacing-sm) var(--spacing-sm);
       color: white;
@@ -385,7 +391,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       width: 100%;
       height: 100%;
       z-index: 0;
-      opacity: 0.3;
+      opacity: 0.16;
     }
 
     .waves {
@@ -417,10 +423,15 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       position: relative;
       z-index: 1;
       text-align: center;
-      max-width: 100%;
+      max-width: min(980px, 100%);
       width: 100%;
       animation: slideUp 0.8s ease-out;
-      padding: 0 var(--spacing-sm);
+      padding: clamp(26px, 6vw, 54px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: clamp(24px, 5vw, 42px);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 38px 90px rgba(0, 0, 0, 0.22);
+      backdrop-filter: blur(18px);
     }
 
     @media (min-width: 600px) {
@@ -444,17 +455,20 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       font-size: clamp(0.95rem, 2.5vw, 1.1rem);
       opacity: 0.9;
       margin-bottom: var(--spacing-sm);
-      font-weight: 500;
-      letter-spacing: 1px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
       line-height: 1.5;
+      text-transform: uppercase;
+      color: #ffe6b0;
     }
 
     .hero-title {
       font-size: var(--heading-2-size);
-      font-weight: 800;
+      font-weight: 900;
       margin-bottom: var(--spacing-md);
-      line-height: 1.2;
-      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+      line-height: 0.98;
+      letter-spacing: -0.075em;
+      text-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
     }
 
     .hero-desc {
@@ -462,6 +476,9 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       margin-bottom: var(--spacing-lg);
       opacity: 0.95;
       line-height: 1.6;
+      max-width: 760px;
+      margin-left: auto;
+      margin-right: auto;
     }
 
     .hero-actions {
@@ -481,10 +498,10 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
     .btn-large {
       padding: clamp(10px, 2vw, 14px) clamp(20px, 5vw, 36px) !important;
       font-size: var(--font-size-sm) !important;
-      border-radius: var(--border-radius-sm) !important;
-      text-transform: uppercase !important;
-      font-weight: 600 !important;
-      letter-spacing: 0.5px !important;
+      border-radius: 999px !important;
+      text-transform: none !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.01em !important;
       transition: all 0.3s ease !important;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
       width: 100%;
@@ -535,7 +552,9 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
     .features-section {
       position: relative;
       padding: var(--spacing-lg) var(--spacing-sm);
-      background: white;
+      background:
+        radial-gradient(circle at top left, rgba(242, 169, 59, 0.08), transparent 28%),
+        linear-gradient(180deg, #fffaf1 0%, #ffffff 100%);
       overflow: hidden;
     }
 
@@ -599,13 +618,13 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
     }
 
     .feature-card {
-      background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+      background: rgba(255, 255, 255, 0.86);
       padding: var(--spacing-lg);
-      border-radius: var(--border-radius);
+      border-radius: 24px;
       text-align: center;
       transition: all 0.3s ease;
-      border: 1px solid #e0e6ff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(16, 42, 67, 0.08);
+      box-shadow: 0 20px 48px rgba(16, 42, 67, 0.1);
     }
 
     .feature-card:hover {
@@ -621,8 +640,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
-      border-radius: var(--border-radius-sm);
+      background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-gold) 100%);
+      border-radius: 18px;
       color: white;
     }
 
@@ -652,7 +671,9 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
        ============================================================ */
     .info-section {
       padding: var(--spacing-lg) var(--spacing-sm);
-      background: #f0f4ff;
+      background:
+        radial-gradient(circle at 8% 12%, rgba(93, 183, 159, 0.18), transparent 28%),
+        linear-gradient(135deg, #f8f1e4 0%, #eef7f5 100%);
     }
 
     @media (min-width: 768px) {
@@ -683,11 +704,11 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
     .step-card {
       background: white;
       padding: var(--spacing-lg);
-      border-radius: var(--border-radius);
+      border-radius: 22px;
       text-align: center;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
       transition: all 0.3s ease;
-      border-left: 4px solid var(--primary-color);
+      border-left: 4px solid var(--accent-gold);
     }
 
     .step-card:hover {
@@ -701,7 +722,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       justify-content: center;
       width: 50px;
       height: 50px;
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
       color: white;
       border-radius: 50%;
       font-size: 1.5rem;
@@ -729,7 +750,9 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
     .cta-section {
       position: relative;
       padding: var(--spacing-lg) var(--spacing-sm);
-      background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+      background:
+        radial-gradient(circle at 20% 20%, rgba(242, 169, 59, 0.24), transparent 26%),
+        linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
       color: white;
       text-align: center;
       overflow: hidden;
@@ -803,7 +826,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
        FOOTER - Responsive footer layout
        ============================================================ */
     .footer {
-      background: #1a1a1a;
+      background: #102033;
       color: #ccc;
       padding: var(--spacing-lg) var(--spacing-sm) var(--spacing-sm);
     }
@@ -898,7 +921,9 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
        ============================================================ */
     .exams-section {
       padding: var(--spacing-lg) var(--spacing-sm);
-      background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+      background:
+        radial-gradient(circle at 90% 0%, rgba(242, 169, 59, 0.15), transparent 28%),
+        linear-gradient(135deg, #fffaf1 0%, #eef7f5 100%);
       min-height: auto;
     }
 

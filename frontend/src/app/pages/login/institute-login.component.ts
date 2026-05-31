@@ -135,11 +135,15 @@ import { BrandingService } from '../../core/branding.service';
       display: grid;
       grid-template-columns: 1fr 1fr;
       min-height: 100vh;
-      background: #f5f5f5;
+      background:
+        radial-gradient(circle at 80% 12%, rgba(242, 169, 59, 0.18), transparent 28%),
+        linear-gradient(135deg, #f8f1e4 0%, #eef7f5 100%);
     }
 
     .left-section {
-      background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+      background:
+        radial-gradient(circle at 20% 18%, rgba(242, 169, 59, 0.28), transparent 28%),
+        linear-gradient(145deg, #102a43 0%, #0f5f6f 100%);
       color: white;
       padding: 3rem;
       display: flex;
@@ -209,8 +213,10 @@ import { BrandingService } from '../../core/branding.service';
 
     .login-card {
       width: 100%;
-      max-width: 400px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      max-width: 440px;
+      border-radius: 28px;
+      border: 1px solid rgba(16, 42, 67, 0.08);
+      box-shadow: 0 32px 84px rgba(16, 42, 67, 0.18);
     }
 
     mat-card-header {
@@ -220,11 +226,12 @@ import { BrandingService } from '../../core/branding.service';
 
     mat-card-title {
       font-size: 1.5rem;
-      color: #333;
+      color: #102033;
+      font-weight: 900;
     }
 
     mat-card-subtitle {
-      color: #666;
+      color: #58677a;
       font-size: 0.95rem;
     }
 
@@ -280,7 +287,7 @@ import { BrandingService } from '../../core/branding.service';
     }
 
     .footer-links a {
-      color: #2196f3;
+      color: #0f5f6f;
       text-decoration: none;
       transition: opacity 0.2s;
     }
