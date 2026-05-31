@@ -9,13 +9,16 @@ export const paymentsRouter = Router();
 
 const CASHFREE_SANDBOX_URL = 'https://sandbox.cashfree.com/pg';
 const CASHFREE_PROD_URL = 'https://api.cashfree.com/pg';
+const CASHFREE_API_VERSION = '2023-08-01';
 
 const isCashfreeTestMode = String(env.CASHFREE_APP_ID || '').startsWith('TEST')
   || String(env.CASHFREE_SECRET_KEY || '').includes('_test_');
-const CASHFREE_ENVIRONMENT = isCashfreeTestMode
-  ? 'sandbox'
-  : (env.NODE_ENV === 'production' ? 'production' : 'sandbox');
+const configuredCashfreeEnvironment = String(env.CASHFREE_ENVIRONMENT || '').toLowerCase();
+const CASHFREE_ENVIRONMENT = ['production', 'prod', 'live'].includes(configuredCashfreeEnvironment)
+  ? 'production'
+  : 'sandbox';
 const CASHFREE_BASE = CASHFREE_ENVIRONMENT === 'production' ? CASHFREE_PROD_URL : CASHFREE_SANDBOX_URL;
+const LIVE_PAYMENTS_REQUIRED = env.NODE_ENV === 'production' || CASHFREE_ENVIRONMENT === 'production';
 const PENDING_PAYMENT_DATE = new Date(0);
 
 function isPaymentSuccessful(payment) {
@@ -44,6 +47,22 @@ function groupedCounts(items = [], keyFn = () => '') {
     current.amountPaise += Number(item.amountPaise || 0);
   }
   return [...map.values()].sort((a, b) => b.amountPaise - a.amountPaise || b.count - a.count);
+}
+
+function ensureCashfreeReady() {
+  if (!env.CASHFREE_APP_ID || !env.CASHFREE_SECRET_KEY) {
+    const error = new Error('Cashfree production credentials are not configured.');
+    error.statusCode = 503;
+    error.publicMessage = 'Live payment gateway is not configured. Please contact support.';
+    throw error;
+  }
+
+  if (LIVE_PAYMENTS_REQUIRED && isCashfreeTestMode) {
+    const error = new Error('Cashfree test credentials cannot be used when live payments are required.');
+    error.statusCode = 503;
+    error.publicMessage = 'Live payment gateway is not configured with production credentials.';
+    throw error;
+  }
 }
 
 function parseDashboardQuery(query = {}) {
@@ -151,6 +170,8 @@ async function getAccessibleStudentIdsForUser(userId) {
 
 /** Create a Cashfree order via REST API (using Node 22 native fetch) */
 async function createCashfreeOrder({ orderId, amountPaise, customerName, customerEmail, customerPhone, returnUrl }) {
+  ensureCashfreeReady();
+
   const amountRupees = (amountPaise / 100).toFixed(2);
 
   const payload = {
@@ -173,7 +194,7 @@ async function createCashfreeOrder({ orderId, amountPaise, customerName, custome
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-version': '2023-08-01',
+      'x-api-version': CASHFREE_API_VERSION,
       'x-client-id': env.CASHFREE_APP_ID ?? '',
       'x-client-secret': env.CASHFREE_SECRET_KEY ?? ''
     },
@@ -183,6 +204,26 @@ async function createCashfreeOrder({ orderId, amountPaise, customerName, custome
   if (!response.ok) {
     const errBody = await response.json().catch(() => ({}));
     throw new Error(`Cashfree API error ${response.status}: ${errBody?.message ?? 'unknown'}`);
+  }
+
+  return response.json();
+}
+
+async function getCashfreeOrder(orderId) {
+  ensureCashfreeReady();
+
+  const response = await fetch(`${CASHFREE_BASE}/orders/${encodeURIComponent(orderId)}`, {
+    method: 'GET',
+    headers: {
+      'x-api-version': CASHFREE_API_VERSION,
+      'x-client-id': env.CASHFREE_APP_ID ?? '',
+      'x-client-secret': env.CASHFREE_SECRET_KEY ?? ''
+    }
+  });
+
+  if (!response.ok) {
+    const errBody = await response.json().catch(() => ({}));
+    throw new Error(`Cashfree order verification failed ${response.status}: ${errBody?.message ?? 'unknown'}`);
   }
 
   return response.json();
@@ -289,7 +330,14 @@ paymentsRouter.post('/initiate/:applicationId', requireAuth, requireRole(['STUDE
         : undefined
     });
   } catch (err) {
-    console.error('[payments] Cashfree error (falling back to sandbox):', err.message);
+    console.error('[payments] Cashfree error:', err.message);
+
+    if (LIVE_PAYMENTS_REQUIRED) {
+      return res.status(err.statusCode || 502).json({
+        error: 'PAYMENT_GATEWAY_UNAVAILABLE',
+        message: err.publicMessage || 'Live payment gateway is unavailable right now. Please try again later.'
+      });
+    }
 
     const sandboxOrderId = `SANDBOX-${orderId}`;
     await (existingPayment
@@ -401,7 +449,26 @@ paymentsRouter.post('/confirm/:applicationId', requireAuth, requireRole(['STUDEN
   if (!payment) return res.status(404).json({ error: 'PAYMENT_NOT_FOUND' });
 
   const normalizedStatus = String(body.paymentStatus || '').trim().toUpperCase();
-  const isPaid = ['PAID', 'SUCCESS', 'COMPLETED'].includes(normalizedStatus) || isPaymentSuccessful(payment);
+  let verifiedOrderStatus = null;
+  let isPaid = isPaymentSuccessful(payment);
+
+  if (!isPaid && body.orderId && !String(payment.method || '').toUpperCase().includes('SANDBOX')) {
+    try {
+      const order = await getCashfreeOrder(body.orderId);
+      verifiedOrderStatus = String(order?.order_status || '').toUpperCase();
+      isPaid = verifiedOrderStatus === 'PAID';
+    } catch (err) {
+      console.error('[payments] Cashfree confirmation verification failed:', err.message);
+      return res.status(502).json({
+        error: 'PAYMENT_VERIFICATION_FAILED',
+        message: 'Unable to verify the payment with Cashfree right now. Please retry in a moment.'
+      });
+    }
+  }
+
+  if (String(payment.method || '').toUpperCase().includes('SANDBOX')) {
+    isPaid = ['PAID', 'SUCCESS', 'COMPLETED'].includes(normalizedStatus) || isPaid;
+  }
 
   const updated = await prisma.payment.update({
     where: { id: payment.id },
@@ -427,7 +494,8 @@ paymentsRouter.post('/confirm/:applicationId', requireAuth, requireRole(['STUDEN
       applicationId,
       status: getPaymentStatus(updated),
       orderId: body.orderId || updated.referenceNo || null,
-      paymentStatus: normalizedStatus || null
+      paymentStatus: normalizedStatus || null,
+      verifiedOrderStatus
     }
   });
 
@@ -739,6 +807,13 @@ paymentsRouter.get('/receipt/:applicationId', requireAuth, requireRole(['STUDENT
  * Dev-only: mark a sandbox payment as complete so submission can proceed.
  */
 paymentsRouter.post('/sandbox/complete/:applicationId', requireAuth, requireRole(['STUDENT']), async (req, res) => {
+  if (LIVE_PAYMENTS_REQUIRED) {
+    return res.status(404).json({
+      error: 'SANDBOX_DISABLED',
+      message: 'Sandbox payment completion is disabled for live payments.'
+    });
+  }
+
   const applicationId = z.coerce.number().int().positive().parse(req.params.applicationId);
 
   const normalizedUserId = Number(req.auth.userId);

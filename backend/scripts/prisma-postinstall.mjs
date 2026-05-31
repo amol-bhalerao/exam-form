@@ -70,3 +70,17 @@ try {
     }
   }
 }
+
+try {
+  run("node ./scripts/sync-db-columns.mjs", { DATABASE_URL: databaseUrl });
+  console.log("\n✅ Production-safe DB column sync completed successfully.");
+} catch (columnSyncError) {
+  console.warn(
+    "\n⚠️  Database column sync could not be completed automatically during install. " +
+    "Run `npm run db:columns` manually on the server before restarting the API."
+  );
+
+  if (strictDbSync) {
+    throw columnSyncError;
+  }
+}

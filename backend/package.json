@@ -8,7 +8,7 @@
     "start": "node src/server.js",
     "build": "npx prisma generate",
     "postinstall": "node ./scripts/prisma-postinstall.mjs",
-    "migrate": "npm run db:sync",
+    "migrate": "npm run db:sync && npm run db:columns",
     "db:sync": "npx prisma migrate deploy || npx prisma db push",
     "db:columns": "node scripts/sync-db-columns.mjs",
     "db:seed-users": "node scripts/seed-users.mjs",

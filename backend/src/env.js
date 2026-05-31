@@ -41,10 +41,11 @@ const envSchema = z.object({
   // Google SSO – REQUIRED for Google login to work
   GOOGLE_CLIENT_ID: z.string().optional(),
 
-  // Cashfree Payment Gateway (Sandbox)
+  // Cashfree Payment Gateway
   CASHFREE_APP_ID: z.string().optional(),
   CASHFREE_SECRET_KEY: z.string().optional(),
   CASHFREE_WEBHOOK_SECRET: z.string().optional(),
+  CASHFREE_ENVIRONMENT: z.string().default(isProd ? 'production' : 'sandbox'),
   EXAM_FEE_PAISE: z.coerce.number().int().nonnegative().default(isProd ? 50000 : 0),
 
   // URLs (used for redirects and webhook base URL)
