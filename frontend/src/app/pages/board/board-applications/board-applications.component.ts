@@ -48,6 +48,17 @@ type DashboardSummary = {
   byExamType: GroupSummary[];
 };
 
+function formatSubjectsForExport(subjects: Row['subjects']): string {
+  return (subjects || [])
+    .map((entry) => {
+      const code = entry.subject?.code || '';
+      const name = entry.subject?.name || '';
+      return code && name ? `${code}-${name}` : code || name;
+    })
+    .filter(Boolean)
+    .join(', ');
+}
+
 @Component({
   selector: 'app-board-applications',
   standalone: true,
@@ -101,7 +112,7 @@ type DashboardSummary = {
         </div>
         <div class="row">
           <mat-form-field appearance="outline" class="w260"><mat-label>Search</mat-label><input matInput [(ngModel)]="search" (input)="load()" /></mat-form-field>
-          <mat-form-field appearance="outline" class="w160"><mat-label>Status</mat-label><mat-select [(ngModel)]="status" (selectionChange)="load()"><mat-option value="">All</mat-option><mat-option value="INSTITUTE_VERIFIED">Institute Verified</mat-option><mat-option value="BOARD_APPROVED">Board Approved</mat-option><mat-option value="REJECTED_BY_BOARD">Rejected</mat-option></mat-select></mat-form-field>
+          <mat-form-field appearance="outline" class="w160"><mat-label>Status</mat-label><mat-select [(ngModel)]="status" (selectionChange)="load()"><mat-option value="">Institute Verified (default)</mat-option><mat-option value="INSTITUTE_VERIFIED">Institute Verified</mat-option><mat-option value="BOARD_APPROVED">Board Approved</mat-option><mat-option value="REJECTED_BY_BOARD">Rejected</mat-option></mat-select></mat-form-field>
           <div class="grow"></div>
           <button mat-flat-button color="primary" (click)="exportExcel()">Export Excel</button>
           <button mat-stroked-button color="primary" (click)="printList()">Print List</button>
@@ -156,8 +167,8 @@ type DashboardSummary = {
           ></ag-grid-angular>
         </div>
         <div class="grid-footer">
-          <button mat-flat-button color="primary" (click)="decide(selectedRow?.id, 'APPROVE')" [disabled]="!selectedRow || selectedRow.status !== 'INSTITUTE_VERIFIED'">Approve Selected</button>
-          <button mat-stroked-button color="warn" (click)="decide(selectedRow?.id, 'REJECT')" [disabled]="!selectedRow || selectedRow.status !== 'INSTITUTE_VERIFIED'">Reject Selected</button>
+          <button mat-stroked-button (click)="printSelectedForm()" [disabled]="!selectedRow">Print Selected Form</button>
+          <button mat-stroked-button color="warn" (click)="decide(selectedRow?.id, 'REJECT')" [disabled]="!selectedRow || !canBoardReject(selectedRow)">Reject Selected</button>
           <span class="pager-inline">Page {{ page }} of {{ totalPages }} ({{ totalApplications }} total)
             <span class="pager-btns">
               <button mat-stroked-button (click)="prevPage()" [disabled]="page <= 1">Prev</button>
@@ -328,6 +339,11 @@ export class BoardApplicationsComponent implements OnInit {
     { field: 'institute.name', headerName: 'Institute', flex: 1 },
     { field: 'exam.name', headerName: 'Exam', flex: 1 },
     { field: 'status', headerName: 'Status', flex: 1 },
+    {
+      headerName: 'Subjects',
+      flex: 1.6,
+      valueGetter: (p) => formatSubjectsForExport(p.data?.subjects)
+    },
     { field: 'updatedAt', headerName: 'Updated', flex: 1, valueFormatter: (p) => new Date(p.value).toLocaleString() }
   ];
   readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true, floatingFilter: true };
@@ -424,7 +440,16 @@ export class BoardApplicationsComponent implements OnInit {
     this.selectedRow = event.data;
   }
 
-  decide(id: number | undefined, action: 'APPROVE' | 'REJECT') {
+  canBoardReject(row: Row | null): boolean {
+    return !!row && ['INSTITUTE_VERIFIED', 'BOARD_APPROVED'].includes(row.status);
+  }
+
+  printSelectedForm() {
+    if (!this.selectedRow?.id) return;
+    window.open(`/print/board/forms?ids=${this.selectedRow.id}`, '_blank');
+  }
+
+  decide(id: number | undefined, action: 'REJECT') {
     if (!id) return;
     this.loading.set(true);
     this.error.set(null);
@@ -459,6 +484,7 @@ export class BoardApplicationsComponent implements OnInit {
           'Student Name': `${r.student.lastName || ''}, ${r.student.firstName || ''}`.trim(),
           'Institute': r.institute.name,
           'Exam': `${r.exam.name} ${r.exam.session} ${r.exam.academicYear}`,
+          'Subjects': formatSubjectsForExport(r.subjects),
           'Status': r.status,
           'Updated At': new Date(r.updatedAt).toLocaleString()
         }));
@@ -485,9 +511,9 @@ export class BoardApplicationsComponent implements OnInit {
         }
         const header = `<h2>Applications for ${this.selectedExam!.name} ${this.selectedExam!.session} ${this.selectedExam!.academicYear}</h2><p>Status: ${this.status || 'All'} | Search: ${this.search || 'All'} | Total: ${printableRows.length}</p>`;
         const rowsHtml = printableRows
-          .map((r) => `<tr><td>${this.htmlEscape(r.applicationNo)}</td><td>${this.htmlEscape(`${r.student.lastName || ''}, ${r.student.firstName || ''}`)}</td><td>${this.htmlEscape(r.institute.name)}</td><td>${this.htmlEscape(`${r.exam.name} ${r.exam.session} ${r.exam.academicYear}`)}</td><td>${this.htmlEscape(r.status)}</td><td>${this.htmlEscape(new Date(r.updatedAt).toLocaleString())}</td></tr>`)
+          .map((r) => `<tr><td>${this.htmlEscape(r.applicationNo)}</td><td>${this.htmlEscape(`${r.student.lastName || ''}, ${r.student.firstName || ''}`)}</td><td>${this.htmlEscape(r.institute.name)}</td><td>${this.htmlEscape(`${r.exam.name} ${r.exam.session} ${r.exam.academicYear}`)}</td><td>${this.htmlEscape(formatSubjectsForExport(r.subjects))}</td><td>${this.htmlEscape(r.status)}</td><td>${this.htmlEscape(new Date(r.updatedAt).toLocaleString())}</td></tr>`)
           .join('');
-        const content = `<html><head><title>Applications - ${this.selectedExam!.name}</title><style>table{width:100%;border-collapse:collapse;font-size:12px;}th,td{border:1px solid #666;padding:4px;text-align:left;}th{background:#f5f5f5;font-weight:bold;}</style></head><body>${header}<table><thead><tr><th>App No</th><th>Student</th><th>Institute</th><th>Exam</th><th>Status</th><th>Updated</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+        const content = `<html><head><title>Applications - ${this.selectedExam!.name}</title><style>@page{size:A4 landscape;margin:10mm;}body{font-family:Arial,sans-serif;color:#111;}table{width:100%;border-collapse:collapse;font-size:10px;}th,td{border:1px solid #666;padding:4px;text-align:left;vertical-align:top;word-break:break-word;}th{background:#f5f5f5;font-weight:bold;}@media print{table{font-size:9px;}th,td{padding:3px;}}</style></head><body>${header}<table><thead><tr><th>App No</th><th>Student</th><th>Institute</th><th>Exam</th><th>Subjects</th><th>Status</th><th>Updated</th></tr></thead><tbody>${rowsHtml}</tbody></table></body></html>`;
         const w = window.open('', '_blank');
         if (!w) {
           this.loading.set(false);

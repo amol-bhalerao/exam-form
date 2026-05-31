@@ -1116,25 +1116,45 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     if (role === 'SUPER_ADMIN') {
-      let p1done = false, p2done = false, p3done = false;
-      const check = () => { if (p1done && p2done && p3done) done(); };
+      let p1done = false, p2done = false;
+      const check = () => { if (p1done && p2done) done(); };
 
-      this.http.get<{ institutes: any[] }>(`${API_BASE_URL}/institutes`).subscribe({
+      this.http.get<{
+        summary: {
+          totalInstitutes: number;
+          approvedInstitutes: number;
+          pendingInstitutes: number;
+          instituteVerifiedApplications: number;
+          boardApprovedApplications: number;
+          rejectedApplications: number;
+          totalStudents: number;
+          totalTeachers: number;
+        };
+        distributions?: { institutesByStatus?: { status: string; _count: { id: number } }[] };
+      }>(`${API_BASE_URL}/admin/overview`).subscribe({
         next: (r) => {
-          const all = r.institutes ?? [];
-          const approved = all.filter((i) => i.status === 'APPROVED').length;
-          const pending = all.filter((i) => i.status === 'PENDING').length;
-          const disabled = all.filter((i) => i.status === 'DISABLED').length;
+          const s = r.summary;
+          const dist = r.distributions?.institutesByStatus ?? [];
+          const disabled = dist.find((d) => d.status === 'DISABLED')?._count?.id ?? 0;
           this.statCards.update((c) => [...c,
-            { label: 'Total Institutes', value: all.length, icon: 'account_balance', gradient: 'gradient-blue', link: '/app/super/institutes', delta: `${approved} active`, deltaPos: true },
-            { label: 'Pending Approval', value: pending, icon: 'pending_actions', gradient: 'gradient-amber', link: '/app/super/institute-users' }
+            { label: 'Total Institutes', value: s.totalInstitutes, icon: 'account_balance', gradient: 'gradient-blue', link: '/app/super/institutes', delta: `${s.approvedInstitutes} active`, deltaPos: true },
+            { label: 'Pending Approval', value: s.pendingInstitutes, icon: 'pending_actions', gradient: 'gradient-amber', link: '/app/super/institute-users' },
+            { label: 'Institute Verified', value: s.instituteVerifiedApplications, icon: 'fact_check', gradient: 'gradient-cyan', link: '/app/board/applications' },
+            { label: 'Board Approved', value: s.boardApprovedApplications, icon: 'verified', gradient: 'gradient-green', link: '/app/board/applications' }
           ]);
+          this.appVerified = s.instituteVerifiedApplications;
+          this.appApproved = s.boardApprovedApplications;
+          this.appRejected = s.rejectedApplications;
           this.refreshRoleInsights();
-          this.initBarData([all.length, approved, pending, disabled], ['Total', 'Approved', 'Pending', 'Disabled']);
-          p1done = true; check();
+          this.initBarData(
+            [s.totalInstitutes, s.approvedInstitutes, s.pendingInstitutes, disabled],
+            ['Total', 'Approved', 'Pending', 'Disabled']
+          );
+          p1done = true;
+          check();
         },
         error: (err) => {
-          console.error('Failed to load institutes:', err?.error?.message || err?.message);
+          console.error('Failed to load admin overview:', err?.error?.message || err?.message);
           p1done = true;
           check();
         }
@@ -1147,24 +1167,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
             { label: 'Institute Users', value: all.length, icon: 'people', gradient: 'gradient-cyan', link: '/app/super/institute-users' }
           ]);
           this.refreshRoleInsights();
-          p2done = true; check();
+          p2done = true;
+          check();
         },
         error: (err) => {
           console.error('Failed to load institute users:', err?.error?.message || err?.message);
           p2done = true;
-          check();
-        }
-      });
-
-      this.http.get<{ applications: any[]; metadata?: any }>(`${API_BASE_URL}/applications/board/list`, { params: { limit: '500', examId: '1' } }).subscribe({
-        next: (r) => {
-          const all = r.applications ?? [];
-          this.setAppCounts(all);
-          p3done = true; check();
-        },
-        error: (err) => {
-          console.error('Failed to load applications:', err?.error?.message || err?.message);
-          p3done = true;
           check();
         }
       });

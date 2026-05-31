@@ -128,6 +128,54 @@ type ExportColumn = {
           <input matInput [(ngModel)]="search" (input)="onFilterChanged()" />
         </mat-form-field>
 
+        <mat-form-field appearance="outline" class="w180">
+          <mat-label>Status</mat-label>
+          <mat-select [(ngModel)]="status" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
+            <mat-option value="">All statuses</mat-option>
+            <mat-option value="DRAFT">Draft</mat-option>
+            <mat-option value="SUBMITTED">Submitted</mat-option>
+            <mat-option value="INSTITUTE_VERIFIED">Institute verified</mat-option>
+            <mat-option value="BOARD_APPROVED">Board approved</mat-option>
+            <mat-option value="REJECTED_BY_INSTITUTE">Rejected by institute</mat-option>
+            <mat-option value="REJECTED_BY_BOARD">Rejected by board</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w160">
+          <mat-label>Caste</mat-label>
+          <mat-select [(ngModel)]="caste" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
+            <mat-option value="">All castes</mat-option>
+            <mat-option *ngFor="let option of casteOptions()" [value]="option">{{ option }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w220">
+          <mat-label>Subject</mat-label>
+          <mat-select [(ngModel)]="subjectId" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
+            <mat-option value="">All subjects</mat-option>
+            <mat-option *ngFor="let subject of subjects()" [value]="subject.id">{{ subject.code }} - {{ subject.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w160">
+          <mat-label>Sort by</mat-label>
+          <mat-select [(ngModel)]="sortBy" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
+            <mat-option value="updatedAt">Updated</mat-option>
+            <mat-option value="exam">Exam</mat-option>
+            <mat-option value="caste">Caste</mat-option>
+            <mat-option value="subject">Subject</mat-option>
+            <mat-option value="studentName">Student name</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w160">
+          <mat-label>Order</mat-label>
+          <mat-select [(ngModel)]="sortOrder" (selectionChange)="onFilterChanged()" panelClass="board-students-select-panel">
+            <mat-option value="asc">Ascending</mat-option>
+            <mat-option value="desc">Descending</mat-option>
+          </mat-select>
+        </mat-form-field>
+
         <button mat-flat-button color="primary" (click)="loadRowsForSelectedExam()"><mat-icon>search</mat-icon>Load Students</button>
         <button mat-stroked-button color="primary" (click)="resetFilters()"><mat-icon>restart_alt</mat-icon>Reset</button>
       </div>
@@ -347,7 +395,12 @@ export class BoardStudentsComponent implements OnInit {
 
   resetFilters() {
     this.examId = '';
+    this.status = '';
+    this.caste = '';
+    this.subjectId = '';
     this.search = '';
+    this.sortBy = 'updatedAt';
+    this.sortOrder = 'desc';
     this.page = 1;
     this.loadRows();
   }
@@ -538,9 +591,12 @@ export class BoardStudentsComponent implements OnInit {
   private buildParams(page: number, limit: number, ignoreExam = false) {
     const p = new URLSearchParams();
     if (!ignoreExam && this.examId) p.set('examId', this.examId);
+    if (this.status) p.set('status', this.status);
+    if (this.caste) p.set('caste', this.caste);
+    if (this.subjectId) p.set('subjectId', this.subjectId);
     if (this.search.trim()) p.set('search', this.search.trim());
-    p.set('sortBy', 'updatedAt');
-    p.set('sortOrder', 'desc');
+    p.set('sortBy', this.sortBy);
+    p.set('sortOrder', this.sortOrder);
     p.set('page', String(page));
     p.set('limit', String(limit));
     return p;

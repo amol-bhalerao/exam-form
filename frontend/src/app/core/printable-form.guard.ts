@@ -5,6 +5,7 @@ import { firstValueFrom } from 'rxjs';
 
 import { AuthService } from './auth.service';
 import { API_BASE_URL } from './api';
+import { canStudentPrintApplication } from './printable-form-policy';
 
 export const printableFormGuard: CanActivateFn = async (route) => {
   const auth = inject(AuthService);
@@ -31,14 +32,7 @@ export const printableFormGuard: CanActivateFn = async (route) => {
       http.get<{ application: any }>(`${API_BASE_URL}/applications/${applicationId}`)
     );
 
-    const app = response?.application;
-    const latestPayment = app?.fees?.[0] || null;
-    const paymentCompleted = !!latestPayment
-      && !!latestPayment.receivedAt
-      && new Date(latestPayment.receivedAt).getTime() > 1000
-      && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
-
-    if (String(app?.status || '').toUpperCase() === 'SUBMITTED' && paymentCompleted) {
+    if (canStudentPrintApplication(response?.application)) {
       return true;
     }
 

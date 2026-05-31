@@ -108,8 +108,9 @@ export const studentGuard: CanActivateFn = (route, state) => {
   return true;
 };
 
-// Application guard - allows exam form access at 70% profile completion
-// Requires: authentication + student role + profile exists + 70% profile completion
+// Application guard - authenticated student access.
+// Multi-student flow allows users to manage student profiles and create applications
+// without blocking the route behind profile percentage thresholds.
 export const applicationGuard: CanActivateFn = async (route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -128,27 +129,9 @@ export const applicationGuard: CanActivateFn = async (route, state) => {
     return true;
   }
   
-  // For STUDENT role, ensure profile exists and is at least 70% complete
+  // For STUDENT role, load profile best-effort but do not hard block route access.
   try {
     await profileService.loadProfile();
-    const profile = profileService.profile$();
-    const completionPercentage = profileService.completionPercentage$();
-    
-    if (!profile) {
-      // Application guard: No profile found. Redirecting to institute selection.
-      router.navigate(['/student/select-institute']);
-      return false;
-    }
-    
-    if (completionPercentage < 70) {
-      // Application guard: Profile incomplete. Redirecting to profile.
-      router.navigate(['/app/student/profile'], {
-        queryParams: { returnUrl: state.url }
-      });
-      return false;
-    }
-    
-    console.log(`Application guard: Profile ${completionPercentage}% complete. Access allowed.`);
     return true;
   } catch (error: any) {
     // Log for debugging
@@ -159,15 +142,10 @@ export const applicationGuard: CanActivateFn = async (route, state) => {
     if (errorCode === 'INSTITUTE_NOT_SELECTED' || 
         errorCode === 'STUDENT_PROFILE_MISSING' || 
         error?.status === 404) {
-      // Profile missing - must select institute first
-      console.warn('Application guard: Institute not selected. Redirecting to institute selection.');
-      router.navigate(['/student/select-institute']);
-      return false;
+      // Allow route; UI handles empty-state/profile creation gracefully.
+      return true;
     }
-    
-    // For other errors, deny access to be safe
-    console.warn('Application guard: Error loading profile, denying access');
-    router.navigate(['/app/student/profile']);
-    return false;
+    // Network/transient errors should not block navigation.
+    return true;
   }
 };

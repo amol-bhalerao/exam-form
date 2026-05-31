@@ -403,7 +403,6 @@ input[matInput]:focus,
 textarea[matInput]:focus,
 .mat-mdc-input-element:focus {
   outline: none !important;
-  transform: scale(1.02);
 }
 
 .mdc-notched-outline__leading,
@@ -2191,150 +2190,20 @@ mat-form-field {
   width: 100%;
   display: block;
   margin: 0 0 var(--form-control-margin) 0;
-  --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21a8 8 0 0 0-16 0'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E");
-
-  --mdc-outlined-text-field-container-shape: 10px;
-
-  .mat-mdc-text-field-wrapper {
-    position: relative;
-    min-height: 46px !important;
-    border-radius: 10px !important;
-    padding: 0 12px !important;
-    background: #fff !important;
-  }
-
-  .mat-mdc-form-field-flex {
-    align-items: center !important;
-  }
-
-  .mat-mdc-form-field-infix {
-    min-height: 46px !important;
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
-    padding-left: 0 !important;
-  }
-
-  .mat-mdc-form-field-subscript-wrapper {
-    margin-top: 1px;
-    min-height: 0;
-  }
-
-  /* Auto icon system: adds semantic leading icon when matPrefix is not present. */
-  &:not(.mat-mdc-form-field-has-icon-prefix) {
-    .mat-mdc-text-field-wrapper::before {
-      content: '';
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      width: 16px;
-      height: 16px;
-      transform: translateY(-50%);
-      opacity: 0.65;
-      pointer-events: none;
-      background-repeat: no-repeat;
-      background-position: center;
-      background-size: 16px 16px;
-      background-image: var(--auto-field-icon);
-    }
-
-    .mat-mdc-form-field-infix {
-      padding-left: 24px !important;
-    }
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[type='email']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='5' width='18' height='14' rx='2'/%3E%3Cpath d='m3 7 9 6 9-6'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[type='tel']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[inputmode='tel']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.08 4.18 2 2 0 0 1 4.06 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.64 2.62a2 2 0 0 1-.45 2.11L8 9.91a16 16 0 0 0 6.09 6.09l1.46-1.25a2 2 0 0 1 2.11-.45c.84.31 1.72.52 2.62.64A2 2 0 0 1 22 16.92z'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[type='password']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2'/%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input.mat-datepicker-input),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[type='date']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 6h13M8 12h13M8 18h13'/%3E%3Ccircle cx='3' cy='6' r='1'/%3E%3Ccircle cx='3' cy='12' r='1'/%3E%3Ccircle cx='3' cy='18' r='1'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(textarea) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 19.5A2.5 2.5 0 0 1 6.5 17H20'/%3E%3Cpath d='M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[inputmode='numeric']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[type='number']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9h16M4 15h16M10 3 8 21M16 3l-2 18'/%3E%3C/svg%3E");
-  }
-
-  /* Field-specific semantic icon overrides for domain forms. */
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='aadhaar']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='aadharNumber']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='governmentId']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='4' y='11' width='16' height='9' rx='2'/%3E%3Cpath d='M7 11V8a5 5 0 0 1 10 0v3'/%3E%3Ccircle cx='12' cy='15.5' r='1.2'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='firstName']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='middleName']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='lastName']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='username']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21a8 8 0 0 0-16 0'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='motherName']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 21a8 8 0 0 0-16 0'/%3E%3Ccircle cx='12' cy='7' r='4'/%3E%3Cpath d='M8.5 5.5h7'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='studentSaralId']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='apaarId']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='collegeNo']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='udiseNo']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='code']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M16 18 22 12 16 6'/%3E%3Cpath d='M8 6 2 12l6 6'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='pinCode']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-6-5.5-6-10a6 6 0 1 1 12 0c0 4.5-6 10-6 10z'/%3E%3Ccircle cx='12' cy='11' r='2'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='address']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(textarea[formControlName='address']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 9.5 12 4l9 5.5'/%3E%3Cpath d='M5 10v10h14V10'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='district']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='taluka']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='village']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 21s-7-4.35-7-10a7 7 0 1 1 14 0c0 5.65-7 10-7 10z'/%3E%3Ccircle cx='12' cy='11' r='2.5'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(select[formControlName='gender']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='gender']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='8' r='3'/%3E%3Cpath d='M8 11v8M5 16h6'/%3E%3Ccircle cx='17' cy='7' r='2.5'/%3E%3Cpath d='M17 9.5V15M17 15l2 2M17 15l-2 2'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='streamCode']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='mediumCode']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='categoryCode']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='minorityReligionCode']),
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(mat-select[formControlName='divyangCode']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h16M4 12h16M4 18h16'/%3E%3C/svg%3E");
-  }
-
-  &:not(.mat-mdc-form-field-has-icon-prefix):has(input[formControlName='dob']) {
-    --auto-field-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364758b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
-  }
 
   .mat-mdc-form-field-icon-prefix,
   .mat-mdc-form-field-icon-suffix {
-    padding: 0 4px !important;
+    padding: 0 !important;
     color: var(--text-secondary) !important;
+  }
+
+  /* Standard spacing between icon and text */
+  .mat-mdc-form-field-icon-prefix {
+    margin-right: 10px !important;
+  }
+
+  .mat-mdc-form-field-icon-suffix {
+    margin-left: 10px !important;
   }
 
   .mat-mdc-form-field-icon-prefix:empty,
@@ -2363,58 +2232,7 @@ mat-form-field {
     font-size: 0.8rem;
     color: #999;
   }
-  
-  /* Ensure label floats properly when focused or filled */
-  .mdc-floating-label {
-    font-size: 0.84rem;
-    font-weight: 600;
-    color: #334155 !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-  }
-  
-  /* When label is floating (focused/filled) */
-  .mdc-floating-label--float-above {
-    top: -18px !important;
-    transform: translateY(0) scale(0.85) !important;
-  }
-  
-  /* Placeholder/label behavior:
-     - Untouched: only label visible (placeholder hidden)
-     - Touched or focused: placeholder visible + label floats above */
-  input::placeholder,
-  textarea::placeholder {
-    opacity: 0;
-    transition: opacity var(--transition-fast);
-  }
 
-  input.ng-touched::placeholder,
-  textarea.ng-touched::placeholder,
-  input:focus::placeholder,
-  textarea:focus::placeholder {
-    opacity: 0.65;
-  }
-
-  &:has(input.ng-touched),
-  &:has(textarea.ng-touched) {
-    .mdc-floating-label {
-      top: -18px !important;
-      transform: translateY(0) scale(0.85) !important;
-    }
-  }
-  
-  /* Input styling for proper appearance */
-  input.mdc-text-field__input,
-  textarea.mdc-text-field__input {
-    padding: 10px 0;
-    font-size: 0.92rem;
-    color: #0f172a !important;
-    
-    &:focus {
-      outline: none;
-    }
-  }
-  
   /* State colors */
   &.mat-form-field-invalid {
     .mdc-text-field {
@@ -2450,7 +2268,7 @@ mat-form-field:last-child {
 .student-summary-row,
 .launcher-form-grid,
 [class*='form-grid'] {
-  gap: var(--form-control-gap) !important;
+  gap: calc(var(--form-control-gap) + 6px) var(--form-control-gap) !important;
 }
 
 [class*='form-grid'] > .form-field,
@@ -2482,11 +2300,8 @@ mat-form-field:last-child {
 
 /* Ensure error messages display under all Material form field appearances */
 .mat-mdc-form-field-subscript-wrapper {
-  display: grid !important;
   height: auto !important;
-  margin-top: 1px !important;
-  row-gap: 2px;
-  min-height: 0 !important;
+  min-height: 20px !important;
 }
 
 .mat-mdc-form-field-error-wrapper {
@@ -2511,16 +2326,14 @@ mat-form-field:last-child {
 .mat-mdc-form-field-hint-wrapper,
 .mat-mdc-form-field-error-wrapper {
   position: relative;
-  top: -20px;
+  top: 0 !important;
   left: 0;
   right: 0;
-  padding: 0 16px;
 }
 
 @media (max-width: 768px) {
   .mat-mdc-form-field-subscript-wrapper {
-    margin-top: 0 !important;
-    min-height: 0 !important;
+    min-height: 20px !important;
   }
 
   .mat-mdc-form-field-error-wrapper,
@@ -2902,23 +2715,27 @@ header.board-header {
 .app-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
+  background: rgba(15, 23, 42, 0.55);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: center;
   z-index: 1500;
-  padding: 72px 12px 12px;
+  padding: 24px 12px;
   overflow-y: auto;
+  backdrop-filter: blur(4px);
 }
 
 .app-modal-panel {
   width: min(720px, calc(100vw - 24px));
-  max-height: calc(100vh - 96px);
-  overflow: auto;
-  border-radius: 16px;
+  max-height: calc(100vh - 48px);
+  overflow: hidden;
+  border-radius: 18px;
   background: #fff;
-  padding: 20px;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
+  padding: 0;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.28);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  display: flex;
+  flex-direction: column;
 }
 
 .app-modal-panel--sm {
@@ -2938,14 +2755,46 @@ header.board-header {
 }
 
 .app-modal-panel--tight {
-  padding: 12px;
+  padding: 0;
 }
 
 .app-modal-header {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 22px;
+  border-bottom: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  flex: 0 0 auto;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.app-modal-body {
+  padding: 20px 22px;
+  overflow: auto;
+  flex: 1 1 auto;
+}
+
+.app-modal-footer {
+  display: flex;
+  justify-content: flex-end;
   align-items: center;
-  margin-bottom: 8px;
+  gap: 10px;
+  padding: 14px 22px;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+  flex: 0 0 auto;
+}
+
+.app-modal-panel > :not(.app-modal-header):not(.app-modal-body):not(.app-modal-footer) {
+  margin: 20px 22px;
+}
+
+.app-modal-panel > .app-modal-header + :not(.app-modal-body):not(.app-modal-footer) {
+  margin-top: 20px;
 }
 
 /* Shared analytics summary cards */

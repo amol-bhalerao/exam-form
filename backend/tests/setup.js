@@ -12,13 +12,18 @@ export class TestClient {
   async request(method, path, options = {}) {
     const url = new URL(this.baseURL + path);
     const body = options.body ? JSON.stringify(options.body) : null;
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    };
+
+    if (this.authToken) {
+      headers.Authorization = `Bearer ${this.authToken}`;
+    }
 
     const response = await fetch(url.toString(), {
       method,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      },
+      headers,
       body
     });
 
@@ -55,19 +60,6 @@ export class TestClient {
    */
   setAuth(token) {
     this.authToken = token;
-  }
-
-  /**
-   * Override request to auto-include auth token
-   */
-  async request(method, path, options = {}) {
-    if (this.authToken) {
-      options.headers = {
-        ...options.headers,
-        Authorization: `Bearer ${this.authToken}`
-      };
-    }
-    return super.request(method, path, options);
   }
 }
 

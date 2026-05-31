@@ -47,6 +47,13 @@ type Institute = {
         </div>
         <div class="grid-panel__actions">
           <span class="grid-pill">{{ institutes().length }} institutes</span>
+          @if (importMessage) {
+            <span class="grid-pill" style="max-width:420px;">{{ importMessage }}</span>
+          }
+          <button mat-stroked-button type="button" (click)="importColleges()" [disabled]="importingColleges()">
+            <mat-icon>upload_file</mat-icon>
+            Import Colleges
+          </button>
           <button mat-flat-button color="primary" (click)="showCreateInstitute.set(true)">Add New Institute</button>
           <mat-form-field appearance="outline" class="table-search-field">
             <mat-label>Search institutes</mat-label>
@@ -297,6 +304,8 @@ type Institute = {
 })
 export class SuperInstitutesComponent implements OnInit {
   readonly institutes = signal<Institute[]>([]);
+  readonly importingColleges = signal(false);
+  importMessage = '';
   selectedInstitute: Institute | null = null;
   viewingInstitute: Institute | null = null;
   readonly columnDefs: ColDef[] = [
@@ -503,6 +512,29 @@ export class SuperInstitutesComponent implements OnInit {
 
   approve(id: number) {
     this.updateStatus(id, 'APPROVED');
+  }
+
+  importColleges() {
+    if (this.importingColleges()) return;
+    if (!confirm('Import all colleges from college-data.sql? Existing rows are updated by college/UDISE number.')) {
+      return;
+    }
+    this.importingColleges.set(true);
+    this.importMessage = '';
+    this.http.post<{ ok: boolean; totalParsed: number; created: number; updated: number; skipped: number }>(
+      `${API_BASE_URL}/admin/import/colleges`,
+      {}
+    ).subscribe({
+      next: (r) => {
+        this.importingColleges.set(false);
+        this.importMessage = `Imported ${r.totalParsed} rows (${r.created} new, ${r.updated} updated, ${r.skipped} unchanged).`;
+        this.load();
+      },
+      error: (e) => {
+        this.importingColleges.set(false);
+        this.importMessage = e?.error?.message || e?.error?.error || 'College import failed';
+      }
+    });
   }
 
   generateInvite(instituteId: number) {

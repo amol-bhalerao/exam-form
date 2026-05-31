@@ -34,7 +34,7 @@ describe('TableExportService', () => {
       const [csvContent, filename] = downloadFileSpy.calls.mostRecent().args;
       
       expect(filename).toBe('test.csv');
-      expect(csvContent).toContain('ID,Name,Email');
+      expect(csvContent).toContain('"ID","Name","Email"');
       expect(csvContent).toContain('John');
       expect(csvContent).toContain('jane@test.com');
     });

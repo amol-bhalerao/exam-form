@@ -2,12 +2,15 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
+import { AgGridModule } from 'ag-grid-angular';
+import type { ColDef } from 'ag-grid-community';
 
 import { API_BASE_URL } from '../../../core/api';
 
@@ -50,17 +53,28 @@ type DashboardSummary = {
 
 type ExamOption = { id: number; name: string; session: string; academicYear: string };
 
+function formatSubjectsCell(subjects: Row['subjects']): string {
+  return (subjects || [])
+    .map((entry) => {
+      const code = entry.subject?.code || '';
+      const name = entry.subject?.name || '';
+      return code && name ? `${code}-${name}` : code || name;
+    })
+    .filter(Boolean)
+    .join(', ');
+}
+
 @Component({
   selector: 'app-institute-applications',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, MatSelectModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatCardModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatIconModule, MatSelectModule, AgGridModule],
   template: `
     <mat-card class="card hero-card">
       <div class="row hero-row">
         <div>
           <div class="eyebrow">Institute review desk</div>
           <div class="h">Student Applications</div>
-          <div class="p">Only paid and submitted forms are shown for institute verification. Search by application number for fast review.</div>
+          <div class="p">All exam applications for your institute. Submitted forms stay pending until the institute verifies them.</div>
         </div>
         <div class="grow"></div>
         <button mat-stroked-button type="button" (click)="printAllExamForms()" [disabled]="loading() || rows().length === 0">
@@ -96,7 +110,7 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
       <div class="summary-row" *ngIf="rows().length > 0">
         <div class="summary-chip total-chip">
           <strong>{{ rows().length }}</strong>
-          <span>Submitted + Paid</span>
+          <span>Total Applications</span>
         </div>
         <div class="summary-chip verified-chip">
           <strong>{{ readyToVerifyCount() }}</strong>
@@ -129,70 +143,30 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
         <span>No applications found.</span>
       </div>
 
-      <div class="application-list" *ngIf="!loading() && rows().length > 0">
-        <article class="application-item" *ngFor="let row of rows(); trackBy: trackById">
-          <div class="item-head">
-            <div>
-              <div class="app-no">{{ row.applicationNo }}</div>
-              <div class="student-name">{{ formatStudentName(row) }}</div>
-            </div>
-            <span class="status-pill" [class.status-submitted]="row.status === 'SUBMITTED'"
-              [class.status-verified]="row.status === 'INSTITUTE_VERIFIED' || row.status === 'BOARD_APPROVED'"
-              [class.status-rejected]="row.status === 'REJECTED_BY_INSTITUTE' || row.status === 'REJECTED_BY_BOARD'"
-              [class.status-draft]="row.status === 'DRAFT'">
-              {{ formatStatus(row.status) }}
-            </span>
-          </div>
-
-          <div class="item-grid">
-            <div>
-              <label>Exam</label>
-              <span>{{ row.exam?.name || '-' }}</span>
-            </div>
-            <div>
-              <label>Session</label>
-              <span>{{ row.exam?.session }} {{ row.exam?.academicYear }}</span>
-            </div>
-            <div>
-              <label>Last updated</label>
-              <span>{{ row.updatedAt | date:'medium' }}</span>
-            </div>
-          </div>
-
-          <div class="verify-checklist" *ngIf="row.verification">
-            <div class="check-title">Verification Checklist</div>
-            <div class="check-grid">
-              <span class="check-pill" [class.ok]="!!row.verification?.hasStudentCoreDetails">Student details: {{ row.verification?.hasStudentCoreDetails ? 'Complete' : 'Missing' }}</span>
-              <span class="check-pill" [class.ok]="!!row.verification?.hasSubjects">Subjects: {{ row.verification?.subjectCount || 0 }}</span>
-              <span class="check-pill" [class.ok]="!!row.verification?.instituteCode">Institute code: {{ row.verification?.instituteCode || 'Missing' }}</span>
-              <span class="check-pill" [class.ok]="!!row.paymentCompleted">Payment: {{ row.paymentCompleted ? 'Completed' : 'Pending' }}</span>
-            </div>
-          </div>
-
-          <div class="item-actions">
-            <button
-              mat-stroked-button
-              (click)="openPrint(row)">
-              <mat-icon>print</mat-icon>
-              Review / Print
-            </button>
-            <button
-              mat-flat-button
-              color="primary"
-              (click)="decide(row.id, 'VERIFY')"
-              [disabled]="row.status !== 'SUBMITTED' || decidingId() === row.id || !row.verification?.isReadyForVerification">
-              <mat-icon>verified</mat-icon>
-              Verify
-            </button>
-            <button
-              mat-stroked-button
-              (click)="decide(row.id, 'REJECT')"
-              [disabled]="row.status !== 'SUBMITTED' || decidingId() === row.id">
-              <mat-icon>close</mat-icon>
-              Reject
-            </button>
-          </div>
-        </article>
+      <div class="ag-theme-alpine grid-table" *ngIf="!loading() && rows().length > 0">
+        <ag-grid-angular
+          style="width:100%; height:480px;"
+          [rowData]="rows()"
+          [columnDefs]="columnDefs"
+          [defaultColDef]="defaultColDef"
+          (rowClicked)="onRowSelected($event)"
+          [pagination]="true"
+          [paginationPageSize]="15"
+        ></ag-grid-angular>
+        <div class="grid-actions" *ngIf="selectedRow as row">
+          <button mat-stroked-button [routerLink]="['/app/institute/applications', row.id]">
+            <mat-icon>edit</mat-icon> Edit Form
+          </button>
+          <button mat-stroked-button (click)="openPrint(row)">
+            <mat-icon>print</mat-icon> Print
+          </button>
+          <button mat-flat-button color="primary" (click)="decide(row.id, 'VERIFY')" [disabled]="!canVerify(row) || decidingId() === row.id">
+            <mat-icon>verified</mat-icon> Verify
+          </button>
+          <button mat-stroked-button color="warn" (click)="decide(row.id, 'REJECT')" [disabled]="!canReject(row) || decidingId() === row.id">
+            <mat-icon>close</mat-icon> Reject
+          </button>
+        </div>
       </div>
     </mat-card>
   `,
@@ -454,6 +428,9 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
         background: #ecfdf5;
       }
 
+      .grid-table { margin-top: 8px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+      .grid-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px; border-top: 1px solid #e2e8f0; background: #f8fafc; }
+
       @media (max-width: 768px) {
         .card {
           padding: 14px;
@@ -483,6 +460,22 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
           flex: 1 1 100%;
         }
       }
+
+      .grid-table {
+        margin-top: 8px;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+
+      .grid-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px;
+        border-top: 1px solid #e2e8f0;
+        background: #f8fafc;
+      }
     `
   ]
 })
@@ -497,6 +490,34 @@ export class InstituteApplicationsComponent implements OnInit {
   readonly needsChecklistCount = computed(() => this.rows().filter((row) => !row.verification?.isReadyForVerification).length);
   search = '';
   selectedExamId = '';
+  selectedRow: Row | null = null;
+
+  readonly columnDefs: ColDef[] = [
+    { field: 'applicationNo', headerName: 'App No', flex: 1 },
+    {
+      headerName: 'Student',
+      flex: 1.2,
+      valueGetter: (p) => {
+        const st = p.data?.student || {};
+        return `${st.lastName || ''} ${st.firstName || ''}`.trim();
+      }
+    },
+    { field: 'exam.name', headerName: 'Exam', flex: 1 },
+    { field: 'status', headerName: 'Status', flex: 1 },
+    {
+      headerName: 'Subjects',
+      flex: 1.5,
+      valueGetter: (p) => formatSubjectsCell(p.data?.subjects)
+    },
+    {
+      field: 'updatedAt',
+      headerName: 'Updated',
+      flex: 1,
+      valueFormatter: (p) => (p.value ? new Date(p.value).toLocaleString() : '')
+    }
+  ];
+
+  readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true };
 
   constructor(private readonly http: HttpClient) {}
 
@@ -538,15 +559,28 @@ export class InstituteApplicationsComponent implements OnInit {
     });
   }
 
+  onRowSelected(event: { data?: Row }) {
+    this.selectedRow = event?.data ?? null;
+  }
+
+  canReject(row: Row): boolean {
+    return ['SUBMITTED', 'INSTITUTE_VERIFIED'].includes(row.status);
+  }
+
+  canVerify(row: Row): boolean {
+    return row.status === 'SUBMITTED' && !!row.verification?.isReadyForVerification;
+  }
+
   decide(id: number, action: 'VERIFY' | 'REJECT') {
     this.decidingId.set(id);
     this.http.post(`${API_BASE_URL}/applications/${id}/institute/decision`, { action }).subscribe({
       next: () => {
         this.decidingId.set(null);
+        this.selectedRow = null;
         this.load();
       },
       error: (error) => {
-        this.errorMessage.set(error?.error?.error || `Unable to ${action === 'VERIFY' ? 'verify' : 'reject'} application`);
+        this.errorMessage.set(error?.error?.error || `Unable to ${action.toLowerCase()} application`);
         this.decidingId.set(null);
       }
     });

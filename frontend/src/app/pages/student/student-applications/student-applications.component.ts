@@ -153,11 +153,51 @@ type Application = {
     }
 
     <mat-card class="card applications-section">
+      <div class="grid-filters">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Search</mat-label>
+          <input
+            matInput
+            type="text"
+            [value]="listSearch()"
+            (input)="listSearch.set(($any($event.target).value || '').trimStart())"
+            placeholder="Application no, student, exam..."
+          />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Status</mat-label>
+          <mat-select [value]="listStatusFilter()" (selectionChange)="listStatusFilter.set($event.value)">
+            <mat-option value="ALL">All</mat-option>
+            <mat-option value="DRAFT">Draft</mat-option>
+            <mat-option value="SUBMITTED">Submitted</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Category</mat-label>
+          <mat-select [value]="listTypeFilter()" (selectionChange)="listTypeFilter.set($event.value)">
+            <mat-option value="ALL">All</mat-option>
+            <mat-option value="REGULAR">Fresh / Regular</mat-option>
+            <mat-option value="BACKLOG">Backlog</mat-option>
+            <mat-option value="REPEATER">Repeater</mat-option>
+            <mat-option value="ATKT">ATKT</mat-option>
+            <mat-option value="IMPROVEMENT">Improvement</mat-option>
+            <mat-option value="PRIVATE">Private</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Payment</mat-label>
+          <mat-select [value]="listPaymentFilter()" (selectionChange)="listPaymentFilter.set($event.value)">
+            <mat-option value="ALL">All</mat-option>
+            <mat-option value="PAID">Paid</mat-option>
+            <mat-option value="PENDING">Pending</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
       @if (loading()) {
         <div class="loading">Loading applications...</div>
-      } @else if (applications().length === 0) {
+      } @else if (filteredApplications().length === 0) {
         <div class="empty-state">
-          <p>No applications yet. Create a new one to get started!</p>
+          <p>No applications found for the selected filters.</p>
         </div>
       } @else {
         <div class="table-wrap">
@@ -174,7 +214,7 @@ type Application = {
               </tr>
             </thead>
             <tbody>
-              @for (app of applications(); track app.id) {
+              @for (app of filteredApplications(); track app.id) {
                 <tr>
                   <td>{{ app.applicationNo }}</td>
                   <td>{{ studentNameFromApplication(app) }}</td>
@@ -207,10 +247,12 @@ type Application = {
         margin: 0 0 16px 0;
         padding: 18px;
         border-radius: 14px;
+        animation: cardEnter 340ms ease-out both;
       }
       .launcher-card {
         background: radial-gradient(circle at top left, #f8fbff 0%, #ffffff 52%, #f5fbf7 100%);
         border: 1px solid #d8e4ef;
+        box-shadow: 0 8px 26px rgba(15, 23, 42, 0.06);
       }
       .launcher-header {
         margin-bottom: 16px;
@@ -239,6 +281,14 @@ type Application = {
       .create-btn {
         height: 56px;
         align-self: start;
+        border-radius: 12px;
+        box-shadow: 0 10px 18px rgba(37, 99, 235, 0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .create-btn:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 24px rgba(37, 99, 235, 0.3);
       }
       .error-card {
         background-color: #fee;
@@ -267,12 +317,22 @@ type Application = {
       .applications-section {
         background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
       }
+      .grid-filters {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+      .filter-field {
+        width: 100%;
+      }
       .table-wrap {
         margin-top: 8px;
         overflow: auto;
         border: 1px solid #e5e7eb;
         border-radius: 12px;
         background: #fff;
+        box-shadow: 0 8px 16px rgba(15, 23, 42, 0.04);
       }
       .applications-table {
         width: 100%;
@@ -405,6 +465,7 @@ type Application = {
         font-size: 0.75rem;
         font-weight: 700;
         white-space: nowrap;
+        letter-spacing: 0.02em;
       }
       .status-draft {
         background: #fef3c7;
@@ -433,6 +494,9 @@ type Application = {
           gap: 10px;
           padding-top: 2px;
         }
+        .grid-filters {
+          grid-template-columns: 1fr;
+        }
 
         .student-summary-row {
           grid-template-columns: 1fr;
@@ -445,11 +509,66 @@ type Application = {
 
         .actions-cell button {
           min-width: 100%;
-          height: 34px;
+          height: 38px;
+          font-size: 0.78rem;
         }
 
         .applications-table {
-          min-width: 680px;
+          min-width: 620px;
+        }
+
+        .launcher-copy .h {
+          font-size: 1rem;
+        }
+
+        .launcher-copy .p {
+          font-size: 0.84rem;
+        }
+      }
+
+      @media (max-width: 520px) {
+        .card {
+          padding: 12px;
+          margin-bottom: 12px;
+        }
+
+        .applications-table {
+          min-width: 560px;
+        }
+
+        .applications-table th,
+        .applications-table td {
+          padding: 7px 6px;
+          font-size: 0.75rem;
+        }
+
+        .create-btn {
+          width: 100%;
+          height: 48px;
+          border-radius: 10px;
+        }
+
+        .field {
+          margin-top: 0;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .card,
+        .create-btn {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+
+      @keyframes cardEnter {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
         }
       }
     `
@@ -477,6 +596,10 @@ export class StudentApplicationsComponent implements OnInit {
   readonly studentSearchText = signal('');
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
+  readonly listSearch = signal('');
+  readonly listStatusFilter = signal<'ALL' | 'DRAFT' | 'SUBMITTED'>('ALL');
+  readonly listTypeFilter = signal<'ALL' | 'REGULAR' | 'BACKLOG' | 'REPEATER' | 'ATKT' | 'IMPROVEMENT' | 'PRIVATE'>('ALL');
+  readonly listPaymentFilter = signal<'ALL' | 'PAID' | 'PENDING'>('ALL');
   selectedApplication: Application | null = null;
 
   readonly filteredManagedStudents = computed(() => {
@@ -486,6 +609,33 @@ export class StudentApplicationsComponent implements OnInit {
     return all.filter((student) => {
       const haystack = `${this.displayStudentName(student)} ${student.instituteName || ''} ${student.streamCode || ''}`.toLowerCase();
       return haystack.includes(query);
+    });
+  });
+
+  readonly filteredApplications = computed(() => {
+    const search = this.listSearch().trim().toLowerCase();
+    const status = this.listStatusFilter();
+    const type = this.listTypeFilter();
+    const payment = this.listPaymentFilter();
+
+    return this.applications().filter((app) => {
+      const statusMatch = status === 'ALL' || app.status === status;
+      const typeMatch = type === 'ALL' || app.candidateType === type;
+      const paymentMatch = payment === 'ALL'
+        || (payment === 'PAID' ? !!app.paymentCompleted : !app.paymentCompleted);
+
+      if (!search) return statusMatch && typeMatch && paymentMatch;
+
+      const text = [
+        app.applicationNo,
+        app.exam?.name,
+        app.exam?.session,
+        app.exam?.academicYear,
+        app.candidateType,
+        this.studentNameFromApplication(app)
+      ].filter(Boolean).join(' ').toLowerCase();
+
+      return statusMatch && typeMatch && paymentMatch && text.includes(search);
     });
   });
 

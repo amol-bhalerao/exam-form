@@ -574,17 +574,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       </div>
                     </div>
                   </form>
-
-                  <div class="form-actions">
-                    <button mat-raised-button color="primary" type="button" 
-                            [disabled]="!bankDetailsForm.valid || savingBank"
-                            (click)="saveBankDetails()"
-                            class="save-btn">
-                      <mat-icon *ngIf="!savingBank">save</mat-icon>
-                      <mat-spinner *ngIf="savingBank" diameter="20" class="button-spinner"></mat-spinner>
-                      {{ savingBank ? 'Saving...' : 'Save Bank Details' }}
-                    </button>
-                  </div>
+                  <!-- Save Bank Details button removed. Bank details will be saved with the main Save Student action. -->
                 </div>
               </mat-tab>
 
@@ -702,12 +692,12 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
               </button>
               <span class="tab-counter">Step {{ selectedTabIndex + 1 }} of 8</span>
               <button mat-raised-button color="primary" type="button" 
-                [disabled]="selectedTabIndex === 7" 
-                     (click)="onNextTabClick()"
-                     class="nav-btn next-btn">
-                Next
-                <mat-icon>arrow_forward</mat-icon>
-              </button>
+                 [disabled]="selectedTabIndex === 7 || (selectedTabIndex === 6 && bankDetailsForm.invalid)" 
+                   (click)="onNextTabClick()"
+                   class="nav-btn next-btn">
+                 Next
+                 <mat-icon>arrow_forward</mat-icon>
+                  </button>
             </div>
           </div>
 
@@ -734,7 +724,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
         <div class="error-content">
           <h3 style="color: #ff9800;">महाविद्यालय निवड आवश्यक</h3>
           <p>{{ error }}</p>
-          <button mat-raised-button color="primary" routerLink="/student/select-institute">
+          <button mat-raised-button color="primary" routerLink="/app/student/profile">
             <mat-icon>school</mat-icon>
             महाविद्यालय व शाखा निवडा
           </button>
@@ -2959,6 +2949,10 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           eligibilityCertNo: student.eligibilityCertNo || ''
         });
         this.managedStudentInstituteId = student.instituteId || null;
+        this.managedPhotoPreviewUrl = student.photoUrl || response.student?.photoUrl || null;
+        this.managedSignaturePreviewUrl = student.signatureUrl || response.student?.signatureUrl || null;
+        this.managedPhotoDataUrl = null;
+        this.managedSignatureDataUrl = null;
         this.snackBar.open(`विद्यार्थी सापडला: ${student.firstName} ${student.lastName}. फॉर्ममधील माहिती आपोआप भरली आहे.`, 'बंद', { duration: 4000 });
       } else {
         // Keep the entered Aadhaar and any already typed data intact on not-found.
@@ -2975,7 +2969,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       this.snackBar.open(this.getManagedTabValidationMessage(this.selectedTabIndex), 'Close', { duration: 3000 });
       return;
     }
-    this.selectedTabIndex = Math.min(this.selectedTabIndex + 1, 6);
+    this.selectedTabIndex = Math.min(this.selectedTabIndex + 1, 7);
     // Save progress to localStorage
     this.saveFormProgress();
   }
@@ -3038,6 +3032,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       case 5:
         return !!(this.managedPhotoDataUrl || this.managedPhotoPreviewUrl) && !!(this.managedSignatureDataUrl || this.managedSignaturePreviewUrl);
       case 6:
+        return this.bankDetailsForm.valid;
+      case 7:
         return filled(value.sscSeatNo) && filled(value.sscMonth) && filled(value.sscYear) && filled(value.sscBoard) && filled(value.sscPercentage)
           && filled(value.xithSeatNo) && filled(value.xithMonth) && filled(value.xithYear) && filled(value.xithCollege) && filled(value.xithPercentage);
       default:

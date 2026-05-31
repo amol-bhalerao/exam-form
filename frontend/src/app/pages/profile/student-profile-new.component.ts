@@ -70,7 +70,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
         <div class="error-content">
           <h3 style="color: #ff9800;">Institute Selection Required</h3>
           <p>{{ error }}</p>
-          <button mat-raised-button color="primary" routerLink="/student/select-institute">
+          <button mat-raised-button color="primary" routerLink="/app/student/profile">
             <mat-icon>school</mat-icon>
             Select Institute & Stream
           </button>

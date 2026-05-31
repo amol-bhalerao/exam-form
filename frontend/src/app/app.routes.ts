@@ -119,6 +119,7 @@ export const routes: Routes = [
 
       // INSTITUTE
       { path: 'institute/applications', component: InstituteApplicationsComponent, canActivate: [roleGuard(['INSTITUTE'])] },
+      { path: 'institute/applications/:id', component: StudentApplicationEditComponent, canActivate: [roleGuard(['INSTITUTE'])] },
       { path: 'institute/settings', component: InstituteSettingsComponent, canActivate: [roleGuard(['INSTITUTE'])] },
       { path: 'institute/exam-capacity', component: InstituteExamCapacityPageComponent, canActivate: [roleGuard(['INSTITUTE'])] },
       { path: 'institute/teachers', component: InstituteAddTeacherComponent, canActivate: [roleGuard(['INSTITUTE'])] },
@@ -126,7 +127,7 @@ export const routes: Routes = [
 
       // STUDENT - Require Google authentication + complete profile (institute + stream)
       { path: 'student/profile', component: StudentProfileComponent, canActivate: [roleGuard(['STUDENT']), profileGuard] },
-      // Allow exam form at 70% profile completion
+      // Multi-student exam application desk
       { path: 'student/applications', component: StudentApplicationsComponent, canActivate: [roleGuard(['STUDENT']), applicationGuard] },
       { path: 'student/payments', component: StudentPaymentsComponent, canActivate: [roleGuard(['STUDENT']), applicationGuard] },
       { path: 'student/applications/:id', component: StudentApplicationEditComponent, canActivate: [roleGuard(['STUDENT']), applicationGuard] },

@@ -5,7 +5,9 @@ import { HttpClient } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
 
 import { API_BASE_URL } from '../../../core/api';
+import { AuthService } from '../../../core/auth.service';
 import { BrandingService } from '../../../core/branding.service';
+import { canStudentPrintApplication } from '../../../core/printable-form-policy';
 
 @Component({
   selector: 'app-student-form-print',
@@ -47,13 +49,17 @@ import { BrandingService } from '../../../core/branding.service';
                   <span><strong>Centre No:</strong> {{ centreNoValue() }}</span>
                   <span><strong>Stream:</strong> {{ streamLabel() }}</span>
                 </div>
+                <div class="institute-meta-row form-status-row">
+                  <span><strong>Status:</strong> <strong class="status-chip" [attr.data-tone]="statusTone()">{{ statusLabel() }}</strong></span>
+                  <span><strong>Printed on:</strong> {{ printedAt | date:'dd/MM/yyyy' }}</span>
+                  <span><strong>Candidate Type:</strong> {{ candidateTypeLabel() }}</span>
+                </div>
               </div>
             </div>
             <aside class="header-side">
               <div class="meta-row"><span>Application No</span><strong>{{ a().applicationNo || '—' }}</strong></div>
-              <div class="meta-row"><span>Status</span><strong class="status-chip" [attr.data-tone]="statusTone()">{{ statusLabel() }}</strong></div>
-              <div class="meta-row"><span>Printed on</span><strong>{{ printedAt | date:'dd/MM/yyyy' }}</strong></div>
-              <div class="meta-row"><span>Candidate Type</span><strong>{{ candidateTypeLabel() }}</strong></div>
+              <div class="meta-row sequence-meta"><span>Institute Seq.</span><strong>{{ a().instituteSequenceNumber || '—' }}</strong></div>
+              <div class="meta-row sequence-meta"><span>Board Seq.</span><strong>{{ a().boardSequenceNumber || '—' }}</strong></div>
             </aside>
           </header>
 
@@ -109,8 +115,8 @@ import { BrandingService } from '../../../core/branding.service';
                 } @else {
                   <colgroup>
                     <col style="width: 6%;" />
-                    <col style="width: 12%;" />
-                    <col style="width: 42%;" />
+                    <col style="width: 10%;" />
+                    <col style="width: 44%;" />
                     <col style="width: 20%;" />
                     <col style="width: 20%;" />
                   </colgroup>
@@ -127,7 +133,7 @@ import { BrandingService } from '../../../core/branding.service';
                       <th>Month</th>
                       <th>Year</th>
                       <th>Marks Obt</th>
-                      <th>Previous Exam Seat No</th>
+                      <th>Seat No</th>
                     }
                   </tr>
                 </thead>
@@ -226,15 +232,20 @@ import { BrandingService } from '../../../core/branding.service';
 
           <section class="bottom-grid">
             <div class="declaration-box">
+
               <div class="section-title small-title">Declaration</div>
               <p>
                 I hereby declare that the information furnished by me in this form is true and correct to the best of my knowledge.
-                            </p>
-
-             
+              </p>
 
               <div class="note-line">
                 Reference: <strong>{{ a().applicationNo || applicationSerialValue() }}</strong>
+              </div>
+              <div class="note-line">
+                Institute Sequence: <strong>{{ a().instituteSequenceNumber || '—' }}</strong>
+              </div>
+              <div class="note-line">
+                Board Sequence: <strong>{{ a().boardSequenceNumber || '—' }}</strong>
               </div>
 
               <div class="declaration-extra-row flex">
@@ -427,7 +438,7 @@ import { BrandingService } from '../../../core/branding.service';
         grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 2px 10px;
         margin-top: 3px;
-        font-size: 9px;
+        font-size: 11px;
         text-align: center;
       }
 
@@ -436,6 +447,17 @@ import { BrandingService } from '../../../core/branding.service';
         overflow: hidden;
         text-overflow: ellipsis;
         text-transform: uppercase;
+      }
+
+      .form-status-row {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border-top: 1px solid #000;
+        padding-top: 3px;
+      }
+
+      .form-status-row .status-chip {
+        display: inline-block;
+        padding: 1px 4px;
       }
 
       .header-side {
@@ -459,6 +481,11 @@ import { BrandingService } from '../../../core/branding.service';
 
       .meta-row span {
         font-weight: 400;
+      }
+
+      .meta-row.sequence-meta strong {
+        font-size: 11px;
+        letter-spacing: 0.02em;
       }
 
       .meta-row strong {
@@ -728,7 +755,7 @@ import { BrandingService } from '../../../core/branding.service';
 
       .bottom-grid {
         display: grid;
-        grid-template-columns: 55% 20% 10% 10%;
+        grid-template-columns: 40% 20% 20% 17%;
         gap: 4px;
         margin-top: auto;
         align-items: stretch;
@@ -1201,6 +1228,7 @@ export class StudentFormPrintComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly http = inject(HttpClient);
   private readonly location = inject(Location);
+  private readonly auth = inject(AuthService);
   private autoPrint = false;
   private closeAfterPrint = false;
   private hideActions = false;
@@ -1238,7 +1266,12 @@ export class StudentFormPrintComponent implements OnInit {
 
       if (!this.canPrintApplication(application)) {
         this.application.set(null);
-        this.printBlockedReason.set('Only submitted applications with successful payment can be printed.');
+        const role = this.auth.user()?.role;
+        this.printBlockedReason.set(
+          role === 'STUDENT'
+            ? 'Print is available after submission and institute verification (or successful payment for pending submissions).'
+            : 'Print is available only for institute-verified applications.'
+        );
         return;
       }
 
@@ -1277,13 +1310,14 @@ export class StudentFormPrintComponent implements OnInit {
     if (!application) return false;
 
     const status = String(application.status || '').toUpperCase();
-    const latestPayment = application.fees?.[0] || null;
-    const paymentCompleted = !!latestPayment
-      && !!latestPayment.receivedAt
-      && new Date(latestPayment.receivedAt).getTime() > 1000
-      && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
+    const role = this.auth.user()?.role;
+    const boardPrintable = ['INSTITUTE_VERIFIED', 'BOARD_APPROVED'].includes(status);
+    if (role === 'BOARD' || role === 'SUPER_ADMIN' || role === 'INSTITUTE') {
+      return boardPrintable;
+    }
 
-    return status === 'SUBMITTED' && paymentCompleted;
+    if (boardPrintable) return true;
+    return canStudentPrintApplication(application);
   }
 
   private triggerAutoPrintIfNeeded() {
@@ -1537,7 +1571,7 @@ export class StudentFormPrintComponent implements OnInit {
   }
 
   applicationSerialValue() {
-    return this.a().applSrNo || '—';
+    return this.a().instituteSequenceNumber || this.a().applSrNo || '—';
   }
 
   answerLanguageForPrint(subjectRow: any) {
@@ -1574,7 +1608,7 @@ export class StudentFormPrintComponent implements OnInit {
 
   orderedPrintSubjects() {
     const rows = [...(this.a().subjects || [])];
-    if (!rows.length || this.isBacklogCandidate()) {
+    if (!rows.length) {
       return rows;
     }
 
@@ -1642,12 +1676,14 @@ export class StudentFormPrintComponent implements OnInit {
   }
 
   statusLabel() {
-    return String(this.a().status || 'DRAFT').replaceAll('_', ' ');
+    const status = String(this.a().status || 'DRAFT').toUpperCase();
+    if (status === 'SUBMITTED') return 'PENDING VERIFICATION';
+    return status.replaceAll('_', ' ');
   }
 
   statusTone() {
     const status = String(this.a().status || '').toUpperCase();
-    if (['SUBMITTED', 'BOARD_APPROVED', 'INSTITUTE_VERIFIED'].includes(status)) return 'success';
+    if (['BOARD_APPROVED', 'INSTITUTE_VERIFIED'].includes(status)) return 'success';
     if (['REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD'].includes(status)) return 'warning';
     return 'progress';
   }
@@ -1792,7 +1828,8 @@ export class StudentFormPrintComponent implements OnInit {
   }
 
   reimbursementDetails() {
-    return this.s().bankDetails || this.s().feeReimbursement || null;
+    // Prefer application-level bankDetails, then student-level, then feeReimbursement
+    return this.a().bankDetails || this.s().bankDetails || this.s().feeReimbursement || null;
   }
 
   reimbursementRevenueCircleVillage() {

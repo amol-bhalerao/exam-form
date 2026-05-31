@@ -101,6 +101,7 @@ export class TableExportService {
 
     const printWindow = window.open('', '', 'width=1200,height=800');
     if (!printWindow) return;
+    const landscape = columns.length > 6;
 
     let html = `
       <!DOCTYPE html>
@@ -108,6 +109,7 @@ export class TableExportService {
       <head>
         <title>${title}</title>
         <style>
+          @page { size: A4 ${landscape ? 'landscape' : 'portrait'}; margin: ${landscape ? '8mm' : '12mm'}; }
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { 
             font-family: 'Segoe UI', Roboto, sans-serif; 
@@ -125,6 +127,7 @@ export class TableExportService {
             width: 100%; 
             border-collapse: collapse; 
             margin-top: 20px;
+            ${landscape ? 'font-size: 10px; table-layout: auto;' : ''}
           }
           thead { 
             background: #1d4ed8; 
@@ -139,6 +142,8 @@ export class TableExportService {
           td { 
             padding: 10px 12px; 
             border: 1px solid #ddd;
+            vertical-align: top;
+            word-break: break-word;
           }
           tr:nth-child(even) { 
             background: #f8fafc; 
@@ -149,8 +154,8 @@ export class TableExportService {
           @media print {
             body { padding: 10px; }
             h1 { margin-bottom: 10px; }
-            table { font-size: 11px; }
-            th, td { padding: 6px; }
+            table { font-size: ${landscape ? '8.5px' : '11px'}; }
+            th, td { padding: ${landscape ? '3px' : '6px'}; }
           }
         </style>
       </head>

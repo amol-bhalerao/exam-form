@@ -4,6 +4,7 @@ import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
 import { env } from '../env.js';
 import { attachStudentAssets } from '../utils/student-assets.js';
+import { assignSequenceNumbers } from '../services/sequence-service.js';
 
 const STUDENT_STREAM_CODE_LOOKUP = {
   '1': 'Science',
@@ -71,6 +72,12 @@ function resolveStreamIdFromStudentCode(streamCode, streams = [], fallbackStream
   });
 
   return matched?.id ?? fallbackStreamId;
+}
+
+/** When exam.streamId is null, exam is open to all streams — use the student's stream for mappings. */
+function resolveExamStreamId(exam, student, streams = []) {
+  if (exam?.streamId) return exam.streamId;
+  return resolveStreamIdFromStudentCode(student?.streamCode, streams, null);
 }
 
 export const applicationsRouter = Router();
@@ -207,6 +214,7 @@ async function addStatusHistory(params) {
 }
 
 async function getApplicationScoped(applicationId, auth) {
+
   const app = await prisma.examApplication.findUnique({
     where: { id: applicationId },
     include: {
@@ -227,6 +235,28 @@ async function getApplicationScoped(applicationId, auth) {
 
   if (app.student) {
     app.student = await attachStudentAssets(app.student);
+    // Attach bank details from feeReimbursement
+    const bankDetails = await prisma.feeReimbursement.findUnique({ where: { studentId: app.student.id } });
+    app.bankDetails = bankDetails ? {
+      ...bankDetails,
+      accountNumber: bankDetails.accountNo ?? null
+    } : null;
+  } else {
+    app.bankDetails = null;
+  }
+
+  if (
+    ['SUBMITTED', 'INSTITUTE_VERIFIED', 'BOARD_APPROVED'].includes(app.status)
+    && (!app.instituteSequenceNumber || !app.boardSequenceNumber)
+  ) {
+    try {
+      const withSeq = await assignSequenceNumbers(app.id);
+      app.instituteSequenceNumber = withSeq.instituteSequenceNumber;
+      app.boardSequenceNumber = withSeq.boardSequenceNumber;
+      app.applSrNo = withSeq.applSrNo ?? app.applSrNo;
+    } catch (err) {
+      console.error('Sequence assignment on fetch failed:', err.message);
+    }
   }
 
   if (auth.role === 'SUPER_ADMIN') return app;
@@ -270,12 +300,8 @@ applicationsRouter.get('/my', requireAuth, requireRole(['STUDENT']), async (req,
     const accessibleStudentIds = await getAccessibleStudentIdsForUser(req.auth.userId);
     
     if (!accessibleStudentIds.length) {
-      // Return helpful error directing them to complete profile
-      return res.status(412).json({ 
-        error: 'PROFILE_INCOMPLETE',
-        message: 'Please complete your profile by selecting your institute and stream first.',
-        redirectUrl: '/student/select-institute'
-      });
+      // Multi-student flow: allow the screen to load with empty state.
+      return res.json({ applications: [] });
     }
 
     const apps = await prisma.examApplication.findMany({
@@ -304,11 +330,12 @@ applicationsRouter.get('/my', requireAuth, requireRole(['STUDENT']), async (req,
         && !!latestPayment.receivedAt
         && new Date(latestPayment.receivedAt).getTime() > 1000
         && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
+      const boardPrintable = ['INSTITUTE_VERIFIED', 'BOARD_APPROVED'].includes(app.status);
 
       return {
         ...app,
         paymentCompleted,
-        printable: app.status !== 'DRAFT' && paymentCompleted
+        printable: boardPrintable || (app.status !== 'DRAFT' && paymentCompleted)
       };
     });
 
@@ -332,10 +359,9 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
 
     const student = await getAccessibleStudentForUser(req.auth.userId, body.studentId ?? null);
     if (!student) {
-      return res.status(412).json({ 
-        error: 'PROFILE_INCOMPLETE',
-        message: 'Please complete your profile by selecting your institute and stream first.',
-        redirectUrl: '/student/select-institute'
+      return res.status(412).json({
+        error: 'MANAGED_STUDENT_REQUIRED',
+        message: 'Please create at least one student profile with institute and stream before creating an application.'
       });
     }
 
@@ -392,6 +418,7 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
     }
 
     const generatedApplicationNo = `APP-${Date.now()}`;
+    
     const app = await prisma.examApplication.create({
       data: {
         instituteId: student.instituteId,
@@ -412,8 +439,22 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
       toStatus: 'DRAFT'
     });
 
+    // Fetch bank details for the student
+    const bankDetails = await prisma.feeReimbursement.findUnique({ where: { studentId: student.id } });
+    // Fetch full institute info
+    const fullInstitute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
+
     return res.json({
-      application: app,
+      application: {
+        ...app,
+        bankDetails: bankDetails ? {
+          ...bankDetails,
+          accountNumber: bankDetails.accountNo ?? null
+        } : null,
+        institute: fullInstitute ? {
+          ...fullInstitute
+        } : null
+      },
       capacity: {
         totalStudents: totalStudentsAllowed,
         applicationsUsed: applicationsUsed + 1,
@@ -437,26 +478,42 @@ applicationsRouter.get('/:id', requireAuth, async (req, res) => {
   return res.json({ application: app });
 });
 
-// Student: update DRAFT application fields + subject selections
-applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req, res) => {
+// Student or institute: update application fields + subject selections
+applicationsRouter.put('/:id', requireAuth, async (req, res) => {
   try {
     const applicationId = z.coerce.number().int().positive().parse(req.params.id);
 
-    const accessibleStudentIds = await getAccessibleStudentIdsForUser(req.auth.userId);
-    if (!accessibleStudentIds.length) {
-      return res.status(412).json({
-        error: 'PROFILE_INCOMPLETE',
-        message: 'Please complete your profile by selecting your institute and stream first.',
-        redirectUrl: '/student/select-institute'
-      });
+    let app;
+    let student;
+
+    if (req.auth.role === 'INSTITUTE') {
+      const instituteId = req.auth.instituteId;
+      if (!instituteId) return res.status(400).json({ error: 'INSTITUTE_REQUIRED' });
+      app = await prisma.examApplication.findFirst({ where: { id: applicationId, instituteId } });
+      if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
+      if (!['DRAFT', 'SUBMITTED', 'INSTITUTE_VERIFIED'].includes(app.status)) {
+        return res.status(400).json({ error: 'NOT_EDITABLE', message: 'This application can no longer be edited.' });
+      }
+      student = await prisma.student.findUnique({ where: { id: app.studentId } });
+      if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND' });
+    } else if (req.auth.role === 'STUDENT') {
+      const accessibleStudentIds = await getAccessibleStudentIdsForUser(req.auth.userId);
+      if (!accessibleStudentIds.length) {
+        return res.status(412).json({
+          error: 'MANAGED_STUDENT_REQUIRED',
+          message: 'Please create at least one student profile with institute and stream before editing applications.'
+        });
+      }
+
+      app = await prisma.examApplication.findFirst({ where: { id: applicationId, studentId: { in: accessibleStudentIds } } });
+      if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
+      if (app.status !== 'DRAFT') return res.status(400).json({ error: 'NOT_EDITABLE' });
+
+      student = await prisma.student.findUnique({ where: { id: app.studentId } });
+      if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND' });
+    } else {
+      return res.status(403).json({ error: 'FORBIDDEN' });
     }
-
-    const app = await prisma.examApplication.findFirst({ where: { id: applicationId, studentId: { in: accessibleStudentIds } } });
-    if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
-    if (app.status !== 'DRAFT') return res.status(400).json({ error: 'NOT_EDITABLE' });
-
-    const student = await prisma.student.findUnique({ where: { id: app.studentId } });
-    if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND' });
 
   const body = z
     .object({
@@ -536,27 +593,36 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
   const institute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
   if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
 
+  const streams = await prisma.stream.findMany({ orderBy: { name: 'asc' } });
+  const examStreamId = resolveExamStreamId(exam, student, streams);
+
   let orderedSubjectsForPersist = null;
 
   if (body.subjects && body.subjects.length > 0) {
     const subjectIds = body.subjects.map((s) => s.subjectId);
-    const instituteMappedSubjects = await prisma.instituteStreamSubject.findMany({
-      where: { instituteId: student.instituteId, streamId: exam.streamId, subjectId: { in: subjectIds } },
-      include: { subject: true }
-    });
+    const instituteMappedSubjects = examStreamId
+      ? await prisma.instituteStreamSubject.findMany({
+          where: { instituteId: student.instituteId, streamId: examStreamId, subjectId: { in: subjectIds } },
+          include: { subject: true }
+        })
+      : [];
 
-    const hasInstituteSpecificMappings = await prisma.instituteStreamSubject.count({
-      where: { instituteId: student.instituteId, streamId: exam.streamId }
-    });
-    const hasBaseStreamMappings = await prisma.streamSubject.count({
-      where: { streamId: exam.streamId }
-    });
+    const hasInstituteSpecificMappings = examStreamId
+      ? await prisma.instituteStreamSubject.count({
+          where: { instituteId: student.instituteId, streamId: examStreamId }
+        })
+      : 0;
+    const hasBaseStreamMappings = examStreamId
+      ? await prisma.streamSubject.count({
+          where: { streamId: examStreamId }
+        })
+      : 0;
 
     const validStream = hasInstituteSpecificMappings > 0
       ? instituteMappedSubjects
       : hasBaseStreamMappings > 0
         ? await prisma.streamSubject.findMany({
-            where: { streamId: exam.streamId, subjectId: { in: subjectIds } },
+            where: { streamId: examStreamId, subjectId: { in: subjectIds } },
             include: { subject: true }
           })
         : (await prisma.subject.findMany({
@@ -683,7 +749,22 @@ applicationsRouter.put('/:id', requireAuth, requireRole(['STUDENT']), async (req
     return app2;
   });
 
-  return res.json({ application: updated });
+  // Fetch bank details for the student
+  const bankDetails = await prisma.feeReimbursement.findUnique({ where: { studentId: student.id } });
+  // Fetch full institute info
+  const fullInstitute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
+  return res.json({
+    application: {
+      ...updated,
+      bankDetails: bankDetails ? {
+        ...bankDetails,
+        accountNumber: bankDetails.accountNo ?? null
+      } : null,
+      institute: fullInstitute ? {
+        ...fullInstitute
+      } : null
+    }
+  });
   } catch (err) {
     console.error('Update application error:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
@@ -697,9 +778,8 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
     const accessibleStudentIds = await getAccessibleStudentIdsForUser(req.auth.userId);
     if (!accessibleStudentIds.length) {
       return res.status(412).json({
-        error: 'PROFILE_INCOMPLETE',
-        message: 'Please complete your profile by selecting your institute and stream first.',
-        redirectUrl: '/student/select-institute'
+        error: 'MANAGED_STUDENT_REQUIRED',
+        message: 'Please create at least one student profile with institute and stream before submitting applications.'
       });
     }
 
@@ -707,7 +787,7 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
     where: { id: applicationId, studentId: { in: accessibleStudentIds } },
     include: {
       subjects: { include: { subject: true } },
-      student: { select: { instituteId: true } },
+      student: { select: { instituteId: true, streamCode: true } },
       exam: { select: { streamId: true } }
     }
   });
@@ -730,7 +810,12 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
     )];
 
     const instituteId = app.student?.instituteId ?? app.instituteId ?? null;
-    const streamId = app.exam?.streamId ?? null;
+    const streamsForSubmit = await prisma.stream.findMany({ orderBy: { name: 'asc' } });
+    const streamId = resolveExamStreamId(
+      { streamId: app.exam?.streamId ?? null },
+      app.student,
+      streamsForSubmit
+    );
 
     const availableCategories = [];
     if (instituteId && streamId) {
@@ -795,20 +880,27 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
   const updated = await prisma.$transaction(async (tx) => {
     const updatedApp = await tx.examApplication.update({
       where: { id: applicationId },
-      data: { status: 'SUBMITTED', submittedAt: now() }
+      data: {
+        status: 'SUBMITTED',
+        submittedAt: now(),
+        instituteVerifiedAt: null
+      }
     });
     await tx.statusHistory.create({
       data: {
         applicationId,
         actorUserId: req.auth.userId,
         fromStatus: 'DRAFT',
-        toStatus: 'SUBMITTED'
+        toStatus: 'SUBMITTED',
+        remark: 'Submitted by student'
       }
     });
     return updatedApp;
   });
 
-  return res.json({ application: updated });
+  const withSequences = await assignSequenceNumbers(applicationId);
+
+  return res.json({ application: withSequences });
   } catch (err) {
     console.error('Submit application error:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
@@ -830,7 +922,7 @@ applicationsRouter.get('/institute/list', requireAuth, requireRole(['INSTITUTE']
   const apps = await prisma.examApplication.findMany({
     where: {
       instituteId,
-      status: 'SUBMITTED',
+      status: { in: ['SUBMITTED', 'INSTITUTE_VERIFIED', 'REJECTED_BY_INSTITUTE', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'] },
       examId: q.examId,
       ...(q.search
         ? {
@@ -853,17 +945,13 @@ applicationsRouter.get('/institute/list', requireAuth, requireRole(['INSTITUTE']
     take: 200
   });
 
-  const paidOnlyRequired = Number(env.EXAM_FEE_PAISE ?? 0) > 0;
-
   const visibleApps = apps
     .map((app) => {
       const latestPayment = app.fees?.[0] ?? null;
-      const paymentCompleted = !paidOnlyRequired
-        ? true
-        : !!latestPayment
-          && !!latestPayment.receivedAt
-          && new Date(latestPayment.receivedAt).getTime() > 1000
-          && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
+      const paymentCompleted = !!latestPayment
+        && !!latestPayment.receivedAt
+        && new Date(latestPayment.receivedAt).getTime() > 1000
+        && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
 
       const hasStudentCoreDetails = !!(
         app.student?.firstName
@@ -888,11 +976,10 @@ applicationsRouter.get('/institute/list', requireAuth, requireRole(['INSTITUTE']
           examSession: app.exam?.session || '',
           examAcademicYear: app.exam?.academicYear || '',
           streamName: app.exam?.stream?.name || '',
-          isReadyForVerification: paymentCompleted && hasStudentCoreDetails && hasSubjects
+          isReadyForVerification: hasStudentCoreDetails && hasSubjects
         }
       };
-    })
-    .filter((app) => app.paymentCompleted);
+    });
 
   const availableExams = Array.from(
     new Map(
@@ -926,7 +1013,7 @@ applicationsRouter.get('/institute/list', requireAuth, requireRole(['INSTITUTE']
   });
 });
 
-// Institute: verify (SUBMITTED -> INSTITUTE_VERIFIED) or reject
+// Institute: verify or reject submitted applications.
 applicationsRouter.post('/:id/institute/decision', requireAuth, requireRole(['INSTITUTE']), async (req, res) => {
   const applicationId = z.coerce.number().int().positive().parse(req.params.id);
   const body = z
@@ -942,8 +1029,11 @@ applicationsRouter.post('/:id/institute/decision', requireAuth, requireRole(['IN
   const app = await prisma.examApplication.findFirst({ where: { id: applicationId, instituteId } });
   if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
 
-  if (app.status !== 'SUBMITTED') return res.status(400).json({ error: 'INVALID_STATE' });
+  if (!['SUBMITTED', 'INSTITUTE_VERIFIED'].includes(app.status)) {
+    return res.status(400).json({ error: 'INVALID_STATE' });
+  }
 
+  const fromStatus = app.status;
   const toStatus = body.action === 'VERIFY' ? 'INSTITUTE_VERIFIED' : 'REJECTED_BY_INSTITUTE';
 
   const updated = await prisma.$transaction(async (tx) => {
@@ -959,7 +1049,7 @@ applicationsRouter.post('/:id/institute/decision', requireAuth, requireRole(['IN
       data: {
         applicationId,
         actorUserId: req.auth.userId,
-        fromStatus: 'SUBMITTED',
+        fromStatus,
         toStatus,
         remark: body.remark
       }
@@ -985,9 +1075,6 @@ applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_
   const page = q.page ?? 1;
   const limit = q.limit ?? 25;
 
-  const strictStatuses = ['INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_BOARD'];
-  const fallbackStatuses = ['SUBMITTED', 'INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD'];
-
   const buildWhere = (statusCondition) => {
     const where = {
       examId: q.examId,
@@ -1004,29 +1091,16 @@ applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_
     return where;
   };
 
-  let where = buildWhere(q.status ?? { in: strictStatuses });
-  let total = await prisma.examApplication.count({ where });
-  let apps = await prisma.examApplication.findMany({
+  const defaultBoardStatuses = ['INSTITUTE_VERIFIED', 'BOARD_APPROVED'];
+  const where = buildWhere(q.status ?? { in: defaultBoardStatuses });
+  const total = await prisma.examApplication.count({ where });
+  const apps = await prisma.examApplication.findMany({
     where,
     include: { student: true, institute: true, exam: true, subjects: { include: { subject: true } } },
     orderBy: { updatedAt: 'desc' },
     skip: (page - 1) * limit,
     take: limit
   });
-
-  // If no explicit status filter is requested and strict status set has no rows,
-  // fall back to include submitted-stage data so board can still review exam data.
-  if (!q.status && total === 0) {
-    where = buildWhere({ in: fallbackStatuses });
-    total = await prisma.examApplication.count({ where });
-    apps = await prisma.examApplication.findMany({
-      where,
-      include: { student: true, institute: true, exam: true, subjects: { include: { subject: true } } },
-      orderBy: { updatedAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit
-    });
-  }
 
   const allForDashboard = await prisma.examApplication.findMany({
     where,
@@ -1252,7 +1326,6 @@ applicationsRouter.post('/:id/board/decision', requireAuth, requireRole(['BOARD'
       where: { id: applicationId },
       data: {
         status: toStatus,
-        boardApprovedAt: body.action === 'APPROVE' ? now() : null,
         boardRemark: body.remark
       }
     });

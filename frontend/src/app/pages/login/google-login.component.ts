@@ -605,7 +605,7 @@ export class GoogleLoginComponent implements OnInit {
   /**
    * Navigate to the appropriate location based on user role and explicit return URL
    * - If returnUrl in query params, use that
-   * - For STUDENT users, go to /student/select-institute (mandatory institute selection)
+   * - For STUDENT users, go to /app/student/profile for onboarding/profile completion
    * - For other roles, navigate to /app/dashboard
    */
   private navigateToAppropriateLocation() {
@@ -617,9 +617,9 @@ export class GoogleLoginComponent implements OnInit {
     // Get current user
     const user = this.authService.user();
     
-    // STUDENT users MUST select institute first
+    // STUDENT users land on profile onboarding first
     if (user?.role === 'STUDENT') {
-      this.router.navigate(['/student/select-institute']);
+      this.router.navigate(['/app/student/profile']);
       return;
     }
 

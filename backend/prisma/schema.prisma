@@ -74,6 +74,7 @@ model Institute {
   instituteStreamSubjects InstituteStreamSubject[]
   instituteInvites InstituteInvite[]
   examCapacities InstituteExamCapacity[]
+  examFormSequences ExamFormSequence[]
 
   @@index([status])
   @@map("institutes")
@@ -141,13 +142,15 @@ model RefreshToken {
 }
 
 model Stream {
-  id   Int    @id @default(autoincrement())
-  name String @unique @db.VarChar(100)
+  id        Int     @id @default(autoincrement())
+  name      String  @unique @db.VarChar(100)
+  shortCode String? @unique @db.VarChar(3) // SCI, COM, ART, BPC
 
   exams Exam[]
   streamSubjects StreamSubject[]
   instituteStreamSubjects InstituteStreamSubject[]
   instituteExamCapacities InstituteExamCapacity[]
+  examFormSequences ExamFormSequence[]
 
   @@map("streams")
 }
@@ -155,7 +158,7 @@ model Stream {
 model Subject {
   id   Int    @id @default(autoincrement())
   name String @db.VarChar(150)
-  code String @unique @db.VarChar(20)
+  code String @db.VarChar(20)
   category String @db.VarChar(30)
 
   applicationSubjects ExamApplicationSubject[]
@@ -163,26 +166,29 @@ model Subject {
   instituteStreamSubjects InstituteStreamSubject[]
 
   @@index([name])
+  @@index([code])
   @@map("subjects")
 }
 
 model Exam {
-  id              Int      @id @default(autoincrement())
-  name            String   @db.VarChar(150)
-  academicYear    String   @db.VarChar(20)
-  session         String   @db.VarChar(30) // FEB-MAR / JUL-AUG
-  streamId        Int
+  id              Int     @id @default(autoincrement())
+  name            String  @db.VarChar(150)
+  academicYear    String  @db.VarChar(20)
+  session         String  @db.VarChar(30) // FEB-MAR / JUL-AUG
+  streamId        Int?    // null = open to all streams
+  examCode        String? @unique @db.VarChar(10) // EXM001, EXM002, etc
   applicationOpen DateTime
   applicationClose DateTime
   lateFeeClose    DateTime?
-  instructions    String?  @db.Text
+  instructions    String? @db.Text
   createdByUserId Int
   createdAt       DateTime @default(now())
 
-  stream Stream @relation(fields: [streamId], references: [id])
+  stream Stream? @relation(fields: [streamId], references: [id])
   createdBy User @relation("ExamCreatedBy", fields: [createdByUserId], references: [id])
   applications ExamApplication[]
   instituteCapacities InstituteExamCapacity[]
+  examFormSequences ExamFormSequence[]
 
   @@index([streamId])
   @@index([applicationOpen, applicationClose])
@@ -230,6 +236,11 @@ model Student {
   pinCode      String?  @db.VarChar(10)
   mobile       String?  @db.VarChar(15)
 
+  // Bank details (now part of student profile)
+  accountHolder         String? @db.VarChar(100)
+  accountHolderRelation String? @db.VarChar(20)
+  ifscCode              String? @db.VarChar(15)
+  accountNumber         String? @db.VarChar(30)
   // PDF coded fields (stored as string codes but validated via master data in UI)
   streamCode        String? @db.VarChar(10)
   minorityReligionCode String? @db.VarChar(10)
@@ -261,6 +272,8 @@ model ExamApplication {
   studentId     Int
   examId        Int
   applicationNo String            @unique @db.VarChar(50)
+  instituteSequenceNumber String?  @unique @db.VarChar(50) // INST001-SCI-EXM001-0024
+  boardSequenceNumber     String?  @unique @db.VarChar(50) // SCI-EXM001-000145
   status        ApplicationStatus @default(DRAFT)
   candidateType CandidateType
 
@@ -565,4 +578,34 @@ model Statistic {
 
   @@map("statistics")
 }
+
+enum SequenceLevel {
+  INSTITUTE
+  BOARD
+}
+
+model ExamFormSequence {
+  id              Int              @id @default(autoincrement())
+  level           SequenceLevel    @default(INSTITUTE)
+  examId          Int
+  streamId        Int
+  instituteId     Int?
+  currentSequence Int              @default(0) // Next sequence number to assign
+  totalApplications Int            @default(0) // Total applications for this sequence
+  isActive        Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  exam      Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+  stream    Stream    @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  institute Institute? @relation(fields: [instituteId], references: [id], onDelete: Cascade)
+
+  // Unique constraint: One sequence config per (level, exam, stream, institute combo)
+  @@unique([level, examId, streamId, instituteId])
+  @@index([level, examId, streamId])
+  @@index([examId, streamId, instituteId])
+  @@index([isActive])
+  @@map("exam_form_sequences")
+}
+
 

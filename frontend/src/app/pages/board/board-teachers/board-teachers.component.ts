@@ -135,18 +135,15 @@ type TeacherRow = {
 
     <div class="app-modal-backdrop" *ngIf="viewingTeacher() as teacher">
       <div class="modal-card app-modal-panel app-modal-panel--lg">
-        <div class="modal-header">
+        <div class="app-modal-header modal-header">
           <div>
             <div class="modal-title">{{ teacher.fullName }}</div>
             <div class="modal-subtitle">{{ teacher.subjectSpecialization || 'Subject not set' }} • {{ teacher.teacherType || 'Type not set' }}</div>
           </div>
-          <div class="modal-header-actions">
-            <button mat-stroked-button color="primary" type="button" (click)="printTeacherDetail(teacher)">Print Detail</button>
-            <button mat-icon-button type="button" (click)="closeView()"><mat-icon>close</mat-icon></button>
-          </div>
+          <button mat-icon-button type="button" aria-label="Close" (click)="closeView()"><mat-icon>close</mat-icon></button>
         </div>
 
-        <div class="modal-grid">
+        <div class="app-modal-body modal-grid">
           <div class="info-section">
             <div class="section-heading">Personal Information</div>
             <div><strong>DOB:</strong> {{ formatDate(teacher.dob) }}</div>
@@ -200,6 +197,10 @@ type TeacherRow = {
             </ng-template>
           </div>
         </div>
+        <div class="app-modal-footer">
+          <button mat-stroked-button type="button" (click)="closeView()">Close</button>
+          <button mat-flat-button color="primary" type="button" (click)="printTeacherDetail(teacher)">Print Detail</button>
+        </div>
       </div>
     </div>
   `,
@@ -238,12 +239,11 @@ type TeacherRow = {
     `.w180 { width: 180px; }`,
     `.w220 { width: 220px; }`,
     `.table-box { border: 1px solid #e2e8f0; border-radius: 6px; }`,
-    `.modal-card { background: #fff; border-radius: 14px; width: min(980px, calc(100vw - 24px)); max-height: 88vh; overflow: auto; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25); }`,
-    `.modal-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 16px 18px; border-bottom: 1px solid #e2e8f0; }`,
+    `.modal-card { width: min(980px, calc(100vw - 24px)); }`,
+    `.modal-header { align-items: flex-start; }`,
     `.modal-title { font-size: 1.15rem; font-weight: 700; }`,
     `.modal-subtitle { color: #64748b; margin-top: 4px; }`,
-    `.modal-header-actions { display: flex; align-items: center; gap: 8px; }`,
-    `.modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; padding: 16px 18px 18px; }`,
+    `.modal-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }`,
     `.info-section { border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; display: grid; gap: 6px; background: #f8fafc; }`,
     `.section-heading { font-weight: 700; color: #1d4ed8; margin-bottom: 2px; }`,
     `.span-2 { grid-column: span 2; }`,
@@ -485,7 +485,7 @@ export class BoardTeachersComponent implements OnInit {
         return;
       }
       const rows = teachers.map((t) => `<tr><td>${t.fullName}</td><td>${this.formatDate(t.dob)}</td><td>${t.governmentId ?? ''}</td><td>${t.subjectSpecialization ?? ''}</td><td>${t.instituteNames ?? t.institute?.name ?? ''}</td><td>${this.formatDate(t.joiningDate)}</td><td>${this.formatDate(t.retirementDate)}</td><td>${t.totalYearsService ?? ''}</td><td>${t.readinessScore ?? ''}</td><td>${(t.recommendedRoles || []).join(', ')}</td><td>${t.seniorPayGradeEligible ? 'Eligible' : 'No'}</td><td>${t.selectionPayGradeEligible ? 'Eligible' : 'No'}</td><td>${t.canCoordinateExam ? 'Yes' : 'No'}</td><td>${t.canExamine ? 'Yes' : 'No'}</td><td>${t.canPaperCheck ? 'Yes' : 'No'}</td><td>${t.examinerExperienceYears ? `${t.examinerExperienceYears} yrs` : 'No'}</td><td>${t.moderatorExperienceYears ? `${t.moderatorExperienceYears} yrs` : 'No'}</td><td>${t.chiefModeratorExperienceYears ? `${t.chiefModeratorExperienceYears} yrs` : 'No'}</td><td>${t.email ?? ''}</td><td>${t.mobile ?? ''}</td><td>${t.active ? 'Active' : 'Inactive'}</td></tr>`).join('');
-      const html = `<html><head><style>body{font-family:Arial,sans-serif;padding:16px;} .summary{margin-bottom:12px;font-size:14px;} table{width:100%;border-collapse:collapse;}th,td{border:1px solid #666;padding:6px;text-align:left;} th{background:#eef2ff;}</style></head><body><h2>Board Teacher Summary</h2><div class="summary">Generated: ${new Date().toLocaleString()}<br/>Total: ${teachers.length} | Active: ${this.metadata().activeCount} | Multi-Institute: ${this.metadata().multiInstituteCount}</div><table><thead><tr><th>Name</th><th>DOB</th><th>Aadhar</th><th>Subject</th><th>Institutes</th><th>Joining</th><th>Retirement</th><th>Total Service</th><th>Readiness</th><th>Recommended Roles</th><th>Senior Grade</th><th>Selection Grade</th><th>Can Coordinate</th><th>Can Examine</th><th>Can Paper Check</th><th>Examiner</th><th>Moderator</th><th>Chief Moderator</th><th>Email</th><th>Mobile</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
+      const html = `<html><head><style>@page{size:A4 landscape;margin:8mm;}body{font-family:Arial,sans-serif;padding:10px;} .summary{margin-bottom:10px;font-size:12px;} table{width:100%;border-collapse:collapse;table-layout:auto;font-size:9px;}th,td{border:1px solid #666;padding:3px 4px;text-align:left;vertical-align:top;word-break:break-word;} th{background:#eef2ff;} @media print{body{padding:0;} table{font-size:8.5px;} th,td{padding:2px 3px;}}</style></head><body><h2>Board Teacher Summary</h2><div class="summary">Generated: ${new Date().toLocaleString()}<br/>Total: ${teachers.length} | Active: ${this.metadata().activeCount} | Multi-Institute: ${this.metadata().multiInstituteCount}</div><table><thead><tr><th>Name</th><th>DOB</th><th>Aadhar</th><th>Subject</th><th>Institutes</th><th>Joining</th><th>Retirement</th><th>Total Service</th><th>Readiness</th><th>Recommended Roles</th><th>Senior Grade</th><th>Selection Grade</th><th>Can Coordinate</th><th>Can Examine</th><th>Can Paper Check</th><th>Examiner</th><th>Moderator</th><th>Chief Moderator</th><th>Email</th><th>Mobile</th><th>Status</th></tr></thead><tbody>${rows}</tbody></table></body></html>`;
       const w = window.open('', '_blank');
       if (!w) return;
       w.document.write(html);
@@ -527,6 +527,7 @@ export class BoardTeachersComponent implements OnInit {
       <html>
         <head>
           <style>
+            @page { size: A4 portrait; margin: 12mm; }
             body { font-family: Arial, sans-serif; padding: 18px; color: #111827; }
             h2 { margin-bottom: 4px; }
             .muted { color: #6b7280; margin-bottom: 12px; }

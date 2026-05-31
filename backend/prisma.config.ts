@@ -3,7 +3,7 @@ import { defineConfig } from "prisma/config";
 
 const databaseUrl =
   (process.env.DATABASE_URL ?? "").trim().replace(/^['"]|['"]$/g, "") ||
-  "mysql://build:build@localhost:3306/hsc_exam_build";
+  "mysql://root:@localhost:3306/hsc_exam_local";
 
 export default defineConfig({
   schema: "prisma/schema.prisma",

@@ -92,24 +92,34 @@ export class StudentProfileService {
    * Required fields: firstName, lastName, dob, gender, aadhaar, address, pinCode, mobile, email, sscYear, xithYear (11 total)
    */
   private calculateCompletionPercentage(profile: any): number {
-    const requiredFields = [
-      'firstName',
-      'lastName',
-      'dob',
-      'gender',
-      'aadhaar',
-      'address',
-      'pinCode',
-      'mobile',
-      'email'
+    const readField = (obj: any, keys: string[]): any => {
+      for (const key of keys) {
+        const value = obj?.[key];
+        if (value !== undefined && value !== null && value !== '') {
+          return value;
+        }
+      }
+      return null;
+    };
+
+    const requiredFieldAliases: string[][] = [
+      ['firstName'],
+      ['lastName'],
+      ['dob', 'dateOfBirth'],
+      ['gender'],
+      ['aadhaar', 'aadharNumber'],
+      ['address', 'addressLineOne'],
+      ['pinCode', 'pincode'],
+      ['mobile'],
+      ['email']
     ];
 
     let completedCount = 0;
 
     // Check required fields
-    requiredFields.forEach(field => {
-      const value = profile[field];
-      if (value && value !== null && value !== '') {
+    requiredFieldAliases.forEach((aliases) => {
+      const value = readField(profile, aliases);
+      if (value !== null) {
         completedCount++;
       }
     });

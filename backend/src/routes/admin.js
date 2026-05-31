@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import { prisma } from '../prisma.js';
 import { env } from '../env.js';
+import { requireAuth, requireRole } from '../auth/middleware.js';
+import { importCollegesFromFile } from '../services/college-import-service.js';
 
 export const adminRouter = Router();
 
@@ -353,6 +355,89 @@ adminRouter.get('/reports', async (req, res) => {
  * GET /api/admin/statistics
  * Get detailed statistics for board dashboard
  */
+/**
+ * GET /api/admin/overview
+ * Consolidated metrics for super-admin dashboard
+ */
+adminRouter.get('/overview', requireAuth, requireRole(['SUPER_ADMIN']), async (_req, res) => {
+  try {
+    const [
+      totalUsers,
+      activeUsers,
+      totalInstitutes,
+      approvedInstitutes,
+      pendingInstitutes,
+      totalExams,
+      totalExamApplications,
+      instituteVerifiedApplications,
+      boardApprovedApplications,
+      rejectedApplications,
+      totalStudents,
+      totalTeachers
+    ] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { status: 'ACTIVE' } }),
+      prisma.institute.count(),
+      prisma.institute.count({ where: { status: 'APPROVED' } }),
+      prisma.institute.count({ where: { status: 'PENDING' } }),
+      prisma.exam.count(),
+      prisma.examApplication.count(),
+      prisma.examApplication.count({ where: { status: 'INSTITUTE_VERIFIED' } }),
+      prisma.examApplication.count({ where: { status: 'BOARD_APPROVED' } }),
+      prisma.examApplication.count({
+        where: { status: { in: ['REJECTED_BY_BOARD', 'REJECTED_BY_INSTITUTE'] } }
+      }),
+      prisma.student.count(),
+      prisma.teacher.count()
+    ]);
+
+    const [applicationsByStatus, institutesByStatus] = await Promise.all([
+      prisma.examApplication.groupBy({ by: ['status'], _count: { id: true } }),
+      prisma.institute.groupBy({ by: ['status'], _count: { id: true } })
+    ]);
+
+    return res.json({
+      summary: {
+        totalUsers,
+        activeUsers,
+        totalInstitutes,
+        approvedInstitutes,
+        pendingInstitutes,
+        totalExams,
+        totalExamApplications,
+        instituteVerifiedApplications,
+        boardApprovedApplications,
+        rejectedApplications,
+        totalStudents,
+        totalTeachers
+      },
+      distributions: { applicationsByStatus, institutesByStatus },
+      generatedAt: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Error fetching admin overview:', error);
+    return res.status(500).json({ error: 'Failed to fetch overview', message: error.message });
+  }
+});
+
+/**
+ * POST /api/admin/import/colleges
+ * Import institutes from college-data.sql (project root)
+ */
+adminRouter.post('/import/colleges', requireAuth, requireRole(['SUPER_ADMIN']), async (_req, res) => {
+  try {
+    const result = await importCollegesFromFile();
+    return res.json({ ok: true, ...result });
+  } catch (error) {
+    console.error('College import failed:', error);
+    const status = String(error.message || '').includes('NOT_FOUND') ? 404 : 500;
+    return res.status(status).json({
+      error: 'COLLEGE_IMPORT_FAILED',
+      message: error.message
+    });
+  }
+});
+
 adminRouter.get('/statistics', async (req, res) => {
   try {
     const [

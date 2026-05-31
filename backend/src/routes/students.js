@@ -155,10 +155,18 @@ studentsRouter.get('/lookup-by-aadhaar/:aadhaar', requireAuth, async (req, res) 
       });
     }
 
+    const studentWithAssets = await attachStudentAssets(student);
+    const bankDetails = await prisma.feeReimbursement.findUnique({ where: { studentId: student.id } });
+
     return res.json({ 
       found: true, 
-      student: studentSummaryDto(student),
-      fullStudent: student
+      student: studentSummaryDto(studentWithAssets),
+      fullStudent: {
+        ...studentWithAssets,
+        bankDetails: bankDetails
+          ? { ...bankDetails, accountNumber: bankDetails.accountNo ?? null }
+          : null
+      }
     });
   } catch (err) {
     console.error('Aadhaar lookup error:', err);
@@ -242,7 +250,12 @@ studentsRouter.post('/managed', requireAuth, async (req, res) => {
       xithMonth: z.string().max(10).optional(),
       xithYear: z.coerce.number().int().positive().optional(),
       xithCollege: z.string().max(200).optional(),
-      xithPercentage: z.string().max(10).optional()
+      xithPercentage: z.string().max(10).optional(),
+      // Bank details
+      accountHolder: z.string().max(100).optional(),
+      accountHolderRelation: z.string().max(20).optional(),
+      ifscCode: z.string().max(15).optional(),
+      accountNumber: z.string().max(30).optional()
     }).parse(req.body ?? {});
 
     const institute = await prisma.institute.findUnique({ where: { id: body.instituteId } });
@@ -348,8 +361,29 @@ studentsRouter.post('/managed', requireAuth, async (req, res) => {
       await saveStudentAsset(student.id, 'signature', body.signatureDataUrl);
     }
 
+    // Upsert bank details if provided
+    if (body.accountHolder || body.accountHolderRelation || body.ifscCode || body.accountNumber) {
+      await prisma.feeReimbursement.upsert({
+        where: { studentId: student.id },
+        update: {
+          accountHolder: body.accountHolder || null,
+          accountHolderRelation: body.accountHolderRelation || null,
+          ifscCode: body.ifscCode ? body.ifscCode.toUpperCase() : null,
+          accountNo: body.accountNumber || null
+        },
+        create: {
+          studentId: student.id,
+          accountHolder: body.accountHolder || null,
+          accountHolderRelation: body.accountHolderRelation || null,
+          ifscCode: body.ifscCode ? body.ifscCode.toUpperCase() : null,
+          accountNo: body.accountNumber || null
+        }
+      });
+    }
+    // Attach bank details to response
+    const bankDetails = await prisma.feeReimbursement.findUnique({ where: { studentId: student.id } });
     const studentWithAssets = await attachStudentAssets(student);
-    return res.status(201).json({ ok: true, student: studentWithAssets });
+    return res.status(201).json({ ok: true, student: { ...studentWithAssets, bankDetails } });
   } catch (err) {
     console.error('Create managed student error:', err);
     if (err.name === 'ZodError') {
@@ -408,7 +442,12 @@ studentsRouter.patch('/managed/:id', requireAuth, async (req, res) => {
       xithMonth: z.string().max(10).nullable().optional(),
       xithYear: z.coerce.number().int().positive().nullable().optional(),
       xithCollege: z.string().max(200).nullable().optional(),
-      xithPercentage: z.string().max(10).nullable().optional()
+      xithPercentage: z.string().max(10).nullable().optional(),
+      // Bank details
+      accountHolder: z.string().max(100).optional(),
+      accountHolderRelation: z.string().max(20).optional(),
+      ifscCode: z.string().max(15).optional(),
+      accountNumber: z.string().max(30).optional()
     }).parse(req.body ?? {});
 
     if (student.aadhaar && body.aadhaar !== undefined && body.aadhaar !== student.aadhaar) {
@@ -519,8 +558,29 @@ studentsRouter.patch('/managed/:id', requireAuth, async (req, res) => {
       }
     }
 
+    // Upsert bank details if provided
+    if (body.accountHolder || body.accountHolderRelation || body.ifscCode || body.accountNumber) {
+      await prisma.feeReimbursement.upsert({
+        where: { studentId: student.id },
+        update: {
+          accountHolder: body.accountHolder || null,
+          accountHolderRelation: body.accountHolderRelation || null,
+          ifscCode: body.ifscCode ? body.ifscCode.toUpperCase() : null,
+          accountNo: body.accountNumber || null
+        },
+        create: {
+          studentId: student.id,
+          accountHolder: body.accountHolder || null,
+          accountHolderRelation: body.accountHolderRelation || null,
+          ifscCode: body.ifscCode ? body.ifscCode.toUpperCase() : null,
+          accountNo: body.accountNumber || null
+        }
+      });
+    }
+    // Attach bank details to response
+    const bankDetails = await prisma.feeReimbursement.findUnique({ where: { studentId: student.id } });
     const updatedWithAssets = await attachStudentAssets(updated);
-    return res.json({ ok: true, student: updatedWithAssets });
+    return res.json({ ok: true, student: { ...updatedWithAssets, bankDetails } });
   } catch (err) {
     console.error('Update managed student error:', err);
     if (err.name === 'ZodError') {
@@ -661,7 +721,12 @@ studentsRouter.patch('/me', requireAuth, async (req, res) => {
       mediumCode: z.string().nullable().optional(),
       sscPassedFromMaharashtra: z.boolean().nullable().optional(),
       eligibilityCertIssued: z.boolean().nullable().optional(),
-      eligibilityCertNo: z.string().max(100).nullable().optional()
+      eligibilityCertNo: z.string().max(100).nullable().optional(),
+      // Bank details
+      accountHolder: z.string().max(100).optional(),
+      accountHolderRelation: z.string().max(20).optional(),
+      ifscCode: z.string().max(15).optional(),
+      accountNumber: z.string().max(30).optional()
     });
 
     const data = updateSchema.parse(req.body);
@@ -678,7 +743,7 @@ studentsRouter.patch('/me', requireAuth, async (req, res) => {
         });
       }
 
-      return tx.student.update({
+      const updatedStudent = await tx.student.update({
         where: { id: student.id },
         data: {
           firstName: data.firstName ?? undefined,
@@ -709,10 +774,32 @@ studentsRouter.patch('/me', requireAuth, async (req, res) => {
               : (data.eligibilityCertIssued === false ? null : undefined)
         }
       });
+      // Upsert bank details if provided
+      if (data.accountHolder || data.accountHolderRelation || data.ifscCode || data.accountNumber) {
+        await tx.feeReimbursement.upsert({
+          where: { studentId: student.id },
+          update: {
+            accountHolder: data.accountHolder || null,
+            accountHolderRelation: data.accountHolderRelation || null,
+            ifscCode: data.ifscCode ? data.ifscCode.toUpperCase() : null,
+            accountNo: data.accountNumber || null
+          },
+          create: {
+            studentId: student.id,
+            accountHolder: data.accountHolder || null,
+            accountHolderRelation: data.accountHolderRelation || null,
+            ifscCode: data.ifscCode ? data.ifscCode.toUpperCase() : null,
+            accountNo: data.accountNumber || null
+          }
+        });
+      }
+      return updatedStudent;
     });
 
+    // Attach bank details to response
+    const bankDetails = await prisma.feeReimbursement.findUnique({ where: { studentId: updated.id } });
     const studentWithAssets = await attachStudentAssets(updated);
-    return res.json({ ok: true, student: studentWithAssets });
+    return res.json({ ok: true, student: { ...studentWithAssets, bankDetails } });
   } catch (err) {
     console.error('Update student profile error:', err);
     if (err.name === 'ZodError') {

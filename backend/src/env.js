@@ -45,7 +45,7 @@ const envSchema = z.object({
   CASHFREE_APP_ID: z.string().optional(),
   CASHFREE_SECRET_KEY: z.string().optional(),
   CASHFREE_WEBHOOK_SECRET: z.string().optional(),
-  EXAM_FEE_PAISE: z.coerce.number().int().positive().default(50000), // ₹500
+  EXAM_FEE_PAISE: z.coerce.number().int().nonnegative().default(isProd ? 50000 : 0),
 
   // URLs (used for redirects and webhook base URL)
   BACKEND_URL: z.string().default(isProd ? 'https://api.hscexam.in' : 'http://localhost:3000'),

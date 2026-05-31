@@ -15,9 +15,11 @@ import { MatStepperModule } from '@angular/material/stepper';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { InstituteSearchModalComponent } from '../../../components/institute-search-modal/institute-search-modal.component';
 
 import { API_BASE_URL } from '../../../core/api';
+import { AuthService } from '../../../core/auth.service';
 
 type Subject = { id: number; code: string; name: string; category?: string; answerLanguageCode?: string | null; mappingId?: number };
 
@@ -45,6 +47,7 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
     MatIconModule,
     MatProgressBarModule,
     MatTooltipModule,
+    MatAutocompleteModule,
     DatePipe,
     InstituteSearchModalComponent
   ],
@@ -70,9 +73,9 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
     }
 
     @if (application()) {
-      <div class="application-container">
+      <div class="application-container animated-shell">
         <!-- Header Card -->
-        <mat-card class="header-card">
+        <mat-card class="header-card glass-card pop-in">
           <div class="header-row">
             <div>
               <h2 class="app-title">Application {{ application()!.applicationNo }}</h2>
@@ -95,10 +98,10 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
         </mat-card>
 
         <!-- Multi-Step Form -->
-        <mat-card class="form-card">
+        <mat-card class="form-card glass-card pop-in delay-1">
           <p class="stepper-help">Complete each step and continue to payment.</p>
           <mat-stepper #stepper [linear]="false" class="application-stepper">
-            <!-- Step 1: Institute & Reference -->
+                        <!-- Step 1: Institute & Reference -->
             <mat-step [editable]="isEditable()">
               <ng-template matStepLabel>
                 <span class="step-label">
@@ -108,28 +111,20 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
               </ng-template>
 
               <div class="step-content">
-                <h3 class="step-title">Institute Information</h3>
-                <p class="step-desc">Search and select your college/institute.</p>
+                <h3 class="step-title">Student Institute Information</h3>
+                <p class="step-desc">This is derived from the selected student profile used to create this application.</p>
 
                 @if (selectedInstitute()) {
                   <div class="institute-card">
                     <div><strong>{{ selectedInstitute()!.name }}</strong></div>
                     <div>{{ selectedInstitute()!.address }}, {{ selectedInstitute()!.city }}</div>
-                    <button mat-stroked-button class="mt-16" (click)="showInstitutePicker.set(true)">
-                      <mat-icon>edit</mat-icon> Change
-                    </button>
                   </div>
                 } @else {
-                  <button mat-raised-button class="block-button" (click)="showInstitutePicker.set(true)">
-                    <mat-icon>search</mat-icon> Search Institute
-                  </button>
+                  <div class="institute-card">
+                    <div><strong>Institute not available</strong></div>
+                    <div>Please update the selected student profile with institute and stream details.</div>
+                  </div>
                 }
-
-                <app-institute-search-modal
-                  [visible]="showInstitutePicker()"
-                  (visibleChange)="showInstitutePicker.set($event)"
-                  (selected)="selectInstitute($event)">
-                </app-institute-search-modal>
 
                 <div class="step-actions">
                   <button mat-button matStepperNext class="next-cta">
@@ -544,14 +539,23 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
                   <div class="subject-item-grid">
                     @for (idx of getSubjectIndices(); track idx) {
                       <div class="subject-input-group" [formGroup]="getSubjectFormGroup(idx)">
-                        <mat-form-field appearance="outline" class="flex-1" matTooltip="Only subjects relevant to the selected stream are shown here." matTooltipPosition="above">
+                        <mat-form-field appearance="outline" class="flex-1" matTooltip="Type code or name to search subjects." matTooltipPosition="above">
                           <mat-label>Subject / विषय (15)</mat-label>
-                          <mat-select formControlName="subjectId" required (selectionChange)="onSubjectSelectionChange(idx)">
-                            <mat-option value="">-- None --</mat-option>
-                            @for (s of getAvailableSubjectsForIndex(idx); track s.id) {
-                              <mat-option [value]="s.id">{{ s.code }} - {{ s.name }} ({{ s.category || 'General' }})</mat-option>
+                          <input
+                            matInput
+                            [value]="getSubjectSearchLabel(idx)"
+                            (input)="onSubjectSearchInput(idx, $event)"
+                            [matAutocomplete]="subjectAuto"
+                            placeholder="Search by code or name"
+                            [disabled]="!isEditable()"
+                          />
+                          <mat-autocomplete
+                            #subjectAuto="matAutocomplete"
+                            (optionSelected)="onSubjectAutocompleteSelected(idx, $event.option.value)">
+                            @for (s of getFilteredSubjectsForIndex(idx); track s.id) {
+                              <mat-option [value]="s">{{ s.code }} - {{ s.name }} ({{ s.category || 'General' }})</mat-option>
                             }
-                          </mat-select>
+                          </mat-autocomplete>
                         </mat-form-field>
                         @if (examType() === 'backlog') {
                           <mat-form-field appearance="outline" class="marks-field" matTooltip="For backlog entries, type the marks obtained in the previous attempt." matTooltipPosition="above">
@@ -560,7 +564,7 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
                           </mat-form-field>
                         } @else {
                           <mat-form-field appearance="outline" class="w120" matTooltip="Select the answer language for this subject. If the institute has mapped it, the field will be locked." matTooltipPosition="above">
-                            <mat-label>Answer Language / उत्तर भाषा</mat-label>
+                            <mat-label>{{ getAnswerLanguageLabelForIndex(idx) }}</mat-label>
                             <mat-select formControlName="langOfAnsCode">
                               <mat-option value="">-- Select language --</mat-option>
                               @for (lang of answerLanguageOptions(); track lang.code) {
@@ -642,6 +646,44 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
                 </div>
 
                 <div class="review-section">
+                  <h4 class="review-heading">Application Details</h4>
+                  <div class="readonly-grid">
+                    <div class="readonly-field">
+                      <label>Application Number</label>
+                      <strong>{{ application()?.applicationNo || '-' }}</strong>
+                    </div>
+                    <div class="readonly-field">
+                      <label>Candidate Type</label>
+                      <strong>{{ candidateType() }}</strong>
+                    </div>
+                    <div class="readonly-field">
+                      <label>Status</label>
+                      <strong>{{ application()?.status || '-' }}</strong>
+                    </div>
+                    <div class="readonly-field">
+                      <label>Payment</label>
+                      <strong>{{ paymentStatusLabel() }}</strong>
+                    </div>
+                    <div class="readonly-field">
+                      <label>Index No</label>
+                      <strong>{{ displayValue('indexNo') }}</strong>
+                    </div>
+                    <div class="readonly-field">
+                      <label>UDISE No</label>
+                      <strong>{{ displayValue('udiseNo') }}</strong>
+                    </div>
+                    <div class="readonly-field">
+                      <label>Centre No</label>
+                      <strong>{{ displayValue('centreNo') }}</strong>
+                    </div>
+                    <div class="readonly-field">
+                      <label>Appl.Sr.No</label>
+                      <strong>{{ displayValue('applSrNo', 'default', application()?.applicationNo || 'Auto generated') }}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="review-section">
                   <h4 class="review-heading">Personal Information</h4>
                   <div class="review-item">
                     <span class="review-label">Name:</span>
@@ -665,6 +707,9 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
                         <div class="subject-review-item">
                           <div class="subject-name">{{ getSubjectName(getSubjectFormGroup(idx).get('subjectId')?.value) }}</div>
                           <div class="subject-category-text">{{ getSubjectCategory(getSubjectFormGroup(idx).get('subjectId')?.value) || 'General' }}</div>
+                          @if (examType() !== 'backlog') {
+                            <div class="subject-category-text">Answer language: {{ getLanguageLabel(getSubjectFormGroup(idx).get('langOfAnsCode')?.value) }}</div>
+                          }
                           @if (examType() === 'backlog' && getSubjectFormGroup(idx).get('marks')?.value) {
                             <div class="subject-marks">Previous Marks: {{ getSubjectFormGroup(idx).get('marks')?.value }}</div>
                           }
@@ -677,7 +722,7 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
                 <div class="warning-card">
                   <mat-icon>info</mat-icon>
                   <div>
-                    <strong>Important:</strong> Please ensure all information is correct. After submission, you will proceed to payment.
+                    <strong>Important:</strong> Please ensure all information is correct. After payment is completed, this form will be locked and cannot be edited.
                   </div>
                 </div>
 
@@ -693,7 +738,7 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
                   } @else {
                     <div class="already-submitted">
                       <mat-icon>check_circle</mat-icon>
-                      <span>This application has been submitted.</span>
+                      <span>{{ paymentCompleted() ? 'Payment completed. This application is locked for editing.' : 'This application has been submitted.' }}</span>
                     </div>
                   }
                 </div>
@@ -704,7 +749,7 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
 
         <!-- Save Bar -->
         @if (isEditable()) {
-          <div class="save-bar">
+          <div class="save-bar pop-in delay-2">
             <button mat-flat-button color="primary" (click)="save()" [disabled]="saving() || !form.dirty">
               <mat-icon>{{ saving() ? 'hourglass_empty' : 'save' }}</mat-icon>
               {{ saving() ? 'Saving…' : 'Save Draft' }}
@@ -741,6 +786,40 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
       padding: 24px 12px;
       display: grid;
       gap: 20px;
+    }
+
+    .animated-shell {
+      background:
+        radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.08), transparent 35%),
+        radial-gradient(circle at 90% 20%, rgba(16, 185, 129, 0.08), transparent 40%),
+        linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+      border-radius: 18px;
+      animation: fadeSlideIn 420ms ease-out both;
+    }
+
+    .glass-card {
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .glass-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
+    .pop-in {
+      animation: popIn 320ms ease-out both;
+    }
+
+    .delay-1 {
+      animation-delay: 70ms;
+    }
+
+    .delay-2 {
+      animation-delay: 120ms;
     }
 
     .header-card {
@@ -803,6 +882,21 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
       background: transparent;
     }
 
+    ::ng-deep .application-stepper .mat-step-header {
+      border-radius: 999px;
+      margin-bottom: 4px;
+      transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    ::ng-deep .application-stepper .mat-step-header:hover {
+      background: rgba(59, 130, 246, 0.08);
+      transform: translateY(-1px);
+    }
+
+    ::ng-deep .application-stepper .mat-step-header .mat-step-icon-selected {
+      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    }
+
     .step-label {
       display: flex;
       align-items: center;
@@ -818,6 +912,7 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
 
     .step-content {
       padding: 24px 0;
+      animation: fadeSlideIn 240ms ease-out both;
     }
 
     .step-title {
@@ -897,11 +992,12 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
     }
 
     .institute-card {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
+      background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+      border: 1px solid #dbeafe;
+      border-radius: 12px;
       padding: 16px;
       margin-bottom: 24px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
     }
 
     .mt-16 {
@@ -924,12 +1020,18 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
     }
 
     .step-actions .next-cta {
-      background: #0f766e;
+      background: linear-gradient(135deg, #0f766e 0%, #0ea5a4 100%);
       color: #fff;
       font-weight: 700;
       border-radius: 999px;
       padding: 0 18px;
       box-shadow: 0 2px 8px rgba(15, 118, 110, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .step-actions .next-cta:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.35);
     }
 
     .step-actions .next-cta:disabled {
@@ -1070,12 +1172,13 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
 
     .save-bar {
       padding: 16px 20px;
-      background: #f8fafc;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef6ff 100%);
       border-radius: var(--card-radius);
       display: flex;
       align-items: center;
       gap: 16px;
       border-top: 1px solid #e2e8f0;
+      border: 1px solid #dbeafe;
     }
 
     .save-status {
@@ -1113,6 +1216,10 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
     }
 
     @media (max-width: 768px) {
+      .animated-shell {
+        border-radius: 12px;
+      }
+
       .form-grid {
         grid-template-columns: 1fr;
       }
@@ -1134,11 +1241,64 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
       }
 
       .save-bar {
-        flex-direction: column;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        position: sticky;
+        bottom: 8px;
+        z-index: 10;
       }
 
       .save-status {
         margin-left: 0;
+        font-size: 0.78rem;
+      }
+
+      .subject-input-group {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .marks-field,
+      .w120 {
+        width: 100%;
+        flex: 1 1 auto;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .application-container {
+        padding: 10px 6px 18px;
+        gap: 12px;
+      }
+
+      .header-card,
+      .form-card {
+        padding: 12px;
+      }
+
+      .app-title {
+        font-size: 1.15rem;
+      }
+
+      .step-title {
+        font-size: 1rem;
+      }
+
+      .step-desc {
+        font-size: 0.84rem;
+      }
+
+      .save-bar {
+        padding: 10px;
+        gap: 10px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
       }
     }
 
@@ -1206,6 +1366,11 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
       display: flex;
       gap: 12px;
       align-items: flex-end;
+      padding: 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      animation: popIn 200ms ease-out both;
     }
 
     .marks-field {
@@ -1277,6 +1442,28 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
       margin: 0;
       font-size: 1rem;
     }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.99);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
   `]
 })
 export class StudentApplicationEditComponent implements OnInit {
@@ -1310,10 +1497,12 @@ export class StudentApplicationEditComponent implements OnInit {
 
   form!: FormGroup;
   private subjectWatcherInitialized = false;
+  private readonly subjectSearchTerms = new Map<number, string>();
 
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(AuthService);
 
   constructor() {
     // Initialize form immediately to avoid binding errors
@@ -1419,7 +1608,25 @@ export class StudentApplicationEditComponent implements OnInit {
     });
   }
 
-  isEditable = () => this.application()?.status === 'DRAFT';
+  isEditable = () => {
+    const status = String(this.application()?.status || '');
+    if (this.auth.user()?.role === 'INSTITUTE') {
+      return ['DRAFT', 'SUBMITTED', 'INSTITUTE_VERIFIED'].includes(status);
+    }
+    return status === 'DRAFT' && !this.paymentCompleted();
+  };
+
+  paymentCompleted(): boolean {
+    const latestPayment = this.application()?.fees?.[0] || null;
+    return !!latestPayment
+      && !!latestPayment.receivedAt
+      && new Date(latestPayment.receivedAt).getTime() > 1000
+      && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
+  }
+
+  paymentStatusLabel(): string {
+    return this.paymentCompleted() ? 'Completed' : 'Pending';
+  }
 
   getStatusClass() {
     const status = this.application()?.status?.toLowerCase() || '';
@@ -1429,12 +1636,14 @@ export class StudentApplicationEditComponent implements OnInit {
   canPrintApplication(): boolean {
     const app = this.application();
     if (!app) return false;
+    const status = String(app.status || '').toUpperCase();
+    if (['INSTITUTE_VERIFIED', 'BOARD_APPROVED'].includes(status)) return true;
     const latestPayment = app.fees?.[0] || null;
     const paymentCompleted = !!latestPayment
       && !!latestPayment.receivedAt
       && new Date(latestPayment.receivedAt).getTime() > 1000
       && !String(latestPayment.method || '').toUpperCase().includes('PENDING');
-    return String(app.status || '').toUpperCase() === 'SUBMITTED' && paymentCompleted;
+    return status === 'SUBMITTED' && paymentCompleted;
   }
 
   personFormGroup() {
@@ -1728,6 +1937,58 @@ export class StudentApplicationEditComponent implements OnInit {
     return this.filteredSubjects().filter((subject) => subject.id === currentSubjectId || !selectedIds.has(subject.id));
   }
 
+  getFilteredSubjectsForIndex(index: number): Subject[] {
+    const query = String(this.subjectSearchTerms.get(index) || '').trim().toLowerCase();
+    const available = this.getAvailableSubjectsForIndex(index);
+    if (!query) return available.slice(0, 50);
+    return available
+      .filter((subject) => {
+        const label = `${subject.code} ${subject.name} ${subject.category || ''}`.toLowerCase();
+        return label.includes(query);
+      })
+      .slice(0, 50);
+  }
+
+  getSubjectSearchLabel(index: number): string {
+    const cached = this.subjectSearchTerms.get(index);
+    if (cached !== undefined) return cached;
+    const subjectId = this.getSubjectFormGroup(index).get('subjectId')?.value;
+    if (!subjectId) return '';
+    const subject = this.masterSubjects().find((entry) => entry.id === subjectId);
+    return subject ? `${subject.code} - ${subject.name}` : '';
+  }
+
+  onSubjectSearchInput(index: number, event: Event) {
+    const value = String((event.target as HTMLInputElement)?.value || '');
+    this.subjectSearchTerms.set(index, value);
+    if (!value.trim()) {
+      this.getSubjectFormGroup(index).get('subjectId')?.setValue(null);
+    }
+  }
+
+  onSubjectAutocompleteSelected(index: number, subject: Subject) {
+    if (!subject?.id) return;
+    this.getSubjectFormGroup(index).get('subjectId')?.setValue(subject.id);
+    this.subjectSearchTerms.set(index, `${subject.code} - ${subject.name}`);
+    this.onSubjectSelectionChange(index);
+  }
+
+  private patchBankGroup(source: { bankDetails?: any; student?: any } | null | undefined) {
+    const bank = source?.bankDetails ?? source?.student?.bankDetails ?? source?.student ?? {};
+    const accountNumber = bank.accountNumber ?? bank.accountNo ?? '';
+    const ifsc = bank.ifsc ?? bank.ifscCode ?? '';
+    if (!accountNumber && !ifsc && !bank.accountHolder && !bank.bankName && !bank.branch) {
+      return;
+    }
+    this.form.get('bankGroup')?.patchValue({
+      accountHolder: bank.accountHolder ?? '',
+      accountNumber,
+      ifsc,
+      bankName: bank.bankName ?? '',
+      branch: bank.branch ?? ''
+    });
+  }
+
   getSubjectCategory(subjectId: number | null | undefined): string {
     if (!subjectId) return '';
     return this.masterSubjects().find((subject: Subject) => subject.id === subjectId)?.category || '';
@@ -1744,6 +2005,21 @@ export class StudentApplicationEditComponent implements OnInit {
   getMappedLanguage(subjectId: number | null | undefined): string {
     if (!subjectId) return '';
     return this.masterSubjects().find((subject: Subject) => subject.id === subjectId)?.answerLanguageCode || '';
+  }
+
+  getLanguageLabel(code: string | null | undefined): string {
+    const selectedCode = String(code || '').trim().toUpperCase();
+    if (!selectedCode) return 'Not selected';
+    return this.answerLanguageOptions().find((language) => language.code === selectedCode)?.label || selectedCode;
+  }
+
+  getAnswerLanguageLabelForIndex(index: number): string {
+    const subjectId = this.getSubjectFormGroup(index).get('subjectId')?.value;
+    const mappedLanguageCode = this.getMappedLanguage(subjectId);
+    if (mappedLanguageCode) {
+      return `Answer Language (Mapped: ${this.getLanguageLabel(mappedLanguageCode)})`;
+    }
+    return 'Answer Language / उत्तर भाषा';
   }
 
   answerLanguageOptions(): Array<{ code: string; label: string }> {
@@ -1780,11 +2056,20 @@ export class StudentApplicationEditComponent implements OnInit {
 
     if (mappedLanguage) {
       control.setValue(mappedLanguage, { emitEvent: false });
+      control.clearValidators();
+      control.updateValueAndValidity({ emitEvent: false });
       if (control.enabled) {
         control.disable({ emitEvent: false });
       }
       return;
     }
+
+    if (this.examType() !== 'backlog' && subjectId) {
+      control.setValidators([Validators.required]);
+    } else {
+      control.clearValidators();
+    }
+    control.updateValueAndValidity({ emitEvent: false });
 
     if (control.disabled) {
       control.enable({ emitEvent: false });
@@ -1857,12 +2142,20 @@ export class StudentApplicationEditComponent implements OnInit {
       }),
 
       academicGroup: new FormGroup({
-        streamCode: new FormControl(''),
+        streamCode: new FormControl('', [Validators.required]),
         minorityReligionCode: new FormControl(''),
-        categoryCode: new FormControl(''),
+        categoryCode: new FormControl('', [Validators.required]),
         isDivyang: new FormControl('NO'),
         divyangCode: new FormControl(''),
-        mediumCode: new FormControl('')
+        mediumCode: new FormControl('', [Validators.required])
+      }),
+
+      bankGroup: new FormGroup({
+        accountHolder: new FormControl(''),
+        accountNumber: new FormControl(''),
+        ifsc: new FormControl(''),
+        bankName: new FormControl(''),
+        branch: new FormControl('')
       }),
 
       subjects: new FormArray<FormGroup>([])
@@ -1965,6 +2258,10 @@ export class StudentApplicationEditComponent implements OnInit {
   save() {
     const app = this.application();
     if (!app) return;
+    if (!this.isEditable()) {
+      this.error.set('This application is locked and cannot be edited.');
+      return;
+    }
     this.saving.set(true);
 
     const payload = this.buildApplicationPayload();
@@ -1989,17 +2286,14 @@ export class StudentApplicationEditComponent implements OnInit {
   submit() {
     const app = this.application();
     if (!app) return;
+    if (!this.isEditable()) {
+      this.error.set('This application is locked and cannot be edited.');
+      return;
+    }
 
     this.form.markAllAsTouched();
     this.form.updateValueAndValidity();
     this.error.set(null);
-
-    if (!this.selectedInstitute()) {
-      const message = 'Please select your institute before continuing to payment.';
-      this.error.set(message);
-      this.showValidationPopup(message);
-      return;
-    }
 
     const selectedSubjectCount = this.subjects().controls.filter((group) => !!group.get('subjectId')?.value).length;
     if (!selectedSubjectCount) {
@@ -2184,6 +2478,7 @@ export class StudentApplicationEditComponent implements OnInit {
         mediumCode: student.mediumCode ?? ''
       }
     });
+    this.patchBankGroup({ bankDetails: a.bankDetails, student });
 
     this.selectedInstitute.set(a.institute ?? null);
     this.applyInstituteDefaults(a.institute ?? null);
@@ -2257,6 +2552,7 @@ export class StudentApplicationEditComponent implements OnInit {
         mediumCode: student?.mediumCode ?? ''
       }
     });
+    this.patchBankGroup({ bankDetails: student?.bankDetails, student });
 
     this.selectedInstitute.set(institute ?? student?.institute ?? null);
     if (institute ?? student?.institute) {

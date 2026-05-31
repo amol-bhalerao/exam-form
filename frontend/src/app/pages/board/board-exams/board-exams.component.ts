@@ -75,7 +75,7 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
           <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="form.name" /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Academic year</mat-label><input matInput [(ngModel)]="form.academicYear" /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Session</mat-label><input matInput [(ngModel)]="form.session" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Stream</mat-label><mat-select [(ngModel)]="form.streamId"><mat-option *ngFor="let s of streams()" [value]="s.id">{{ s.name }}</mat-option></mat-select></mat-form-field>
+          <mat-form-field appearance="outline"><mat-label>Stream (optional)</mat-label><mat-select [(ngModel)]="form.streamId"><mat-option [value]="null">All Streams</mat-option><mat-option *ngFor="let s of streams()" [value]="s.id">{{ s.name }}</mat-option></mat-select></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Open date</mat-label><input matInput [matDatepicker]="openPicker" [(ngModel)]="form.applicationOpen" /><mat-datepicker-toggle matSuffix [for]="openPicker"></mat-datepicker-toggle><mat-datepicker #openPicker></mat-datepicker></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Close date</mat-label><input matInput [matDatepicker]="closePicker" [(ngModel)]="form.applicationClose" /><mat-datepicker-toggle matSuffix [for]="closePicker"></mat-datepicker-toggle><mat-datepicker #closePicker></mat-datepicker></mat-form-field>
         </div>
@@ -130,7 +130,11 @@ export class BoardExamsComponent implements OnInit {
     { field: 'name', headerName: 'Name', flex: 1 },
     { field: 'session', headerName: 'Session', flex: 1 },
     { field: 'academicYear', headerName: 'Academic Year', flex: 1 },
-    { field: 'stream.name', headerName: 'Stream', flex: 1 },
+    {
+      headerName: 'Stream',
+      flex: 1,
+      valueGetter: (p) => p.data?.stream?.name || 'All Streams'
+    },
     { field: 'applicationOpen', headerName: 'Open Date', flex: 1, valueFormatter: (p) => new Date(p.value).toLocaleDateString() },
     { field: 'applicationClose', headerName: 'Close Date', flex: 1, valueFormatter: (p) => new Date(p.value).toLocaleDateString() },
     { headerName: 'Status', flex: 1, valueGetter: (p) => this.isExamOpen(p.data) ? 'Open' : 'Closed' }
@@ -149,7 +153,7 @@ export class BoardExamsComponent implements OnInit {
     name: '',
     academicYear: '',
     session: '',
-    streamId: 0,
+    streamId: null as number | null,
     applicationOpen: '',
     applicationClose: ''
   };
@@ -204,7 +208,7 @@ export class BoardExamsComponent implements OnInit {
   }
 
   create() {
-    if (!this.form.name || !this.form.academicYear || !this.form.session || !this.form.streamId || !this.form.applicationOpen || !this.form.applicationClose) {
+    if (!this.form.name || !this.form.academicYear || !this.form.session || !this.form.applicationOpen || !this.form.applicationClose) {
       this.status = 'Fill all fields';
       return;
     }
@@ -219,7 +223,7 @@ export class BoardExamsComponent implements OnInit {
       name: this.form.name,
       academicYear: this.form.academicYear,
       session: this.form.session,
-      streamId: Number(this.form.streamId),
+      streamId: this.form.streamId ? Number(this.form.streamId) : null,
       applicationOpen: openDate.toISOString(),
       applicationClose: closeDate.toISOString(),
       instructions: ''
