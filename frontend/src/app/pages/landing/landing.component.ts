@@ -246,7 +246,7 @@ interface RegisterData {
             <ul>
               <li><a href="#features">Features</a></li>
               <li><a href="#about">How It Works</a></li>
-              <li><a href="mailto:contact@hscexam.in">Contact</a></li>
+              <li><a href="mailto:mail.hscinfo@gmail.com">Contact</a></li>
             </ul>
           </div>
           <div class="footer-section">

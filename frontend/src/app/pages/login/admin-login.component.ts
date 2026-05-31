@@ -62,6 +62,7 @@ import { BrandingService } from '../../core/branding.service';
       <div class="right-section">
         <mat-card class="login-card">
           <mat-card-header>
+            <img [src]="branding.getLogoUrl()" alt="HSC Exam Portal Logo" class="login-logo" />
             <div class="admin-badge">
               <mat-icon>admin_panel_settings</mat-icon>
             </div>
@@ -227,6 +228,14 @@ import { BrandingService } from '../../core/branding.service';
       align-items: center;
       justify-content: center;
       margin-bottom: 1rem;
+    }
+
+    .login-logo {
+      width: 78px;
+      height: 78px;
+      margin-bottom: 1rem;
+      border-radius: 22px;
+      box-shadow: 0 18px 40px rgba(16, 42, 67, 0.16);
     }
 
     .admin-badge mat-icon {

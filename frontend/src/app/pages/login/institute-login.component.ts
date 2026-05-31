@@ -29,44 +29,62 @@ import { BrandingService } from '../../core/branding.service';
   ],
   template: `
     <div class="institute-login-container">
+      <div class="ambient-shape shape-one"></div>
+      <div class="ambient-shape shape-two"></div>
+
       <div class="left-section">
         <div class="branding">
           <img [src]="branding.getLogoUrl()" alt="Board Logo" class="logo" />
-          <h1>{{ branding.getBoardName('en') }}</h1>
-          <p class="tagline">{{ i18n.t('institutePortal') }}</p>
+          <span>Institute Portal</span>
+          <h1>Manage HSC exam applications with confidence</h1>
+          <p class="tagline">Verify student forms, manage institute records, and keep the exam process moving from one secure workspace.</p>
         </div>
 
-    
-         <div class="concern-letter-section">
+        <div class="portal-stats">
+          <div>
+            <strong>01</strong>
+            <span>Generate letter</span>
+          </div>
+          <div>
+            <strong>02</strong>
+            <span>Send signed copy</span>
+          </div>
+          <div>
+            <strong>03</strong>
+            <span>Login after approval</span>
+          </div>
+        </div>
+
+        <div class="concern-letter-section">
           <div class="concern-letter-card">
             <div class="letter-header">
-              <mat-icon>description</mat-icon>
-              <h3>आपले इन्स्टिट्यूट लॉगीन मिळविण्यासाठी सूचना</h3>
+              <div class="letter-icon"><mat-icon>verified_user</mat-icon></div>
+              <div>
+                <h3>नवीन इन्स्टिट्यूट लॉगिन कसे मिळेल?</h3>
+                <p>Follow these steps to request institute access.</p>
+              </div>
             </div>
-            <div class="letter-content bg-white p-4 rounded shadow">
-              <p><strong>नवीन इन्स्टिट्यूट नोंदणी साठी सूचना:</strong></p>
+            <div class="letter-content">
               <ol>
-                <li>"Generate Letter Of Concern" या बटन वरती क्लिक करा</li>
-                <li>आपल्या इन्स्टिट्यूटचे डीटेल्स भरा व लेटर डाउनलोड करा</li>
-                <li>लेटर डाउनलोड केल्यानंतर तो आपल्या संस्थेच्या लेटर हेड वरती प्रिंट करा</li>
-                <li>लेटरवर सही व शिक्का मारून त्याची फोटो काढून खालील मेल वरती पाठवा</li>
-                <li class="bg-white">Send the signed letter to: contact&#64;hscexam.in</li>
+                <li>Click <strong>Generate Letter Of Concern</strong>.</li>
+                <li>Fill institute details and print the letter on official letterhead.</li>
+                <li>Sign and stamp the letter from the principal/authorized person.</li>
+                <li>Send the scanned copy to <a href="mailto:mail.hscinfo@gmail.com">mail.hscinfo&#64;gmail.com</a>.</li>
               </ol>
-              <p><strong>For any queries, contact us on WhatsApp:</strong></p>
-              <!-- <a href="https://wa.me/919922774144" target="_blank" class="whatsapp-link">
-                <mat-icon>whatsapp</mat-icon>
-                +91 99227 74144
-              </a> -->
-              <a mat-raised-button
-              matButton="elevated"
-                color="success"
-                type="submit"
-                class="full-width"
-   [href]="'https://wa.me/919922774144?text=Hello%20HSC%20Exam%20Support%2C%20I%20have%20a%20query%20regarding%20the%20institute%20login.'" 
-   target="_blank">
-   <mat-icon>chat</mat-icon>
-   Send WhatsApp Message
-</a>
+              <div class="support-actions">
+                <a mat-raised-button
+                  type="button"
+                  class="whatsapp-btn"
+                  [href]="'https://wa.me/919922774144?text=Hello%20HSC%20Exam%20Support%2C%20I%20have%20a%20query%20regarding%20the%20institute%20login.'"
+                  target="_blank">
+                  <mat-icon>chat</mat-icon>
+                  WhatsApp Support
+                </a>
+                <a mat-stroked-button class="mail-btn" href="mailto:mail.hscinfo@gmail.com">
+                  <mat-icon>mail</mat-icon>
+                  Email Support
+                </a>
+              </div>
             </div>
           </div>
         </div>
@@ -75,19 +93,25 @@ import { BrandingService } from '../../core/branding.service';
       <div class="right-section">
         <mat-card class="login-card">
           <mat-card-header>
+            <img [src]="branding.getLogoUrl()" alt="HSC Exam Portal Logo" class="login-logo" />
             <mat-card-title>{{ i18n.t('instituteLogin') }}</mat-card-title>
-            <mat-card-subtitle>{{ i18n.t('enterYourCredentials') }}</mat-card-subtitle>
+            <mat-card-subtitle>Use the credentials issued after institute verification.</mat-card-subtitle>
           </mat-card-header>
 
           <mat-card-content>
+            <div class="login-help">
+              <mat-icon>info</mat-icon>
+              <span>Institute users can verify applications, manage subject mapping, exam capacity, and teacher records after login.</span>
+            </div>
+
             <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
-              <mat-form-field class="full-width">
+              <mat-form-field appearance="outline" class="full-width">
                 <mat-label>Username</mat-label>
                 <mat-icon matPrefix>person</mat-icon>
                 <input matInput formControlName="username" required />
               </mat-form-field>
 
-              <mat-form-field class="full-width">
+              <mat-form-field appearance="outline" class="full-width">
                 <mat-label>{{ i18n.t('password') }}</mat-label>
                 <mat-icon matPrefix>lock</mat-icon>
                 <input matInput formControlName="password" [type]="showPassword ? 'text' : 'password'" required />
@@ -110,135 +134,314 @@ import { BrandingService } from '../../core/branding.service';
 
             <div class="divider">{{ i18n.t('or') }}</div>
 
-            <button mat-stroked-button class="full-width" type="button" (click)="goToLetterGenerator()">
+            <button mat-raised-button class="full-width secondary-action" type="button" (click)="goToLetterGenerator()">
               <mat-icon>description</mat-icon>
               Generate Letter Of Concern
             </button>
 
-            <button mat-stroked-button class="full-width" (click)="goBack()">
+            <button mat-stroked-button class="full-width back-action" (click)="goBack()">
               <mat-icon>arrow_back</mat-icon>
               {{ i18n.t('backToUserSelection') }}
             </button>
+
+            <div class="mini-contact">
+              <div><mat-icon>mail</mat-icon><a href="mailto:mail.hscinfo@gmail.com">mail.hscinfo&#64;gmail.com</a></div>
+              <div><mat-icon>phone</mat-icon><a href="https://wa.me/919922774144" target="_blank">+91 99227 74144</a></div>
+            </div>
           </mat-card-content>
         </mat-card>
-
-        <div class="footer-links">
-          <a href="#help">{{ i18n.t('needHelp') }}</a>
-          <span>•</span>
-          <a href="#support">{{ i18n.t('contactSupport') }}</a>
-        </div>
       </div>
     </div>
   `,
   styles: [`
     .institute-login-container {
+      position: relative;
       display: grid;
       grid-template-columns: 1fr 1fr;
       min-height: 100vh;
       background:
         radial-gradient(circle at 80% 12%, rgba(242, 169, 59, 0.18), transparent 28%),
         linear-gradient(135deg, #f8f1e4 0%, #eef7f5 100%);
+      overflow: hidden;
+      color: #102033;
+    }
+
+    .ambient-shape {
+      position: absolute;
+      border-radius: 999px;
+      pointer-events: none;
+      filter: blur(1px);
+      opacity: 0.58;
+    }
+
+    .shape-one {
+      width: 220px;
+      height: 220px;
+      right: -70px;
+      top: 60px;
+      background: rgba(242, 169, 59, 0.36);
+    }
+
+    .shape-two {
+      width: 170px;
+      height: 170px;
+      left: 45%;
+      bottom: -60px;
+      background: rgba(93, 183, 159, 0.3);
     }
 
     .left-section {
+      position: relative;
+      z-index: 1;
       background:
         radial-gradient(circle at 20% 18%, rgba(242, 169, 59, 0.28), transparent 28%),
         linear-gradient(145deg, #102a43 0%, #0f5f6f 100%);
       color: white;
-      padding: 3rem;
+      padding: clamp(28px, 5vw, 64px);
       display: flex;
       flex-direction: column;
       justify-content: center;
-      align-items: center;
+      align-items: stretch;
+      gap: 24px;
     }
 
     .branding {
-      margin-bottom: 3rem;
+      max-width: 680px;
     }
 
     .logo {
-      max-width: 100px;
-      margin-bottom: 1rem;
-      filter: brightness(0) invert(1);
+      width: 96px;
+      height: 96px;
+      margin-bottom: 1.2rem;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 24px 54px rgba(0, 0, 0, 0.22);
+      padding: 8px;
+    }
+
+    .branding span {
+      display: inline-flex;
+      margin-bottom: 10px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffe6b0;
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
 
     .branding h1 {
-      font-size: 1.8rem;
-      margin: 0 0 0.5rem 0;
-      font-weight: 700;
+      font-size: clamp(2.3rem, 5vw, 4.5rem);
+      line-height: 0.95;
+      letter-spacing: -0.075em;
+      margin: 0 0 1rem 0;
+      font-weight: 900;
     }
 
     .tagline {
-      font-size: 1rem;
-      opacity: 0.9;
+      max-width: 620px;
+      font-size: clamp(1rem, 1.8vw, 1.18rem);
+      line-height: 1.65;
+      opacity: 0.86;
       margin: 0;
     }
 
-    .benefits {
-      text-align: left;
-      width: 100%;
+    .portal-stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 680px;
     }
 
-    .benefits h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1.5rem;
+    .portal-stats div {
+      padding: 16px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      backdrop-filter: blur(10px);
     }
 
-    .benefits ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
+    .portal-stats strong {
+      display: block;
+      color: #ffe6b0;
+      font-size: 1.4rem;
+      line-height: 1;
+      margin-bottom: 8px;
     }
 
-    .benefits li {
-      display: flex;
+    .portal-stats span {
+      color: rgba(255, 255, 255, 0.82);
+      font-size: 0.86rem;
+      line-height: 1.35;
+      font-weight: 700;
+    }
+
+    .concern-letter-section,
+    .concern-letter-card {
+      max-width: 680px;
+    }
+
+    .concern-letter-card {
+      padding: 22px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.18);
+      backdrop-filter: blur(14px);
+    }
+
+    .letter-header {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 14px;
       align-items: center;
-      gap: 1rem;
-      margin-bottom: 1rem;
-      font-size: 1rem;
+      margin-bottom: 14px;
     }
 
-    .benefits mat-icon {
-      color: #4caf50;
-      flex-shrink: 0;
+    .letter-icon {
+      width: 56px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      background: #f2a93b;
+      color: #102033;
+    }
+
+    .letter-icon mat-icon {
+      width: 32px;
+      height: 32px;
+      font-size: 32px;
+    }
+
+    .letter-header h3 {
+      margin: 0;
+      font-size: 1.12rem;
+      font-weight: 900;
+      color: #fff;
+    }
+
+    .letter-header p {
+      margin: 4px 0 0;
+      color: rgba(255, 255, 255, 0.72);
+    }
+
+    .letter-content ol {
+      margin: 0;
+      padding-left: 22px;
+      color: rgba(255, 255, 255, 0.86);
+      line-height: 1.75;
+    }
+
+    .letter-content a {
+      color: #ffe6b0;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .support-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .support-actions a {
+      min-height: 44px;
+      border-radius: 14px;
+    }
+
+    .whatsapp-btn {
+      background: #1b7f5a !important;
+      color: #fff !important;
+    }
+
+    .mail-btn {
+      color: #fff !important;
+      border-color: rgba(255, 255, 255, 0.5) !important;
     }
 
     .right-section {
+      position: relative;
+      z-index: 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      padding: 2rem;
+      padding: clamp(22px, 5vw, 56px);
     }
 
     .login-card {
-      width: 100%;
-      max-width: 440px;
-      border-radius: 28px;
+      width: min(100%, 470px);
+      max-width: 470px;
+      border-radius: 32px;
       border: 1px solid rgba(16, 42, 67, 0.08);
       box-shadow: 0 32px 84px rgba(16, 42, 67, 0.18);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
     }
 
     mat-card-header {
       text-align: center;
-      margin-bottom: 2rem;
+      margin-bottom: 1rem;
+      padding: 28px 28px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .login-logo {
+      width: 86px;
+      height: 86px;
+      margin-bottom: 14px;
+      border-radius: 24px;
+      box-shadow: 0 18px 40px rgba(16, 42, 67, 0.16);
     }
 
     mat-card-title {
-      font-size: 1.5rem;
+      font-size: 1.75rem;
       color: #102033;
       font-weight: 900;
+      letter-spacing: -0.04em;
     }
 
     mat-card-subtitle {
       color: #58677a;
       font-size: 0.95rem;
+      line-height: 1.45;
+    }
+
+    mat-card-content {
+      padding: 12px 28px 28px;
+    }
+
+    .login-help {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 10px;
+      padding: 14px;
+      border-radius: 18px;
+      background: #eef7f5;
+      color: #405267;
+      font-size: 0.9rem;
+      line-height: 1.45;
+      margin-bottom: 18px;
+    }
+
+    .login-help mat-icon {
+      color: #0f5f6f;
+      width: 22px;
+      height: 22px;
+      font-size: 22px;
     }
 
     form {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 14px;
     }
 
     .full-width {
@@ -254,11 +457,31 @@ import { BrandingService } from '../../core/branding.service';
       margin-right: 0.5rem;
     }
 
+    button.full-width {
+      min-height: 46px;
+      border-radius: 14px;
+      font-weight: 800;
+    }
+
+    .secondary-action {
+      background: #f2a93b !important;
+      color: #102033 !important;
+      margin-bottom: 10px;
+    }
+
+    .back-action {
+      margin-bottom: 14px;
+    }
+
     .divider {
       text-align: center;
-      color: #999;
-      margin: 1.5rem 0;
+      color: #7a8798;
+      margin: 1.4rem 0;
       position: relative;
+      font-weight: 800;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
     }
 
     .divider::before,
@@ -266,9 +489,9 @@ import { BrandingService } from '../../core/branding.service';
       content: '';
       position: absolute;
       top: 50%;
-      width: 40%;
+      width: 38%;
       height: 1px;
-      background-color: #e0e0e0;
+      background-color: #d9e2e8;
     }
 
     .divider::before {
@@ -279,25 +502,32 @@ import { BrandingService } from '../../core/branding.service';
       right: 0;
     }
 
-    .footer-links {
-      text-align: center;
-      margin-top: 2rem;
-      color: #666;
-      font-size: 0.9rem;
+    .mini-contact {
+      display: grid;
+      gap: 8px;
+      padding-top: 12px;
+      border-top: 1px solid #e2e8f0;
     }
 
-    .footer-links a {
+    .mini-contact div {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #58677a;
+      font-size: 0.88rem;
+    }
+
+    .mini-contact mat-icon {
+      width: 18px;
+      height: 18px;
+      font-size: 18px;
+      color: #0f5f6f;
+    }
+
+    .mini-contact a {
       color: #0f5f6f;
       text-decoration: none;
-      transition: opacity 0.2s;
-    }
-
-    .footer-links a:hover {
-      opacity: 0.7;
-    }
-
-    .footer-links span {
-      margin: 0 0.5rem;
+      font-weight: 800;
     }
 
     @media (max-width: 968px) {
@@ -307,35 +537,39 @@ import { BrandingService } from '../../core/branding.service';
 
       .left-section {
         min-height: auto;
-        padding: 2rem;
       }
 
-      .benefits h2 {
-        font-size: 1.3rem;
-      }
-
-      .benefits li {
-        font-size: 0.9rem;
+      .portal-stats {
+        grid-template-columns: 1fr;
       }
     }
 
-    @media (max-width: 480px) {
+    @media (max-width: 560px) {
       .left-section {
-        padding: 1.5rem;
+        padding: 24px 16px;
       }
 
       .branding h1 {
-        font-size: 1.5rem;
+        font-size: 2.15rem;
+      }
+
+      .support-actions {
+        grid-template-columns: 1fr;
       }
 
       .right-section {
-        padding: 1rem;
+        padding: 16px;
       }
 
-      .login-card {
-        max-width: 100%;
+      mat-card-header {
+        padding: 22px 18px 0;
+      }
+
+      mat-card-content {
+        padding: 12px 18px 22px;
       }
     }
+
   `]
 })
 export class InstituteLoginComponent {

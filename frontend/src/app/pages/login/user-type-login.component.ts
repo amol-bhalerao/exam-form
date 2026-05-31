@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { BrandingService } from '../../core/branding.service';
 
 type LoginCard = {
   title: string;
@@ -25,6 +26,7 @@ type LoginCard = {
     <main class="login-page">
       <section class="hero-panel">
         <div class="hero-copy">
+          <img [src]="branding.getLogoUrl()" alt="HSC Exam Portal Logo" class="chooser-logo" />
           <span class="kicker">Maharashtra HSC Exam Services</span>
           <h1>Choose your secure portal</h1>
           <p>
@@ -133,6 +135,15 @@ type LoginCard = {
       font-weight: 800;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+    }
+
+    .chooser-logo {
+      width: 82px;
+      height: 82px;
+      display: block;
+      margin-bottom: 18px;
+      border-radius: 24px;
+      box-shadow: 0 18px 42px rgba(16, 42, 67, 0.16);
     }
 
     .hero-copy h1 {
@@ -454,6 +465,7 @@ type LoginCard = {
 })
 export class UserTypeLoginComponent {
   private readonly router = inject(Router);
+  readonly branding = inject(BrandingService);
 
   readonly cards: LoginCard[] = [
     {

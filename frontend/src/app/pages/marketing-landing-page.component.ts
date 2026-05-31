@@ -360,7 +360,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
                 <mat-icon>help_outline</mat-icon>
                 <span>संस्थानसाठी नोंदणी कसे करावी?</span>
               </mat-expansion-panel-header>
-              <p>संस्थाला "संस्थान लॉगिन" वर जाणे, "चिंता पत्र" तयार करणे, संस्थाच्या लेटरहेडवर प्रिंट करणे, स्वाक्षरी आणि शिक्का करणे आणि contact@hscexam.in ला पाठवणे आवश्यक आहे.</p>
+              <p>संस्थाला "संस्थान लॉगिन" वर जाणे, "चिंता पत्र" तयार करणे, संस्थाच्या लेटरहेडवर प्रिंट करणे, स्वाक्षरी आणि शिक्का करणे आणि mail.hscinfo@gmail.com ला पाठवणे आवश्यक आहे.</p>
             </mat-expansion-panel>
           </mat-accordion>
         </div>
@@ -375,7 +375,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
             <div class="contact-card">
               <mat-icon>email</mat-icon>
               <h3>ईमेल</h3>
-              <p>contact@hscexam.in</p>
+              <p>mail.hscinfo@gmail.com</p>
               <p>support@hscexam.in</p>
             </div>
             <div class="contact-card">
