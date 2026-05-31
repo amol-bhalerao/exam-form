@@ -75,7 +75,7 @@ export class BoardHeaderComponent {
 
   goToLogin() {
     // Redirect to unified auth page which shows login options
-    this.router.navigate(['/auth']);
+    this.router.navigate(['/login']);
   }
 
   logout() {

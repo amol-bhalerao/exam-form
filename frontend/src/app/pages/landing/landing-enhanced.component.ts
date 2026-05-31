@@ -50,8 +50,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
           <h1 class="hero-title">{{ i18n.t('welcomeToExamPortal') }}</h1>
           <p class="hero-desc">
             {{ selectedLanguage() === 'mr' 
-              ? 'आपल्या परीक्षा अर्जासाठी सुरक्षित, वेगवान प्लॅटफॉर्म।'
-              : 'Seamlessly manage your exam applications with our secure, fast platform.'
+              ? 'सक्रिय परीक्षा, बोर्ड सूचना, सुरक्षित पेमेंट आणि प्रिंट करण्यायोग्य परीक्षा फॉर्म यासाठी एकच विद्यार्थी सहाय्य केंद्र.'
+              : 'Your student help desk for active exams, board updates, secure payments, receipts, and printable HSC exam forms.'
             }}
           </p>
           
@@ -60,6 +60,10 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
             <button mat-raised-button color="accent" class="btn-large" (click)="goToGoogleLogin()">
               <mat-icon>login</mat-icon>
               {{ i18n.t('loginWithGoogle') }}
+            </button>
+            <button mat-stroked-button class="btn-large btn-outline" type="button" (click)="scrollToExams()">
+              <mat-icon>event_available</mat-icon>
+              {{ selectedLanguage() === 'mr' ? 'सक्रिय परीक्षा पहा' : 'View Active Exams' }}
             </button>
           </div>
         </div>
@@ -83,6 +87,13 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
         <h2 class="section-title">{{ selectedLanguage() === 'mr' ? 'सक्रिय परीक्षा' : 'Active Exams' }}</h2>
         
         @if ((exams$ | async); as response) {
+        @if (!response.exams.length) {
+        <div class="empty-public-state">
+          <mat-icon>event_busy</mat-icon>
+          <h3>{{ selectedLanguage() === 'mr' ? 'सध्या कोणतीही परीक्षा खुली नाही' : 'No active exams right now' }}</h3>
+          <p>{{ selectedLanguage() === 'mr' ? 'नवीन परीक्षा सुरु होताच ती येथे दिसेल. कृपया बोर्ड सूचना तपासत रहा.' : 'When a new exam application window opens, it will appear here. Please keep checking board updates.' }}</p>
+        </div>
+        }
         <div class="exams-grid">
           <div *ngFor="let exam of response.exams" class="exam-card" (click)="goToExamForm(exam)">
             <div class="exam-header">
@@ -96,6 +107,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
             </div>
             <div class="exam-deadline">
               <p>{{ selectedLanguage() === 'mr' ? 'आवेदन समय सीमा' : 'Application Deadline' }}: {{ exam.applicationDeadline | date: 'mediumDate' }}</p>
+              <p class="application-count">{{ selectedLanguage() === 'mr' ? 'नोंदणी' : 'Applications' }}: {{ exam.totalApplications || 0 }}</p>
             </div>
             <button mat-raised-button color="primary" class="exam-btn">
               {{ selectedLanguage() === 'mr' ? 'आवेदन करा' : 'Apply Now' }}
@@ -113,6 +125,102 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
         }
       </div>
     </section>
+
+    <section class="student-info-section">
+      <div class="container">
+        <div class="section-intro">
+          <span>{{ selectedLanguage() === 'mr' ? 'विद्यार्थी माहिती केंद्र' : 'Student Information Hub' }}</span>
+          <h2>{{ selectedLanguage() === 'mr' ? 'फॉर्म भरण्यापूर्वी सर्व आवश्यक माहिती' : 'Everything students need before filling the form' }}</h2>
+          <p>{{ selectedLanguage() === 'mr' ? 'परीक्षा निवडण्यापासून पेमेंट आणि प्रिंटपर्यंत प्रत्येक टप्प्यावर ही माहिती मदत करेल.' : 'From selecting the right exam to payment and print, this guide helps students avoid common mistakes.' }}</p>
+        </div>
+
+        <div class="info-grid">
+          @for (item of studentHighlights; track item.title) {
+            <article class="info-card">
+              <div class="info-icon">
+                <mat-icon>{{ item.icon }}</mat-icon>
+              </div>
+              <h3>{{ selectedLanguage() === 'mr' ? item.titleMr : item.title }}</h3>
+              <p>{{ selectedLanguage() === 'mr' ? item.textMr : item.text }}</p>
+            </article>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="news-section">
+      <div class="container">
+        <div class="split-heading">
+          <div>
+            <span>{{ selectedLanguage() === 'mr' ? 'बोर्ड अपडेट्स' : 'Board Updates' }}</span>
+            <h2>{{ selectedLanguage() === 'mr' ? 'ताज्या बातम्या व कार्यक्रम' : 'Latest news and events' }}</h2>
+          </div>
+          <button mat-stroked-button routerLink="/login">
+            <mat-icon>login</mat-icon>
+            {{ selectedLanguage() === 'mr' ? 'लॉगिन करा' : 'Login' }}
+          </button>
+        </div>
+
+        @if ((news$ | async); as newsResponse) {
+          @if (newsResponse.news.length) {
+            <div class="news-grid">
+              @for (item of newsResponse.news; track item.id) {
+                <article class="news-card">
+                  <span class="news-type">{{ item.type || 'Notice' }}</span>
+                  <h3>{{ item.title }}</h3>
+                  <p>{{ item.content }}</p>
+                  <time>{{ item.createdAt | date: 'mediumDate' }}</time>
+                </article>
+              }
+            </div>
+          } @else {
+            <div class="empty-public-state compact">
+              <mat-icon>campaign</mat-icon>
+              <p>{{ selectedLanguage() === 'mr' ? 'नवीन बोर्ड सूचना येथे प्रकाशित होतील.' : 'New board notices and events will be published here.' }}</p>
+            </div>
+          }
+        }
+      </div>
+    </section>
+
+    <section class="journey-section">
+      <div class="container journey-layout">
+        <div class="journey-copy">
+          <span>{{ selectedLanguage() === 'mr' ? 'पोर्टल कसे मदत करते' : 'How this portal helps' }}</span>
+          <h2>{{ selectedLanguage() === 'mr' ? 'चुकांशिवाय परीक्षा फॉर्म पूर्ण करा' : 'Complete the exam form with fewer mistakes' }}</h2>
+          <p>{{ selectedLanguage() === 'mr' ? 'प्रोफाइलमधील माहिती पुन्हा वापरली जाते, विषय निवड मार्गदर्शित असते, पेमेंट सुरक्षित आहे आणि सबमिशननंतर प्रिंट फॉर्म उपलब्ध होतो.' : 'Profile details are reused, subject selection is guided, payment is secure, and printable forms become available after submission.' }}</p>
+        </div>
+        <div class="journey-steps">
+          @for (step of formJourney; track step.title) {
+            <div class="journey-step">
+              <span>{{ step.no }}</span>
+              <div>
+                <h3>{{ selectedLanguage() === 'mr' ? step.titleMr : step.title }}</h3>
+                <p>{{ selectedLanguage() === 'mr' ? step.textMr : step.text }}</p>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="checklist-section">
+      <div class="container checklist-panel">
+        <div>
+          <span>{{ selectedLanguage() === 'mr' ? 'तयारी तपासणी' : 'Before You Start' }}</span>
+          <h2>{{ selectedLanguage() === 'mr' ? 'ही माहिती जवळ ठेवा' : 'Keep these details ready' }}</h2>
+        </div>
+        <div class="checklist-grid">
+          @for (item of checklist; track item) {
+            <div class="check-item">
+              <mat-icon>task_alt</mat-icon>
+              <span>{{ item }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </section>
+
     <section class="features-section" #featuresSection>
       <div class="waves-top">
         <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
@@ -1043,13 +1151,312 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
     .exam-deadline {
       padding: 0 var(--spacing-md) var(--spacing-md);
       display: flex;
+      flex-direction: column;
+      gap: 6px;
+      color: var(--text-secondary);
+      font-size: var(--font-size-sm);
+    }
+
+    .application-count {
+      margin: 0;
+      color: var(--primary-color);
+      font-weight: 800;
+    }
+
+    .empty-public-state {
+      max-width: 760px;
+      margin: var(--spacing-lg) auto;
+      padding: var(--spacing-lg);
+      text-align: center;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.82);
+      border: 1px solid rgba(16, 42, 67, 0.08);
+      box-shadow: 0 18px 44px rgba(16, 42, 67, 0.1);
+      color: var(--text-secondary);
+    }
+
+    .empty-public-state mat-icon {
+      width: 44px;
+      height: 44px;
+      font-size: 44px;
+      color: var(--accent-gold);
+      margin-bottom: 10px;
+    }
+
+    .empty-public-state h3 {
+      color: var(--text-primary);
+      margin: 0 0 8px;
+    }
+
+    .empty-public-state p {
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    .empty-public-state.compact {
+      margin: var(--spacing-md) auto 0;
+      padding: var(--spacing-md);
+    }
+
+    .student-info-section,
+    .news-section,
+    .journey-section,
+    .checklist-section {
+      padding: clamp(56px, 9vw, 96px) var(--spacing-sm);
+    }
+
+    .student-info-section {
+      background: #fffaf1;
+    }
+
+    .section-intro {
+      max-width: 760px;
+      margin: 0 auto var(--spacing-lg);
+      text-align: center;
+    }
+
+    .section-intro span,
+    .split-heading span,
+    .journey-copy span,
+    .checklist-panel > div > span {
+      display: inline-flex;
+      margin-bottom: 10px;
+      color: var(--primary-color);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .section-intro h2,
+    .split-heading h2,
+    .journey-copy h2,
+    .checklist-panel h2 {
+      margin: 0;
+      color: var(--text-primary);
+      font-size: clamp(1.8rem, 4vw, 3.15rem);
+      line-height: 1.02;
+      letter-spacing: -0.06em;
+      font-weight: 900;
+    }
+
+    .section-intro p,
+    .journey-copy p {
+      color: var(--text-secondary);
+      line-height: 1.7;
+      font-size: var(--body-size);
+      margin: 16px 0 0;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .info-card,
+    .news-card,
+    .journey-step,
+    .checklist-panel {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(16, 42, 67, 0.08);
+      box-shadow: 0 20px 52px rgba(16, 42, 67, 0.1);
+    }
+
+    .info-card {
+      padding: 22px;
+      border-radius: 24px;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .info-card:hover,
+    .news-card:hover,
+    .journey-step:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 28px 64px rgba(16, 42, 67, 0.16);
+    }
+
+    .info-icon {
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+      border-radius: 18px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary-color), var(--accent-gold));
+      margin-bottom: 16px;
+    }
+
+    .info-icon mat-icon {
+      width: 30px;
+      height: 30px;
+      font-size: 30px;
+    }
+
+    .info-card h3,
+    .news-card h3,
+    .journey-step h3 {
+      margin: 0 0 8px;
+      color: var(--text-primary);
+      font-weight: 900;
+      letter-spacing: -0.025em;
+    }
+
+    .info-card p,
+    .news-card p,
+    .journey-step p {
+      margin: 0;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      font-size: 0.94rem;
+    }
+
+    .news-section {
+      background:
+        radial-gradient(circle at 90% 0%, rgba(242, 169, 59, 0.14), transparent 28%),
+        linear-gradient(135deg, #eef7f5 0%, #fffaf1 100%);
+    }
+
+    .split-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      margin-bottom: var(--spacing-lg);
+    }
+
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .news-card {
+      min-height: 230px;
+      padding: 22px;
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 180ms ease, box-shadow 180ms ease;
+    }
+
+    .news-type {
+      align-self: flex-start;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #102a43;
+      color: #ffe6b0;
+      font-size: 0.72rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 14px;
+    }
+
+    .news-card time {
+      margin-top: auto;
+      padding-top: 16px;
+      color: var(--primary-color);
+      font-weight: 800;
+      font-size: 0.84rem;
+    }
+
+    .journey-section {
+      background: #102033;
+      color: #fff;
+    }
+
+    .journey-layout {
+      display: grid;
+      grid-template-columns: 0.82fr 1.18fr;
+      gap: 32px;
       align-items: center;
-      gap: var(--spacing-xs);
-      font-size: var(--font-size-xs);
-      color: #e74c3c;
-      font-weight: 600;
-      flex-shrink: 0;
-      flex-wrap: wrap;
+    }
+
+    .journey-copy h2,
+    .journey-copy p {
+      color: #fff;
+    }
+
+    .journey-copy span {
+      color: #ffe6b0;
+    }
+
+    .journey-steps {
+      display: grid;
+      gap: 14px;
+    }
+
+    .journey-step {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.16);
+      box-shadow: none;
+      transition: transform 180ms ease, background 180ms ease;
+    }
+
+    .journey-step > span {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: #f2a93b;
+      color: #102033;
+      font-weight: 900;
+      font-size: 1.1rem;
+    }
+
+    .journey-step h3,
+    .journey-step p {
+      color: #fff;
+    }
+
+    .journey-step p {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .checklist-section {
+      background: linear-gradient(135deg, #fffaf1 0%, #eef7f5 100%);
+    }
+
+    .checklist-panel {
+      border-radius: 30px;
+      padding: clamp(22px, 4vw, 36px);
+      display: grid;
+      grid-template-columns: 0.75fr 1.25fr;
+      gap: 26px;
+      align-items: start;
+    }
+
+    .checklist-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .check-item {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(238, 247, 245, 0.72);
+      color: var(--text-primary);
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .check-item mat-icon {
+      color: #1b7f5a;
+      width: 20px;
+      height: 20px;
+      font-size: 20px;
     }
 
     .exam-deadline-icon {
@@ -1146,8 +1553,29 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       }
 
       .features-grid,
-      .steps-grid {
+      .steps-grid,
+      .info-grid,
+      .news-grid,
+      .checklist-grid {
         gap: var(--spacing-sm);
+      }
+
+      .split-heading,
+      .checklist-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .split-heading {
+        display: grid;
+        align-items: start;
+      }
+
+      .journey-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .journey-step {
+        grid-template-columns: 48px 1fr;
       }
 
       .exam-card {
@@ -1190,6 +1618,12 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
 
       .feature-card {
         padding: var(--spacing-md);
+      }
+
+      .info-grid,
+      .news-grid,
+      .checklist-grid {
+        grid-template-columns: 1fr;
       }
 
       .step-card {
@@ -1252,6 +1686,80 @@ export class LandingEnhancedComponent implements OnInit {
 
   selectedLanguage = this.i18n.getLanguageSignal();
   exams$ = this.publicApi.getActiveExams();
+  news$ = this.publicApi.getNews();
+
+  readonly studentHighlights = [
+    {
+      icon: 'event_available',
+      title: 'Active Exam Windows',
+      titleMr: 'सक्रिय परीक्षा कालावधी',
+      text: 'See which HSC exams are currently accepting applications and note the deadline before you start.',
+      textMr: 'कोणत्या HSC परीक्षा अर्जासाठी खुल्या आहेत आणि अंतिम तारीख काय आहे हे लगेच पहा.'
+    },
+    {
+      icon: 'assignment',
+      title: 'Guided Form Filling',
+      titleMr: 'मार्गदर्शित फॉर्म प्रक्रिया',
+      text: 'Complete profile, exam, subject, document, payment, and print steps in the correct order.',
+      textMr: 'प्रोफाइल, परीक्षा, विषय, कागदपत्रे, पेमेंट आणि प्रिंट हे सर्व टप्पे योग्य क्रमाने पूर्ण करा.'
+    },
+    {
+      icon: 'payments',
+      title: 'Secure Fee Payment',
+      titleMr: 'सुरक्षित शुल्क पेमेंट',
+      text: 'Pay online through the live payment gateway and keep your receipt available for records.',
+      textMr: 'लाईव्ह पेमेंट गेटवेद्वारे शुल्क भरा आणि पावती रेकॉर्डसाठी जतन करा.'
+    },
+    {
+      icon: 'print',
+      title: 'Printable Exam Form',
+      titleMr: 'प्रिंट करण्यायोग्य परीक्षा फॉर्म',
+      text: 'After submission and payment, print the exam form for institute verification.',
+      textMr: 'सबमिशन आणि पेमेंटनंतर संस्थेकडून पडताळणीसाठी परीक्षा फॉर्म प्रिंट करा.'
+    }
+  ];
+
+  readonly formJourney = [
+    {
+      no: '01',
+      title: 'Login with Google',
+      titleMr: 'Google ने लॉगिन करा',
+      text: 'Use the email account that should remain linked with the student profile.',
+      textMr: 'विद्यार्थी प्रोफाइलशी जोडले जाणारे ईमेल खाते वापरा.'
+    },
+    {
+      no: '02',
+      title: 'Complete Student Profile',
+      titleMr: 'विद्यार्थी प्रोफाइल पूर्ण करा',
+      text: 'Fill personal, institute, stream, bank, and previous exam details once.',
+      textMr: 'वैयक्तिक, संस्था, शाखा, बँक आणि मागील परीक्षेची माहिती एकदाच भरा.'
+    },
+    {
+      no: '03',
+      title: 'Select Exam and Subjects',
+      titleMr: 'परीक्षा आणि विषय निवडा',
+      text: 'Choose the active exam, candidate type, language of answer, and applicable subjects.',
+      textMr: 'सक्रिय परीक्षा, उमेदवार प्रकार, उत्तर भाषा आणि लागू विषय निवडा.'
+    },
+    {
+      no: '04',
+      title: 'Pay, Submit, Print',
+      titleMr: 'पेमेंट, सबमिट, प्रिंट',
+      text: 'Complete payment, submit the application, then print the form and receipt.',
+      textMr: 'पेमेंट पूर्ण करा, अर्ज सबमिट करा आणि फॉर्म व पावती प्रिंट करा.'
+    }
+  ];
+
+  readonly checklist = [
+    'Google email account access',
+    'Institute / college details',
+    'Student personal and address details',
+    'SSC / previous exam information',
+    'Subject and medium selection',
+    'Photo and signature files',
+    'Bank details for student profile',
+    'Online payment method'
+  ];
 
   ngOnInit() {
     // Redirect logged-in users to the dashboard

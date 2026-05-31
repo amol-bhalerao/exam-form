@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">HSC Exam Portal Logo</title>
+  <desc id="desc">Shield, open book, check mark, and rising sun for the HSC Exam Portal.</desc>
+  <defs>
+    <linearGradient id="shield" x1="42" y1="30" x2="216" y2="228" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#102a43"/>
+      <stop offset="0.58" stop-color="#0f5f6f"/>
+      <stop offset="1" stop-color="#7a4b17"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="72" y1="64" x2="185" y2="186" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffe2a3"/>
+      <stop offset="1" stop-color="#f2a93b"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="58" fill="#fffaf1"/>
+  <path d="M128 24l82 30v62c0 54-31 94-82 116-51-22-82-62-82-116V54l82-30z" fill="url(#shield)"/>
+  <path d="M83 83c24-8 39-3 45 8 6-11 21-16 45-8v83c-22-7-37-3-45 10-8-13-23-17-45-10V83z" fill="#fffaf1"/>
+  <path d="M94 96c16-3 25 0 30 7v48c-7-6-17-8-30-5V96zM132 103c5-7 14-10 30-7v50c-13-3-23-1-30 5v-48z" fill="#e7f0ef"/>
+  <circle cx="128" cy="70" r="22" fill="url(#gold)"/>
+  <path d="M90 184l25 24 55-66" fill="none" stroke="#f2a93b" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M76 219h104" stroke="#102a43" stroke-width="10" stroke-linecap="round" opacity="0.18"/>
+</svg>

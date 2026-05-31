@@ -14,6 +14,15 @@ export interface Exam {
   applicationDeadline: string;
   description?: string;
   status: string;
+  totalApplications?: number;
+}
+
+export interface PublicNewsItem {
+  id: number;
+  title: string;
+  content: string;
+  type: string;
+  createdAt: string;
 }
 
 @Injectable({
@@ -25,6 +34,10 @@ export class PublicApiService {
   // Get active exams that students can apply to
   getActiveExams(): Observable<{ exams: Exam[] }> {
     return this.http.get<{ exams: Exam[] }>(`${API_BASE_URL}/public/exams`);
+  }
+
+  getNews(): Observable<{ news: PublicNewsItem[] }> {
+    return this.http.get<{ news: PublicNewsItem[] }>(`${API_BASE_URL}/public/news`);
   }
 
   // Get platform statistics
