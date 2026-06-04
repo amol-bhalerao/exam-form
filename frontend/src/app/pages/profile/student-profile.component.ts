@@ -257,36 +257,50 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       <mat-icon matPrefix>person</mat-icon>
                       <input matInput 
                              formControlName="firstName" 
+                             maxlength="50"
                              appEnglishOnly 
-                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                             (input)="onUppercaseInput($event)" />
                       <mat-error *ngIf="managedStudentForm.get('firstName')?.hasError('required')">First name is required</mat-error>
                       <mat-error *ngIf="managedStudentForm.get('firstName')?.hasError('minlength')">Minimum 2 characters</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('firstName')?.hasError('maxlength')">Maximum 50 characters</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('firstName')?.hasError('pattern')">Only capital letters, spaces, hyphen and apostrophe allowed</mat-error>
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Middle Name</mat-label>
                       <mat-icon matPrefix>badge</mat-icon>
                       <input matInput 
                              formControlName="middleName" 
+                             maxlength="50"
                              appEnglishOnly 
-                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                             (input)="onUppercaseInput($event)" />
+                      <mat-error *ngIf="managedStudentForm.get('middleName')?.hasError('maxlength')">Maximum 50 characters</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('middleName')?.hasError('pattern')">Only capital letters, spaces, hyphen and apostrophe allowed</mat-error>
                     </mat-form-field>
                     <mat-form-field class="form-field" [class.error-field]="managedStudentForm.get('lastName')?.invalid && managedStudentForm.get('lastName')?.touched">
                       <mat-label>Last Name *</mat-label>
                       <mat-icon matPrefix>person</mat-icon>
                       <input matInput 
                              formControlName="lastName" 
+                             maxlength="50"
                              appEnglishOnly 
-                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                             (input)="onUppercaseInput($event)" />
                       <mat-error *ngIf="managedStudentForm.get('lastName')?.hasError('required')">Last name is required</mat-error>
                       <mat-error *ngIf="managedStudentForm.get('lastName')?.hasError('minlength')">Minimum 2 characters</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('lastName')?.hasError('maxlength')">Maximum 50 characters</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('lastName')?.hasError('pattern')">Only capital letters, spaces, hyphen and apostrophe allowed</mat-error>
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Mother Name</mat-label>
                       <mat-icon matPrefix>female</mat-icon>
                       <input matInput 
                              formControlName="motherName" 
+                             maxlength="50"
                              appEnglishOnly 
-                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                             (input)="onUppercaseInput($event)" />
+                      <mat-error *ngIf="managedStudentForm.get('motherName')?.hasError('required')">Mother name is required</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('motherName')?.hasError('minlength')">Minimum 2 characters</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('motherName')?.hasError('maxlength')">Maximum 50 characters</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('motherName')?.hasError('pattern')">Only capital letters, spaces, hyphen and apostrophe allowed</mat-error>
                     </mat-form-field>
                   </div>
 
@@ -297,6 +311,9 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       <input matInput [matDatepicker]="managedDobPicker" formControlName="dob" />
                       <mat-datepicker-toggle matSuffix [for]="managedDobPicker"></mat-datepicker-toggle>
                       <mat-datepicker #managedDobPicker></mat-datepicker>
+                      <mat-error *ngIf="managedStudentForm.get('dob')?.hasError('required')">Date of birth is required</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('dob')?.hasError('futureDate')">Date of birth cannot be future date</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('dob')?.hasError('minimumAge')">Minimum age must be 14 years</mat-error>
                     </mat-form-field>
 
                     <mat-form-field class="form-field">
@@ -320,6 +337,8 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                              maxlength="10"
                              appEnglishOnly
                              (input)="onOnlyDigitsInput($event)" />
+                      <mat-error *ngIf="managedStudentForm.get('mobile')?.hasError('required')">Mobile number is required</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('mobile')?.hasError('pattern')">Mobile must be 10 digits and start with 6-9</mat-error>
                     </mat-form-field>
                   </div>
 
@@ -329,16 +348,22 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       <mat-icon matPrefix>badge</mat-icon>
                       <input matInput 
                              formControlName="apaarId" 
+                             maxlength="12"
                              appEnglishOnly 
-                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                             (input)="onUppercaseInput($event)" />
+                      <mat-error *ngIf="managedStudentForm.get('apaarId')?.hasError('maxlength')">Maximum 12 characters</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('apaarId')?.hasError('pattern')">Only capital letters and numbers allowed</mat-error>
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Udise / Saral ID</mat-label>
                       <mat-icon matPrefix>assignment_ind</mat-icon>
                       <input matInput 
                              formControlName="studentSaralId" 
+                             maxlength="18"
                              appEnglishOnly 
-                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                             (input)="onUppercaseInput($event)" />
+                      <mat-error *ngIf="managedStudentForm.get('studentSaralId')?.hasError('maxlength')">Maximum 18 characters</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('studentSaralId')?.hasError('pattern')">Only capital letters, numbers and hyphen allowed</mat-error>
                     </mat-form-field>
                   </div>
 
@@ -369,11 +394,14 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       <input matInput
                              formControlName="eligibilityCertNo"
                              appEnglishOnly
+                             maxlength="30"
                              [disabled]="managedStudentForm.get('eligibilityCertIssued')?.value !== true"
-                             (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                             (input)="onUppercaseInput($event)" />
                       <mat-error *ngIf="managedStudentForm.get('eligibilityCertNo')?.hasError('required')">
                         Eligibility Certificate No is required when certificate is issued
                       </mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('eligibilityCertNo')?.hasError('maxlength')">Maximum 30 characters</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('eligibilityCertNo')?.hasError('pattern')">Only capital letters, numbers, slash and hyphen allowed</mat-error>
                     </mat-form-field>
                   </div>
                 </div>
@@ -392,7 +420,10 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                   <mat-form-field class="form-field form-field-full">
                     <mat-label>Residential Address</mat-label>
                     <mat-icon matPrefix>home</mat-icon>
-                    <textarea matInput rows="3" formControlName="address" placeholder="Enter complete residential address"></textarea>
+                    <textarea matInput rows="3" formControlName="address" maxlength="250" appEnglishOnly (input)="onUppercaseInput($event)" placeholder="Enter complete residential address"></textarea>
+                    <mat-error *ngIf="managedStudentForm.get('address')?.hasError('required')">Address is required</mat-error>
+                    <mat-error *ngIf="managedStudentForm.get('address')?.hasError('minlength')">Minimum 3 characters</mat-error>
+                    <mat-error *ngIf="managedStudentForm.get('address')?.hasError('maxlength')">Maximum 250 characters</mat-error>
                   </mat-form-field>
 
                   <div class="form-grid-compact">
@@ -405,21 +436,29 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                              appEnglishOnly
                              (input)="onOnlyDigitsInput($event); onPincodeInput($event)"
                              (blur)="onPincodeInput($event)" />
+                      <mat-error *ngIf="managedStudentForm.get('pinCode')?.hasError('required')">Pincode is required</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('pinCode')?.hasError('pattern')">Pincode must be exactly 6 digits</mat-error>
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>District</mat-label>
                       <mat-icon matPrefix>map</mat-icon>
-                      <input matInput formControlName="district" appEnglishOnly />
+                      <input matInput formControlName="district" maxlength="50" appEnglishOnly (input)="onUppercaseInput($event)" />
+                      <mat-error *ngIf="managedStudentForm.get('district')?.hasError('required')">District is required</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('district')?.hasError('maxlength')">Maximum 50 characters</mat-error>
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Taluka</mat-label>
                       <mat-icon matPrefix>location_city</mat-icon>
-                      <input matInput formControlName="taluka" appEnglishOnly />
+                      <input matInput formControlName="taluka" maxlength="50" appEnglishOnly (input)="onUppercaseInput($event)" />
+                      <mat-error *ngIf="managedStudentForm.get('taluka')?.hasError('required')">Taluka is required</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('taluka')?.hasError('maxlength')">Maximum 50 characters</mat-error>
                     </mat-form-field>
                     <mat-form-field class="form-field">
                       <mat-label>Village</mat-label>
                       <mat-icon matPrefix>cottage</mat-icon>
-                      <input matInput formControlName="village" appEnglishOnly />
+                      <input matInput formControlName="village" maxlength="50" appEnglishOnly (input)="onUppercaseInput($event)" />
+                      <mat-error *ngIf="managedStudentForm.get('village')?.hasError('required')">Village is required</mat-error>
+                      <mat-error *ngIf="managedStudentForm.get('village')?.hasError('maxlength')">Maximum 50 characters</mat-error>
                     </mat-form-field>
                   </div>
                 </div>
@@ -532,9 +571,11 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                         <mat-form-field class="form-field">
                           <mat-label>Account Holder Name</mat-label>
                           <mat-icon matPrefix>person</mat-icon>
-                          <input matInput formControlName="accountHolder" appEnglishOnly />
+                          <input matInput formControlName="accountHolder" maxlength="100" appEnglishOnly (input)="onUppercaseInput($event)" />
                           <mat-error *ngIf="bankDetailsForm.get('accountHolder')?.hasError('required')">Required</mat-error>
                           <mat-error *ngIf="bankDetailsForm.get('accountHolder')?.hasError('minlength')">Minimum 3 characters</mat-error>
+                          <mat-error *ngIf="bankDetailsForm.get('accountHolder')?.hasError('maxlength')">Maximum 100 characters</mat-error>
+                          <mat-error *ngIf="bankDetailsForm.get('accountHolder')?.hasError('pattern')">Only capital letters, spaces, hyphen and apostrophe allowed</mat-error>
                         </mat-form-field>
 
                         <mat-form-field class="form-field">
@@ -557,7 +598,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                         <mat-form-field class="form-field">
                           <mat-label>IFSC Code</mat-label>
                           <mat-icon matPrefix>code</mat-icon>
-                          <input matInput formControlName="ifscCode" (input)="$event.target.value = $event.target.value.toUpperCase()" appEnglishOnly placeholder="e.g., SBIN0001234" />
+                          <input matInput formControlName="ifscCode" maxlength="11" (input)="onUppercaseInput($event)" appEnglishOnly placeholder="e.g., SBIN0001234" />
                           <mat-error *ngIf="bankDetailsForm.get('ifscCode')?.hasError('required')">Required</mat-error>
                           <mat-error *ngIf="bankDetailsForm.get('ifscCode')?.hasError('minlength') || bankDetailsForm.get('ifscCode')?.hasError('maxlength')">Must be 11 characters</mat-error>
                           <mat-error *ngIf="bankDetailsForm.get('ifscCode')?.hasError('pattern')">Invalid IFSC format</mat-error>
@@ -566,7 +607,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                         <mat-form-field class="form-field">
                           <mat-label>Account Number</mat-label>
                           <mat-icon matPrefix>badge</mat-icon>
-                          <input matInput formControlName="accountNumber" placeholder="e.g., 12345678901234" />
+                          <input matInput formControlName="accountNumber" maxlength="18" appEnglishOnly (input)="onOnlyDigitsInput($event)" placeholder="e.g., 12345678901234" />
                           <mat-error *ngIf="bankDetailsForm.get('accountNumber')?.hasError('required')">Required</mat-error>
                           <mat-error *ngIf="bankDetailsForm.get('accountNumber')?.hasError('minlength') || bankDetailsForm.get('accountNumber')?.hasError('maxlength')">Must be 8-18 digits</mat-error>
                           <mat-error *ngIf="bankDetailsForm.get('accountNumber')?.hasError('pattern')">Must contain only digits</mat-error>
@@ -596,8 +637,11 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                         <mat-icon matPrefix>badge</mat-icon>
                         <input matInput 
                                formControlName="sscSeatNo" 
+                               maxlength="12"
                                appEnglishOnly 
-                               (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                               (input)="onUppercaseInput($event)" />
+                        <mat-error *ngIf="managedStudentForm.get('sscSeatNo')?.hasError('maxlength')">Maximum 12 characters</mat-error>
+                        <mat-error *ngIf="managedStudentForm.get('sscSeatNo')?.hasError('pattern')">Only capital letters and numbers allowed</mat-error>
                       </mat-form-field>
                       <mat-form-field class="form-field">
                         <mat-label>SSC Month</mat-label>
@@ -615,19 +659,23 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       <mat-form-field class="form-field">
                         <mat-label>SSC Year</mat-label>
                         <mat-icon matPrefix>event</mat-icon>
-                        <input type="number" matInput formControlName="sscYear" />
+                        <input matInput formControlName="sscYear" maxlength="4" appEnglishOnly (input)="onOnlyDigitsInput($event)" />
+                        <mat-error *ngIf="managedStudentForm.get('sscYear')?.hasError('pattern')">Year must be 4 digits</mat-error>
                       </mat-form-field>
                       <mat-form-field class="form-field">
                         <mat-label>SSC Board</mat-label>
                         <mat-icon matPrefix>account_balance</mat-icon>
-                        <input matInput formControlName="sscBoard" appEnglishOnly />
+                        <input matInput formControlName="sscBoard" maxlength="100" appEnglishOnly (input)="onUppercaseInput($event)" />
+                        <mat-error *ngIf="managedStudentForm.get('sscBoard')?.hasError('maxlength')">Maximum 100 characters</mat-error>
                       </mat-form-field>
                     </div>
                     <div class="form-grid-2">
                       <mat-form-field class="form-field">
                         <mat-label>SSC Percentage</mat-label>
                         <mat-icon matPrefix>percent</mat-icon>
-                        <input type="number" matInput formControlName="sscPercentage" min="0" max="100" step="0.01" />
+                        <input matInput formControlName="sscPercentage" maxlength="6" appEnglishOnly (input)="onPercentageInput($event)" placeholder="0-100" />
+                        <mat-error *ngIf="managedStudentForm.get('sscPercentage')?.hasError('pattern')">Use valid percentage, max 2 decimals</mat-error>
+                        <mat-error *ngIf="managedStudentForm.get('sscPercentage')?.hasError('min') || managedStudentForm.get('sscPercentage')?.hasError('max')">Percentage must be 0 to 100</mat-error>
                       </mat-form-field>
                     </div>
                   </div>
@@ -642,8 +690,11 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                         <mat-icon matPrefix>badge</mat-icon>
                         <input matInput 
                                formControlName="xithSeatNo" 
+                               maxlength="12"
                                appEnglishOnly 
-                               (input)="$event.target.value = $event.target.value.toUpperCase()" />
+                               (input)="onUppercaseInput($event)" />
+                        <mat-error *ngIf="managedStudentForm.get('xithSeatNo')?.hasError('maxlength')">Maximum 12 characters</mat-error>
+                        <mat-error *ngIf="managedStudentForm.get('xithSeatNo')?.hasError('pattern')">Only capital letters and numbers allowed</mat-error>
                       </mat-form-field>
                       <mat-form-field class="form-field">
                         <mat-label>XI Month</mat-label>
@@ -661,19 +712,23 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       <mat-form-field class="form-field">
                         <mat-label>XI Year</mat-label>
                         <mat-icon matPrefix>event</mat-icon>
-                        <input type="number" matInput formControlName="xithYear" />
+                        <input matInput formControlName="xithYear" maxlength="4" appEnglishOnly (input)="onOnlyDigitsInput($event)" />
+                        <mat-error *ngIf="managedStudentForm.get('xithYear')?.hasError('pattern')">Year must be 4 digits</mat-error>
                       </mat-form-field>
                       <mat-form-field class="form-field">
                         <mat-label>XI College</mat-label>
                         <mat-icon matPrefix>school</mat-icon>
-                        <input matInput formControlName="xithCollege" appEnglishOnly />
+                        <input matInput formControlName="xithCollege" maxlength="100" appEnglishOnly (input)="onUppercaseInput($event)" />
+                        <mat-error *ngIf="managedStudentForm.get('xithCollege')?.hasError('maxlength')">Maximum 100 characters</mat-error>
                       </mat-form-field>
                     </div>
                     <div class="form-grid-2">
                       <mat-form-field class="form-field">
                         <mat-label>XI Percentage</mat-label>
                         <mat-icon matPrefix>percent</mat-icon>
-                        <input type="number" matInput formControlName="xithPercentage" min="0" max="100" step="0.01" />
+                        <input matInput formControlName="xithPercentage" maxlength="6" appEnglishOnly (input)="onPercentageInput($event)" placeholder="0-100" />
+                        <mat-error *ngIf="managedStudentForm.get('xithPercentage')?.hasError('pattern')">Use valid percentage, max 2 decimals</mat-error>
+                        <mat-error *ngIf="managedStudentForm.get('xithPercentage')?.hasError('min') || managedStudentForm.get('xithPercentage')?.hasError('max')">Percentage must be 0 to 100</mat-error>
                       </mat-form-field>
                     </div>
                   </div>
@@ -2435,7 +2490,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     this.bankDetailsForm = this.fb.group({
       accountHolder: ['', [
         Validators.minLength(3),
-        Validators.maxLength(100)
+        Validators.maxLength(100),
+        Validators.pattern(/^[A-Z\s'-]*$/)
       ]],
       accountHolderRelation: [''],
       ifscCode: ['', [
@@ -2451,40 +2507,40 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     });
 
     this.managedStudentForm = this.fb.group({
-      firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      middleName: ['', [Validators.maxLength(100)]],
-      lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      motherName: ['', [Validators.maxLength(100)]],
-      dob: [null],
-      gender: [''],
+      firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50), Validators.pattern(/^[A-Z\s'-]+$/)]],
+      middleName: ['', [Validators.maxLength(50), Validators.pattern(/^[A-Z\s'-]*$/)]],
+      lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50), Validators.pattern(/^[A-Z\s'-]+$/)]],
+      motherName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50), Validators.pattern(/^[A-Z\s'-]+$/)]],
+      dob: [null, [Validators.required, this.dateOfBirthValidator.bind(this)]],
+      gender: ['', [Validators.required]],
       instituteId: [null, [Validators.required]],
       streamCode: ['', [Validators.required]],
-      mobile: ['', [Validators.pattern(/^[6-9]\d{9}$/)]],
+      mobile: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
       aadhaar: ['', [Validators.required, Validators.pattern(/^\d{12}$/)]],
       categoryCode: ['', [Validators.maxLength(10)]],
       minorityReligionCode: ['', [Validators.maxLength(20)]],
       divyangCode: ['', [Validators.maxLength(10)]],
       mediumCode: ['', [Validators.maxLength(10)]],
-      pinCode: ['', [Validators.maxLength(10)]],
-      district: ['', [Validators.maxLength(100)]],
-      taluka: ['', [Validators.maxLength(100)]],
-      village: ['', [Validators.maxLength(100)]],
-      address: ['', [Validators.maxLength(500)]],
-      apaarId: ['', [Validators.maxLength(20)]],
-      studentSaralId: ['', [Validators.maxLength(50)]],
+      pinCode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+      district: ['', [Validators.required, Validators.maxLength(50)]],
+      taluka: ['', [Validators.required, Validators.maxLength(50)]],
+      village: ['', [Validators.required, Validators.maxLength(50)]],
+      address: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(250)]],
+      apaarId: ['', [Validators.maxLength(12), Validators.pattern(/^[A-Z0-9]*$/)]],
+      studentSaralId: ['', [Validators.maxLength(18), Validators.pattern(/^[A-Z0-9-]*$/)]],
       sscPassedFromMaharashtra: [null],
       eligibilityCertIssued: [null],
-      eligibilityCertNo: ['', [Validators.maxLength(100)]],
-      sscSeatNo: ['', [Validators.maxLength(50), Validators.pattern(/^[A-Z0-9]*$/)]],
+      eligibilityCertNo: ['', [Validators.maxLength(30), Validators.pattern(/^[A-Z0-9/-]*$/)]],
+      sscSeatNo: ['', [Validators.maxLength(12), Validators.pattern(/^[A-Z0-9]*$/)]],
       sscMonth: [''],
       sscYear: ['', [Validators.minLength(4), Validators.maxLength(4), Validators.pattern(/^\d{4}$|^$/)]],
-      sscBoard: ['', [Validators.maxLength(200)]],
-      sscPercentage: ['', [Validators.minLength(1), Validators.maxLength(5), Validators.pattern(/^\d+(\.\d{1,2})?$|^$/), Validators.min(0), Validators.max(100)]],
-      xithSeatNo: ['', [Validators.maxLength(50), Validators.pattern(/^[A-Z0-9]*$/)]],
+      sscBoard: ['', [Validators.maxLength(100)]],
+      sscPercentage: ['', [Validators.minLength(1), Validators.maxLength(6), Validators.pattern(/^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)$|^$/), Validators.min(0), Validators.max(100)]],
+      xithSeatNo: ['', [Validators.maxLength(12), Validators.pattern(/^[A-Z0-9]*$/)]],
       xithMonth: [''],
       xithYear: ['', [Validators.minLength(4), Validators.maxLength(4), Validators.pattern(/^\d{4}$|^$/)]],
-      xithCollege: ['', [Validators.maxLength(200)]],
-      xithPercentage: ['', [Validators.minLength(1), Validators.maxLength(5), Validators.pattern(/^\d+(\.\d{1,2})?$|^$/), Validators.min(0), Validators.max(100)]]
+      xithCollege: ['', [Validators.maxLength(100)]],
+      xithPercentage: ['', [Validators.minLength(1), Validators.maxLength(6), Validators.pattern(/^(100(\.0{1,2})?|\d{1,2}(\.\d{1,2})?)$|^$/), Validators.min(0), Validators.max(100)]]
     });
   }
 
@@ -2568,7 +2624,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
   private setupBankDetailsValidation() {
     const validatorMap: Record<string, any[]> = {
-      accountHolder: [Validators.minLength(3), Validators.maxLength(100)],
+      accountHolder: [Validators.minLength(3), Validators.maxLength(100), Validators.pattern(/^[A-Z\s'-]*$/)],
       accountHolderRelation: [],
       ifscCode: [
         Validators.minLength(11),
@@ -3962,10 +4018,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   onOnlyDigitsInput(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input) return;
-    const cleaned = input.value.replace(/\D+/g, '');
+    const maxLength = Number(input.getAttribute('maxlength') || 0);
+    const cleaned = input.value.replace(/\D+/g, '').slice(0, maxLength || undefined);
+    input.value = cleaned;
 
     const controlName = input.getAttribute('formControlName');
-    if (controlName && cleaned !== input.value) {
+    if (controlName) {
       const control = this.managedStudentForm.get(controlName)
         || this.personalDetailsForm.get(controlName)
         || this.previousExamForm.get(controlName)
@@ -3975,6 +4033,50 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         control.setValue(cleaned, { emitEvent: false });
       }
     }
+  }
+
+  onUppercaseInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input) return;
+
+    const maxLength = Number(input.getAttribute('maxlength') || 0);
+    const upper = input.value.toUpperCase().slice(0, maxLength || undefined);
+    input.value = upper;
+
+    const control = this.getControlForInput(input);
+    if (control && control.value !== upper) {
+      control.setValue(upper, { emitEvent: false });
+    }
+  }
+
+  onPercentageInput(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input) return;
+
+    let value = input.value.replace(/[^0-9.]/g, '');
+    const [whole = '', ...decimalParts] = value.split('.');
+    const decimal = decimalParts.join('').slice(0, 2);
+    value = decimalParts.length ? `${whole.slice(0, 3)}.${decimal}` : whole.slice(0, 3);
+
+    const numeric = Number(value);
+    if (value && !Number.isNaN(numeric) && numeric > 100) {
+      value = '100';
+    }
+
+    input.value = value;
+    const control = this.getControlForInput(input);
+    if (control && control.value !== value) {
+      control.setValue(value, { emitEvent: false });
+    }
+  }
+
+  private getControlForInput(input: HTMLInputElement | HTMLTextAreaElement): AbstractControl | null {
+    const controlName = input.getAttribute('formControlName');
+    if (!controlName) return null;
+    return this.managedStudentForm.get(controlName)
+      || this.personalDetailsForm.get(controlName)
+      || this.previousExamForm.get(controlName)
+      || this.bankDetailsForm.get(controlName);
   }
 
   onAadhaarBlur(event: Event) {
