@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -641,6 +641,7 @@ export class StudentApplicationsComponent implements OnInit {
 
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly profileService = inject(StudentProfileService);
   private readonly snackBar = inject(MatSnackBar);
 
@@ -658,7 +659,12 @@ export class StudentApplicationsComponent implements OnInit {
       next: (response) => {
         const students = response.students || [];
         this.managedStudents.set(students);
-        if (!this.selectedStudentId() && students.length) {
+        const requestedStudentId = Number(this.route.snapshot.queryParamMap.get('studentId') || 0);
+        const requestedStudent = students.find((student) => Number(student.id) === requestedStudentId);
+        if (requestedStudent) {
+          this.selectedStudentId.set(requestedStudent.id);
+          this.studentSearchText.set(this.displayStudentName(requestedStudent));
+        } else if (!this.selectedStudentId() && students.length) {
           this.selectedStudentId.set(students[0].id);
           // Keep search empty so dropdown shows all students by default.
           this.studentSearchText.set('');

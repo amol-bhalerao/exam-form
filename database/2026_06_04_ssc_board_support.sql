@@ -131,14 +131,21 @@ EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
 INSERT INTO `users` (`roleId`, `username`, `passwordHash`, `email`, `status`, `boardType`)
-SELECT r.`id`, 'ssc.board', '$2b$12$zQf2y1V05em0f5T1XILicekwd6g4ZqRCHdxM6fcd/Hl8QQkRWNu3q', 'ssc.board@hscexam.in', 'ACTIVE', 'SSC'
+SELECT r.`id`, 'ssc.board', '$2b$12$KrpTogVB4XYIjK7FhkJq2.vrM8BJeXHA3I3H.iwTMiFP37y6eDHi2', 'ssc.board@hscexam.in', 'ACTIVE', 'SSC'
 FROM `roles` r
 WHERE r.`name` = 'BOARD'
   AND NOT EXISTS (SELECT 1 FROM `users` WHERE `username` = 'ssc.board');
 
+UPDATE `users`
+SET `passwordHash` = '$2b$12$KrpTogVB4XYIjK7FhkJq2.vrM8BJeXHA3I3H.iwTMiFP37y6eDHi2',
+    `email` = 'ssc.board@hscexam.in',
+    `status` = 'ACTIVE',
+    `boardType` = 'SSC'
+WHERE `username` = 'ssc.board';
+
 -- Temporary credentials for the new SSC board account:
 -- Username: ssc.board
--- Password: SscBoard@123
+-- Password: Pass@123
 -- Change this password immediately after first login.
 
 -- SSC school import guidance:

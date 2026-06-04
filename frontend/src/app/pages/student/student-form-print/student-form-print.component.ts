@@ -97,7 +97,9 @@ import { canStudentPrintApplication } from '../../../core/printable-form-policy'
                 <div class="detail-line"><span class="line-label">SSC from Maharashtra:</span><span class="line-value">{{ yesNoOrDash(s().sscPassedFromMaharashtra) }}</span></div>
               }
               <div class="detail-line"><span class="line-label">Eligibility Certificate:</span><span class="line-value">{{ yesNoOrDash(s().eligibilityCertIssued) }}</span></div>
-              <div class="detail-line"><span class="line-label">Certificate No:</span><span class="line-value">{{ valueOrDash(s().eligibilityCertNo) }}</span></div>
+              @if (isEligibilityCertificateIssued()) {
+                <div class="detail-line"><span class="line-label">Certificate No:</span><span class="line-value">{{ valueOrDash(s().eligibilityCertNo) }}</span></div>
+              }
             </div>
           </section>
 
@@ -190,7 +192,9 @@ import { canStudentPrintApplication } from '../../../core/printable-form-policy'
                 <div class="detail-line"><span class="line-label">SSC Passed (MS Board):</span><span class="line-value">{{ sscMaharashtraForPrint() }}</span></div>
               }
               <div class="detail-line"><span class="line-label">Eligibility Cert Issued:</span><span class="line-value">{{ eligibilityIssuedForPrint() }}</span></div>
-              <div class="detail-line"><span class="line-label">Eligibility Cert No:</span><span class="line-value">{{ eligibilityCertNoForPrint() }}</span></div>
+              @if (isEligibilityCertificateIssued()) {
+                <div class="detail-line"><span class="line-label">Eligibility Cert No:</span><span class="line-value">{{ eligibilityCertNoForPrint() }}</span></div>
+              }
             </div>
           </section>
 
@@ -1580,6 +1584,14 @@ export class StudentFormPrintComponent implements OnInit {
       ?? this.a().isEligibilityCertIssued
       ?? this.a().eligibilityCertificateIssued;
     return this.yesNoOrDash(value);
+  }
+
+  isEligibilityCertificateIssued(): boolean {
+    const value = this.s().eligibilityCertIssued
+      ?? this.a().eligibilityCertIssued
+      ?? this.a().isEligibilityCertIssued
+      ?? this.a().eligibilityCertificateIssued;
+    return value === true || String(value).trim().toUpperCase() === 'YES';
   }
 
   eligibilityCertNoForPrint() {

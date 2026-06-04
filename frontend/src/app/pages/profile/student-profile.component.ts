@@ -407,7 +407,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       </mat-select>
                     </mat-form-field>
 
-                    <mat-form-field class="form-field">
+                    <mat-form-field class="form-field" *ngIf="managedStudentForm.get('eligibilityCertIssued')?.value === true">
                       <mat-label>Eligibility Certificate No</mat-label>
                       <mat-icon matPrefix>confirmation_number</mat-icon>
                       <input matInput
@@ -655,7 +655,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                   <span>Previous Exams</span>
                 </ng-template>
 
-                <div class="form-section">
+                <div class="form-section" *ngIf="!isManagedStudentSsc(); else sscPreviousExamSkip">
                   <div class="form-card form-card-compact form-card-span">
                     <div class="card-title-row">
                       <h3 class="card-title">SSC Details</h3>
@@ -762,6 +762,16 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     </div>
                   </div>
                 </div>
+                <ng-template #sscPreviousExamSkip>
+                  <div class="form-section">
+                    <div class="form-card form-card-compact form-card-span">
+                      <div class="card-title-row">
+                        <h3 class="card-title">Previous Exam Details Not Required</h3>
+                      </div>
+                      <p class="tab-instruction">SSC विद्यार्थ्यांसाठी SSC आणि XIth तपशील आवश्यक नाहीत. कृपया फॉर्म जतन करा.</p>
+                    </div>
+                  </div>
+                </ng-template>
               </mat-tab>
             </mat-tab-group>
 
@@ -774,9 +784,9 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                 <mat-icon>arrow_back</mat-icon>
                 Back
               </button>
-              <span class="tab-counter">Step {{ selectedTabIndex + 1 }} of 8</span>
+              <span class="tab-counter">Step {{ selectedTabIndex + 1 }} of {{ getManagedTabCount() }}</span>
               <button mat-raised-button color="primary" type="button" 
-                 [disabled]="selectedTabIndex === 7 || (selectedTabIndex === 6 && !isBankDetailsComplete())" 
+                 [disabled]="selectedTabIndex === getLastManagedTabIndex() || (selectedTabIndex === 6 && !isBankDetailsComplete())" 
                    (click)="onNextTabClick()"
                    class="nav-btn next-btn">
                  Next
@@ -853,7 +863,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                   <th>Stream</th>
                   <th>Mobile</th>
                   <th>Profile</th>
-                  <th>Action</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -863,7 +873,16 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                   <td>{{ student.streamCode || '-' }}</td>
                   <td>{{ student.mobile || '-' }}</td>
                   <td><span class="completion-pill">{{ student.profileCompletion ?? 0 }}%</span></td>
-                  <td><button mat-stroked-button type="button" (click)="openManagedStudentModal('edit', student)">Edit</button></td>
+                  <td class="managed-row-actions">
+                    <button mat-stroked-button type="button" (click)="openManagedStudentModal('edit', student)">Edit</button>
+                    <button
+                      mat-flat-button
+                      color="primary"
+                      type="button"
+                      (click)="handleManagedStudentExamAction(student)">
+                      {{ getManagedStudentExamActionLabel(student) }}
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>
@@ -1141,6 +1160,12 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       color: #075985;
       font-weight: 700;
       font-size: 0.8rem;
+    }
+
+    .managed-row-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
     .managed-student-popup {
@@ -2293,6 +2318,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly router = inject(Router);
   private destroy$ = new Subject<void>();
 
   profile: StudentProfile | null = null;
@@ -2329,6 +2355,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   infoPopupTitle = '';
   infoPopupText = '';
   managedStudents: any[] = [];
+  managedStudentApplications: any[] = [];
   showManagedStudentModal = false;
   managedStudentMode: 'create' | 'edit' = 'create';
   managedStudentSaving = false;
@@ -2641,6 +2668,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     this.loadInstitutesAndStreams().then(() => {
       this.loadProfile();
       this.loadManagedStudents();
+      this.loadManagedStudentApplications();
     });
   }
 
@@ -2651,9 +2679,9 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
     const applyRules = (issued: unknown) => {
       if (issued === true) {
-        certNoControl.setValidators([Validators.required, Validators.maxLength(100)]);
+        certNoControl.setValidators([Validators.required, Validators.maxLength(30), Validators.pattern(/^[A-Z0-9/-]*$/)]);
       } else {
-        certNoControl.setValidators([Validators.maxLength(100)]);
+        certNoControl.setValidators([Validators.maxLength(30), Validators.pattern(/^[A-Z0-9/-]*$/)]);
         if (certNoControl.value) {
           certNoControl.setValue('', { emitEvent: false });
         }
@@ -2678,6 +2706,10 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         streamControl.clearValidators();
         if (streamControl.value) {
           streamControl.setValue('', { emitEvent: false });
+        }
+        this.clearManagedPreviousExamFields();
+        if (this.selectedTabIndex > this.getLastManagedTabIndex()) {
+          this.selectedTabIndex = this.getLastManagedTabIndex();
         }
       } else {
         streamControl.setValidators([Validators.required]);
@@ -2761,10 +2793,60 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadManagedStudentApplications() {
+    this.http.get<{ applications: any[] }>(`${API_BASE_URL}/applications/my`).subscribe({
+      next: (response) => {
+        this.managedStudentApplications = response?.applications || [];
+      },
+      error: () => {
+        this.managedStudentApplications = [];
+      }
+    });
+  }
+
   displayManagedStudentName(student: any): string {
     const fromApi = String(student?.fullName || '').trim();
     if (fromApi) return fromApi;
     return [student?.lastName, student?.firstName, student?.middleName].filter(Boolean).join(' ') || '-';
+  }
+
+  getManagedStudentApplication(student: any): any | null {
+    const studentId = Number(student?.id || 0);
+    if (!studentId) return null;
+    const applications = this.managedStudentApplications
+      .filter((application) => Number(application?.student?.id || application?.studentId || 0) === studentId)
+      .sort((a, b) => new Date(b.updatedAt || b.createdAt || 0).getTime() - new Date(a.updatedAt || a.createdAt || 0).getTime());
+
+    return applications.find((application) => this.canPrintManagedApplication(application))
+      || applications.find((application) => String(application?.status || '').toUpperCase() === 'DRAFT')
+      || applications[0]
+      || null;
+  }
+
+  canPrintManagedApplication(application: any): boolean {
+    if (!application) return false;
+    if (typeof application.printable === 'boolean') return application.printable;
+    return String(application.status || '').toUpperCase() !== 'DRAFT' && !!application.paymentCompleted;
+  }
+
+  getManagedStudentExamActionLabel(student: any): string {
+    const application = this.getManagedStudentApplication(student);
+    if (!application) return 'Fill Exam Form';
+    if (this.canPrintManagedApplication(application)) return 'Print Form';
+    return 'Continue Form';
+  }
+
+  handleManagedStudentExamAction(student: any) {
+    const application = this.getManagedStudentApplication(student);
+    if (application && this.canPrintManagedApplication(application)) {
+      this.router.navigate(['/app/student/forms', application.id, 'print']);
+      return;
+    }
+    if (application?.id) {
+      this.router.navigate(['/app/student/applications', application.id]);
+      return;
+    }
+    this.router.navigate(['/app/student/applications'], { queryParams: { studentId: student?.id || null } });
   }
 
   openManagedStudentModal(mode: 'create' | 'edit', student?: any) {
@@ -2965,7 +3047,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       return;
     }
 
-    for (let tabIndex = 0; tabIndex <= 6; tabIndex++) {
+    for (let tabIndex = 0; tabIndex <= this.getLastManagedTabIndex(); tabIndex++) {
       if (!this.isManagedTabComplete(tabIndex)) {
         this.markManagedTabTouched(tabIndex);
         this.selectedTabIndex = tabIndex;
@@ -2993,6 +3075,21 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
     const dobValue = this.managedStudentForm.value.dob;
     const boardType = String(rawValue.boardType || 'HSC').trim().toUpperCase();
+
+    const previousExamPayload = boardType === 'SSC'
+      ? {}
+      : {
+          sscSeatNo: String(rawValue.sscSeatNo || '').trim() || undefined,
+          sscMonth: String(rawValue.sscMonth || '').trim() || undefined,
+          sscYear: rawValue.sscYear ? Number(rawValue.sscYear) : undefined,
+          sscBoard: String(rawValue.sscBoard || '').trim().toUpperCase() || undefined,
+          sscPercentage: String(rawValue.sscPercentage || '').trim() || undefined,
+          xithSeatNo: String(rawValue.xithSeatNo || '').trim() || undefined,
+          xithMonth: String(rawValue.xithMonth || '').trim() || undefined,
+          xithYear: rawValue.xithYear ? Number(rawValue.xithYear) : undefined,
+          xithCollege: String(rawValue.xithCollege || '').trim().toUpperCase() || undefined,
+          xithPercentage: String(rawValue.xithPercentage || '').trim() || undefined
+        };
 
     const payload = {
       firstName: String(rawValue.firstName || '').trim().toUpperCase(),
@@ -3023,16 +3120,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         : null,
       photoDataUrl: this.managedPhotoRemoved ? null : (this.managedPhotoDataUrl || undefined),
       signatureDataUrl: this.managedSignatureRemoved ? null : (this.managedSignatureDataUrl || undefined),
-      sscSeatNo: String(rawValue.sscSeatNo || '').trim() || undefined,
-      sscMonth: String(rawValue.sscMonth || '').trim() || undefined,
-      sscYear: rawValue.sscYear ? Number(rawValue.sscYear) : undefined,
-      sscBoard: String(rawValue.sscBoard || '').trim().toUpperCase() || undefined,
-      sscPercentage: String(rawValue.sscPercentage || '').trim() || undefined,
-      xithSeatNo: String(rawValue.xithSeatNo || '').trim() || undefined,
-      xithMonth: String(rawValue.xithMonth || '').trim() || undefined,
-      xithYear: rawValue.xithYear ? Number(rawValue.xithYear) : undefined,
-      xithCollege: String(rawValue.xithCollege || '').trim().toUpperCase() || undefined,
-      xithPercentage: String(rawValue.xithPercentage || '').trim() || undefined,
+      ...previousExamPayload,
       ...this.getManagedBankDetailsPayload()
     };
 
@@ -3046,6 +3134,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         this.managedStudentSaving = false;
         this.closeManagedStudentModal();
         this.loadManagedStudents();
+        this.loadManagedStudentApplications();
         this.snackBar.open(this.managedStudentMode === 'edit' ? 'विद्यार्थ्याची माहिती अद्ययावत झाली.' : 'विद्यार्थी यशस्वीरीत्या जोडला गेला.', 'बंद', { duration: 2500 });
         
         // Clear form and redirect to first tab for new student
@@ -3102,7 +3191,6 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           this.managedStudentInstituteId = null;
           this.selectedTabIndex = 0;
           this.clearFormProgress(); // Clear saved progress after successful save
-          this.openManagedStudentModal('create'); // Reopen modal with cleared form
         }
       },
       error: (err) => {
@@ -3181,7 +3269,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       this.snackBar.open(this.getManagedTabValidationMessage(this.selectedTabIndex), 'बंद', { duration: 3000 });
       return;
     }
-    this.selectedTabIndex = Math.min(this.selectedTabIndex + 1, 7);
+    this.selectedTabIndex = Math.min(this.selectedTabIndex + 1, this.getLastManagedTabIndex());
     // Save progress to localStorage
     this.saveFormProgress();
   }
@@ -3215,10 +3303,18 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       1: ['boardType', 'instituteId', 'streamCode'],
       2: ['firstName', 'lastName', 'motherName', 'dob', 'gender', 'mobile'],
       3: ['address', 'pinCode', 'district', 'taluka', 'village'],
-      4: ['categoryCode', 'minorityReligionCode', 'divyangCode', 'mediumCode', 'sscPassedFromMaharashtra', 'eligibilityCertIssued', 'eligibilityCertNo'],
+      4: [
+        'categoryCode',
+        'minorityReligionCode',
+        'divyangCode',
+        'mediumCode',
+        'sscPassedFromMaharashtra',
+        'eligibilityCertIssued',
+        ...(this.managedStudentForm.get('eligibilityCertIssued')?.value === true ? ['eligibilityCertNo'] : [])
+      ],
       5: [],
       6: ['accountHolder', 'accountHolderRelation', 'ifscCode', 'accountNumber'],
-      7: ['sscSeatNo', 'sscMonth', 'sscYear', 'sscBoard', 'sscPercentage', 'xithSeatNo', 'xithMonth', 'xithYear', 'xithCollege', 'xithPercentage']
+      7: this.isManagedStudentSsc() ? [] : ['sscSeatNo', 'sscMonth', 'sscYear', 'sscBoard', 'sscPercentage', 'xithSeatNo', 'xithMonth', 'xithYear', 'xithCollege', 'xithPercentage']
     };
     for (const field of fieldsByTab[tabIndex] || []) {
       this.managedStudentForm.get(field)?.markAsTouched();
@@ -3251,6 +3347,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       case 6:
         return this.isBankDetailsComplete();
       case 7:
+        if (this.isManagedStudentSsc()) return true;
         return filled(value.sscSeatNo) && filled(value.sscMonth) && filled(value.sscYear) && filled(value.sscBoard) && filled(value.sscPercentage)
           && filled(value.xithSeatNo) && filled(value.xithMonth) && filled(value.xithYear) && filled(value.xithCollege) && filled(value.xithPercentage);
       default:
@@ -3270,6 +3367,33 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       7: 'जतन करण्यापूर्वी मागील परीक्षेची माहिती पूर्ण भरा.'
     };
     return messages[tabIndex] || 'कृपया आवश्यक माहिती भरा.';
+  }
+
+  isManagedStudentSsc(): boolean {
+    return String(this.managedStudentForm?.get('boardType')?.value || '').trim().toUpperCase() === 'SSC';
+  }
+
+  getManagedTabCount(): number {
+    return 8;
+  }
+
+  getLastManagedTabIndex(): number {
+    return this.getManagedTabCount() - 1;
+  }
+
+  private clearManagedPreviousExamFields() {
+    this.managedStudentForm.patchValue({
+      sscSeatNo: '',
+      sscMonth: '',
+      sscYear: '',
+      sscBoard: '',
+      sscPercentage: '',
+      xithSeatNo: '',
+      xithMonth: '',
+      xithYear: '',
+      xithCollege: '',
+      xithPercentage: ''
+    }, { emitEvent: false });
   }
 
   private getManagedStudentSaveErrorMessage(err: any): string {

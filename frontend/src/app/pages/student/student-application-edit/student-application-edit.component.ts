@@ -277,7 +277,7 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
                       <strong>{{ form.get('eligibilityCertIssued')?.value ? 'Yes' : 'No' }}</strong>
                     </div>
                   }
-                  @if (hasValue('eligibilityCertNo')) {
+                  @if (form.get('eligibilityCertIssued')?.value === true && hasValue('eligibilityCertNo')) {
                     <div class="readonly-field">
                       <label>Eligibility Certificate No</label>
                       <strong>{{ displayValue('eligibilityCertNo') }}</strong>
