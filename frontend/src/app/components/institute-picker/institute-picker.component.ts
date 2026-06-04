@@ -14,6 +14,7 @@ export interface InstituteOption {
   code?: string;
   collegeNo?: string;
   udiseNo?: string;
+  boardType?: 'HSC' | 'SSC' | string;
 }
 
 @Component({
@@ -36,7 +37,7 @@ export interface InstituteOption {
           <mat-option *ngFor="let inst of filteredInstitutes()" [value]="inst">
             <div class="picker-option">
               <span class="picker-name">{{ inst.name }}</span>
-              <span class="picker-meta">{{ inst.code || 'No code' }} • {{ inst.collegeNo || 'N/A' }} / {{ inst.udiseNo || 'N/A' }}</span>
+              <span class="picker-meta">{{ inst.boardType || 'HSC' }} • {{ inst.code || 'No code' }} • {{ inst.collegeNo || 'N/A' }} / {{ inst.udiseNo || 'N/A' }}</span>
             </div>
           </mat-option>
           <mat-option *ngIf="filteredInstitutes().length === 0" disabled>
@@ -113,7 +114,8 @@ export interface InstituteOption {
 })
 export class InstitutePickerComponent implements OnInit, OnChanges {
   @Input() selectedInstituteId: number | null = null;
-  @Output() selectedInstituteIdChange = new EventEmitter<number>();
+  @Input() boardType: 'HSC' | 'SSC' | '' | null = null;
+  @Output() selectedInstituteIdChange = new EventEmitter<number | null>();
 
   readonly institutes = signal<InstituteOption[]>([]);
   readonly filteredInstitutes = signal<InstituteOption[]>([]);
@@ -125,7 +127,7 @@ export class InstitutePickerComponent implements OnInit, OnChanges {
     this.http.get<{ institutes: InstituteOption[] }>(`${API_BASE_URL}/institutes`).subscribe({
       next: (res) => {
         this.institutes.set(res.institutes ?? []);
-        this.filteredInstitutes.set(res.institutes ?? []);
+        this.filteredInstitutes.set(this.availableInstitutes());
         this.syncSearchTermWithSelection();
       },
       error: () => {
@@ -136,9 +138,46 @@ export class InstitutePickerComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
+    if (changes['boardType']) {
+      const selected = this.institutes().find((inst) => inst.id === this.selectedInstituteId);
+      if (selected && !this.matchesBoardType(selected)) {
+        this.selectedInstituteId = null;
+        this.selectedInstituteIdChange.emit(null);
+        this.searchTerm.set('');
+      }
+      this.filteredInstitutes.set(this.filterInstitutes(this.searchTerm()));
+    }
+
     if (changes['selectedInstituteId']) {
       this.syncSearchTermWithSelection();
     }
+  }
+
+  private normalizedBoardType(): string {
+    return String(this.boardType || '').trim().toUpperCase();
+  }
+
+  private matchesBoardType(inst: InstituteOption): boolean {
+    const selectedBoard = this.normalizedBoardType();
+    if (!selectedBoard) return true;
+    return String(inst.boardType || 'HSC').trim().toUpperCase() === selectedBoard;
+  }
+
+  private availableInstitutes(): InstituteOption[] {
+    return this.institutes().filter((inst) => this.matchesBoardType(inst));
+  }
+
+  private filterInstitutes(term: string): InstituteOption[] {
+    const q = (term || '').trim().toLowerCase();
+    const list = this.availableInstitutes();
+    if (!q) return list;
+    return list.filter((inst) =>
+      inst.name.toLowerCase().includes(q) ||
+      (inst.code ?? '').toLowerCase().includes(q) ||
+      (inst.collegeNo ?? '').toLowerCase().includes(q) ||
+      (inst.udiseNo ?? '').toLowerCase().includes(q) ||
+      (inst.boardType ?? '').toLowerCase().includes(q)
+    );
   }
 
   private syncSearchTermWithSelection() {
@@ -154,20 +193,7 @@ export class InstitutePickerComponent implements OnInit, OnChanges {
 
   onSearch(term: string) {
     this.searchTerm.set(term || '');
-    const q = (term || '').trim().toLowerCase();
-    const list = this.institutes();
-    if (!q) {
-      this.filteredInstitutes.set(list);
-      return;
-    }
-    this.filteredInstitutes.set(
-      list.filter((inst) =>
-        inst.name.toLowerCase().includes(q) ||
-        (inst.code ?? '').toLowerCase().includes(q) ||
-        (inst.collegeNo ?? '').toLowerCase().includes(q) ||
-        (inst.udiseNo ?? '').toLowerCase().includes(q)
-      )
-    );
+    this.filteredInstitutes.set(this.filterInstitutes(term));
   }
 
   selectedInstituteLabel() {

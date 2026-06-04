@@ -214,11 +214,25 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
                 <div class="form-section">
                   <div class="form-grid-1">
+                    <mat-form-field class="form-field form-field-full" [class.error-field]="managedStudentForm.get('boardType')?.invalid && managedStudentForm.get('boardType')?.touched">
+                      <mat-label>Student Board *</mat-label>
+                      <mat-icon matPrefix>account_balance</mat-icon>
+                      <mat-select formControlName="boardType" required>
+                        <mat-option value="HSC">HSC - Higher Secondary Certificate</mat-option>
+                        <mat-option value="SSC">SSC - Secondary School Certificate</mat-option>
+                      </mat-select>
+                      <mat-hint>Select HSC or SSC first to show the matching institute list.</mat-hint>
+                      <mat-error>Student board is required</mat-error>
+                    </mat-form-field>
+
                     <div class="form-field form-field-full">
-                      <app-institute-picker [(selectedInstituteId)]="managedStudentInstituteId"></app-institute-picker>
+                      <app-institute-picker
+                        [boardType]="managedStudentForm.get('boardType')?.value"
+                        [(selectedInstituteId)]="managedStudentInstituteId">
+                      </app-institute-picker>
                     </div>
 
-                    <mat-form-field class="form-field form-field-full" [class.error-field]="managedStudentForm.get('streamCode')?.invalid && managedStudentForm.get('streamCode')?.touched">
+                    <mat-form-field class="form-field form-field-full" *ngIf="managedStudentForm.get('boardType')?.value !== 'SSC'" [class.error-field]="managedStudentForm.get('streamCode')?.invalid && managedStudentForm.get('streamCode')?.touched">
                       <mat-label>Stream *</mat-label>
                       <mat-icon matPrefix>school</mat-icon>
                       <mat-select formControlName="streamCode" required>
@@ -227,6 +241,11 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                       </mat-select>
                       <mat-error>Stream is required</mat-error>
                     </mat-form-field>
+
+                    <div class="board-note" *ngIf="managedStudentForm.get('boardType')?.value === 'SSC'">
+                      <mat-icon>info</mat-icon>
+                      <span>SSC students do not need an HSC stream. The exam form will use the SSC board format.</span>
+                    </div>
 
                     <mat-form-field class="form-field form-field-full">
                       <mat-label>Medium</mat-label>
@@ -456,7 +475,17 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                     <mat-form-field class="form-field">
                       <mat-label>Village</mat-label>
                       <mat-icon matPrefix>cottage</mat-icon>
-                      <input matInput formControlName="village" maxlength="50" appEnglishOnly (input)="onUppercaseInput($event)" />
+                      <mat-select
+                        *ngIf="pincodeOptions.length; else manualVillageInput"
+                        formControlName="village"
+                        (selectionChange)="onVillageSelected($event.value)">
+                        <mat-option *ngFor="let location of pincodeOptions" [value]="getPostalVillageValue(location)">
+                          {{ getPostalVillageLabel(location) }}
+                        </mat-option>
+                      </mat-select>
+                      <ng-template #manualVillageInput>
+                        <input matInput formControlName="village" maxlength="50" appEnglishOnly (input)="onUppercaseInput($event)" />
+                      </ng-template>
                       <mat-error *ngIf="managedStudentForm.get('village')?.hasError('required')">Village is required</mat-error>
                       <mat-error *ngIf="managedStudentForm.get('village')?.hasError('maxlength')">Maximum 50 characters</mat-error>
                     </mat-form-field>
@@ -758,6 +787,10 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
           <div class="popup-actions">
             <button mat-stroked-button type="button" (click)="closeManagedStudentModal()">Cancel</button>
+            <button mat-stroked-button type="button" (click)="saveFormProgress(true)">
+              <mat-icon>save</mat-icon>
+              Save Draft
+            </button>
             <button mat-raised-button color="primary" type="button" [disabled]="managedStudentSaving" (click)="saveManagedStudent()">
               {{ managedStudentSaving ? 'Saving...' : (managedStudentMode === 'edit' ? 'Update Student' : 'Save Student') }}
             </button>
@@ -1584,6 +1617,16 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     .managed-student-modal .form-field-full {
       width: 100%;
       margin: 0;
+    }
+
+    .board-note {
+      display: flex;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #e0f2fe;
+      color: #075985;
+      font-weight: 600;
     }
 
     .managed-student-modal .mat-form-field .mat-mdc-form-field-flex,
@@ -2513,6 +2556,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       motherName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50), Validators.pattern(/^[A-Z\s'-]+$/)]],
       dob: [null, [Validators.required, this.dateOfBirthValidator.bind(this)]],
       gender: ['', [Validators.required]],
+      boardType: ['HSC', [Validators.required]],
       instituteId: [null, [Validators.required]],
       streamCode: ['', [Validators.required]],
       mobile: ['', [Validators.required, Validators.pattern(/^[6-9]\d{9}$/)]],
@@ -2589,6 +2633,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     this.setupNameFieldTransformers();
     this.setupManagedEligibilityValidation();
     this.setupBankDetailsValidation();
+    this.setupManagedBoardValidation();
     this.setupPincodeLookup();
     this.setupInstituteAutocomplete();
     // Load institutes and streams FIRST, then load profile
@@ -2620,6 +2665,33 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     issuedControl.valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe((issued) => applyRules(issued));
+  }
+
+  private setupManagedBoardValidation() {
+    const boardControl = this.managedStudentForm.get('boardType');
+    const streamControl = this.managedStudentForm.get('streamCode');
+    if (!boardControl || !streamControl) return;
+
+    const applyRules = (boardType: unknown) => {
+      const normalizedBoard = String(boardType || 'HSC').trim().toUpperCase();
+      if (normalizedBoard === 'SSC') {
+        streamControl.clearValidators();
+        if (streamControl.value) {
+          streamControl.setValue('', { emitEvent: false });
+        }
+      } else {
+        streamControl.setValidators([Validators.required]);
+      }
+      streamControl.updateValueAndValidity({ emitEvent: false });
+    };
+
+    applyRules(boardControl.value);
+    boardControl.valueChanges.pipe(
+      takeUntil(this.destroy$)
+    ).subscribe((value) => {
+      applyRules(value);
+      this.saveFormProgress();
+    });
   }
 
   private setupBankDetailsValidation() {
@@ -2715,6 +2787,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
             motherName: studentData.motherName || '',
             dob: studentData.dob ? new Date(studentData.dob) : null,
             gender: studentData.gender || '',
+            boardType: studentData.boardType || 'HSC',
             instituteId: studentData.instituteId || null,
             streamCode: studentData.streamCode || '',
             mobile: studentData.mobile || '',
@@ -2772,6 +2845,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
             motherName: student.motherName || '',
             dob: student.dob ? new Date(student.dob) : null,
             gender: student.gender || '',
+            boardType: student.boardType || 'HSC',
             instituteId: student.instituteId || null,
             streamCode: student.streamCode || '',
             mobile: student.mobile || '',
@@ -2823,6 +2897,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       motherName: '',
       dob: null,
       gender: '',
+      boardType: 'HSC',
       instituteId: null,
       streamCode: '',
       mobile: '',
@@ -2869,9 +2944,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     this.selectedTabIndex = 0;
     this.showManagedStudentModal = true;
 
-    // Always start Add Student from first tab with clean state.
     if (mode === 'create') {
-      this.clearFormProgress();
+      this.loadFormProgress();
     }
   }
 
@@ -2918,6 +2992,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     }
 
     const dobValue = this.managedStudentForm.value.dob;
+    const boardType = String(rawValue.boardType || 'HSC').trim().toUpperCase();
 
     const payload = {
       firstName: String(rawValue.firstName || '').trim().toUpperCase(),
@@ -2927,7 +3002,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       dob: dobValue ? (dobValue instanceof Date ? dobValue.toISOString() : String(dobValue).trim()) : undefined,
       gender: String(rawValue.gender || '').trim() || undefined,
       instituteId: Number(rawValue.instituteId),
-      streamCode: String(rawValue.streamCode || '').trim(),
+      streamCode: boardType === 'SSC' ? null : String(rawValue.streamCode || '').trim(),
       mobile: String(rawValue.mobile || '').trim() || undefined,
       aadhaar: String(rawValue.aadhaar || '').trim() || undefined,
       address: String(rawValue.address || '').trim().toUpperCase() || undefined,
@@ -2982,6 +3057,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
             motherName: '',
             dob: null,
             gender: '',
+            boardType: 'HSC',
             instituteId: null,
             streamCode: '',
             mobile: '',
@@ -3066,6 +3142,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
           dob: student.dob ? new Date(student.dob) : null,
           gender: student.gender || '',
           mobile: student.mobile || '',
+          boardType: student.boardType || 'HSC',
           instituteId: student.instituteId || null,
           streamCode: student.streamCode || '',
           categoryCode: student.categoryCode || '',
@@ -3131,7 +3208,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   private markManagedTabTouched(tabIndex: number) {
     const fieldsByTab: Record<number, string[]> = {
       0: ['aadhaar'],
-      1: ['instituteId', 'streamCode'],
+      1: ['boardType', 'instituteId', 'streamCode'],
       2: ['firstName', 'lastName', 'motherName', 'dob', 'gender', 'mobile'],
       3: ['address', 'pinCode', 'district', 'taluka', 'village'],
       4: ['categoryCode', 'minorityReligionCode', 'divyangCode', 'mediumCode', 'sscPassedFromMaharashtra', 'eligibilityCertIssued', 'eligibilityCertNo'],
@@ -3152,7 +3229,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       case 0:
         return /^\d{12}$/.test(String(value.aadhaar || '').trim());
       case 1:
-        return !!value.instituteId && filled(value.streamCode);
+        return filled(value.boardType) && !!value.instituteId && (value.boardType === 'SSC' || filled(value.streamCode));
       case 2:
         return filled(value.firstName) && filled(value.lastName) && filled(value.motherName) && !!value.dob && filled(value.gender) && /^\d{10}$/.test(String(value.mobile || '').trim());
       case 3:
@@ -3180,7 +3257,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   private getManagedTabValidationMessage(tabIndex: number): string {
     const messages: Record<number, string> = {
       0: 'पुढे जाण्यापूर्वी 12 अंकी आधार क्रमांक भरा.',
-      1: 'पुढे जाण्यापूर्वी महाविद्यालय आणि शाखा निवडा.',
+      1: 'पुढे जाण्यापूर्वी बोर्ड, संस्था आणि HSC असल्यास शाखा निवडा.',
       2: 'पुढे जाण्यापूर्वी वैयक्तिक माहिती पूर्ण भरा.',
       3: 'पुढे जाण्यापूर्वी पत्ता माहिती पूर्ण भरा.',
       4: 'पुढे जाण्यापूर्वी डेमोग्राफिक माहिती पूर्ण भरा.',
@@ -3215,17 +3292,22 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     }
   }
 
-  private saveFormProgress() {
+  saveFormProgress(showToast = false) {
     if (typeof window !== 'undefined' && window.localStorage) {
       const userId = this.auth.user()?.userId;
       if (userId) {
         const progressData = {
-          formData: this.managedStudentForm.value,
+          status: 'DRAFT',
+          formData: this.managedStudentForm.getRawValue(),
+          bankDetails: this.bankDetailsForm.getRawValue(),
           selectedTabIndex: this.selectedTabIndex,
           managedStudentInstituteId: this.managedStudentInstituteId,
           timestamp: new Date().toISOString()
         };
         localStorage.setItem(`studentFormProgress_${userId}`, JSON.stringify(progressData));
+        if (showToast) {
+          this.snackBar.open('Draft saved. You can come back and continue without re-entering these fields.', 'Close', { duration: 3000 });
+        }
       }
     }
   }
@@ -3245,9 +3327,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
             
             if (hoursDiff < 24) {
               this.managedStudentForm.patchValue(progressData.formData);
+              if (progressData.bankDetails) {
+                this.bankDetailsForm.patchValue(progressData.bankDetails);
+              }
               this.selectedTabIndex = progressData.selectedTabIndex || 0;
               this.managedStudentInstituteId = progressData.managedStudentInstituteId || null;
-              this.snackBar.open('Previous form progress restored', 'Close', { duration: 2000 });
+              this.snackBar.open('Previous draft progress restored', 'Close', { duration: 2000 });
             } else {
               // Clear old data
               localStorage.removeItem(`studentFormProgress_${userId}`);
@@ -4116,11 +4201,35 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     }
   }
 
+  getPostalVillageValue(location: PostalLocation): string {
+    return String(location.village || location.officeName || '').trim().toUpperCase();
+  }
+
+  getPostalVillageLabel(location: PostalLocation): string {
+    const village = this.getPostalVillageValue(location);
+    const taluka = String(location.taluka || '').trim().toUpperCase();
+    const officeType = String(location.officeType || '').trim();
+    return [village, taluka, officeType].filter(Boolean).join(' - ');
+  }
+
+  onVillageSelected(village: string) {
+    const selectedVillage = String(village || '').trim().toUpperCase();
+    const location = this.pincodeOptions.find((option) => this.getPostalVillageValue(option) === selectedVillage);
+    if (!location) return;
+
+    this.managedStudentForm.patchValue({
+      district: String(location.district || '').trim().toUpperCase(),
+      taluka: String(location.taluka || '').trim().toUpperCase(),
+      village: selectedVillage
+    }, { emitEvent: false });
+    this.saveFormProgress();
+  }
+
   private applyPincodeToAddressForms(pincode: string, location: PostalLocation) {
     const patchData = {
-      district: location.district || '',
-      taluka: location.taluka || '',
-      village: location.village || location.officeName || ''
+      district: String(location.district || '').trim().toUpperCase(),
+      taluka: String(location.taluka || '').trim().toUpperCase(),
+      village: this.getPostalVillageValue(location)
     };
 
     const personalPincode = String(this.personalDetailsForm.get('pincode')?.value || '').trim();

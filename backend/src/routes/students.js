@@ -39,6 +39,7 @@ function studentSummaryDto(student) {
     instituteId: student.instituteId,
     instituteName: student.institute?.name || null,
     instituteCode: student.institute?.code || student.institute?.collegeNo || null,
+    boardType: student.boardType || student.institute?.boardType || null,
     streamCode: student.streamCode || null,
     firstName: student.firstName || null,
     middleName: student.middleName || null,
@@ -68,6 +69,37 @@ function studentSummaryDto(student) {
     previousExams: student.previousExams || [],
     createdAt: student.createdAt
   };
+}
+
+async function withStudentBoardType(student) {
+  if (!student?.instituteId) return student;
+  const boardType = await getInstituteBoardType(student.instituteId);
+  return {
+    ...student,
+    boardType,
+    institute: student.institute ? { ...student.institute, boardType } : student.institute
+  };
+}
+
+async function withStudentsBoardType(students = []) {
+  return Promise.all(students.map((student) => withStudentBoardType(student)));
+}
+
+async function resolveManagedStreamCode(instituteId, streamCode) {
+  const boardType = await getInstituteBoardType(instituteId);
+  if (boardType === 'SSC') {
+    return { boardType, streamCode: null };
+  }
+
+  const normalizedStream = String(streamCode || '').trim();
+  if (!normalizedStream) {
+    const error = new Error('Please select a stream for HSC student.');
+    error.statusCode = 422;
+    error.code = 'STREAM_REQUIRED';
+    throw error;
+  }
+
+  return { boardType, streamCode: normalizedStream };
 }
 
 async function getAccessibleStudents(userId) {
@@ -156,7 +188,7 @@ studentsRouter.get('/lookup-by-aadhaar/:aadhaar', requireAuth, async (req, res) 
       });
     }
 
-    const studentWithAssets = await attachStudentAssets(student);
+    const studentWithAssets = await withStudentBoardType(await attachStudentAssets(student));
     const bankDetails = await prisma.feeReimbursement.findUnique({ where: { studentId: student.id } });
 
     return res.json({ 
@@ -164,6 +196,7 @@ studentsRouter.get('/lookup-by-aadhaar/:aadhaar', requireAuth, async (req, res) 
       student: studentSummaryDto(studentWithAssets),
       fullStudent: {
         ...studentWithAssets,
+        boardType: studentWithAssets.boardType,
         bankDetails: bankDetails
           ? { ...bankDetails, accountNumber: bankDetails.accountNo ?? null }
           : null
@@ -181,7 +214,7 @@ studentsRouter.get('/managed', requireAuth, async (req, res) => {
     if (!userId) return res.status(401).json({ error: 'UNAUTHORIZED' });
 
     const students = await getAccessibleStudents(userId);
-    const studentsWithAssets = await Promise.all(students.map((student) => attachStudentAssets(student)));
+    const studentsWithAssets = await withStudentsBoardType(await Promise.all(students.map((student) => attachStudentAssets(student))));
     return res.json({ students: studentsWithAssets.map(studentSummaryDto) });
   } catch (err) {
     console.error('Get managed students error:', err);
@@ -198,14 +231,16 @@ studentsRouter.get('/managed/:id', requireAuth, async (req, res) => {
     const student = await getAccessibleStudentById(userId, studentId);
     if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND' });
 
-    const [studentWithAssets, bankDetails] = await Promise.all([
+    const [studentWithAssetsRaw, bankDetails] = await Promise.all([
       attachStudentAssets(student),
       prisma.feeReimbursement.findUnique({ where: { studentId: student.id } })
     ]);
+    const studentWithAssets = await withStudentBoardType(studentWithAssetsRaw);
     return res.json({
       ok: true,
       student: {
         ...studentWithAssets,
+        boardType: studentWithAssets.boardType,
         bankDetails: bankDetails
           ? { ...bankDetails, accountNumber: bankDetails.accountNo ?? null }
           : null
@@ -216,6 +251,9 @@ studentsRouter.get('/managed/:id', requireAuth, async (req, res) => {
     if (err.name === 'ZodError') {
       const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
       return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ error: err.code || 'VALIDATION_ERROR', message: err.message });
     }
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
@@ -228,7 +266,7 @@ studentsRouter.post('/managed', requireAuth, async (req, res) => {
 
     const body = z.object({
       instituteId: z.coerce.number().int().positive(),
-      streamCode: z.string().min(1).max(20),
+      streamCode: z.string().max(20).nullable().optional(),
       firstName: z.string().min(1).max(100),
       middleName: z.string().max(100).optional(),
       lastName: z.string().min(1).max(100),
@@ -272,6 +310,7 @@ studentsRouter.post('/managed', requireAuth, async (req, res) => {
 
     const institute = await prisma.institute.findUnique({ where: { id: body.instituteId } });
     if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
+    const { streamCode } = await resolveManagedStreamCode(body.instituteId, body.streamCode);
 
     const duplicateCandidates = [];
     if (body.aadhaar) duplicateCandidates.push({ aadhaar: body.aadhaar });
@@ -281,7 +320,7 @@ studentsRouter.post('/managed', requireAuth, async (req, res) => {
       lastName: body.lastName,
       dob: body.dob ? new Date(body.dob) : null,
       instituteId: body.instituteId,
-      streamCode: body.streamCode
+      streamCode
     });
 
     const duplicateStudent = await prisma.student.findFirst({
@@ -325,7 +364,7 @@ studentsRouter.post('/managed', requireAuth, async (req, res) => {
         instituteId: body.instituteId,
         managerUserId: userId,
         userId: null,
-        streamCode: body.streamCode,
+        streamCode,
         firstName: body.firstName,
         middleName: body.middleName || null,
         lastName: body.lastName,
@@ -394,13 +433,16 @@ studentsRouter.post('/managed', requireAuth, async (req, res) => {
     }
     // Attach bank details to response
     const bankDetails = await prisma.feeReimbursement.findUnique({ where: { studentId: student.id } });
-    const studentWithAssets = await attachStudentAssets(student);
+    const studentWithAssets = await withStudentBoardType(await attachStudentAssets(student));
     return res.status(201).json({ ok: true, student: { ...studentWithAssets, bankDetails } });
   } catch (err) {
     console.error('Create managed student error:', err);
     if (err.name === 'ZodError') {
       const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
       return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    if (err.statusCode) {
+      return res.status(err.statusCode).json({ error: err.code || 'VALIDATION_ERROR', message: err.message });
     }
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
@@ -420,7 +462,7 @@ studentsRouter.patch('/managed/:id', requireAuth, async (req, res) => {
 
     const body = z.object({
       instituteId: z.coerce.number().int().positive().optional(),
-      streamCode: z.string().min(1).max(20).optional(),
+      streamCode: z.string().max(20).nullable().optional(),
       firstName: z.string().min(1).max(100).optional(),
       middleName: z.string().max(100).nullable().optional(),
       lastName: z.string().min(1).max(100).optional(),
@@ -479,10 +521,15 @@ studentsRouter.patch('/managed/:id', requireAuth, async (req, res) => {
       }
     }
 
+    const effectiveInstituteId = body.instituteId ?? student.instituteId;
     if (body.instituteId !== undefined) {
       const institute = await prisma.institute.findUnique({ where: { id: body.instituteId } });
       if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
     }
+    const shouldResolveStream = body.instituteId !== undefined || body.streamCode !== undefined;
+    const resolvedStream = shouldResolveStream
+      ? await resolveManagedStreamCode(effectiveInstituteId, body.streamCode ?? student.streamCode)
+      : null;
 
     const previousExams = [];
     if (body.sscSeatNo || body.sscMonth || body.sscYear || body.sscBoard || body.sscPercentage) {
@@ -510,7 +557,7 @@ studentsRouter.patch('/managed/:id', requireAuth, async (req, res) => {
       where: { id: student.id },
       data: {
         instituteId: body.instituteId ?? undefined,
-        streamCode: body.streamCode ?? undefined,
+        streamCode: resolvedStream ? resolvedStream.streamCode : undefined,
         firstName: body.firstName ?? undefined,
         middleName: body.middleName ?? undefined,
         lastName: body.lastName ?? undefined,
@@ -591,7 +638,7 @@ studentsRouter.patch('/managed/:id', requireAuth, async (req, res) => {
     }
     // Attach bank details to response
     const bankDetails = await prisma.feeReimbursement.findUnique({ where: { studentId: student.id } });
-    const updatedWithAssets = await attachStudentAssets(updated);
+    const updatedWithAssets = await withStudentBoardType(await attachStudentAssets(updated));
     return res.json({ ok: true, student: { ...updatedWithAssets, bankDetails } });
   } catch (err) {
     console.error('Update managed student error:', err);
