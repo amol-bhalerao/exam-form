@@ -520,7 +520,8 @@ institutesRouter.get('/', async (req, res) => {
         acceptingApplications: true
       }
     });
-    const normalizedInstitutes = institutes.map(withInstituteDisplayCode);
+    const withBoardType = await enrichInstitutesWithBoardType(institutes);
+    const normalizedInstitutes = withBoardType.map(withInstituteDisplayCode);
     return res.json({ institutes: normalizedInstitutes, total: normalizedInstitutes.length });
   } catch (err) {
     console.error('Error fetching institutes:', err);
@@ -866,7 +867,8 @@ institutesRouter.get('/list', async (req, res) => {
       status: true
     }
   });
-  return res.json({ institutes });
+  const withBoardType = await enrichInstitutesWithBoardType(institutes);
+  return res.json({ institutes: withBoardType.map(withInstituteDisplayCode) });
 });
 
 // Super admin: list institute users waiting approval
