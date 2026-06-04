@@ -588,7 +588,7 @@ model ExamFormSequence {
   id              Int              @id @default(autoincrement())
   level           SequenceLevel    @default(INSTITUTE)
   examId          Int
-  streamId        Int
+  streamId        Int?
   instituteId     Int?
   currentSequence Int              @default(0) // Next sequence number to assign
   totalApplications Int            @default(0) // Total applications for this sequence
@@ -597,7 +597,7 @@ model ExamFormSequence {
   updatedAt       DateTime         @updatedAt
 
   exam      Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
-  stream    Stream    @relation(fields: [streamId], references: [id], onDelete: Cascade)
+  stream    Stream?   @relation(fields: [streamId], references: [id], onDelete: Cascade)
   institute Institute? @relation(fields: [instituteId], references: [id], onDelete: Cascade)
 
   // Unique constraint: One sequence config per (level, exam, stream, institute combo)

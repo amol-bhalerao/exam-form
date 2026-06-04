@@ -5,6 +5,7 @@ import { requireAuth, requireRole } from '../auth/middleware.js';
 import { env } from '../env.js';
 import { attachStudentAssets } from '../utils/student-assets.js';
 import { assignSequenceNumbers } from '../services/sequence-service.js';
+import { applyApplicationBoardScope, applyExamBoardScope, enrichApplicationBoardTypes, getInstituteBoardType, getScopedExamIds } from '../utils/board-scope.js';
 
 const STUDENT_STREAM_CODE_LOOKUP = {
   '1': 'Science',
@@ -262,6 +263,8 @@ async function getApplicationScoped(applicationId, auth) {
   if (auth.role === 'SUPER_ADMIN') return app;
 
   if (auth.role === 'BOARD') {
+    const scopedExamIds = await getScopedExamIds(auth);
+    if (Array.isArray(scopedExamIds) && !scopedExamIds.includes(app.examId)) return null;
     if (
       app.status === 'SUBMITTED' ||
       app.status === 'INSTITUTE_VERIFIED' ||
@@ -339,7 +342,7 @@ applicationsRouter.get('/my', requireAuth, requireRole(['STUDENT']), async (req,
       };
     });
 
-    return res.json({ applications: enriched });
+    return res.json({ applications: await Promise.all(enriched.map((app) => enrichApplicationBoardTypes(app))) });
   } catch (err) {
     console.error('Get applications error:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
@@ -370,6 +373,18 @@ applicationsRouter.post('/', requireAuth, requireRole(['STUDENT']), async (req, 
 
     const institute = await prisma.institute.findUnique({ where: { id: student.instituteId } });
     if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
+    const scopedExamIds = await getScopedExamIds({
+      role: 'INSTITUTE',
+      instituteId: student.instituteId,
+      userId: req.auth.userId
+    });
+    if (Array.isArray(scopedExamIds) && !scopedExamIds.includes(exam.id)) {
+      const boardType = await getInstituteBoardType(student.instituteId);
+      return res.status(409).json({
+        error: 'EXAM_BOARD_TYPE_MISMATCH',
+        message: `This exam is not available for ${boardType} institutes.`
+      });
+    }
 
     const streams = await prisma.stream.findMany({ orderBy: { name: 'asc' } });
     const studentStreamId = resolveStreamIdFromStudentCode(student.streamCode, streams, exam.streamId ?? null);
@@ -475,7 +490,7 @@ applicationsRouter.get('/:id', requireAuth, async (req, res) => {
   const applicationId = z.coerce.number().int().positive().parse(req.params.id);
   const app = await getApplicationScoped(applicationId, req.auth);
   if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
-  return res.json({ application: app });
+  return res.json({ application: await enrichApplicationBoardTypes(app) });
 });
 
 // Student or institute: update application fields + subject selections
@@ -1092,7 +1107,7 @@ applicationsRouter.get('/board/list', requireAuth, requireRole(['BOARD', 'SUPER_
   };
 
   const defaultBoardStatuses = ['INSTITUTE_VERIFIED', 'BOARD_APPROVED'];
-  const where = buildWhere(q.status ?? { in: defaultBoardStatuses });
+  const where = await applyApplicationBoardScope(buildWhere(q.status ?? { in: defaultBoardStatuses }), req.auth);
   const total = await prisma.examApplication.count({ where });
   const apps = await prisma.examApplication.findMany({
     where,
@@ -1143,14 +1158,15 @@ applicationsRouter.get('/board/exams', requireAuth, requireRole(['BOARD', 'SUPER
 
   const broadStatuses = ['SUBMITTED', 'INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD'];
 
-  let exams = await prisma.exam.findMany({
-    where: {
+  let examWhere = await applyExamBoardScope({
       applications: {
         some: {
           status: { in: boardVisibleStatuses }
         }
       }
-    },
+    }, req.auth);
+  let exams = await prisma.exam.findMany({
+    where: examWhere,
     include: {
       _count: {
         select: {
@@ -1167,14 +1183,15 @@ applicationsRouter.get('/board/exams', requireAuth, requireRole(['BOARD', 'SUPER
 
   // Keep default board screens useful when no applications have reached verified/approved statuses yet.
   if (!includeSubmitted && exams.length === 0) {
-    exams = await prisma.exam.findMany({
-      where: {
+    examWhere = await applyExamBoardScope({
         applications: {
           some: {
             status: { in: broadStatuses }
           }
         }
-      },
+      }, req.auth);
+    exams = await prisma.exam.findMany({
+      where: examWhere,
       include: {
         _count: {
           select: {
@@ -1214,7 +1231,7 @@ applicationsRouter.get('/board/student-master', requireAuth, requireRole(['BOARD
   const sortOrder = q.sortOrder ?? 'desc';
   const sortBy = q.sortBy ?? 'updatedAt';
 
-  const where = {
+  let where = await applyApplicationBoardScope({
     examId: q.examId,
     status: q.status ?? { in: ['SUBMITTED', 'INSTITUTE_VERIFIED', 'BOARD_APPROVED', 'REJECTED_BY_INSTITUTE', 'REJECTED_BY_BOARD'] },
     student: {
@@ -1227,7 +1244,7 @@ applicationsRouter.get('/board/student-master', requireAuth, requireRole(['BOARD
           }
         }
       : undefined
-  };
+  }, req.auth);
 
   if (q.search) {
     where.OR = [
@@ -1317,6 +1334,8 @@ applicationsRouter.post('/:id/board/decision', requireAuth, requireRole(['BOARD'
 
   const app = await prisma.examApplication.findUnique({ where: { id: applicationId } });
   if (!app) return res.status(404).json({ error: 'NOT_FOUND' });
+  const scopedExamIds = await getScopedExamIds(req.auth);
+  if (Array.isArray(scopedExamIds) && !scopedExamIds.includes(app.examId)) return res.status(403).json({ error: 'FORBIDDEN' });
   if (app.status !== 'INSTITUTE_VERIFIED') return res.status(400).json({ error: 'INVALID_STATE' });
 
   const toStatus = body.action === 'APPROVE' ? 'BOARD_APPROVED' : 'REJECTED_BY_BOARD';

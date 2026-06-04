@@ -7,6 +7,7 @@ import { signAccessToken, signRefreshToken, hashToken, compareToken, verifyRefre
 import { requireAuth } from '../auth/middleware.js';
 import { writeAuditLog } from '../middleware/audit-log.js';
 import { env } from '../env.js';
+import { getInstituteBoardType, getUserBoardType } from '../utils/board-scope.js';
 
 export const authRouter = Router();
 
@@ -46,11 +47,18 @@ authRouter.post('/login', async (req, res, next) => {
     const ok = await bcrypt.compare(body.password, user.passwordHash);
     if (!ok) return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
 
+    const boardType = user.role.name === 'BOARD'
+      ? await getUserBoardType(user.id)
+      : user.role.name === 'INSTITUTE'
+        ? await getInstituteBoardType(user.instituteId)
+        : undefined;
+
     const authUser = {
       userId: user.id,
       role: user.role.name,
       instituteId: user.instituteId ?? null,
-      username: user.username
+      username: user.username,
+      ...(boardType ? { boardType } : {})
     };
 
     const accessToken = signAccessToken(authUser);
@@ -122,11 +130,18 @@ authRouter.post('/refresh', async (req, res) => {
     }
   }
 
+  const boardType = user.role.name === 'BOARD'
+    ? await getUserBoardType(user.id)
+    : user.role.name === 'INSTITUTE'
+      ? await getInstituteBoardType(instituteId)
+      : undefined;
+
   const authUser = {
     userId: user.id,
     role: user.role.name,
     instituteId: instituteId,
-    username: user.username
+    username: user.username,
+    ...(boardType ? { boardType } : {})
   };
 
   const accessToken = signAccessToken(authUser);
@@ -175,7 +190,20 @@ authRouter.put('/me', requireAuth, async (req, res) => {
   if (!user) return res.status(404).json({ error: 'NOT_FOUND' });
   const updated = await prisma.user.update({ where: { id: user.id }, data: { email: body.email ?? user.email, mobile: body.mobile ?? user.mobile } });
   const role = await prisma.role.findUnique({ where: { id: updated.roleId } });
-  return res.json({ user: { userId: updated.id, username: updated.username, role: role?.name ?? 'UNKNOWN', instituteId: updated.instituteId } });
+  const boardType = role?.name === 'BOARD'
+    ? await getUserBoardType(updated.id)
+    : role?.name === 'INSTITUTE'
+      ? await getInstituteBoardType(updated.instituteId)
+      : undefined;
+  return res.json({
+    user: {
+      userId: updated.id,
+      username: updated.username,
+      role: role?.name ?? 'UNKNOWN',
+      instituteId: updated.instituteId,
+      ...(boardType ? { boardType } : {})
+    }
+  });
 });
 
 authRouter.put('/me/password', requireAuth, async (req, res) => {

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import { requireAuth } from '../auth/middleware.js';
 import { prisma } from '../prisma.js';
 import { attachStudentAssets } from '../utils/student-assets.js';
+import { getInstituteBoardType, getUserBoardType } from '../utils/board-scope.js';
 
 export const meRouter = Router();
 
@@ -28,6 +29,14 @@ meRouter.get('/', requireAuth, async (req, res) => {
     student = rawStudent ? await attachStudentAssets(rawStudent) : null;
   }
 
+  const userBoardType = user.role.name === 'BOARD'
+    ? await getUserBoardType(user.id)
+    : user.role.name === 'INSTITUTE'
+      ? await getInstituteBoardType(user.instituteId)
+      : student?.instituteId
+        ? await getInstituteBoardType(student.instituteId)
+        : undefined;
+
   return res.json({
     user: {
       userId: user.id,
@@ -38,14 +47,16 @@ meRouter.get('/', requireAuth, async (req, res) => {
       email: user.email,
       mobile: user.mobile,
       status: user.status,
+      ...(userBoardType ? { boardType: userBoardType } : {}),
       institute: user.role.name === 'STUDENT' 
-        ? (student?.institute ? { id: student.institute.id, name: student.institute.name, status: student.institute.status } : null)
-        : (user.institute ? { id: user.institute.id, name: user.institute.name, status: user.institute.status } : null)
+        ? (student?.institute ? { id: student.institute.id, name: student.institute.name, status: student.institute.status, boardType: userBoardType } : null)
+        : (user.institute ? { id: user.institute.id, name: user.institute.name, status: user.institute.status, boardType: userBoardType } : null)
     },
     student: student ? {
       id: student.id,
       userId: student.userId,
       instituteId: student.instituteId,
+      boardType: userBoardType,
       firstName: student.firstName,
       middleName: student.middleName,
       lastName: student.lastName,

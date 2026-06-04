@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
+import { enrichInstitutesWithBoardType } from '../utils/board-scope.js';
 
 export const institutesRouter = Router();
 
@@ -442,7 +443,8 @@ institutesRouter.get('/all', requireAuth, requireRole(['SUPER_ADMIN']), async (r
         createdAt: true
       }
     });
-    return res.json({ institutes: institutes.map(withInstituteDisplayCode) });
+    const withBoardType = await enrichInstitutesWithBoardType(institutes);
+    return res.json({ institutes: withBoardType.map(withInstituteDisplayCode) });
   } catch (err) {
     console.error('Error fetching all institutes:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });

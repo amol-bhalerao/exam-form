@@ -14,8 +14,9 @@ import { AgGridModule } from 'ag-grid-angular';
 import type { ColDef } from 'ag-grid-community';
 
 import { API_BASE_URL } from '../../../core/api';
+import { AuthService } from '../../../core/auth.service';
 
-type Exam = { id: number; name: string; academicYear: string; session: string; applicationOpen: string; applicationClose: string; stream: { name: string } };
+type Exam = { id: number; name: string; academicYear: string; session: string; applicationOpen: string; applicationClose: string; stream: { name: string } | null; boardType?: 'HSC' | 'SSC' };
 
 @Component({
   selector: 'app-board-exams',
@@ -29,7 +30,7 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
             <mat-icon>event_note</mat-icon>
             Exams
           </div>
-          <div class="grid-panel__subtitle">Create exam windows, search quickly, and review the latest records first.</div>
+          <div class="grid-panel__subtitle">Create {{ boardTypeLabel() }} exam windows for all eligible institutes and students.</div>
         </div>
         <div class="grid-panel__actions">
           <span class="grid-pill">{{ activeCount() }} active exams</span>
@@ -44,7 +45,7 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
       <div class="grid-panel__header">
         <div class="header-copy">
           <div class="grid-panel__title">Exam List</div>
-          <div class="grid-panel__subtitle">Use the search and stream filter to find records quickly.</div>
+          <div class="grid-panel__subtitle">Use search to find records quickly. Stream shows legacy/specific records; new exams apply to all streams.</div>
         </div>
         <div class="grid-panel__actions">
           <mat-form-field appearance="outline" class="table-search-field"><mat-label>Search exams</mat-label><mat-icon matPrefix>search</mat-icon><input matInput [(ngModel)]="search" (input)="load()" placeholder="Search by exam name or year" /></mat-form-field>
@@ -75,13 +76,12 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
           <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="form.name" /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Academic year</mat-label><input matInput [(ngModel)]="form.academicYear" /></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Session</mat-label><input matInput [(ngModel)]="form.session" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Stream (optional)</mat-label><mat-select [(ngModel)]="form.streamId"><mat-option [value]="null">All Streams</mat-option><mat-option *ngFor="let s of streams()" [value]="s.id">{{ s.name }}</mat-option></mat-select></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Open date</mat-label><input matInput [matDatepicker]="openPicker" [(ngModel)]="form.applicationOpen" /><mat-datepicker-toggle matSuffix [for]="openPicker"></mat-datepicker-toggle><mat-datepicker #openPicker></mat-datepicker></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Close date</mat-label><input matInput [matDatepicker]="closePicker" [(ngModel)]="form.applicationClose" /><mat-datepicker-toggle matSuffix [for]="closePicker"></mat-datepicker-toggle><mat-datepicker #closePicker></mat-datepicker></mat-form-field>
         </div>
-        <div class="stream-row">
-          <mat-form-field appearance="outline" class="table-search-field"><mat-label>New stream name</mat-label><input matInput [(ngModel)]="newStreamName" /></mat-form-field>
-          <button mat-stroked-button color="primary" (click)="createStream()" [disabled]="!newStreamName">Add Stream</button>
+        <div class="scope-note">
+          <mat-icon>hub</mat-icon>
+          <span>This exam will apply to all {{ boardTypeLabel() }} streams/institutes. Stream is used only later for HSC subject mapping and capacity.</span>
         </div>
         <div class="actions">
           <button mat-stroked-button (click)="closeFormModal()">Cancel</button>
@@ -106,6 +106,8 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
       .status { color: #166534; font-weight: 600; }
       .status--error { color: #b91c1c; }
       .stream-row { margin-top: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .scope-note { margin-top: 12px; display: flex; align-items: flex-start; gap: 8px; border: 1px solid #bfdbfe; background: #eff6ff; color: #1e3a8a; padding: 10px 12px; border-radius: 12px; font-weight: 700; font-size: 13px; }
+      .scope-note mat-icon { flex: 0 0 auto; }
       .table-search-field { width: min(280px, 100%); }
       .grid-panel__table { margin-top: 10px; width: 100%; min-height: 420px; height: 420px; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
       .grid-panel__table--lg { min-height: 460px; height: 460px; }
@@ -148,17 +150,15 @@ export class BoardExamsComponent implements OnInit {
   search = '';
   filterStream = '';
   status = '';
-  newStreamName = '';
   form = {
     name: '',
     academicYear: '',
     session: '',
-    streamId: null as number | null,
     applicationOpen: '',
     applicationClose: ''
   };
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient, private readonly auth: AuthService) {}
 
   ngOnInit() {
     this.loadStreams();
@@ -195,6 +195,10 @@ export class BoardExamsComponent implements OnInit {
     this.http.get<{ streams: any[] }>(`${API_BASE_URL}/masters/streams`).subscribe((r) => this.streams.set(r.streams));
   }
 
+  boardTypeLabel() {
+    return this.auth.user()?.boardType === 'SSC' ? 'SSC' : 'HSC';
+  }
+
   load() {
     const params = new URLSearchParams();
     if (this.search) params.set('search', this.search);
@@ -223,7 +227,7 @@ export class BoardExamsComponent implements OnInit {
       name: this.form.name,
       academicYear: this.form.academicYear,
       session: this.form.session,
-      streamId: this.form.streamId ? Number(this.form.streamId) : null,
+      streamId: null,
       applicationOpen: openDate.toISOString(),
       applicationClose: closeDate.toISOString(),
       instructions: ''
@@ -238,21 +242,6 @@ export class BoardExamsComponent implements OnInit {
       }
     });
   }
-
-  createStream() {
-    if (!this.newStreamName.trim()) return;
-    this.http.post(`${API_BASE_URL}/masters/streams`, { name: this.newStreamName }).subscribe({
-      next: () => {
-        this.newStreamName = '';
-        this.loadStreams();
-        this.status = 'Stream added';
-      },
-      error: () => {
-        this.status = 'Stream create failed';
-      }
-    });
-  }
-
   nextPage() {
     this.page += 1;
     this.load();

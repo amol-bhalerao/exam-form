@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
+import { applyExamBoardScope, getAuthBoardType, stampExamBoardType } from '../utils/board-scope.js';
 
 const STUDENT_STREAM_CODE_LOOKUP = {
   '1': 'Science',
@@ -36,15 +37,19 @@ examsRouter.get('/', requireAuth, async (req, res) => {
     })
     .parse(req.query);
 
-  const where = {};
+  const filters = [];
+  let where = {};
   if (q.search) {
-    where.OR = [
-      { name: { contains: q.search } },
-      { academicYear: { contains: q.search } },
-      { session: { contains: q.search } }
-    ];
+    filters.push({
+      OR: [
+        { name: { contains: q.search } },
+        { academicYear: { contains: q.search } },
+        { session: { contains: q.search } }
+      ]
+    });
   }
-  if (q.streamId) where.streamId = q.streamId;
+  if (q.streamId) filters.push({ OR: [{ streamId: q.streamId }, { streamId: null }] });
+  if (filters.length) where.AND = filters;
 
   // Hide passed exam windows for non-admin users
   if (req.auth?.role === 'STUDENT' || req.auth?.role === 'INSTITUTE') {
@@ -52,6 +57,8 @@ examsRouter.get('/', requireAuth, async (req, res) => {
     where.applicationOpen = { lte: now };
     where.applicationClose = { gte: now };
   }
+
+  where = await applyExamBoardScope(where, req.auth);
 
   const page = q.page ?? 1;
   const limit = q.limit ?? 25;
@@ -158,12 +165,13 @@ examsRouter.post('/', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async 
     })
     .parse(req.body);
 
+  const boardType = await getAuthBoardType(req.auth);
   const exam = await prisma.exam.create({
     data: {
       name: body.name,
       academicYear: body.academicYear,
       session: body.session,
-      streamId: body.streamId ?? null,
+      streamId: null,
       applicationOpen: new Date(body.applicationOpen),
       applicationClose: new Date(body.applicationClose),
       lateFeeClose: body.lateFeeClose ? new Date(body.lateFeeClose) : null,
@@ -171,6 +179,7 @@ examsRouter.post('/', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async 
       createdByUserId: req.auth.userId
     }
   });
+  await stampExamBoardType(exam.id, boardType);
 
-  return res.json({ exam });
+  return res.json({ exam: { ...exam, streamId: null, boardType } });
 });

@@ -430,10 +430,10 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
 
               <div class="step-content">
                 <h3 class="step-title">Academic Details (8–13)</h3>
-                <p class="step-desc">Enter your stream, category, and medium information.</p>
+                <p class="step-desc">{{ isSscApplication() ? 'Enter category and medium information for SSC.' : 'Enter your stream, category, and medium information.' }}</p>
 
                 <form [formGroup]="academicFormGroup()" class="form-grid">
-                  @if (!hasValue('academicGroup.streamCode')) {
+                  @if (!isSscApplication() && !hasValue('academicGroup.streamCode')) {
                     <mat-form-field appearance="outline" class="w100" matTooltip="Choose the stream for which this exam application is being filled." matTooltipPosition="above">
                       <mat-label>Stream / प्रवाह (8)</mat-label>
                       <mat-select formControlName="streamCode">
@@ -2142,7 +2142,7 @@ export class StudentApplicationEditComponent implements OnInit {
       }),
 
       academicGroup: new FormGroup({
-        streamCode: new FormControl('', [Validators.required]),
+        streamCode: new FormControl(''),
         minorityReligionCode: new FormControl(''),
         categoryCode: new FormControl('', [Validators.required]),
         isDivyang: new FormControl('NO'),
@@ -2160,6 +2160,36 @@ export class StudentApplicationEditComponent implements OnInit {
 
       subjects: new FormArray<FormGroup>([])
     });
+  }
+
+  private isSscApplicationContext(source?: any): boolean {
+    const boardType = String(
+      source?.exam?.boardType
+      || source?.institute?.boardType
+      || source?.boardType
+      || this.application()?.exam?.boardType
+      || this.application()?.institute?.boardType
+      || ''
+    ).toUpperCase();
+    if (boardType === 'SSC') return true;
+    const examName = String(source?.exam?.name || this.application()?.exam?.name || '').toUpperCase();
+    return examName.includes('SSC');
+  }
+
+  isSscApplication(): boolean {
+    return this.isSscApplicationContext();
+  }
+
+  private applyBoardSpecificValidators(source?: any) {
+    const streamControl = this.form.get('academicGroup.streamCode');
+    if (!streamControl) return;
+    if (this.isSscApplicationContext(source)) {
+      streamControl.clearValidators();
+      streamControl.setValue('', { emitEvent: false });
+    } else {
+      streamControl.setValidators([Validators.required]);
+    }
+    streamControl.updateValueAndValidity({ emitEvent: false });
   }
 
   private checkPersonalInfoComplete(): boolean {
@@ -2479,6 +2509,7 @@ export class StudentApplicationEditComponent implements OnInit {
       }
     });
     this.patchBankGroup({ bankDetails: a.bankDetails, student });
+    this.applyBoardSpecificValidators(a);
 
     this.selectedInstitute.set(a.institute ?? null);
     this.applyInstituteDefaults(a.institute ?? null);
@@ -2553,6 +2584,7 @@ export class StudentApplicationEditComponent implements OnInit {
       }
     });
     this.patchBankGroup({ bankDetails: student?.bankDetails, student });
+    this.applyBoardSpecificValidators({ ...student, institute });
 
     this.selectedInstitute.set(institute ?? student?.institute ?? null);
     if (institute ?? student?.institute) {

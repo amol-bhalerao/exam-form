@@ -20,6 +20,7 @@ type User = {
   createdAt: string;
   role: { name: string };
   institute?: { name: string; code: string };
+  boardType?: 'HSC' | 'SSC';
 };
 
 @Component({
@@ -77,6 +78,9 @@ type User = {
             <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" [(ngModel)]="editUserForm.email" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="editUserForm.mobile" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Role</mat-label><mat-select [(ngModel)]="editUserForm.roleName"><mat-option value="BOARD">Board User</mat-option><mat-option value="SUPER_ADMIN">Super Admin</mat-option></mat-select></mat-form-field>
+            @if (editUserForm.roleName === 'BOARD') {
+              <mat-form-field appearance="outline"><mat-label>Board Type</mat-label><mat-select [(ngModel)]="editUserForm.boardType"><mat-option value="HSC">HSC Board</mat-option><mat-option value="SSC">SSC Board</mat-option></mat-select></mat-form-field>
+            }
             <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="editUserForm.status"><mat-option value="ACTIVE">Active</mat-option><mat-option value="PENDING">Pending</mat-option><mat-option value="DISABLED">Disabled</mat-option></mat-select></mat-form-field>
           </div>
           <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
@@ -119,6 +123,9 @@ type User = {
             <mat-form-field appearance="outline"><mat-label>Email</mat-label><input matInput type="email" [(ngModel)]="createForm.email" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Mobile</mat-label><input matInput [(ngModel)]="createForm.mobile" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Role</mat-label><mat-select [(ngModel)]="createForm.roleName"><mat-option value="BOARD">Board User</mat-option><mat-option value="SUPER_ADMIN">Super Admin</mat-option></mat-select></mat-form-field>
+            @if (createForm.roleName === 'BOARD') {
+              <mat-form-field appearance="outline"><mat-label>Board Type</mat-label><mat-select [(ngModel)]="createForm.boardType"><mat-option value="HSC">HSC Board</mat-option><mat-option value="SSC">SSC Board</mat-option></mat-select></mat-form-field>
+            }
           </div>
           <div class="card-actions">
             <button mat-flat-button color="primary" (click)="createUser()">Create User</button>
@@ -241,6 +248,7 @@ export class SuperUsersComponent implements OnInit {
   readonly columnDefs: ColDef[] = [
     { field: 'username', headerName: 'Username', flex: 1, sortable: true, filter: true },
     { field: 'role.name', headerName: 'Role', flex: 1, sortable: true, filter: true, valueGetter: (params: any) => params.data.role.name },
+    { field: 'boardType', headerName: 'Board', flex: 1, sortable: true, filter: true, valueGetter: (params: any) => params.data.role?.name === 'BOARD' ? (params.data.boardType || 'HSC') : '—' },
     { field: 'status', headerName: 'Status', flex: 1, sortable: true, filter: true },
     { field: 'email', headerName: 'Email', flex: 1, sortable: true, filter: true, valueGetter: (params: any) => params.data.email || '—' },
     { field: 'mobile', headerName: 'Mobile', flex: 1, sortable: true, filter: true, valueGetter: (params: any) => params.data.mobile || '—' },
@@ -256,7 +264,8 @@ export class SuperUsersComponent implements OnInit {
     password: '',
     email: '',
     mobile: '',
-    roleName: 'BOARD' as 'BOARD' | 'SUPER_ADMIN'
+    roleName: 'BOARD' as 'BOARD' | 'SUPER_ADMIN',
+    boardType: 'HSC' as 'HSC' | 'SSC'
   };
   createError = '';
   createSuccess = '';
@@ -266,6 +275,7 @@ export class SuperUsersComponent implements OnInit {
     email: '',
     mobile: '',
     roleName: 'BOARD' as 'BOARD' | 'SUPER_ADMIN',
+    boardType: 'HSC' as 'HSC' | 'SSC',
     status: 'ACTIVE' as 'ACTIVE' | 'PENDING' | 'DISABLED'
   };
   editUserError = '';
@@ -314,7 +324,8 @@ export class SuperUsersComponent implements OnInit {
       password: '',
       email: '',
       mobile: '',
-      roleName: 'BOARD'
+      roleName: 'BOARD',
+      boardType: 'HSC'
     };
   }
 
@@ -331,6 +342,7 @@ export class SuperUsersComponent implements OnInit {
       email: this.selectedUser.email || '',
       mobile: this.selectedUser.mobile || '',
       roleName: this.selectedUser.role.name as 'BOARD' | 'SUPER_ADMIN',
+      boardType: this.selectedUser.boardType || 'HSC',
       status: this.selectedUser.status as 'ACTIVE' | 'PENDING' | 'DISABLED'
     };
     this.showEditUserModal = true;

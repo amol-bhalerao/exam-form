@@ -36,8 +36,8 @@ import { canStudentPrintApplication } from '../../../core/printable-form-policy'
           <header class="document-header">
             <div class="board-head compact-head">
               <div class="head-copy">
-                <div class="board-name">MAHARASHTRA HSC EXAMINATION PORTAL</div>
-                <h1>HIGHER SECONDARY CERTIFICATE EXAMINATION APPLICATION FORM </h1>
+                <div class="board-name">MAHARASHTRA {{ boardTypeLabel() }} EXAMINATION PORTAL</div>
+                <h1>{{ certificateTitle() }} EXAMINATION APPLICATION FORM </h1>
                 <hr>
                 <h1>{{ valueOrDash(a().exam?.name) }} {{ valueOrDash(a().exam?.session) }} {{ valueOrDash(a().exam?.academicYear, '') }}</h1>
                 <h1>{{ instituteName() }} ( {{ indexNoValue() }} )</h1>
@@ -47,7 +47,9 @@ import { canStudentPrintApplication } from '../../../core/printable-form-policy'
                   <span><strong>Index No:</strong> {{ a().institute?.code || a().institute?.collegeNo || '—' }}</span>
                   <span><strong>UDISE No:</strong> {{ udiseNoValue() }}</span>
                   <span><strong>Centre No:</strong> {{ centreNoValue() }}</span>
-                  <span><strong>Stream:</strong> {{ streamLabel() }}</span>
+                  @if (!isSscForm()) {
+                    <span><strong>Stream:</strong> {{ streamLabel() }}</span>
+                  }
                 </div>
                 <div class="institute-meta-row form-status-row">
                   <span><strong>Status:</strong> <strong class="status-chip" [attr.data-tone]="statusTone()">{{ statusLabel() }}</strong></span>
@@ -84,12 +86,16 @@ import { canStudentPrintApplication } from '../../../core/printable-form-policy'
           <section class="section-card">
             <div class="section-title">Academic & Reservation Details</div>
             <div class="detail-list detail-list--academic">
-              <div class="detail-line"><span class="line-label">Stream:</span><span class="line-value">{{ streamLabel() }}</span></div>
+              @if (!isSscForm()) {
+                <div class="detail-line"><span class="line-label">Stream:</span><span class="line-value">{{ streamLabel() }}</span></div>
+              }
               <div class="detail-line"><span class="line-label">Minority Religion:</span><span class="line-value">{{ religionLabel() }}</span></div>
               <div class="detail-line"><span class="line-label">Category:</span><span class="line-value">{{ categoryLabel() }}</span></div>
               <div class="detail-line"><span class="line-label">Medium of Instruction:</span><span class="line-value">{{ mediumLabel() }}</span></div>
               <div class="detail-line"><span class="line-label">Divyang:</span><span class="line-value">{{ s().divyangCode ? s().divyangCode : 'No' }}</span></div>
-              <div class="detail-line"><span class="line-label">SSC from Maharashtra:</span><span class="line-value">{{ yesNoOrDash(s().sscPassedFromMaharashtra) }}</span></div>
+              @if (!isSscForm()) {
+                <div class="detail-line"><span class="line-label">SSC from Maharashtra:</span><span class="line-value">{{ yesNoOrDash(s().sscPassedFromMaharashtra) }}</span></div>
+              }
               <div class="detail-line"><span class="line-label">Eligibility Certificate:</span><span class="line-value">{{ yesNoOrDash(s().eligibilityCertIssued) }}</span></div>
               <div class="detail-line"><span class="line-label">Certificate No:</span><span class="line-value">{{ valueOrDash(s().eligibilityCertNo) }}</span></div>
             </div>
@@ -171,19 +177,24 @@ import { canStudentPrintApplication } from '../../../core/printable-form-policy'
               <div class="detail-line"><span class="line-label">Type:</span><span class="line-value">{{ typeAValue() }}</span></div>
               <div class="detail-line"><span class="line-label">Candidate:</span><span class="line-value">{{ typeBValue() }}</span></div>
               <div class="detail-line"><span class="line-label">Exemption Status:</span><span class="line-value">{{ typeCValue() }}</span></div>
-              <div class="detail-line"><span class="line-label">Group:</span><span class="line-value">{{ typeDValue() }}</span></div>
+              @if (!isSscForm()) {
+                <div class="detail-line"><span class="line-label">Group:</span><span class="line-value">{{ typeDValue() }}</span></div>
+              }
               <div class="detail-line"><span class="line-label">Foreigner:</span><span class="line-value">{{ yesNoOrDash(a().isForeigner) }}</span></div>
               <div class="detail-line"><span class="line-label">Exemptions Claimed:</span><span class="line-value">{{ valueOrDash(a().totalExemptionsClaimed) }}</span></div>
               <div class="detail-line"><span class="line-label">Enrol. Cert No (Private):</span><span class="line-value">{{ enrollmentDetailsForPrint() }}</span></div>
               @if (isBacklogCandidate()) {
                 <div class="detail-line"><span class="line-label">Last Exam Seat (Repeater):</span><span class="line-value">{{ lastExamDetailsForPrint() }}</span></div>
               }
-              <div class="detail-line"><span class="line-label">SSC Passed (MS Board):</span><span class="line-value">{{ sscMaharashtraForPrint() }}</span></div>
+              @if (!isSscForm()) {
+                <div class="detail-line"><span class="line-label">SSC Passed (MS Board):</span><span class="line-value">{{ sscMaharashtraForPrint() }}</span></div>
+              }
               <div class="detail-line"><span class="line-label">Eligibility Cert Issued:</span><span class="line-value">{{ eligibilityIssuedForPrint() }}</span></div>
               <div class="detail-line"><span class="line-label">Eligibility Cert No:</span><span class="line-value">{{ eligibilityCertNoForPrint() }}</span></div>
             </div>
           </section>
 
+          @if (!isSscForm()) {
           <section class="section-card">
             <div class="section-title">Previous Examination Passing Details</div>
             <div class="table-wrap">
@@ -219,6 +230,16 @@ import { canStudentPrintApplication } from '../../../core/printable-form-policy'
               </table>
             </div>
           </section>
+          } @else if (isBacklogCandidate()) {
+          <section class="section-card">
+            <div class="section-title">Previous SSC Attempt Details</div>
+            <div class="detail-list detail-list--academic">
+              <div class="detail-line"><span class="line-label">Last Exam Seat No:</span><span class="line-value">{{ valueOrDash(a().lastExamSeatNo) }}</span></div>
+              <div class="detail-line"><span class="line-label">Last Exam Month:</span><span class="line-value">{{ valueOrDash(a().lastExamMonth) }}</span></div>
+              <div class="detail-line"><span class="line-label">Last Exam Year:</span><span class="line-value">{{ valueOrDash(a().lastExamYear) }}</span></div>
+            </div>
+          </section>
+          }
 
           <section class="section-card">
             <div class="section-title">Details for reimbursement of fees to students of drought prone areas</div>
@@ -1479,6 +1500,27 @@ export class StudentFormPrintComponent implements OnInit {
   valueOrDash(value: unknown, fallback = '—') {
     if (value === null || value === undefined || value === '') return fallback;
     return String(value);
+  }
+
+  boardTypeLabel() {
+    const direct = String(
+      this.a().exam?.boardType
+      || this.a().institute?.boardType
+      || this.auth.user()?.boardType
+      || ''
+    ).toUpperCase();
+    if (direct === 'SSC') return 'SSC';
+
+    const examText = `${this.a().exam?.name || ''} ${this.a().exam?.academicYear || ''}`.toUpperCase();
+    return examText.includes('SSC') ? 'SSC' : 'HSC';
+  }
+
+  isSscForm() {
+    return this.boardTypeLabel() === 'SSC';
+  }
+
+  certificateTitle() {
+    return this.isSscForm() ? 'SECONDARY SCHOOL CERTIFICATE' : 'HIGHER SECONDARY CERTIFICATE';
   }
 
   indexNoValue() {

@@ -38,6 +38,7 @@ export interface StudentProfile {
   admissionYear?: number;
   stream?: string; // Science, Commerce, Arts
   streamCode?: string; // Code for stream selection
+  boardType?: 'HSC' | 'SSC';
   board?: string;
   instituteId?: number; // Institute selection
   sscPassedFromMaharashtra?: boolean | null;
@@ -157,7 +158,10 @@ export class StudentProfileService {
    */
   hasBasicProfile(): boolean {
     const profile = this.studentProfile();
-    return !!(profile?.instituteId && profile?.streamCode);
+    const boardType = String(profile?.boardType || this.authService.user()?.boardType || 'HSC').toUpperCase();
+    return boardType === 'SSC'
+      ? !!profile?.instituteId
+      : !!(profile?.instituteId && profile?.streamCode);
   }
 
   /**

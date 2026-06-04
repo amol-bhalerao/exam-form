@@ -26,6 +26,7 @@ interface Institute {
   code?: string;
   collegeNo?: string;
   udiseNo?: string;
+  boardType?: 'HSC' | 'SSC';
 }
 
 interface Stream {
@@ -64,7 +65,7 @@ interface Stream {
       <div class="header-section">
         <div class="header-content">
           <h1>Complete Your Profile</h1>
-          <p class="tagline">Select your institute and stream to get started</p>
+          <p class="tagline">Select your institute/school{{ isSelectedInstituteSsc() ? '' : ' and stream' }} to get started</p>
         </div>
       </div>
 
@@ -76,10 +77,10 @@ interface Stream {
             <div class="step-number">1</div>
             <div class="step-label">Institute</div>
           </div>
-          <div class="progress-line" [class.active]="selectedInstituteId && selectedStream"></div>
-          <div class="progress-step" [class.active]="selectedInstituteId" [class.completed]="selectedStream">
+          <div class="progress-line" [class.active]="selectedInstituteId && (isSelectedInstituteSsc() || selectedStream)"></div>
+          <div class="progress-step" [class.active]="selectedInstituteId" [class.completed]="isSelectedInstituteSsc() || selectedStream">
             <div class="step-number">2</div>
-            <div class="step-label">Stream</div>
+            <div class="step-label">{{ isSelectedInstituteSsc() ? 'Board' : 'Stream' }}</div>
           </div>
         </div>
 
@@ -89,7 +90,7 @@ interface Stream {
             <mat-icon>info</mat-icon>
             <div class="warning-content">
               <h3>ℹ️ Selection Update</h3>
-              <p>You can change your institute and stream selection anytime. Please select carefully.</p>
+              <p>You can change your institute/school{{ isSelectedInstituteSsc() ? '' : ' and stream' }} selection anytime. Please select carefully.</p>
               <p class="marathi">आप कभी भी अपनी संस्था व प्रवाह निवड बदल सकते हैं।</p>
             </div>
           </div>
@@ -180,6 +181,10 @@ interface Stream {
                   <span class="label">Location:</span>
                   <span class="value">{{ selectedInstitute.district }}, {{ selectedInstitute.city }}</span>
                 </div>
+                <div class="info-row">
+                  <span class="label">Board:</span>
+                  <span class="value">{{ instituteBoardType(selectedInstitute) }}</span>
+                </div>
               </div>
               <div class="card-footer">
                 <mat-icon>check_circle</mat-icon>
@@ -195,7 +200,7 @@ interface Stream {
           </div>
 
           <!-- Stream Selection Card -->
-          <div class="form-section" *ngIf="selectedInstituteId" [@slideIn]>
+          <div class="form-section" *ngIf="selectedInstituteId && !isSelectedInstituteSsc()" [@slideIn]>
             <div class="section-header">
               <div class="section-badge stream-badge">2</div>
               <div>
@@ -240,7 +245,7 @@ interface Stream {
           </div>
 
           <!-- Confirmation Section -->
-          <div class="confirmation-section" *ngIf="selectedInstituteId && selectedStream" [@slideIn]>
+          <div class="confirmation-section" *ngIf="selectedInstituteId && (isSelectedInstituteSsc() || selectedStream)" [@slideIn]>
             <div class="summary-box">
               <h3>Summary of Your Selection</h3>
               <div class="summary-content">
@@ -251,11 +256,18 @@ interface Stream {
                     <span class="summary-value">{{ getInstituteLabel(selectedInstituteId) }}</span>
                   </div>
                 </div>
-                <div class="summary-item">
+                <div class="summary-item" *ngIf="!isSelectedInstituteSsc()">
                   <mat-icon>layers</mat-icon>
                   <div>
                     <span class="summary-label">Stream:</span>
                     <span class="summary-value">{{ selectedStream }}</span>
+                  </div>
+                </div>
+                <div class="summary-item" *ngIf="isSelectedInstituteSsc()">
+                  <mat-icon>verified</mat-icon>
+                  <div>
+                    <span class="summary-label">Board:</span>
+                    <span class="summary-value">SSC</span>
                   </div>
                 </div>
               </div>
@@ -1320,13 +1332,21 @@ export class InstituteSelectComponent implements OnInit {
     return inst ? `${inst.name}${code ? ` (${code})` : ''}` : '';
   }
 
+  instituteBoardType(inst: Institute | null | undefined): 'HSC' | 'SSC' {
+    return String(inst?.boardType || '').toUpperCase() === 'SSC' ? 'SSC' : 'HSC';
+  }
+
+  isSelectedInstituteSsc(): boolean {
+    return this.instituteBoardType(this.selectedInstitute) === 'SSC';
+  }
+
   onSubmit() {
     if (!this.selectedInstituteId) {
       this.snackBar.open('Please select an institute', 'Close', { duration: 3000 });
       return;
     }
 
-    if (!this.selectedStream) {
+    if (!this.isSelectedInstituteSsc() && !this.selectedStream) {
       this.snackBar.open('Please select a stream', 'Close', { duration: 3000 });
       return;
     }
@@ -1336,14 +1356,14 @@ export class InstituteSelectComponent implements OnInit {
     // Save institute and stream selection to backend
     this.http.post<any>(`${API_BASE_URL}/students/select-institute`, {
       instituteId: this.selectedInstituteId,
-      streamCode: this.selectedStream
+      streamCode: this.isSelectedInstituteSsc() ? null : this.selectedStream
     }).subscribe({
       next: (response) => {
         // Update access token with the new one that includes instituteId
         if (response.accessToken) {
           this.auth.updateAccessToken(response.accessToken);
         }
-        this.snackBar.open('✓ Institute and Stream selected successfully! Redirecting to profile...', 'Close', { duration: 3000 });
+        this.snackBar.open(`✓ ${this.isSelectedInstituteSsc() ? 'School' : 'Institute and Stream'} selected successfully! Redirecting to profile...`, 'Close', { duration: 3000 });
         // Load profile to check completion percentage and redirect accordingly
         setTimeout(() => {
           this.profileService.loadProfile()

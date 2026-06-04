@@ -6,6 +6,7 @@ export type AuthUser = {
   email?: string;
   role: RoleName;
   instituteId: number | null;
+  boardType?: 'HSC' | 'SSC';
 };
 
 export type LoginResponse = {

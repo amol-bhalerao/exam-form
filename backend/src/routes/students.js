@@ -4,6 +4,7 @@ import { prisma } from '../prisma.js';
 import { requireAuth } from '../auth/middleware.js';
 import { signAccessToken } from '../auth/tokens.js';
 import { attachStudentAssets, removeStudentAsset, saveStudentAsset } from '../utils/student-assets.js';
+import { getInstituteBoardType } from '../utils/board-scope.js';
 
 export const studentsRouter = Router();
 
@@ -1236,7 +1237,7 @@ studentsRouter.post('/select-institute', requireAuth, async (req, res) => {
 
     const body = z.object({
       instituteId: z.coerce.number().int().positive(),
-      streamCode: z.string().min(1).max(10) // e.g., 'Science', 'Arts', 'Commerce'
+      streamCode: z.string().max(10).optional().nullable() // HSC stream; SSC can be blank
     }).parse(req.body);
 
     // Verify institute exists
@@ -1244,6 +1245,11 @@ studentsRouter.post('/select-institute', requireAuth, async (req, res) => {
       where: { id: body.instituteId }
     });
     if (!institute) return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND' });
+    const boardType = await getInstituteBoardType(institute.id);
+    const streamCode = boardType === 'SSC' ? null : String(body.streamCode || '').trim();
+    if (boardType !== 'SSC' && !streamCode) {
+      return res.status(422).json({ error: 'STREAM_REQUIRED', message: 'Please select a stream for HSC institute.' });
+    }
 
     // Get the student profile for this user
     let student = await prisma.student.findUnique({
@@ -1256,7 +1262,7 @@ studentsRouter.post('/select-institute', requireAuth, async (req, res) => {
         data: {
           userId,
           instituteId: body.instituteId,
-          streamCode: body.streamCode,
+          streamCode,
           firstName: '',
           lastName: ''
         }
@@ -1267,7 +1273,7 @@ studentsRouter.post('/select-institute', requireAuth, async (req, res) => {
         where: { userId },
         data: {
           instituteId: body.instituteId,
-          streamCode: body.streamCode
+          streamCode
         }
       });
     }
@@ -1280,7 +1286,8 @@ studentsRouter.post('/select-institute', requireAuth, async (req, res) => {
         userId,
         role: 'STUDENT',
         instituteId: student.instituteId,
-        username: req.auth.username
+        username: req.auth.username,
+        boardType
       }),
       student: {
         id: student.id,

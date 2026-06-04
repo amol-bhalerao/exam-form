@@ -3,6 +3,7 @@ import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
+import { BOARD_TYPES, enrichUsersWithBoardType, normalizeBoardType, setUserBoardType } from '../utils/board-scope.js';
 
 export const usersRouter = Router();
 
@@ -26,7 +27,7 @@ usersRouter.get('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res)
     orderBy: { createdAt: 'desc' }
   });
 
-  return res.json({ users });
+  return res.json({ users: await enrichUsersWithBoardType(users) });
 });
 
 // Create a new user (board user)
@@ -36,7 +37,8 @@ usersRouter.post('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res
     password: z.string().min(6),
     email: z.string().email().optional(),
     mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
-    roleName: z.enum(['BOARD', 'SUPER_ADMIN'])
+    roleName: z.enum(['BOARD', 'SUPER_ADMIN']),
+    boardType: z.enum(BOARD_TYPES).optional()
   }).parse(req.body);
 
   // Check if username already exists
@@ -61,8 +63,11 @@ usersRouter.post('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res
     },
     include: { role: true }
   });
+  if (body.roleName === 'BOARD') {
+    await setUserBoardType(user.id, normalizeBoardType(body.boardType));
+  }
 
-  return res.json({ user });
+  return res.json({ user: (await enrichUsersWithBoardType([user]))[0] });
 });
 
 // Update user
@@ -73,7 +78,8 @@ usersRouter.put('/:id', requireAuth, requireRole(['SUPER_ADMIN']), async (req, r
     email: z.string().email().optional(),
     mobile: z.string().max(10).regex(/^\d{1,10}$/, 'Mobile must be numeric and max 10 digits').optional(),
     status: z.enum(['ACTIVE', 'PENDING', 'DISABLED']).optional(),
-    roleName: z.enum(['BOARD', 'SUPER_ADMIN']).optional()
+    roleName: z.enum(['BOARD', 'SUPER_ADMIN']).optional(),
+    boardType: z.enum(BOARD_TYPES).optional()
   }).parse(req.body);
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
@@ -103,8 +109,11 @@ usersRouter.put('/:id', requireAuth, requireRole(['SUPER_ADMIN']), async (req, r
     },
     include: { role: true, institute: { select: { name: true, code: true } } }
   });
+  if ((body.roleName ?? updated.role.name) === 'BOARD') {
+    await setUserBoardType(updated.id, normalizeBoardType(body.boardType));
+  }
 
-  return res.json({ user: updated });
+  return res.json({ user: (await enrichUsersWithBoardType([updated]))[0] });
 });
 
 // Reset user password
@@ -161,7 +170,7 @@ usersRouter.get('/board', requireAuth, requireRole(['SUPER_ADMIN']), async (req,
     orderBy: { createdAt: 'desc' }
   });
 
-  return res.json({ users });
+  return res.json({ users: await enrichUsersWithBoardType(users) });
 });
 
 // Get institute users only
