@@ -178,6 +178,14 @@ import { API_BASE_URL } from '../../core/api';
       z-index: 1;
     }
 
+    ::ng-deep .mat-drawer.mat-drawer-over {
+      z-index: 5 !important;
+    }
+
+    ::ng-deep .mat-drawer-backdrop {
+      z-index: 4 !important;
+    }
+
     .container.sidebar-compact .sidenav {
       width: 88px !important;
       min-width: 88px !important;
