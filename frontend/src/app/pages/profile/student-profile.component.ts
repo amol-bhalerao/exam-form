@@ -854,11 +854,49 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
           </div>
           <p class="managed-students-note">या लॉगिनखाली एकापेक्षा जास्त विद्यार्थी इथून जोडा आणि व्यवस्थापित करा.</p>
 
-          <div class="managed-students-table-wrap" *ngIf="managedStudents.length; else noManagedStudents">
+          <div class="managed-students-toolbar" *ngIf="managedStudents.length" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;margin:12px 0;">
+            <mat-form-field class="managed-student-search" appearance="outline" style="flex:1 1 260px;min-width:220px;">
+              <mat-label>Search students</mat-label>
+              <mat-icon matPrefix>search</mat-icon>
+              <input
+                matInput
+                [(ngModel)]="managedStudentSearch"
+                placeholder="Name, institute, mobile"
+                appEnglishOnly
+                (input)="onUppercaseInput($event)" />
+            </mat-form-field>
+            <mat-form-field class="managed-student-filter" appearance="outline">
+              <mat-label>Board</mat-label>
+              <mat-select [(ngModel)]="managedStudentBoardFilter">
+                <mat-option value="">All Boards</mat-option>
+                <mat-option value="HSC">HSC</mat-option>
+                <mat-option value="SSC">SSC</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field class="managed-student-filter" appearance="outline">
+              <mat-label>Sort by</mat-label>
+              <mat-select [(ngModel)]="managedStudentSortBy">
+                <mat-option value="name">Name</mat-option>
+                <mat-option value="board">Board</mat-option>
+                <mat-option value="institute">Institute</mat-option>
+                <mat-option value="profile">Profile %</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <button mat-stroked-button type="button" (click)="toggleManagedStudentSortDirection()">
+              <mat-icon>{{ managedStudentSortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
+              {{ managedStudentSortDirection === 'asc' ? 'Ascending' : 'Descending' }}
+            </button>
+            <button mat-button type="button" (click)="resetManagedStudentTableFilters()" *ngIf="hasManagedStudentTableFilters()">
+              Clear
+            </button>
+          </div>
+
+          <div class="managed-students-table-wrap" *ngIf="filteredManagedStudents().length; else noManagedStudents">
             <table class="managed-students-table">
               <thead>
                 <tr>
                   <th>Name</th>
+                  <th>Board</th>
                   <th>Institute</th>
                   <th>Stream</th>
                   <th>Mobile</th>
@@ -867,8 +905,13 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let student of managedStudents">
+                <tr *ngFor="let student of filteredManagedStudents()">
                   <td>{{ displayManagedStudentName(student) }}</td>
+                  <td>
+                    <span class="completion-pill">
+                      {{ getManagedStudentBoardType(student) }}
+                    </span>
+                  </td>
                   <td>{{ student.instituteName || '-' }}</td>
                   <td>{{ student.streamCode || '-' }}</td>
                   <td>{{ student.mobile || '-' }}</td>
@@ -889,7 +932,9 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
           </div>
 
           <ng-template #noManagedStudents>
-            <p class="managed-students-empty">अतिरिक्त विद्यार्थी अद्याप जोडलेले नाहीत.</p>
+            <p class="managed-students-empty">
+              {{ managedStudents.length ? 'या शोध/फिल्टरसाठी विद्यार्थी सापडले नाहीत.' : 'अतिरिक्त विद्यार्थी अद्याप जोडलेले नाहीत.' }}
+            </p>
           </ng-template>
         </div>
 
@@ -2356,6 +2401,10 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   infoPopupText = '';
   managedStudents: any[] = [];
   managedStudentApplications: any[] = [];
+  managedStudentSearch = '';
+  managedStudentBoardFilter = '';
+  managedStudentSortBy: 'name' | 'board' | 'institute' | 'profile' = 'name';
+  managedStudentSortDirection: 'asc' | 'desc' = 'asc';
   showManagedStudentModal = false;
   managedStudentMode: 'create' | 'edit' = 'create';
   managedStudentSaving = false;
@@ -2808,6 +2857,74 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     const fromApi = String(student?.fullName || '').trim();
     if (fromApi) return fromApi;
     return [student?.lastName, student?.firstName, student?.middleName].filter(Boolean).join(' ') || '-';
+  }
+
+  getManagedStudentBoardType(student: any): 'HSC' | 'SSC' {
+    return String(student?.boardType || student?.institute?.boardType || '').trim().toUpperCase() === 'SSC' ? 'SSC' : 'HSC';
+  }
+
+  filteredManagedStudents(): any[] {
+    const query = String(this.managedStudentSearch || '').trim().toUpperCase();
+    const boardFilter = String(this.managedStudentBoardFilter || '').trim().toUpperCase();
+    const direction = this.managedStudentSortDirection === 'desc' ? -1 : 1;
+
+    return [...this.managedStudents]
+      .filter((student) => {
+        const boardType = this.getManagedStudentBoardType(student);
+        if (boardFilter && boardType !== boardFilter) return false;
+        if (!query) return true;
+
+        const searchable = [
+          this.displayManagedStudentName(student),
+          boardType,
+          student?.instituteName,
+          student?.streamCode,
+          student?.mobile,
+          student?.aadhaar
+        ].filter(Boolean).join(' ').toUpperCase();
+
+        return searchable.includes(query);
+      })
+      .sort((a, b) => {
+        const valueA = this.getManagedStudentSortValue(a);
+        const valueB = this.getManagedStudentSortValue(b);
+        if (typeof valueA === 'number' || typeof valueB === 'number') {
+          return ((Number(valueA) || 0) - (Number(valueB) || 0)) * direction;
+        }
+        return String(valueA || '').localeCompare(String(valueB || '')) * direction;
+      });
+  }
+
+  private getManagedStudentSortValue(student: any): string | number {
+    switch (this.managedStudentSortBy) {
+      case 'board':
+        return this.getManagedStudentBoardType(student);
+      case 'institute':
+        return String(student?.instituteName || '');
+      case 'profile':
+        return Number(student?.profileCompletion || 0);
+      case 'name':
+      default:
+        return this.displayManagedStudentName(student);
+    }
+  }
+
+  toggleManagedStudentSortDirection() {
+    this.managedStudentSortDirection = this.managedStudentSortDirection === 'asc' ? 'desc' : 'asc';
+  }
+
+  hasManagedStudentTableFilters(): boolean {
+    return !!String(this.managedStudentSearch || '').trim()
+      || !!this.managedStudentBoardFilter
+      || this.managedStudentSortBy !== 'name'
+      || this.managedStudentSortDirection !== 'asc';
+  }
+
+  resetManagedStudentTableFilters() {
+    this.managedStudentSearch = '';
+    this.managedStudentBoardFilter = '';
+    this.managedStudentSortBy = 'name';
+    this.managedStudentSortDirection = 'asc';
   }
 
   getManagedStudentApplication(student: any): any | null {

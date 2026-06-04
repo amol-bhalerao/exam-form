@@ -74,8 +74,18 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
         </div>
         <div class="grid">
           <mat-form-field appearance="outline"><mat-label>Name</mat-label><input matInput [(ngModel)]="form.name" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Academic year</mat-label><input matInput [(ngModel)]="form.academicYear" /></mat-form-field>
-          <mat-form-field appearance="outline"><mat-label>Session</mat-label><input matInput [(ngModel)]="form.session" /></mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Academic year</mat-label>
+            <mat-select [(ngModel)]="form.academicYear" panelClass="board-exam-modal-select-panel">
+              <mat-option *ngFor="let year of academicYears" [value]="year">{{ year }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <mat-form-field appearance="outline">
+            <mat-label>Session</mat-label>
+            <mat-select [(ngModel)]="form.session" panelClass="board-exam-modal-select-panel">
+              <mat-option *ngFor="let session of sessionOptions" [value]="session">{{ session }}</mat-option>
+            </mat-select>
+          </mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Open date</mat-label><input matInput [matDatepicker]="openPicker" [(ngModel)]="form.applicationOpen" /><mat-datepicker-toggle matSuffix [for]="openPicker"></mat-datepicker-toggle><mat-datepicker #openPicker></mat-datepicker></mat-form-field>
           <mat-form-field appearance="outline"><mat-label>Close date</mat-label><input matInput [matDatepicker]="closePicker" [(ngModel)]="form.applicationClose" /><mat-datepicker-toggle matSuffix [for]="closePicker"></mat-datepicker-toggle><mat-datepicker #closePicker></mat-datepicker></mat-form-field>
         </div>
@@ -113,6 +123,8 @@ type Exam = { id: number; name: string; academicYear: string; session: string; a
       .grid-panel__table--lg { min-height: 460px; height: 460px; }
       .w180 { width: min(180px, 100%); }
       .pager { margin-top: 12px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+      ::ng-deep .cdk-overlay-container { z-index: 2100 !important; }
+      ::ng-deep .board-exam-modal-select-panel { z-index: 2101 !important; }
       @media (max-width: 980px) {
         .grid { grid-template-columns: 1fr; }
         .grid-panel__actions { align-items: stretch; }
@@ -150,6 +162,8 @@ export class BoardExamsComponent implements OnInit {
   search = '';
   filterStream = '';
   status = '';
+  readonly academicYears = this.buildAcademicYears();
+  readonly sessionOptions = ['FEBRUARY-MARCH', 'JULY-AUGUST', 'OCTOBER-NOVEMBER'];
   form = {
     name: '',
     academicYear: '',
@@ -171,6 +185,14 @@ export class BoardExamsComponent implements OnInit {
 
   closeFormModal() {
     this.showFormModal.set(false);
+  }
+
+  private buildAcademicYears(): string[] {
+    const currentYear = new Date().getFullYear();
+    return Array.from({ length: 6 }, (_, index) => {
+      const startYear = currentYear - 1 + index;
+      return `${startYear}-${String(startYear + 1).slice(-2)}`;
+    });
   }
 
   private isExamOpen(exam: any): boolean {
