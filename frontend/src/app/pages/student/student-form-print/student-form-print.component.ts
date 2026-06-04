@@ -1290,8 +1290,8 @@ export class StudentFormPrintComponent implements OnInit {
         const role = this.auth.user()?.role;
         this.printBlockedReason.set(
           role === 'STUDENT'
-            ? 'Print is available after submission and institute verification (or successful payment for pending submissions).'
-            : 'Print is available only for institute-verified applications.'
+            ? 'प्रिंट फॉर्म सबमिशननंतर आणि संस्थेच्या पडताळणीनंतर उपलब्ध होईल. पेमेंट यशस्वी झालेल्या सबमिट अर्जांसाठीही प्रिंट उपलब्ध आहे.'
+            : 'प्रिंट फॉर्म फक्त संस्थेकडून पडताळणी झालेल्या अर्जांसाठी उपलब्ध आहे.'
         );
         return;
       }

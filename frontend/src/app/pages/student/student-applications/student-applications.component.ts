@@ -138,7 +138,7 @@ type Application = {
 
       @if (selectedExamCapacityReached()) {
         <div style="margin-top:8px;color:#b91c1c;">
-          No remaining application slots are available for the selected exam at your institute.
+          निवडलेल्या परीक्षेसाठी तुमच्या संस्थेत अर्जाची जागा उपलब्ध नाही.
         </div>
       }
 
@@ -147,7 +147,7 @@ type Application = {
     @if (error()) {
       <mat-card class="card error-card">
         <div class="error-message">
-          <strong>Error:</strong> {{ error() }}
+          <strong>त्रुटी:</strong> {{ error() }}
         </div>
       </mat-card>
     }
@@ -665,7 +665,7 @@ export class StudentApplicationsComponent implements OnInit {
         }
       },
       error: (err: any) => {
-        this.error.set(err?.error?.message || 'Failed to load students');
+        this.error.set(this.toMarathiStudentFlowError(err, 'विद्यार्थी यादी लोड करण्यात अडचण आली.'));
       }
     });
   }
@@ -704,7 +704,7 @@ export class StudentApplicationsComponent implements OnInit {
 
   saveStudentFromModal() {
     if (!this.editorFirstName().trim() || !this.editorLastName().trim() || !this.editorInstituteId() || !this.editorStreamCode().trim()) {
-      this.error.set('Please fill First Name, Last Name, Institute and Stream for new student.');
+      this.error.set('कृपया विद्यार्थ्याचे नाव, आडनाव, संस्था आणि HSC असल्यास शाखा भरा.');
       return;
     }
 
@@ -732,7 +732,7 @@ export class StudentApplicationsComponent implements OnInit {
       },
       error: (err: any) => {
         this.creatingStudent.set(false);
-        this.error.set(err?.error?.message || 'Failed to create student');
+        this.error.set(this.toMarathiStudentFlowError(err, 'विद्यार्थी तयार करताना अडचण आली.'));
       }
     });
   }
@@ -754,7 +754,7 @@ export class StudentApplicationsComponent implements OnInit {
       },
       error: (err: any) => {
         console.error('Failed to load exams:', err?.error?.message || err?.message);
-        this.error.set('Failed to load exams. Please try again.');
+        this.error.set(this.toMarathiStudentFlowError(err, 'परीक्षा यादी लोड करण्यात अडचण आली. कृपया पुन्हा प्रयत्न करा.'));
       }
     });
   }
@@ -791,7 +791,7 @@ export class StudentApplicationsComponent implements OnInit {
         this.loading.set(false);
       },
       error: (err: any) => {
-        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to load applications';
+        const errorMsg = this.toMarathiStudentFlowError(err, 'अर्ज यादी लोड करण्यात अडचण आली.');
         console.error('Failed to load applications:', errorMsg);
         this.error.set(errorMsg);
         this.loading.set(false);
@@ -860,7 +860,7 @@ export class StudentApplicationsComponent implements OnInit {
     
     const exam = this.exams().find((e) => e.id === examId);
     if (!exam || !this.isExamOpen(exam)) {
-      this.error.set('Cannot apply: selected exam is closed or invalid.');
+      this.error.set('निवडलेली परीक्षा बंद आहे किंवा वैध नाही.');
       return;
     }
 
@@ -868,13 +868,13 @@ export class StudentApplicationsComponent implements OnInit {
     const profileCompletion = selectedStudentCompletion || this.getProfileCompletion();
     if (profileCompletion < 70) {
       this.snackBar.open(
-        `⚠️ Please complete your profile (${profileCompletion}% done) before creating an exam application`,
-        'Go to Profile',
+        `कृपया परीक्षा अर्ज सुरू करण्यापूर्वी विद्यार्थी प्रोफाइल पूर्ण करा (${profileCompletion}% पूर्ण).`,
+        'प्रोफाइल उघडा',
         { duration: 5000 }
       ).onAction().subscribe(() => {
         this.router.navigate(['/app/student/profile']);
       });
-      this.error.set('Please complete at least 70% of your student profile before creating an exam application.');
+      this.error.set('परीक्षा अर्ज तयार करण्यासाठी विद्यार्थी प्रोफाइल किमान 70% पूर्ण असणे आवश्यक आहे.');
       return;
     }
 
@@ -890,7 +890,7 @@ export class StudentApplicationsComponent implements OnInit {
           this.router.navigate(['/app/student/applications', r.application.id]);
         },
         error: (err: any) => {
-          const errorMsg = err?.error?.error || err?.error?.message || 'Failed to create application';
+          const errorMsg = this.toMarathiStudentFlowError(err, 'परीक्षा अर्ज तयार करताना अडचण आली.');
           console.error('Failed to create application:', errorMsg);
           this.error.set(errorMsg);
           this.creating.set(false);
@@ -910,6 +910,31 @@ export class StudentApplicationsComponent implements OnInit {
   displayStudentName(student: ManagedStudent | null | undefined): string {
     if (!student) return '-';
     return student.fullName || [student.lastName, student.firstName, student.middleName].filter(Boolean).join(' ') || `Student #${student.id}`;
+  }
+
+  private toMarathiStudentFlowError(err: any, fallback: string): string {
+    const code = String(err?.error?.error || '').trim().toUpperCase();
+    const rawMessage = String(err?.error?.message || err?.message || err?.error || '').trim();
+    const messages: Record<string, string> = {
+      EXAM_NOT_FOUND: 'निवडलेली परीक्षा सापडली नाही.',
+      EXAM_BOARD_TYPE_MISMATCH: 'ही परीक्षा निवडलेल्या विद्यार्थ्याच्या बोर्डासाठी उपलब्ध नाही.',
+      EXAM_APPLICATION_LIMIT_REACHED: 'या परीक्षेसाठी संस्थेतील उपलब्ध अर्ज मर्यादा संपली आहे.',
+      MANAGED_STUDENT_REQUIRED: 'कृपया आधी विद्यार्थी प्रोफाइल तयार करा.',
+      INSTITUTE_NOT_FOUND: 'विद्यार्थ्याची संस्था सापडली नाही.',
+      DUPLICATE_STUDENT: 'हा विद्यार्थी आधीच नोंदणीकृत आहे.',
+      STREAM_REQUIRED: 'HSC विद्यार्थ्यासाठी शाखा आवश्यक आहे.',
+      VALIDATION_ERROR: 'कृपया माहिती योग्य स्वरूपात भरा.',
+      INTERNAL_ERROR: 'सर्व्हरमध्ये अडचण आली. कृपया पुन्हा प्रयत्न करा.'
+    };
+
+    if (messages[code]) return messages[code];
+    if (/closed|invalid/i.test(rawMessage)) return 'निवडलेली परीक्षा बंद आहे किंवा वैध नाही.';
+    if (/load.*student/i.test(rawMessage)) return 'विद्यार्थी यादी लोड करण्यात अडचण आली.';
+    if (/load.*exam/i.test(rawMessage)) return 'परीक्षा यादी लोड करण्यात अडचण आली.';
+    if (/load.*application/i.test(rawMessage)) return 'अर्ज यादी लोड करण्यात अडचण आली.';
+    if (/create.*application/i.test(rawMessage)) return 'परीक्षा अर्ज तयार करताना अडचण आली.';
+    if (/validation|required|invalid/i.test(rawMessage)) return messages['VALIDATION_ERROR'];
+    return fallback;
   }
 
   studentNameFromApplication(app: Application): string {

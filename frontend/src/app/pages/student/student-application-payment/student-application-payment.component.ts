@@ -239,7 +239,7 @@ export class StudentApplicationPaymentComponent implements OnInit {
 
     if (!this.applicationId()) {
       this.loading.set(false);
-      this.error.set('Invalid application selected for payment.');
+      this.error.set('पेमेंटसाठी निवडलेला अर्ज वैध नाही.');
       return;
     }
 
@@ -281,7 +281,7 @@ export class StudentApplicationPaymentComponent implements OnInit {
       next: () => this.finalizeSubmission(applicationId),
       error: (err: any) => {
         this.loading.set(false);
-        this.error.set(err?.error?.message || err?.error?.error || 'Sandbox payment could not be completed.');
+        this.error.set(this.toMarathiPaymentError(err, 'चाचणी पेमेंट पूर्ण करताना अडचण आली.'));
       }
     });
   }
@@ -312,7 +312,7 @@ export class StudentApplicationPaymentComponent implements OnInit {
 
         if (!response?.paymentSessionId) {
           this.loading.set(false);
-          this.error.set('Payment session could not be created. Please try again.');
+          this.error.set('पेमेंट सत्र तयार झाले नाही. कृपया पुन्हा प्रयत्न करा.');
           return;
         }
 
@@ -320,7 +320,7 @@ export class StudentApplicationPaymentComponent implements OnInit {
       },
       error: (err: any) => {
         this.loading.set(false);
-        this.error.set(err?.error?.message || err?.error?.error || 'Unable to initiate payment right now.');
+        this.error.set(this.toMarathiPaymentError(err, 'आत्ता पेमेंट सुरू करता आले नाही.'));
       }
     });
   }
@@ -328,7 +328,7 @@ export class StudentApplicationPaymentComponent implements OnInit {
   private launchCashfreeCheckout(paymentSessionId: string, environment: string): void {
     if (typeof window === 'undefined' || typeof window.Cashfree !== 'function') {
       this.loading.set(false);
-      this.error.set('Cashfree checkout script is not available. Please refresh and try again.');
+      this.error.set('Cashfree पेमेंट स्क्रिप्ट उपलब्ध नाही. कृपया पेज रिफ्रेश करून पुन्हा प्रयत्न करा.');
       return;
     }
 
@@ -344,11 +344,11 @@ export class StudentApplicationPaymentComponent implements OnInit {
         redirectTarget: '_self'
       })).catch((err: any) => {
         this.loading.set(false);
-        this.error.set(err?.message || 'Cashfree checkout could not be opened.');
+        this.error.set(this.toMarathiPaymentError(err, 'Cashfree पेमेंट विंडो उघडता आली नाही.'));
       });
     } catch (err: any) {
       this.loading.set(false);
-      this.error.set(err?.message || 'Cashfree checkout could not be opened.');
+      this.error.set(this.toMarathiPaymentError(err, 'Cashfree पेमेंट विंडो उघडता आली नाही.'));
     }
   }
 
@@ -357,7 +357,7 @@ export class StudentApplicationPaymentComponent implements OnInit {
 
     if (!['PAID', 'SUCCESS', 'COMPLETED'].includes(normalized)) {
       this.loading.set(false);
-      this.error.set('Payment was cancelled or failed. You can retry the payment from this page.');
+      this.error.set('पेमेंट रद्द झाले किंवा अयशस्वी झाले. या पेजवरून पुन्हा प्रयत्न करू शकता.');
       return;
     }
 
@@ -376,11 +376,11 @@ export class StudentApplicationPaymentComponent implements OnInit {
         }
 
         this.loading.set(false);
-        this.error.set('Payment verification is still pending. Please retry in a moment.');
+        this.error.set('पेमेंट पडताळणी अजून प्रलंबित आहे. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.');
       },
       error: (err: any) => {
         this.loading.set(false);
-        this.error.set(err?.error?.message || err?.error?.error || 'Unable to verify payment right now.');
+        this.error.set(this.toMarathiPaymentError(err, 'आत्ता पेमेंट पडताळणी करता आली नाही.'));
       }
     });
   }
@@ -425,8 +425,31 @@ export class StudentApplicationPaymentComponent implements OnInit {
         }
 
         this.loading.set(false);
-        this.error.set(err?.error?.message || err?.error?.error || 'Payment was completed, but the application could not be submitted automatically.');
+        this.error.set(this.toMarathiPaymentError(err, 'पेमेंट पूर्ण झाले, पण अर्ज आपोआप सबमिट करता आला नाही.'));
       }
     });
+  }
+
+  private toMarathiPaymentError(err: any, fallback: string): string {
+    const code = String(err?.error?.error || '').trim().toUpperCase();
+    const rawMessage = String(err?.error?.message || err?.message || err?.error || '').trim();
+    const messages: Record<string, string> = {
+      PAYMENT_GATEWAY_UNAVAILABLE: 'पेमेंट सेवा सध्या उपलब्ध नाही. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.',
+      APPLICATION_NOT_FOUND: 'पेमेंटसाठी अर्ज सापडला नाही.',
+      PAYMENT_NOT_ALLOWED_FOR_STATUS: 'या अर्जाच्या सद्य स्थितीत पेमेंट करता येणार नाही.',
+      PAYMENT_REQUIRED: 'ही कृती करण्यापूर्वी पेमेंट पूर्ण करणे आवश्यक आहे.',
+      INVALID_STATE: 'या स्थितीत पेमेंट प्रक्रिया करता येणार नाही.',
+      SUBJECTS_REQUIRED: 'पेमेंटपूर्वी किमान एक विषय निवडणे आवश्यक आहे.',
+      INVALID_SUBJECT_CATEGORY: 'विषय निवडीत त्रुटी आहे. कृपया अर्जातील विषय पुन्हा तपासा.',
+      VALIDATION_ERROR: 'कृपया अर्जातील आवश्यक माहिती योग्य स्वरूपात भरा.',
+      INTERNAL_ERROR: 'सर्व्हरमध्ये अडचण आली. कृपया पुन्हा प्रयत्न करा.'
+    };
+
+    if (messages[code]) return messages[code];
+    if (/cashfree|gateway/i.test(rawMessage)) return messages['PAYMENT_GATEWAY_UNAVAILABLE'];
+    if (/payment/i.test(rawMessage)) return messages['PAYMENT_REQUIRED'];
+    if (/subject/i.test(rawMessage)) return messages['SUBJECTS_REQUIRED'];
+    if (/validation|required|invalid/i.test(rawMessage)) return messages['VALIDATION_ERROR'];
+    return fallback;
   }
 }

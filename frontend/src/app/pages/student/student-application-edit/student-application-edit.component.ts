@@ -66,7 +66,7 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
         <div class="error-message">
           <mat-icon>error_outline</mat-icon>
           <div>
-            <strong>Error:</strong> {{ error() }}
+            <strong>त्रुटी:</strong> {{ error() }}
           </div>
         </div>
       </mat-card>
@@ -2289,7 +2289,7 @@ export class StudentApplicationEditComponent implements OnInit {
     const app = this.application();
     if (!app) return;
     if (!this.isEditable()) {
-      this.error.set('This application is locked and cannot be edited.');
+      this.error.set('हा अर्ज लॉक झाला आहे आणि संपादित करता येणार नाही.');
       return;
     }
     this.saving.set(true);
@@ -2305,7 +2305,7 @@ export class StudentApplicationEditComponent implements OnInit {
         this.reload(app.id);
       },
       error: (err: any) => {
-        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to save application. Your changes may be lost. Please try again.';
+        const errorMsg = this.toMarathiApplicationError(err, 'अर्ज जतन करताना अडचण आली. कृपया पुन्हा प्रयत्न करा.');
         console.error('Failed to save application:', errorMsg);
         this.error.set(errorMsg);
         this.saving.set(false);
@@ -2317,7 +2317,7 @@ export class StudentApplicationEditComponent implements OnInit {
     const app = this.application();
     if (!app) return;
     if (!this.isEditable()) {
-      this.error.set('This application is locked and cannot be edited.');
+      this.error.set('हा अर्ज लॉक झाला आहे आणि संपादित करता येणार नाही.');
       return;
     }
 
@@ -2327,17 +2327,17 @@ export class StudentApplicationEditComponent implements OnInit {
 
     const selectedSubjectCount = this.subjects().controls.filter((group) => !!group.get('subjectId')?.value).length;
     if (!selectedSubjectCount) {
-      const message = 'Please select at least one subject before continuing to payment.';
+      const message = 'पेमेंटकडे जाण्यापूर्वी किमान एक विषय निवडा.';
       this.error.set(message);
-      this.showValidationPopup(message, ['Subject Selection']);
+      this.showValidationPopup(message, ['विषय निवड']);
       return;
     }
 
     const missingProfileFields = this.getMissingProfileFieldsForSubmit();
     if (missingProfileFields.length) {
-      const message = `Please complete profile fields before submitting: ${missingProfileFields.join(', ')}`;
+      const message = `सबमिट करण्यापूर्वी प्रोफाइलमधील माहिती पूर्ण करा: ${missingProfileFields.join(', ')}`;
       this.error.set(message);
-      this.showValidationPopup('Please complete required fields before continuing to payment.', missingProfileFields);
+      this.showValidationPopup('पेमेंटकडे जाण्यापूर्वी आवश्यक माहिती पूर्ण करा.', missingProfileFields);
       this.focusFieldByLabel(missingProfileFields[0]);
       return;
     }
@@ -2345,10 +2345,10 @@ export class StudentApplicationEditComponent implements OnInit {
     if (this.form.invalid) {
       const invalidFields = this.getInvalidFieldLabelsForSubmit();
       const message = invalidFields.length
-        ? `Please complete all required fields before continuing to payment: ${invalidFields.join(', ')}`
-        : 'Please complete all required fields before continuing to payment.';
+        ? `पेमेंटकडे जाण्यापूर्वी सर्व आवश्यक माहिती पूर्ण करा: ${invalidFields.join(', ')}`
+        : 'पेमेंटकडे जाण्यापूर्वी सर्व आवश्यक माहिती पूर्ण करा.';
       this.error.set(message);
-      this.showValidationPopup('Please complete all required fields before continuing to payment.', invalidFields);
+      this.showValidationPopup('पेमेंटकडे जाण्यापूर्वी सर्व आवश्यक माहिती पूर्ण करा.', invalidFields);
       if (invalidFields.length) {
         this.focusFieldByLabel(invalidFields[0]);
       } else {
@@ -2370,7 +2370,7 @@ export class StudentApplicationEditComponent implements OnInit {
         this.router.navigate(['/app/student/applications', app.id, 'payment']);
       },
       error: (err: any) => {
-        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to validate and save the application before payment';
+        const errorMsg = this.toMarathiApplicationError(err, 'पेमेंटपूर्वी अर्ज तपासून जतन करताना अडचण आली.');
         console.error('Failed to prepare application for payment:', errorMsg);
         this.error.set(errorMsg);
         this.submitting.set(false);
@@ -2380,16 +2380,16 @@ export class StudentApplicationEditComponent implements OnInit {
 
   private getMissingProfileFieldsForSubmit(): string[] {
     const fields: Array<{ label: string; value: unknown }> = [
-      { label: 'First Name', value: this.form.get('personGroup.firstName')?.value },
-      { label: 'Last Name', value: this.form.get('personGroup.lastName')?.value },
-      { label: 'Mobile', value: this.form.get('personGroup.mobile')?.value },
-      { label: 'Address', value: this.form.get('personGroup.address')?.value },
-      { label: 'Pin Code', value: this.form.get('personGroup.pinCode')?.value },
-      { label: 'Date of Birth', value: this.form.get('personGroup.dob')?.value },
-      { label: 'Gender', value: this.form.get('personGroup.gender')?.value },
-      { label: 'Stream', value: this.form.get('academicGroup.streamCode')?.value },
-      { label: 'Category', value: this.form.get('academicGroup.categoryCode')?.value },
-      { label: 'Medium', value: this.form.get('academicGroup.mediumCode')?.value }
+      { label: 'पहिले नाव', value: this.form.get('personGroup.firstName')?.value },
+      { label: 'आडनाव', value: this.form.get('personGroup.lastName')?.value },
+      { label: 'मोबाईल क्रमांक', value: this.form.get('personGroup.mobile')?.value },
+      { label: 'पत्ता', value: this.form.get('personGroup.address')?.value },
+      { label: 'पिन कोड', value: this.form.get('personGroup.pinCode')?.value },
+      { label: 'जन्म तारीख', value: this.form.get('personGroup.dob')?.value },
+      { label: 'लिंग', value: this.form.get('personGroup.gender')?.value },
+      ...(this.isSscApplication() ? [] : [{ label: 'शाखा', value: this.form.get('academicGroup.streamCode')?.value }]),
+      { label: 'प्रवर्ग', value: this.form.get('academicGroup.categoryCode')?.value },
+      { label: 'माध्यम', value: this.form.get('academicGroup.mediumCode')?.value }
     ];
 
     return fields
@@ -2414,7 +2414,29 @@ export class StudentApplicationEditComponent implements OnInit {
     }
 
     const lines = fields.map((field) => `- ${field}`).join('\n');
-    window.alert(`${title}\n\nPlease check:\n${lines}`);
+    window.alert(`${title}\n\nकृपया तपासा:\n${lines}`);
+  }
+
+  private toMarathiApplicationError(err: any, fallback: string): string {
+    const code = String(err?.error?.error || '').trim().toUpperCase();
+    const rawMessage = String(err?.error?.message || err?.message || err?.error || '').trim();
+    const messages: Record<string, string> = {
+      PAYMENT_REQUIRED: 'प्रिंट करण्यापूर्वी किंवा सबमिट करण्यापूर्वी पेमेंट पूर्ण करणे आवश्यक आहे.',
+      PAYMENT_GATEWAY_UNAVAILABLE: 'पेमेंट सेवा सध्या उपलब्ध नाही. कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.',
+      SUBJECTS_REQUIRED: 'कृपया किमान एक विषय निवडा.',
+      INVALID_SUBJECT_CATEGORY: 'निवडलेल्या विषयांमध्ये चुकीचा विषय प्रकार आहे. कृपया विषय पुन्हा तपासा.',
+      INVALID_STATE: 'या स्थितीत अर्जावर ही कृती करता येणार नाही.',
+      NOT_FOUND: 'अर्ज सापडला नाही.',
+      VALIDATION_ERROR: 'कृपया सर्व आवश्यक माहिती योग्य स्वरूपात भरा.',
+      INTERNAL_ERROR: 'सर्व्हरमध्ये अडचण आली. कृपया पुन्हा प्रयत्न करा.'
+    };
+
+    if (messages[code]) return messages[code];
+    if (/locked/i.test(rawMessage)) return 'हा अर्ज लॉक झाला आहे आणि संपादित करता येणार नाही.';
+    if (/subject/i.test(rawMessage)) return messages['SUBJECTS_REQUIRED'];
+    if (/payment/i.test(rawMessage)) return messages['PAYMENT_REQUIRED'];
+    if (/validation|required|invalid/i.test(rawMessage)) return messages['VALIDATION_ERROR'];
+    return fallback;
   }
 
   private focusFieldByLabel(label: string) {
@@ -2456,7 +2478,7 @@ export class StudentApplicationEditComponent implements OnInit {
         this.patchFromApplication(r.application);
       },
       error: (err: any) => {
-        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to reload application';
+        const errorMsg = this.toMarathiApplicationError(err, 'अर्ज पुन्हा लोड करताना अडचण आली.');
         console.error('Failed to reload application:', errorMsg);
         this.error.set(errorMsg);
       }

@@ -2961,7 +2961,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
 
     if (this.managedStudentForm.invalid) {
       this.managedStudentForm.markAllAsTouched();
-      this.snackBar.open('Please fill required fields for managed student.', 'Close', { duration: 2500 });
+      this.snackBar.open('कृपया विद्यार्थ्याची आवश्यक माहिती पूर्ण भरा.', 'बंद', { duration: 2500 });
       return;
     }
 
@@ -2969,7 +2969,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       if (!this.isManagedTabComplete(tabIndex)) {
         this.markManagedTabTouched(tabIndex);
         this.selectedTabIndex = tabIndex;
-        this.snackBar.open(this.getManagedTabValidationMessage(tabIndex), 'Close', { duration: 3000 });
+        this.snackBar.open(this.getManagedTabValidationMessage(tabIndex), 'बंद', { duration: 3000 });
         return;
       }
     }
@@ -2986,7 +2986,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         return true;
       });
       if (existingStudent) {
-        this.snackBar.open('This student is already registered under your account.', 'Close', { duration: 3000 });
+        this.snackBar.open('हा विद्यार्थी तुमच्या खात्यात आधीच नोंदणीकृत आहे.', 'बंद', { duration: 3000 });
         return;
       }
     }
@@ -3046,7 +3046,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         this.managedStudentSaving = false;
         this.closeManagedStudentModal();
         this.loadManagedStudents();
-        this.snackBar.open(this.managedStudentMode === 'edit' ? 'Managed student updated.' : 'Managed student added.', 'Close', { duration: 2500 });
+        this.snackBar.open(this.managedStudentMode === 'edit' ? 'विद्यार्थ्याची माहिती अद्ययावत झाली.' : 'विद्यार्थी यशस्वीरीत्या जोडला गेला.', 'बंद', { duration: 2500 });
         
         // Clear form and redirect to first tab for new student
         if (this.managedStudentMode === 'create') {
@@ -3107,8 +3107,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.managedStudentSaving = false;
-        const message = err?.error?.message || err?.error?.error || 'Failed to save managed student.';
-        this.snackBar.open(message, 'Close', { duration: 3000 });
+        const message = this.getManagedStudentSaveErrorMessage(err);
+        this.snackBar.open(message, 'बंद', { duration: 3000 });
       }
     });
   }
@@ -3178,7 +3178,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   onNextTabClick() {
     if (!this.isManagedTabComplete(this.selectedTabIndex)) {
       this.markManagedTabTouched(this.selectedTabIndex);
-      this.snackBar.open(this.getManagedTabValidationMessage(this.selectedTabIndex), 'Close', { duration: 3000 });
+      this.snackBar.open(this.getManagedTabValidationMessage(this.selectedTabIndex), 'बंद', { duration: 3000 });
       return;
     }
     this.selectedTabIndex = Math.min(this.selectedTabIndex + 1, 7);
@@ -3195,8 +3195,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     for (let tabIndex = 0; tabIndex < nextIndex; tabIndex++) {
       if (!this.isManagedTabComplete(tabIndex)) {
         this.markManagedTabTouched(tabIndex);
-        this.snackBar.open(this.getManagedTabValidationMessage(tabIndex), 'Close', { duration: 3000 });
-        this.selectedTabIndex = tabIndex;
+        this.snackBar.open(this.getManagedTabValidationMessage(tabIndex), 'बंद', { duration: 3000 });
+        this.selectedTabIndex = nextIndex;
+        setTimeout(() => {
+          this.selectedTabIndex = tabIndex;
+          this.cdr.detectChanges();
+        });
         return;
       }
     }
@@ -3268,6 +3272,28 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     return messages[tabIndex] || 'कृपया आवश्यक माहिती भरा.';
   }
 
+  private getManagedStudentSaveErrorMessage(err: any): string {
+    const code = String(err?.error?.error || '').trim().toUpperCase();
+    const rawMessage = String(err?.error?.message || err?.message || '').trim();
+    const messages: Record<string, string> = {
+      DUPLICATE_STUDENT: 'हा विद्यार्थी आधीच नोंदणीकृत आहे. कृपया आधार/मोबाईल क्रमांक तपासा.',
+      AADHAAR_LOCKED: 'विद्यार्थी जतन झाल्यानंतर आधार क्रमांक बदलता येत नाही.',
+      AADHAAR_REQUIRED: 'विद्यार्थ्यासाठी 12 अंकी आधार क्रमांक आवश्यक आहे.',
+      STREAM_REQUIRED: 'HSC विद्यार्थ्यासाठी शाखा निवडणे आवश्यक आहे.',
+      INSTITUTE_NOT_FOUND: 'निवडलेली संस्था सापडली नाही. कृपया संस्था पुन्हा निवडा.',
+      VALIDATION_ERROR: 'कृपया सर्व आवश्यक माहिती योग्य स्वरूपात भरा.',
+      INTERNAL_ERROR: 'विद्यार्थी जतन करताना सर्व्हरमध्ये अडचण आली. कृपया पुन्हा प्रयत्न करा.'
+    };
+
+    if (messages[code]) return messages[code];
+    if (/duplicate/i.test(rawMessage)) return messages['DUPLICATE_STUDENT'];
+    if (/aadhaar/i.test(rawMessage)) return messages['AADHAAR_REQUIRED'];
+    if (/stream/i.test(rawMessage)) return messages['STREAM_REQUIRED'];
+    if (/institute/i.test(rawMessage)) return messages['INSTITUTE_NOT_FOUND'];
+    if (/validation|required|invalid/i.test(rawMessage)) return messages['VALIDATION_ERROR'];
+    return 'विद्यार्थी जतन करताना अडचण आली. कृपया पुन्हा प्रयत्न करा.';
+  }
+
   onManagedAssetSaved(event: { type: 'photo' | 'signature'; dataUrl: string; sizeKB: number }) {
     if (event.type === 'photo') {
       this.managedPhotoDataUrl = event.dataUrl;
@@ -3306,7 +3332,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
         };
         localStorage.setItem(`studentFormProgress_${userId}`, JSON.stringify(progressData));
         if (showToast) {
-          this.snackBar.open('Draft saved. You can come back and continue without re-entering these fields.', 'Close', { duration: 3000 });
+          this.snackBar.open('मसुदा जतन झाला. नंतर परत येऊन हीच माहिती पुढे भरू शकता.', 'बंद', { duration: 3000 });
         }
       }
     }
@@ -3332,7 +3358,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
               }
               this.selectedTabIndex = progressData.selectedTabIndex || 0;
               this.managedStudentInstituteId = progressData.managedStudentInstituteId || null;
-              this.snackBar.open('Previous draft progress restored', 'Close', { duration: 2000 });
+              this.snackBar.open('मागील मसुदा पुन्हा भरला गेला.', 'बंद', { duration: 2000 });
             } else {
               // Clear old data
               localStorage.removeItem(`studentFormProgress_${userId}`);

@@ -56,6 +56,11 @@ async function resolveContext(client, applicationId) {
 
   let stream = streamId ? streams.find((s) => s.id === streamId) : app.exam?.stream;
   if (!stream && app.exam?.stream) stream = app.exam.stream;
+  const sequenceStreamId = streamId
+    ?? streams.find((s) => String(s.shortCode || '').toUpperCase() === 'ALL')?.id
+    ?? streams.find((s) => String(s.name || '').toUpperCase().includes('ALL'))?.id
+    ?? streams[0]?.id
+    ?? null;
 
   let streamShort = stream?.shortCode;
   if (!streamShort && stream?.name) {
@@ -83,15 +88,15 @@ async function resolveContext(client, applicationId) {
     12
   );
 
-  return { app, streamId, streamShort, examCode, instituteCode };
+  return { app, streamId, sequenceStreamId, streamShort, examCode, instituteCode };
 }
 
 async function bumpSequence(client, { level, examId, streamId, instituteId }) {
   const where = {
     level,
     examId,
-    streamId: streamId ?? null,
-    instituteId: instituteId ?? null
+    ...(streamId ? { streamId } : {}),
+    ...(instituteId ? { instituteId } : {})
   };
 
   const existing = await client.examFormSequence.findFirst({ where });
@@ -111,9 +116,9 @@ async function bumpSequence(client, { level, examId, streamId, instituteId }) {
   const row = await client.examFormSequence.create({
     data: {
       level,
-      examId,
-      streamId: streamId ?? null,
-      instituteId: instituteId ?? null,
+      exam: { connect: { id: examId } },
+      ...(streamId ? { stream: { connect: { id: streamId } } } : {}),
+      ...(instituteId ? { institute: { connect: { id: instituteId } } } : {}),
       currentSequence: 1,
       totalApplications: 1
     }
@@ -176,7 +181,7 @@ async function uniqueBoardNumber(client, base, examId, streamId, startSeq) {
 export async function assignSequenceNumbers(applicationId, existingClient = null) {
   const run = async (client) => {
     const ctx = await resolveContext(client, applicationId);
-    const { app, streamId, streamShort, examCode, instituteCode } = ctx;
+    const { app, streamId, sequenceStreamId, streamShort, examCode, instituteCode } = ctx;
 
     const updateData = {};
 
@@ -184,14 +189,14 @@ export async function assignSequenceNumbers(applicationId, existingClient = null
       const start = await bumpSequence(client, {
         level: 'INSTITUTE',
         examId: app.examId,
-        streamId,
+        streamId: sequenceStreamId,
         instituteId: app.instituteId
       });
       const { number } = await uniqueInstituteNumber(
         client,
         { instituteCode, streamShort, examCode },
         app.examId,
-        streamId,
+        sequenceStreamId,
         app.instituteId,
         start
       );
@@ -203,14 +208,14 @@ export async function assignSequenceNumbers(applicationId, existingClient = null
       const start = await bumpSequence(client, {
         level: 'BOARD',
         examId: app.examId,
-        streamId,
+        streamId: sequenceStreamId,
         instituteId: null
       });
       const { number } = await uniqueBoardNumber(
         client,
         { streamShort, examCode },
         app.examId,
-        streamId,
+        sequenceStreamId,
         start
       );
       updateData.boardSequenceNumber = number;
