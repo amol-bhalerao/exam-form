@@ -692,7 +692,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
               </button>
               <span class="tab-counter">Step {{ selectedTabIndex + 1 }} of 8</span>
               <button mat-raised-button color="primary" type="button" 
-                 [disabled]="selectedTabIndex === 7 || (selectedTabIndex === 6 && bankDetailsForm.invalid)" 
+                 [disabled]="selectedTabIndex === 7 || (selectedTabIndex === 6 && !isBankDetailsComplete())" 
                    (click)="onNextTabClick()"
                    class="nav-btn next-btn">
                  Next
@@ -2434,19 +2434,16 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     // BANK DETAILS FORM
     this.bankDetailsForm = this.fb.group({
       accountHolder: ['', [
-        Validators.required,
         Validators.minLength(3),
         Validators.maxLength(100)
       ]],
-      accountHolderRelation: ['', [Validators.required]],
+      accountHolderRelation: [''],
       ifscCode: ['', [
-        Validators.required,
         Validators.minLength(11),
         Validators.maxLength(11),
         Validators.pattern(/^[A-Z]{4}0[A-Z0-9]{6}$/)
       ]],
       accountNumber: ['', [
-        Validators.required,
         Validators.minLength(8),
         Validators.maxLength(18),
         Validators.pattern(/^\d{8,18}$/)
@@ -2535,6 +2532,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.setupNameFieldTransformers();
     this.setupManagedEligibilityValidation();
+    this.setupBankDetailsValidation();
     this.setupPincodeLookup();
     this.setupInstituteAutocomplete();
     // Load institutes and streams FIRST, then load profile
@@ -2566,6 +2564,62 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
     issuedControl.valueChanges.pipe(
       takeUntil(this.destroy$)
     ).subscribe((issued) => applyRules(issued));
+  }
+
+  private setupBankDetailsValidation() {
+    const validatorMap: Record<string, any[]> = {
+      accountHolder: [Validators.minLength(3), Validators.maxLength(100)],
+      accountHolderRelation: [],
+      ifscCode: [
+        Validators.minLength(11),
+        Validators.maxLength(11),
+        Validators.pattern(/^[A-Z]{4}0[A-Z0-9]{6}$/)
+      ],
+      accountNumber: [
+        Validators.minLength(8),
+        Validators.maxLength(18),
+        Validators.pattern(/^\d{8,18}$/)
+      ]
+    };
+
+    const applyRules = () => {
+      const requireBankDetails = this.hasAnyBankDetails();
+      Object.entries(validatorMap).forEach(([fieldName, validators]) => {
+        const control = this.bankDetailsForm.get(fieldName);
+        if (!control) return;
+        control.setValidators(requireBankDetails ? [Validators.required, ...validators] : validators);
+        control.updateValueAndValidity({ emitEvent: false });
+      });
+    };
+
+    applyRules();
+    Object.keys(validatorMap).forEach((fieldName) => {
+      this.bankDetailsForm.get(fieldName)?.valueChanges.pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(() => applyRules());
+    });
+  }
+
+  hasAnyBankDetails(): boolean {
+    const value = this.bankDetailsForm?.value || {};
+    return ['accountHolder', 'accountHolderRelation', 'ifscCode', 'accountNumber']
+      .some((fieldName) => String(value[fieldName] ?? '').trim() !== '');
+  }
+
+  isBankDetailsComplete(): boolean {
+    return !this.hasAnyBankDetails() || this.bankDetailsForm.valid;
+  }
+
+  private getManagedBankDetailsPayload() {
+    if (!this.hasAnyBankDetails()) return {};
+
+    const value = this.bankDetailsForm.value;
+    return {
+      accountHolder: String(value.accountHolder || '').trim().toUpperCase() || undefined,
+      accountHolderRelation: String(value.accountHolderRelation || '').trim() || undefined,
+      ifscCode: String(value.ifscCode || '').trim().toUpperCase() || undefined,
+      accountNumber: String(value.accountNumber || '').trim() || undefined
+    };
   }
 
   loadManagedStudents() {
@@ -2634,6 +2688,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
             xithCollege: studentData.previousExams?.find((e: any) => e.examType === 'XI')?.boardOrCollegeName || '',
             xithPercentage: studentData.previousExams?.find((e: any) => e.examType === 'XI')?.percentage || ''
           });
+          this.bankDetailsForm.patchValue({
+            accountHolder: studentData.bankDetails?.accountHolder || '',
+            accountHolderRelation: studentData.bankDetails?.accountHolderRelation || '',
+            ifscCode: studentData.bankDetails?.ifscCode || '',
+            accountNumber: studentData.bankDetails?.accountNumber || studentData.bankDetails?.accountNo || ''
+          });
           this.managedPhotoPreviewUrl = studentData.photoUrl || null;
           this.managedSignaturePreviewUrl = studentData.signatureUrl || null;
           this.managedAadhaarLocked = !!studentData.aadhaar;
@@ -2674,6 +2734,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
             sscPassedFromMaharashtra: student.sscPassedFromMaharashtra ?? null,
             eligibilityCertIssued: student.eligibilityCertIssued ?? null,
             eligibilityCertNo: student.eligibilityCertNo || ''
+          });
+          this.bankDetailsForm.patchValue({
+            accountHolder: student.bankDetails?.accountHolder || '',
+            accountHolderRelation: student.bankDetails?.accountHolderRelation || '',
+            ifscCode: student.bankDetails?.ifscCode || '',
+            accountNumber: student.bankDetails?.accountNumber || student.bankDetails?.accountNo || ''
           });
           this.managedPhotoPreviewUrl = student.photoUrl || null;
           this.managedSignaturePreviewUrl = student.signatureUrl || null;
@@ -2729,6 +2795,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       xithYear: '',
       xithCollege: '',
       xithPercentage: ''
+    });
+    this.bankDetailsForm.reset({
+      accountHolder: '',
+      accountHolderRelation: '',
+      ifscCode: '',
+      accountNumber: ''
     });
     this.managedPhotoPreviewUrl = null;
     this.managedSignaturePreviewUrl = null;
@@ -2795,18 +2867,18 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       firstName: String(rawValue.firstName || '').trim().toUpperCase(),
       middleName: String(rawValue.middleName || '').trim().toUpperCase() || undefined,
       lastName: String(rawValue.lastName || '').trim().toUpperCase(),
-      motherName: String(rawValue.motherName || '').trim() || undefined,
+      motherName: String(rawValue.motherName || '').trim().toUpperCase() || undefined,
       dob: dobValue ? (dobValue instanceof Date ? dobValue.toISOString() : String(dobValue).trim()) : undefined,
       gender: String(rawValue.gender || '').trim() || undefined,
       instituteId: Number(rawValue.instituteId),
       streamCode: String(rawValue.streamCode || '').trim(),
       mobile: String(rawValue.mobile || '').trim() || undefined,
       aadhaar: String(rawValue.aadhaar || '').trim() || undefined,
-      address: String(rawValue.address || '').trim() || undefined,
+      address: String(rawValue.address || '').trim().toUpperCase() || undefined,
       pinCode: String(rawValue.pinCode || '').trim() || undefined,
-      district: String(rawValue.district || '').trim() || undefined,
-      taluka: String(rawValue.taluka || '').trim() || undefined,
-      village: String(rawValue.village || '').trim() || undefined,
+      district: String(rawValue.district || '').trim().toUpperCase() || undefined,
+      taluka: String(rawValue.taluka || '').trim().toUpperCase() || undefined,
+      village: String(rawValue.village || '').trim().toUpperCase() || undefined,
       categoryCode: String(rawValue.categoryCode || '').trim() || undefined,
       minorityReligionCode: String(rawValue.minorityReligionCode || '').trim() || undefined,
       divyangCode: String(rawValue.divyangCode || '').trim() || undefined,
@@ -2823,13 +2895,14 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       sscSeatNo: String(rawValue.sscSeatNo || '').trim() || undefined,
       sscMonth: String(rawValue.sscMonth || '').trim() || undefined,
       sscYear: rawValue.sscYear ? Number(rawValue.sscYear) : undefined,
-      sscBoard: String(rawValue.sscBoard || '').trim() || undefined,
+      sscBoard: String(rawValue.sscBoard || '').trim().toUpperCase() || undefined,
       sscPercentage: String(rawValue.sscPercentage || '').trim() || undefined,
       xithSeatNo: String(rawValue.xithSeatNo || '').trim() || undefined,
       xithMonth: String(rawValue.xithMonth || '').trim() || undefined,
       xithYear: rawValue.xithYear ? Number(rawValue.xithYear) : undefined,
-      xithCollege: String(rawValue.xithCollege || '').trim() || undefined,
-      xithPercentage: String(rawValue.xithPercentage || '').trim() || undefined
+      xithCollege: String(rawValue.xithCollege || '').trim().toUpperCase() || undefined,
+      xithPercentage: String(rawValue.xithPercentage || '').trim() || undefined,
+      ...this.getManagedBankDetailsPayload()
     };
 
     this.managedStudentSaving = true;
@@ -2881,6 +2954,12 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
             xithYear: '',
             xithCollege: '',
             xithPercentage: ''
+          });
+          this.bankDetailsForm.reset({
+            accountHolder: '',
+            accountHolderRelation: '',
+            ifscCode: '',
+            accountNumber: ''
           });
           this.managedPhotoPreviewUrl = null;
           this.managedSignaturePreviewUrl = null;
@@ -3001,7 +3080,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       3: ['address', 'pinCode', 'district', 'taluka', 'village'],
       4: ['categoryCode', 'minorityReligionCode', 'divyangCode', 'mediumCode', 'sscPassedFromMaharashtra', 'eligibilityCertIssued', 'eligibilityCertNo'],
       5: [],
-      6: ['sscSeatNo', 'sscMonth', 'sscYear', 'sscBoard', 'sscPercentage', 'xithSeatNo', 'xithMonth', 'xithYear', 'xithCollege', 'xithPercentage']
+      6: ['accountHolder', 'accountHolderRelation', 'ifscCode', 'accountNumber'],
+      7: ['sscSeatNo', 'sscMonth', 'sscYear', 'sscBoard', 'sscPercentage', 'xithSeatNo', 'xithMonth', 'xithYear', 'xithCollege', 'xithPercentage']
     };
     for (const field of fieldsByTab[tabIndex] || []) {
       this.managedStudentForm.get(field)?.markAsTouched();
@@ -3032,7 +3112,7 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       case 5:
         return !!(this.managedPhotoDataUrl || this.managedPhotoPreviewUrl) && !!(this.managedSignatureDataUrl || this.managedSignaturePreviewUrl);
       case 6:
-        return this.bankDetailsForm.valid;
+        return this.isBankDetailsComplete();
       case 7:
         return filled(value.sscSeatNo) && filled(value.sscMonth) && filled(value.sscYear) && filled(value.sscBoard) && filled(value.sscPercentage)
           && filled(value.xithSeatNo) && filled(value.xithMonth) && filled(value.xithYear) && filled(value.xithCollege) && filled(value.xithPercentage);
@@ -3049,7 +3129,8 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       3: 'पुढे जाण्यापूर्वी पत्ता माहिती पूर्ण भरा.',
       4: 'पुढे जाण्यापूर्वी डेमोग्राफिक माहिती पूर्ण भरा.',
       5: 'पुढे जाण्यापूर्वी फोटो आणि स्वाक्षरी अपलोड करा.',
-      6: 'जतन करण्यापूर्वी मागील परीक्षेची माहिती पूर्ण भरा.'
+      6: 'बँक तपशील वैकल्पिक आहेत. काही भरल्यास सर्व बँक तपशील योग्य भरा.',
+      7: 'जतन करण्यापूर्वी मागील परीक्षेची माहिती पूर्ण भरा.'
     };
     return messages[tabIndex] || 'कृपया आवश्यक माहिती भरा.';
   }
@@ -3191,6 +3272,22 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
   private setupNameFieldTransformers() {
     const nameFields = ['lastName', 'firstName', 'middleName', 'motherName'];
     const seatFields = ['sscSeatNo', 'xithSeatNo'];
+    const managedUppercaseFields = [
+      'lastName',
+      'firstName',
+      'middleName',
+      'motherName',
+      'address',
+      'district',
+      'taluka',
+      'village',
+      'apaarId',
+      'studentSaralId',
+      'sscSeatNo',
+      'sscBoard',
+      'xithSeatNo',
+      'xithCollege'
+    ];
 
     // Uppercase transformers for name fields
     nameFields.forEach(fieldName => {
@@ -3220,6 +3317,19 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       }
     });
 
+    managedUppercaseFields.forEach(fieldName => {
+      const control = this.managedStudentForm.get(fieldName);
+      if (control) {
+        control.valueChanges.pipe(
+          takeUntil(this.destroy$)
+        ).subscribe(value => {
+          if (value && value !== value.toUpperCase()) {
+            control.setValue(value.toUpperCase(), { emitEvent: false });
+          }
+        });
+      }
+    });
+
     // Uppercase IFSC while typing so validation passes for lowercase input too
     const ifscControl = this.bankDetailsForm.get('ifscCode');
     if (ifscControl) {
@@ -3228,6 +3338,17 @@ export class StudentProfileComponent implements OnInit, OnDestroy {
       ).subscribe(value => {
         if (value && value !== value.toUpperCase()) {
           ifscControl.setValue(value.toUpperCase(), { emitEvent: false });
+        }
+      });
+    }
+
+    const accountHolderControl = this.bankDetailsForm.get('accountHolder');
+    if (accountHolderControl) {
+      accountHolderControl.valueChanges.pipe(
+        takeUntil(this.destroy$)
+      ).subscribe(value => {
+        if (value && value !== value.toUpperCase()) {
+          accountHolderControl.setValue(value.toUpperCase(), { emitEvent: false });
         }
       });
     }

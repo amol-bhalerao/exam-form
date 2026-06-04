@@ -198,8 +198,19 @@ studentsRouter.get('/managed/:id', requireAuth, async (req, res) => {
     const student = await getAccessibleStudentById(userId, studentId);
     if (!student) return res.status(404).json({ error: 'STUDENT_NOT_FOUND' });
 
-    const studentWithAssets = await attachStudentAssets(student);
-    return res.json({ ok: true, student: studentWithAssets });
+    const [studentWithAssets, bankDetails] = await Promise.all([
+      attachStudentAssets(student),
+      prisma.feeReimbursement.findUnique({ where: { studentId: student.id } })
+    ]);
+    return res.json({
+      ok: true,
+      student: {
+        ...studentWithAssets,
+        bankDetails: bankDetails
+          ? { ...bankDetails, accountNumber: bankDetails.accountNo ?? null }
+          : null
+      }
+    });
   } catch (err) {
     console.error('Get managed student by id error:', err);
     if (err.name === 'ZodError') {
