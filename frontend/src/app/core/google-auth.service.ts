@@ -159,6 +159,30 @@ export class GoogleAuthService {
     return this.authService.googleLogin(token);
   }
 
+  getGoogleRedirectUrl(returnUrl = '') {
+    const redirectUri = `${window.location.origin}/google-login`;
+    const nonce = this.createNonce();
+    sessionStorage.setItem('google_oauth_nonce', nonce);
+
+    const params = new URLSearchParams({
+      client_id: this.googleClientId,
+      redirect_uri: redirectUri,
+      response_type: 'id_token',
+      scope: 'openid profile email',
+      nonce,
+      prompt: 'select_account',
+      state: returnUrl || ''
+    });
+
+    return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+  }
+
+  private createNonce() {
+    const bytes = new Uint8Array(16);
+    window.crypto.getRandomValues(bytes);
+    return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+
   // Check if user is logged in - expose as signal/computed
   readonly isLoggedIn = computed(() => this.authService.isLoggedIn());
 

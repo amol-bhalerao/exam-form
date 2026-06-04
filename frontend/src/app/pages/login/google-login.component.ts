@@ -54,6 +54,13 @@ import { rateLimiter } from '../../core/rate-limiter';
             <!-- Google Sign-In Button -->
             <div class="google-signin-container">
               <div id="google-signin-button" class="google-button-wrapper"></div>
+              <button mat-stroked-button type="button" class="google-redirect-btn" (click)="continueWithGoogleRedirect()">
+                <mat-icon>open_in_new</mat-icon>
+                Google login in same tab
+              </button>
+              <p class="popup-help">
+                If the popup does not open, use the same-tab login above.
+              </p>
               @if (loading()) {
                 <div class="loading-spinner">
                   <mat-spinner diameter="40"></mat-spinner>
@@ -301,12 +308,36 @@ import { rateLimiter } from '../../core/rate-limiter';
       margin: 20px 0;
       min-height: 60px;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
+      gap: 12px;
     }
 
     .google-button-wrapper {
       display: inline-block;
+    }
+
+    .google-redirect-btn {
+      border-color: #d7e1ea;
+      color: #143047;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 0 18px;
+      min-height: 42px;
+      background: #fff;
+    }
+
+    .google-redirect-btn mat-icon {
+      margin-right: 6px;
+      color: #0f5f6f;
+    }
+
+    .popup-help {
+      margin: 0;
+      color: #64748b;
+      font-size: 0.82rem;
+      line-height: 1.35;
     }
 
     .loading-spinner {
@@ -559,6 +590,10 @@ export class GoogleLoginComponent implements OnInit {
   private returnUrl = '';
 
   ngOnInit() {
+    if (this.handleGoogleRedirectResponse()) {
+      return;
+    }
+
     // Check if already logged in
     if (this.googleAuth.isLoggedIn()) {
       // Clear rate limiter when already logged in
@@ -608,6 +643,48 @@ export class GoogleLoginComponent implements OnInit {
         this.loading.set(false);
       }
     );
+  }
+
+  continueWithGoogleRedirect() {
+    if (rateLimiter.isBlocked('login')) {
+      this.errorMessage.set(rateLimiter.getThrottleMessage('login'));
+      return;
+    }
+
+    this.loading.set(true);
+    this.errorMessage.set(null);
+    window.location.href = this.googleAuth.getGoogleRedirectUrl(this.returnUrl);
+  }
+
+  private handleGoogleRedirectResponse() {
+    if (!window.location.hash.includes('id_token=')) return false;
+
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const credential = params.get('id_token');
+    this.returnUrl = params.get('state') || this.route.snapshot.queryParams['returnUrl'] || '';
+
+    if (!credential) {
+      this.errorMessage.set('Google did not return a valid login token. Please try again.');
+      return true;
+    }
+
+    this.loading.set(true);
+    this.errorMessage.set(null);
+    window.history.replaceState({}, document.title, window.location.pathname);
+    this.googleAuth.handleGoogleSignIn(credential).subscribe({
+      next: () => {
+        rateLimiter.recordSuccess('login');
+        this.loading.set(false);
+        this.navigateToAppropriateLocation();
+      },
+      error: (err) => {
+        rateLimiter.recordFailure('login');
+        this.loading.set(false);
+        this.errorMessage.set(err?.error?.message ?? err?.error?.error ?? 'Google sign-in failed. Please try again.');
+      }
+    });
+
+    return true;
   }
 
   /**
