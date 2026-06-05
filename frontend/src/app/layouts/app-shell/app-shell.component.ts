@@ -88,7 +88,6 @@ import { API_BASE_URL } from '../../core/api';
             <a mat-list-item routerLink="/app/board/teachers" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">groups</mat-icon><span class="label">Teachers</span></a>
             <a mat-list-item routerLink="/app/board/subjects" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">auto_stories</mat-icon><span class="label">Subjects</span></a>
             <a mat-list-item routerLink="/app/board/streams" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">branch</mat-icon><span class="label">Streams</span></a>
-            <a mat-list-item routerLink="/app/board/payments" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">payments</mat-icon><span class="label">Payments</span></a>
           }
 
           @if (role() === 'INSTITUTE') {

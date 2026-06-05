@@ -69,7 +69,7 @@ import { BrandingService } from '../core/branding.service';
         <div>
           <span class="eyebrow light">Board Value</span>
           <h2>Board users get operational control, not only reports.</h2>
-          <p>बोर्ड वापरकर्त्यांना परीक्षा सत्र, अर्ज स्थिती, पेमेंट, संस्था आणि पडताळणी यावर नियंत्रण मिळते.</p>
+          <p>बोर्ड वापरकर्त्यांना परीक्षा सत्र, अर्ज स्थिती, संस्था आणि पडताळणी यावर नियंत्रण मिळते.</p>
         </div>
         <div class="value-list">
           <div *ngFor="let item of boardValue">
@@ -858,7 +858,7 @@ export class BoardPresentationLandingComponent {
   readonly boardValue = [
     'Create and manage HSC / SSC exam sessions | HSC / SSC परीक्षा सत्र व्यवस्थापन',
     'Monitor submitted applications and verification status | अर्ज व पडताळणी स्थिती निरीक्षण',
-    'Track payments, receipts and printable forms | पेमेंट, पावती आणि प्रिंट फॉर्म ट्रॅकिंग',
+    'Review institute dashboard and district-wise status | संस्था डॅशबोर्ड आणि जिल्हानिहाय स्थिती पाहणे',
     'Publish news, notices and exam updates | सूचना, बातम्या आणि अपडेट्स प्रसिद्ध करणे'
   ];
 

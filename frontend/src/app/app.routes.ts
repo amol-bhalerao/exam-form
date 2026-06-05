@@ -120,7 +120,6 @@ export const routes: Routes = [
       { path: 'board/teachers', component: BoardTeachersComponent, canActivate: [roleGuard(['BOARD'])] },
       { path: 'board/subjects', component: BoardSubjectsComponent, canActivate: [roleGuard(['BOARD'])] },
       { path: 'board/streams', component: BoardStreamsComponent, canActivate: [roleGuard(['BOARD'])] },
-      { path: 'board/payments', component: SuperPaymentsDashboardComponent, canActivate: [roleGuard(['BOARD'])] },
 
       // INSTITUTE
       { path: 'institute/applications', component: InstituteApplicationsComponent, canActivate: [roleGuard(['INSTITUTE'])] },

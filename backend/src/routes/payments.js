@@ -528,9 +528,9 @@ paymentsRouter.get('/status/:applicationId', requireAuth, async (req, res) => {
 
 /**
  * GET /api/payments/dashboard
- * Board/Super admin payment analytics with filters.
+ * Super admin payment analytics with filters.
  */
-paymentsRouter.get('/dashboard', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
+paymentsRouter.get('/dashboard', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
   const dashboard = await getDashboardPayments(req.query ?? {});
 
   return res.json({
@@ -545,7 +545,7 @@ paymentsRouter.get('/dashboard', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN
  * GET /api/payments/dashboard/export
  * Export filtered payment rows as CSV.
  */
-paymentsRouter.get('/dashboard/export', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
+paymentsRouter.get('/dashboard/export', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
   const dashboard = await getDashboardPayments(req.query ?? {});
   const rows = dashboard.rawRows || [];
 
