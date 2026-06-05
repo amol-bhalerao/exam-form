@@ -3,6 +3,7 @@ import { prisma } from '../prisma.js';
 import { env } from '../env.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
 import { importCollegesFromFile } from '../services/college-import-service.js';
+import { enrichExamsWithBoardType, enrichInstitutesWithBoardType, normalizeBoardType } from '../utils/board-scope.js';
 
 export const adminRouter = Router();
 
@@ -391,10 +392,26 @@ adminRouter.get('/overview', requireAuth, requireRole(['SUPER_ADMIN']), async (_
       prisma.teacher.count()
     ]);
 
-    const [applicationsByStatus, institutesByStatus] = await Promise.all([
+    const [applicationsByStatus, institutesByStatus, instituteRows, examRows, applicationRows] = await Promise.all([
       prisma.examApplication.groupBy({ by: ['status'], _count: { id: true } }),
-      prisma.institute.groupBy({ by: ['status'], _count: { id: true } })
+      prisma.institute.groupBy({ by: ['status'], _count: { id: true } }),
+      prisma.institute.findMany({ select: { id: true, name: true } }),
+      prisma.exam.findMany({ select: { id: true, name: true } }),
+      prisma.examApplication.findMany({ select: { id: true, examId: true } })
     ]);
+    const institutesWithBoard = await enrichInstitutesWithBoardType(instituteRows);
+    const examsWithBoard = await enrichExamsWithBoardType(examRows);
+    const examsById = new Map(examsWithBoard.map((exam) => [Number(exam.id), normalizeBoardType(exam.boardType)]));
+    const byBoardType = {
+      institutes: { HSC: 0, SSC: 0 },
+      exams: { HSC: 0, SSC: 0 },
+      applications: { HSC: 0, SSC: 0 }
+    };
+    for (const institute of institutesWithBoard) byBoardType.institutes[normalizeBoardType(institute.boardType)] += 1;
+    for (const exam of examsWithBoard) byBoardType.exams[normalizeBoardType(exam.boardType)] += 1;
+    for (const application of applicationRows) {
+      byBoardType.applications[examsById.get(Number(application.examId)) || 'HSC'] += 1;
+    }
 
     return res.json({
       summary: {
@@ -411,7 +428,7 @@ adminRouter.get('/overview', requireAuth, requireRole(['SUPER_ADMIN']), async (_
         totalStudents,
         totalTeachers
       },
-      distributions: { applicationsByStatus, institutesByStatus },
+      distributions: { applicationsByStatus, institutesByStatus, byBoardType },
       generatedAt: new Date().toISOString()
     });
   } catch (error) {

@@ -22,6 +22,7 @@ type DashboardData = {
     totalCollectedRupees: number;
   };
   grouped: {
+    byBoardType: GroupRow[];
     byDistrict: GroupRow[];
     byInstitute: GroupRow[];
     byExam: GroupRow[];
@@ -44,6 +45,15 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
           <div class="sub">Collection, failures, and payment trends by district, institute, and exam.</div>
         </div>
         <div class="filter-row">
+          <mat-form-field appearance="outline" class="status-filter">
+            <mat-label>Board</mat-label>
+            <mat-select [value]="boardFilter()" (selectionChange)="changeBoard($event.value)">
+              <mat-option value="ALL">All HSC / SSC</mat-option>
+              <mat-option value="HSC">HSC</mat-option>
+              <mat-option value="SSC">SSC</mat-option>
+            </mat-select>
+          </mat-form-field>
+
           <mat-form-field appearance="outline" class="status-filter">
             <mat-label>Status</mat-label>
             <mat-select [value]="statusFilter()" (selectionChange)="changeStatus($event.value)">
@@ -93,6 +103,14 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
         <div class="kpi fail"><span>Failed</span><strong>{{ d.summary.failedCount }}</strong></div>
         <div class="kpi pending"><span>Pending</span><strong>{{ d.summary.pendingCount }}</strong></div>
         <div class="kpi collect"><span>Total Collected</span><strong>INR {{ d.summary.totalCollectedRupees | number:'1.2-2' }}</strong></div>
+      </div>
+
+      <div class="board-group-grid" *ngIf="boardGroups().length">
+        <div class="board-group-card" *ngFor="let row of boardGroups()">
+          <span>{{ row.label }} Collection</span>
+          <strong>INR {{ row.amountPaise / 100 | number:'1.2-2' }}</strong>
+          <small>{{ row.count }} successful payments</small>
+        </div>
       </div>
     </mat-card>
 
@@ -171,6 +189,11 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
     .kpi.pending { border-color: #fde68a; }
     .kpi.collect { border-color: #93c5fd; }
 
+    .board-group-grid { margin-top: 10px; display: grid; gap: 8px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .board-group-card { border: 1px solid #bfdbfe; border-radius: 12px; padding: 10px 12px; background: linear-gradient(135deg, #eff6ff, #ffffff); }
+    .board-group-card span, .board-group-card small { display: block; color: #64748b; font-weight: 700; }
+    .board-group-card strong { display: block; margin: 5px 0 2px; color: #1e3a8a; font-size: 1rem; }
+
     .grid-two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .section-title { font-size: 0.94rem; font-weight: 700; color: #1f2937; margin-bottom: 8px; }
     .mini-table-wrap { overflow: auto; border: 1px solid #e5e7eb; border-radius: 10px; }
@@ -181,6 +204,7 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
 
     @media (max-width: 980px) {
       .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .board-group-grid { grid-template-columns: 1fr; }
       .grid-two { grid-template-columns: 1fr; }
       .filter-row { align-items: stretch; }
       .filter-row > button { width: 100%; }
@@ -195,6 +219,7 @@ type ExamOption = { id: number; name: string; session: string; academicYear: str
 export class SuperPaymentsDashboardComponent implements OnInit {
   readonly data = signal<DashboardData | null>(null);
   readonly statusFilter = signal<'ALL' | 'SUCCESS' | 'FAILED' | 'PENDING'>('ALL');
+  readonly boardFilter = signal<'ALL' | 'HSC' | 'SSC'>('ALL');
   readonly districtFilter = signal<string>('ALL');
   readonly examFilter = signal<number | 'ALL'>('ALL');
   readonly fromDate = signal<string>('');
@@ -202,6 +227,7 @@ export class SuperPaymentsDashboardComponent implements OnInit {
   readonly exams = signal<ExamOption[]>([]);
 
   readonly districtOptions = computed(() => (this.data()?.grouped?.byDistrict || []).map((x) => x.label).filter(Boolean));
+  readonly boardGroups = computed(() => (this.data()?.grouped?.byBoardType || []).slice(0, 2));
   readonly topDistricts = computed(() => (this.data()?.grouped?.byDistrict || []).slice(0, 10));
   readonly topExams = computed(() => (this.data()?.grouped?.byExam || []).slice(0, 10));
   readonly failedRows = computed(() => (this.data()?.failedPayments || []).slice(0, 100));
@@ -215,6 +241,11 @@ export class SuperPaymentsDashboardComponent implements OnInit {
 
   changeStatus(value: 'ALL' | 'SUCCESS' | 'FAILED' | 'PENDING'): void {
     this.statusFilter.set(value || 'ALL');
+    this.loadData();
+  }
+
+  changeBoard(value: 'ALL' | 'HSC' | 'SSC'): void {
+    this.boardFilter.set(value || 'ALL');
     this.loadData();
   }
 
@@ -280,6 +311,9 @@ export class SuperPaymentsDashboardComponent implements OnInit {
     const query = new URLSearchParams();
     if (this.statusFilter() !== 'ALL') {
       query.set('status', this.statusFilter());
+    }
+    if (this.boardFilter() !== 'ALL') {
+      query.set('boardType', this.boardFilter());
     }
     if (this.districtFilter() !== 'ALL') {
       query.set('district', this.districtFilter());

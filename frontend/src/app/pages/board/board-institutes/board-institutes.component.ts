@@ -124,6 +124,24 @@ type Dashboard = {
         </mat-card>
       </div>
 
+      @if (dashboard()?.boardType === 'ALL') {
+        <mat-card class="board-split-panel">
+          <div class="panel-title">
+            <mat-icon>hub</mat-icon>
+            Board-wise Institute Grouping
+          </div>
+          <div class="board-split-grid">
+            @for (item of boardTypeBreakdown(); track item.type) {
+              <div class="board-split-card">
+                <span>{{ item.type }} Institutes</span>
+                <strong>{{ item.count }}</strong>
+                <small>{{ boardPercentage(item.count) }}% of total</small>
+              </div>
+            }
+          </div>
+        </mat-card>
+      }
+
       <div class="insight-grid">
         <mat-card class="panel">
           <div class="panel-title">
@@ -374,6 +392,7 @@ type Dashboard = {
 
     .panel,
     .registration-panel,
+    .board-split-panel,
     .table-panel,
     .error-card {
       padding: 18px;
@@ -402,6 +421,42 @@ type Dashboard = {
       color: #1f2343;
       font-size: 15px;
       font-weight: 900;
+    }
+
+    .board-split-panel {
+      background:
+        radial-gradient(circle at 95% 20%, rgba(102, 126, 234, 0.12), transparent 24%),
+        #fff;
+    }
+
+    .board-split-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .board-split-card {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid #dbeafe;
+      background: linear-gradient(135deg, #eff6ff, #ffffff);
+    }
+
+    .board-split-card span,
+    .board-split-card small {
+      display: block;
+      color: #64748b;
+      font-weight: 800;
+    }
+
+    .board-split-card strong {
+      display: block;
+      margin: 8px 0 3px;
+      color: #1e3a8a;
+      font-size: 34px;
+      line-height: 1;
+      letter-spacing: -0.05em;
     }
 
     .registration-panel {
@@ -620,6 +675,7 @@ type Dashboard = {
 
       .summary-grid,
       .insight-grid,
+      .board-split-grid,
       .filters {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -629,6 +685,7 @@ type Dashboard = {
       .summary-grid,
       .insight-grid,
       .filters,
+      .board-split-grid,
       .district-list {
         grid-template-columns: 1fr;
       }
@@ -755,5 +812,11 @@ export class BoardInstitutesComponent implements OnInit {
 
   refreshFilters(): void {
     this.filterVersion.update((value) => value + 1);
+  }
+
+  boardPercentage(count: number): string {
+    const total = this.dashboard()?.total || 0;
+    if (!total) return '0';
+    return ((Number(count || 0) / total) * 100).toFixed(1);
   }
 }

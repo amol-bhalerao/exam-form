@@ -1143,7 +1143,13 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           totalStudents: number;
           totalTeachers: number;
         };
-        distributions?: { institutesByStatus?: { status: string; _count: { id: number } }[] };
+        distributions?: {
+          institutesByStatus?: { status: string; _count: { id: number } }[];
+          byBoardType?: {
+            institutes?: { HSC?: number; SSC?: number };
+            applications?: { HSC?: number; SSC?: number };
+          };
+        };
       }>(`${API_BASE_URL}/admin/overview`).subscribe({
         next: (r) => {
           const s = r.summary;
@@ -1151,6 +1157,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           const disabled = dist.find((d) => d.status === 'DISABLED')?._count?.id ?? 0;
           this.statCards.update((c) => [...c,
             { label: 'Total Institutes', value: s.totalInstitutes, icon: 'account_balance', gradient: 'gradient-blue', link: '/app/super/institutes', delta: `${s.approvedInstitutes} active`, deltaPos: true },
+            { label: 'HSC Institutes', value: r.distributions?.byBoardType?.institutes?.HSC ?? 0, icon: 'school', gradient: 'gradient-indigo', link: '/app/super/institute-dashboard' },
+            { label: 'SSC Institutes', value: r.distributions?.byBoardType?.institutes?.SSC ?? 0, icon: 'domain', gradient: 'gradient-cyan', link: '/app/super/institute-dashboard' },
             { label: 'Pending Approval', value: s.pendingInstitutes, icon: 'pending_actions', gradient: 'gradient-amber', link: '/app/super/institute-users' },
             { label: 'Institute Verified', value: s.instituteVerifiedApplications, icon: 'fact_check', gradient: 'gradient-cyan', link: '/app/board/applications' },
             { label: 'Board Approved', value: s.boardApprovedApplications, icon: 'verified', gradient: 'gradient-green', link: '/app/board/applications' }

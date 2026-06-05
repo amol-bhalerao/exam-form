@@ -4,6 +4,7 @@ import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
 import { writeAuditLog } from '../middleware/audit-log.js';
 import { env } from '../env.js';
+import { enrichExamsWithBoardType, enrichInstitutesWithBoardType, normalizeBoardType } from '../utils/board-scope.js';
 
 export const paymentsRouter = Router();
 
@@ -68,6 +69,7 @@ function ensureCashfreeReady() {
 function parseDashboardQuery(query = {}) {
   const parsed = z.object({
     status: z.enum(['SUCCESS', 'FAILED', 'PENDING', 'NOT_INITIATED']).optional(),
+    boardType: z.enum(['HSC', 'SSC']).optional(),
     examId: z.coerce.number().int().positive().optional(),
     instituteId: z.coerce.number().int().positive().optional(),
     district: z.string().optional(),
@@ -120,13 +122,42 @@ async function getDashboardPayments(query) {
     take: 2000
   });
 
+  const uniqueInstitutes = [
+    ...new Map(payments
+      .map((payment) => payment.application?.institute)
+      .filter(Boolean)
+      .map((institute) => [Number(institute.id), institute])).values()
+  ];
+  const uniqueExams = [
+    ...new Map(payments
+      .map((payment) => payment.application?.exam)
+      .filter(Boolean)
+      .map((exam) => [Number(exam.id), exam])).values()
+  ];
+  const instituteBoardById = new Map((await enrichInstitutesWithBoardType(uniqueInstitutes))
+    .map((institute) => [Number(institute.id), normalizeBoardType(institute.boardType)]));
+  const examBoardById = new Map((await enrichExamsWithBoardType(uniqueExams))
+    .map((exam) => [Number(exam.id), normalizeBoardType(exam.boardType)]));
+
   const enriched = payments
-    .map((payment) => ({
-      ...payment,
-      createdAt: payment.receivedAt,
-      status: getPaymentStatus(payment)
-    }))
-    .filter((payment) => (params.status ? payment.status === params.status : true));
+    .map((payment) => {
+      const instituteId = Number(payment.application?.institute?.id);
+      const examId = Number(payment.application?.exam?.id);
+      const boardType = instituteBoardById.get(instituteId) || examBoardById.get(examId) || 'HSC';
+      return {
+        ...payment,
+        boardType,
+        createdAt: payment.receivedAt,
+        status: getPaymentStatus(payment),
+        application: {
+          ...payment.application,
+          institute: payment.application?.institute ? { ...payment.application.institute, boardType } : payment.application?.institute,
+          exam: payment.application?.exam ? { ...payment.application.exam, boardType: examBoardById.get(examId) || boardType } : payment.application?.exam
+        }
+      };
+    })
+    .filter((payment) => (params.status ? payment.status === params.status : true))
+    .filter((payment) => (params.boardType ? payment.boardType === params.boardType : true));
 
   const success = enriched.filter((payment) => payment.status === 'SUCCESS');
   const failed = enriched.filter((payment) => payment.status === 'FAILED');
@@ -142,6 +173,7 @@ async function getDashboardPayments(query) {
       totalCollectedRupees: success.reduce((sum, payment) => sum + Number(payment.amountPaise || 0), 0) / 100
     },
     grouped: {
+      byBoardType: groupedCounts(success, (payment) => payment.boardType || 'HSC'),
       byDistrict: groupedCounts(success, (payment) => payment.application?.institute?.district || 'Unknown'),
       byInstitute: groupedCounts(success, (payment) => payment.application?.institute?.name || 'Unknown'),
       byExam: groupedCounts(success, (payment) => {
@@ -551,6 +583,7 @@ paymentsRouter.get('/dashboard/export', requireAuth, requireRole(['SUPER_ADMIN']
 
   const headers = [
     'paymentId',
+    'boardType',
     'status',
     'paymentDate',
     'amountRupees',
@@ -573,6 +606,7 @@ paymentsRouter.get('/dashboard/export', requireAuth, requireRole(['SUPER_ADMIN']
     const studentName = [row.application?.student?.firstName, row.application?.student?.lastName].filter(Boolean).join(' ').trim();
     const values = [
       row.id,
+      row.boardType || '',
       row.status,
       row.receivedAt ? new Date(row.receivedAt).toISOString() : '',
       (Number(row.amountPaise || 0) / 100).toFixed(2),
