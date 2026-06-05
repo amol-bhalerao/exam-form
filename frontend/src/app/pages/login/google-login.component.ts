@@ -40,7 +40,7 @@ import { rateLimiter } from '../../core/rate-limiter';
         <div class="board-branding">
           <img [src]="branding.getLogoUrl()" alt="Board Logo" class="board-logo-large" />
           <h1 class="board-title">{{ i18n.t('boardName') }}</h1>
-          <p class="board-subtitle">{{ branding.getBoardNameShort() }}</p>
+          <p class="board-subtitle">Student Login | विद्यार्थी लॉगिन</p>
         </div>
 
         <!-- Login Card -->
@@ -52,6 +52,21 @@ import { rateLimiter } from '../../core/rate-limiter';
 
           <mat-card-content>
             <!-- Google Sign-In Button -->
+            <div class="student-instructions">
+              <div>
+                <mat-icon>account_circle</mat-icon>
+                <span>Login with your own Google account. आपल्या स्वतःच्या Google खात्याने लॉगिन करा.</span>
+              </div>
+              <div>
+                <mat-icon>edit_document</mat-icon>
+                <span>Complete profile first, then select HSC/SSC exam and institute. आधी प्रोफाइल पूर्ण करा, नंतर परीक्षा व संस्था निवडा.</span>
+              </div>
+              <div>
+                <mat-icon>print</mat-icon>
+                <span>Print form after payment/submission and institute verification. पेमेंट/सबमिशन व संस्था पडताळणीनंतर प्रिंट घ्या.</span>
+              </div>
+            </div>
+
             <div class="google-signin-container">
               <div id="google-signin-button" class="google-button-wrapper"></div>
               <button mat-stroked-button type="button" class="google-redirect-btn" (click)="continueWithGoogleRedirect()">
@@ -59,7 +74,7 @@ import { rateLimiter } from '../../core/rate-limiter';
                 Google login in same tab
               </button>
               <p class="popup-help">
-                If the popup does not open, use the same-tab login above.
+                If the popup does not open, use the same-tab login above. पॉपअप न उघडल्यास वरील same-tab login वापरा.
               </p>
               @if (loading()) {
                 <div class="loading-spinner">
@@ -96,6 +111,7 @@ import { rateLimiter } from '../../core/rate-limiter';
                 <h3>{{ i18n.t('loginRequired') }}</h3>
                 <p>आपण परीक्षा फॉर्म भरण्याआधी आपल्या Google खात्याद्वारे लॉगिन करणे आवश्यक आहे.</p>
                 <p class="english-info">You must login with your Google account before filling the exam form.</p>
+                <p class="english-info">Help: mail.hscinfo&#64;gmail.com</p>
               </div>
             </div>
           </mat-card-content>
@@ -103,7 +119,7 @@ import { rateLimiter } from '../../core/rate-limiter';
           <mat-card-footer class="login-footer">
             <p class="security-note">
               <mat-icon>lock</mat-icon>
-              आपले डेटा सुरक्षित आहे। आम्ही केवळ आपल्या ई-मेल आणि नाव वापरतो।
+              आपला डेटा सुरक्षित आहे. We use your account only for secure student login.
             </p>
           </mat-card-footer>
         </mat-card>
@@ -120,7 +136,7 @@ import { rateLimiter } from '../../core/rate-limiter';
             <div class="feature-card">
               <mat-icon class="feature-icon">language</mat-icon>
               <h3>बहुभाषिक</h3>
-              <p>मराठी आणि अंग्रेजी समर्थित</p>
+              <p>मराठी आणि इंग्रजी समर्थित</p>
             </div>
             <div class="feature-card">
               <mat-icon class="feature-icon">print</mat-icon>
@@ -144,9 +160,9 @@ import { rateLimiter } from '../../core/rate-limiter';
       align-items: center;
       justify-content: center;
       background:
-        radial-gradient(circle at 12% 14%, rgba(242, 169, 59, 0.32), transparent 28%),
-        radial-gradient(circle at 88% 16%, rgba(93, 183, 159, 0.26), transparent 30%),
-        linear-gradient(135deg, #102a43 0%, #0f5f6f 58%, #7a4b17 100%);
+        radial-gradient(circle at 12% 14%, rgba(255, 255, 255, 0.18), transparent 28%),
+        radial-gradient(circle at 88% 16%, rgba(255, 255, 255, 0.14), transparent 30%),
+        linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       position: relative;
       overflow: hidden;
       padding: 20px;
@@ -243,7 +259,10 @@ import { rateLimiter } from '../../core/rate-limiter';
       width: 80px;
       height: 80px;
       margin-bottom: 16px;
-      filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 24px 54px rgba(0, 0, 0, 0.22);
+      padding: 8px;
     }
 
     .board-title {
@@ -267,6 +286,14 @@ import { rateLimiter } from '../../core/rate-limiter';
       background: rgba(255, 255, 255, 0.92);
       backdrop-filter: blur(16px);
       animation: slideIn 0.7s ease-out 0.2s both;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: '';
+      display: block;
+      height: 4px;
+      background: linear-gradient(90deg, #4caf50 0%, #45a049 100%);
     }
 
     @keyframes slideIn {
@@ -301,6 +328,33 @@ import { rateLimiter } from '../../core/rate-limiter';
 
     mat-card-content {
       padding: 24px;
+    }
+
+    .student-instructions {
+      display: grid;
+      gap: 10px;
+      margin: 0 0 18px;
+    }
+
+    .student-instructions div {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 12px;
+      border-radius: 14px;
+      background: #f5f7ff;
+      color: #4b5563;
+      font-size: 0.86rem;
+      line-height: 1.45;
+      font-weight: 650;
+    }
+
+    .student-instructions mat-icon {
+      width: 21px;
+      height: 21px;
+      font-size: 21px;
+      color: #667eea;
     }
 
     .google-signin-container {

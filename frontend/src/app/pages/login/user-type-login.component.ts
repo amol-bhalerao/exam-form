@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { I18nService } from '../../core/i18n.service';
+import { BrandingService } from '../../core/branding.service';
 
 @Component({
   selector: 'app-user-type-login',
@@ -12,9 +13,19 @@ import { I18nService } from '../../core/i18n.service';
   imports: [CommonModule, MatButtonModule, MatCardModule, MatIconModule],
   template: `
     <div class="user-type-container">
+      <div class="ambient-shape shape-one"></div>
+      <div class="ambient-shape shape-two"></div>
+
       <div class="header">
+        <img [src]="branding.getLogoUrl()" alt="HSC Exam Portal Logo" class="header-logo" />
+        <span class="eyebrow">HSC / SSC Exam Portal</span>
         <h1>{{ i18n.t('selectUserType') || 'Select Login Type' }}</h1>
-        <p class="subtitle">{{ i18n.t('chooseYourRoleToLogin') || 'Choose your role to login' }}</p>
+        <p class="subtitle">Choose the correct login for your role. आपल्या भूमिकेनुसार योग्य लॉगिन निवडा.</p>
+        <div class="login-instructions">
+          <div><mat-icon>school</mat-icon><span>Students can fill profiles, apply for active exams, pay fees, and print verified forms. विद्यार्थी प्रोफाइल, अर्ज, पेमेंट आणि प्रिंट प्रक्रिया करू शकतात.</span></div>
+          <div><mat-icon>apartment</mat-icon><span>Institutes must complete setup first: details, teachers, subject mapping, and capacity. संस्थांनी प्रथम माहिती, शिक्षक, विषय आणि क्षमता सेट करावी.</span></div>
+          <div><mat-icon>admin_panel_settings</mat-icon><span>Board users manage exams, institutes, applications, and reports for their own board only. बोर्ड वापरकर्ते त्यांच्या बोर्डचा डेटा व्यवस्थापित करतात.</span></div>
+        </div>
       </div>
 
       <div class="login-cards">
@@ -23,11 +34,11 @@ import { I18nService } from '../../core/i18n.service';
             <mat-icon class="large-icon">school</mat-icon>
           </div>
           <h2>Student</h2>
-          <p class="description">Fill exam form and apply for exams</p>
+          <p class="description">Fill exam form and apply for exams. परीक्षा अर्ज भरा आणि स्थिती तपासा.</p>
           <div class="features">
             <div class="feature">
               <mat-icon>check_circle</mat-icon>
-              <span>Fill exam form</span>
+              <span>Profile and exam form</span>
             </div>
             <div class="feature">
               <mat-icon>check_circle</mat-icon>
@@ -35,7 +46,7 @@ import { I18nService } from '../../core/i18n.service';
             </div>
             <div class="feature">
               <mat-icon>check_circle</mat-icon>
-              <span>Quick registration</span>
+              <span>Payment and print form</span>
             </div>
           </div>
           <button mat-raised-button color="primary" class="full-width" (click)="navigateTo('/google-login')">
@@ -49,19 +60,19 @@ import { I18nService } from '../../core/i18n.service';
             <mat-icon class="large-icon">apartment</mat-icon>
           </div>
           <h2>Institute</h2>
-          <p class="description">Manage institute and applications</p>
+          <p class="description">Manage institute setup and student applications. संस्था सेटअप आणि अर्ज पडताळणी करा.</p>
           <div class="features">
             <div class="feature">
               <mat-icon>check_circle</mat-icon>
-              <span>View applications</span>
+              <span>Institute details setup</span>
             </div>
             <div class="feature">
               <mat-icon>check_circle</mat-icon>
-              <span>Manage streams</span>
+              <span>Teachers and subjects</span>
             </div>
             <div class="feature">
               <mat-icon>check_circle</mat-icon>
-              <span>Add teachers</span>
+              <span>Verify applications</span>
             </div>
           </div>
           <button mat-raised-button color="accent" class="full-width" (click)="navigateTo('/institute-login')">
@@ -75,7 +86,7 @@ import { I18nService } from '../../core/i18n.service';
             <mat-icon class="large-icon">admin_panel_settings</mat-icon>
           </div>
           <h2>Board</h2>
-          <p class="description">Manage exams and student applications</p>
+          <p class="description">Manage board exams, institutes, and reports. बोर्ड परीक्षा, संस्था आणि अहवाल व्यवस्थापित करा.</p>
           <div class="features">
             <div class="feature">
               <mat-icon>check_circle</mat-icon>
@@ -87,7 +98,7 @@ import { I18nService } from '../../core/i18n.service';
             </div>
             <div class="feature">
               <mat-icon>check_circle</mat-icon>
-              <span>Analytics reports</span>
+              <span>Board-wise dashboards</span>
             </div>
           </div>
           <button mat-raised-button color="warn" class="full-width" (click)="navigateTo('/board-login')">
@@ -107,6 +118,7 @@ import { I18nService } from '../../core/i18n.service';
   `,
   styles: [`
     .user-type-container {
+      position: relative;
       min-height: 100vh;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       display: flex;
@@ -115,27 +127,110 @@ import { I18nService } from '../../core/i18n.service';
       justify-content: center;
       padding: 2rem;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+
+    .ambient-shape {
+      position: absolute;
+      border-radius: 999px;
+      pointer-events: none;
+      opacity: 0.5;
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .shape-one {
+      width: 260px;
+      height: 260px;
+      right: -90px;
+      top: 52px;
+    }
+
+    .shape-two {
+      width: 190px;
+      height: 190px;
+      left: -58px;
+      bottom: 8%;
     }
 
     .header {
+      position: relative;
+      z-index: 1;
       text-align: center;
       color: white;
-      margin-bottom: 3rem;
+      margin-bottom: 2rem;
+      max-width: 980px;
+    }
+
+    .header-logo {
+      width: 92px;
+      height: 92px;
+      margin-bottom: 14px;
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 24px 54px rgba(0, 0, 0, 0.22);
+      padding: 8px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      margin-bottom: 10px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
 
     .header h1 {
-      font-size: 2.5rem;
+      font-size: clamp(2rem, 5vw, 4rem);
       margin: 0 0 0.5rem 0;
-      font-weight: 700;
+      font-weight: 900;
+      letter-spacing: -0.06em;
     }
 
     .header .subtitle {
       font-size: 1.1rem;
       opacity: 0.9;
       margin: 0;
+      line-height: 1.55;
+    }
+
+    .login-instructions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+      text-align: left;
+    }
+
+    .login-instructions div {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 14px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      line-height: 1.45;
+      font-size: 0.88rem;
+      font-weight: 650;
+    }
+
+    .login-instructions mat-icon {
+      color: #fff;
+      width: 24px;
+      height: 24px;
+      font-size: 24px;
     }
 
     .login-cards {
+      position: relative;
+      z-index: 1;
       display: grid;
       grid-template-columns: repeat(3, minmax(280px, 1fr));
       gap: 2rem;
@@ -146,9 +241,9 @@ import { I18nService } from '../../core/i18n.service';
 
     .login-card {
       background: white;
-      border-radius: 12px;
+      border-radius: 28px;
       padding: 2rem;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 28px 70px rgba(0, 0, 0, 0.18);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -156,6 +251,7 @@ import { I18nService } from '../../core/i18n.service';
       transition: transform 0.3s ease, box-shadow 0.3s ease;
       position: relative;
       overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.28);
     }
 
     .login-card::before {
@@ -264,6 +360,8 @@ import { I18nService } from '../../core/i18n.service';
     }
 
     .footer-info {
+      position: relative;
+      z-index: 1;
       text-align: center;
       color: white;
       font-size: 0.95rem;
@@ -278,6 +376,10 @@ import { I18nService } from '../../core/i18n.service';
     @media (max-width: 1024px) {
       .login-cards {
         grid-template-columns: repeat(2, minmax(280px, 1fr));
+      }
+
+      .login-instructions {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -336,6 +438,7 @@ import { I18nService } from '../../core/i18n.service';
 })
 export class UserTypeLoginComponent {
   readonly i18n = inject(I18nService);
+  readonly branding = inject(BrandingService);
   private readonly router = inject(Router);
 
   navigateTo(route: string) {

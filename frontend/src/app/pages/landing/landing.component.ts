@@ -259,7 +259,7 @@ interface RegisterData {
           </div>
           <div class="footer-section">
             <h4>Contact</h4>
-            <p>📧 contact&#64;hscexam.in</p>
+            <p>📧 mail.hscinfo&#64;gmail.com</p>
             <p>📞 +91 99227 74144</p>
           </div>
         </div>

@@ -376,7 +376,6 @@ import { MatExpansionModule } from '@angular/material/expansion';
               <mat-icon>email</mat-icon>
               <h3>ईमेल</h3>
               <p>mail.hscinfo@gmail.com</p>
-              <p>support@hscexam.in</p>
             </div>
             <div class="contact-card">
               <mat-icon>phone</mat-icon>

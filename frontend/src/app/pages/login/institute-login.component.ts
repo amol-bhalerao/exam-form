@@ -38,6 +38,7 @@ import { BrandingService } from '../../core/branding.service';
           <span>संस्था पोर्टल</span>
           <h1>संस्था सेटअप पूर्ण करून परीक्षा अर्ज व्यवस्थापन सुरू करा</h1>
           <p class="tagline">विद्यार्थ्यांचे अर्ज पडताळण्यासाठी आधी संस्थेची मूलभूत माहिती, शिक्षक माहिती, विषय मॅपिंग आणि परीक्षा क्षमता योग्यरीत्या सेट करा.</p>
+          <p class="tagline english">Complete institute setup first, then verify student applications and print exam forms without delays.</p>
         </div>
 
         <div class="portal-stats">
@@ -62,6 +63,7 @@ import { BrandingService } from '../../core/branding.service';
               <div>
                 <h3>प्रथम लॉगिन केल्यानंतर सेटअप कसा करावा?</h3>
                 <p>खालील क्रमाने माहिती भरल्यास अर्ज पडताळणी आणि प्रिंट प्रक्रिया व्यवस्थित चालते.</p>
+                <p class="english-line">Follow this setup sequence before verifying applications.</p>
               </div>
             </div>
             <div class="letter-content">
@@ -71,7 +73,7 @@ import { BrandingService } from '../../core/branding.service';
                 <li><strong>Stream Subjects</strong> मध्ये आपल्या संस्थेसाठी लागू असलेले स्ट्रीम आणि विषय मॅपिंग योग्यरीत्या सेट करा.</li>
                 <li><strong>Exam Capacity</strong> मध्ये प्रत्येक परीक्षेसाठी उपलब्ध आसन क्षमता शेवटी सेट करा.</li>
               </ol>
-              <p class="setup-note">वरील सेटअप पूर्ण झाल्यानंतरच विद्यार्थ्यांचे सबमिट केलेले अर्ज तपासणे, पडताळणे आणि प्रिंट करणे सोपे होईल.</p>
+              <p class="setup-note">वरील सेटअप पूर्ण झाल्यानंतरच विद्यार्थ्यांचे सबमिट केलेले अर्ज तपासणे, पडताळणे आणि प्रिंट करणे सोपे होईल.<br />After setup, submitted applications can be checked, verified, and printed smoothly.</p>
               <div class="support-actions">
                 <a mat-raised-button
                   type="button"
@@ -102,7 +104,7 @@ import { BrandingService } from '../../core/branding.service';
           <mat-card-content>
             <div class="login-help">
               <mat-icon>info</mat-icon>
-              <span>लॉगिन केल्यानंतर प्रथम संस्था माहिती, नंतर शिक्षक माहिती, विषय मॅपिंग आणि शेवटी परीक्षा क्षमता पूर्ण करा.</span>
+              <span>लॉगिन केल्यानंतर प्रथम संस्था माहिती, नंतर शिक्षक माहिती, विषय मॅपिंग आणि शेवटी परीक्षा क्षमता पूर्ण करा. Complete these setup steps before application verification.</span>
             </div>
 
             <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
@@ -249,6 +251,11 @@ import { BrandingService } from '../../core/branding.service';
       margin: 0;
     }
 
+    .tagline.english {
+      margin-top: 8px;
+      font-weight: 700;
+    }
+
     .portal-stats {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -327,6 +334,11 @@ import { BrandingService } from '../../core/branding.service';
     .letter-header p {
       margin: 4px 0 0;
       color: rgba(255, 255, 255, 0.72);
+    }
+
+    .letter-header .english-line {
+      color: rgba(255, 255, 255, 0.86);
+      font-weight: 700;
     }
 
     .letter-content ol {
