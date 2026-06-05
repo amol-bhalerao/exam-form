@@ -37,11 +37,11 @@ import { BrandingService } from '../core/branding.service';
             <strong>Role based</strong>
             <span>भूमिकेनुसार प्रवेश</span>
           </div>
-          <div class="metric-card">
+          <div class="metric-card no-public">
             <strong>No public data</strong>
             <span>सार्वजनिक डेटा प्रवेश नाही</span>
           </div>
-          <div class="metric-card">
+          <div class="metric-card authority">
             <strong>Authority managed</strong>
             <span>उच्च अधिकाऱ्यांचे नियंत्रण</span>
           </div>
@@ -92,6 +92,32 @@ import { BrandingService } from '../core/branding.service';
             <h3>{{ item.en }}</h3>
             <p>{{ item.mr }}</p>
           </article>
+        </div>
+      </section>
+
+      <section class="section technical-security">
+        <div class="section-heading compact">
+          <span class="eyebrow">Technical Protection</span>
+          <h2>Security controls protect the portal from common web risks.</h2>
+          <p>SSL, सुरक्षित क्लाउड होस्टिंग, Google login, server-side validation आणि database protection यामुळे पोर्टल अधिक सुरक्षित राहते.</p>
+        </div>
+
+        <div class="technical-grid">
+          <article *ngFor="let item of technicalSecurity" class="technical-card">
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <div>
+              <h3>{{ item.en }}</h3>
+              <p>{{ item.mr }}</p>
+            </div>
+          </article>
+        </div>
+
+        <div class="security-note">
+          <mat-icon>verified_user</mat-icon>
+          <div>
+            <strong>No system should be described as impossible to hack; this portal reduces risk through layered controls.</strong>
+            <span>कोणतीही प्रणाली 100% hack-proof म्हणता येत नाही; परंतु हे पोर्टल अनेक सुरक्षा स्तरांमुळे धोका कमी करते.</span>
+          </div>
         </div>
       </section>
 
@@ -324,6 +350,18 @@ import { BrandingService } from '../core/branding.service';
       color: #667eea;
     }
 
+    .metric-card.no-public {
+      background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+      border-color: rgba(255,255,255,0.28);
+      color: #fff;
+    }
+
+    .metric-card.authority {
+      background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+      border-color: rgba(255,255,255,0.28);
+      color: #fff;
+    }
+
     .metric-card strong {
       display: block;
       font-size: clamp(1.45rem, 3vw, 2.35rem);
@@ -478,6 +516,97 @@ import { BrandingService } from '../core/branding.service';
       min-height: 218px;
     }
 
+    .technical-security {
+      background: #10172a;
+      color: white;
+    }
+
+    .technical-security .eyebrow {
+      background: rgba(255,255,255,0.14);
+      color: #fff;
+    }
+
+    .technical-security h2 {
+      color: white;
+    }
+
+    .technical-security .section-heading p {
+      color: rgba(255,255,255,0.78);
+    }
+
+    .technical-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .technical-card {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      gap: 14px;
+      min-height: 148px;
+      padding: 18px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .technical-card mat-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 14px;
+      color: #fff;
+      font-size: 34px;
+    }
+
+    .technical-card h3 {
+      color: #fff;
+      margin-bottom: 7px;
+      font-size: 1.02rem;
+    }
+
+    .technical-card p {
+      margin: 0;
+      color: rgba(255,255,255,0.74);
+      line-height: 1.5;
+      font-family: 'Nirmala UI', sans-serif;
+      font-weight: 650;
+    }
+
+    .security-note {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 14px;
+      align-items: start;
+      margin-top: 20px;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255,152,0,0.14);
+      border: 1px solid rgba(255,152,0,0.28);
+    }
+
+    .security-note mat-icon {
+      color: #ffb74d;
+    }
+
+    .security-note strong,
+    .security-note span {
+      display: block;
+    }
+
+    .security-note strong {
+      color: #fff;
+      margin-bottom: 5px;
+    }
+
+    .security-note span {
+      color: rgba(255,255,255,0.75);
+      font-family: 'Nirmala UI', sans-serif;
+      font-weight: 700;
+    }
+
     .security-icon {
       width: 64px;
       height: 64px;
@@ -612,7 +741,8 @@ import { BrandingService } from '../core/branding.service';
       }
 
       .workflow-grid,
-      .security-grid {
+      .security-grid,
+      .technical-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
@@ -634,6 +764,7 @@ import { BrandingService } from '../core/branding.service';
 
       .workflow-grid,
       .security-grid,
+      .technical-grid,
       .demo-steps {
         grid-template-columns: 1fr;
       }
@@ -676,6 +807,39 @@ export class BoardPresentationLandingComponent {
     { icon: 'manage_accounts', en: 'Authority managed users', mr: 'वापरकर्ते उच्च अधिकाऱ्यांच्या नियंत्रणाखाली व्यवस्थापित होतात.' },
     { icon: 'download_done', en: 'Restricted exports', mr: 'संपूर्ण डेटा अनधिकृतपणे डाउनलोड करता येत नाही.' },
     { icon: 'fact_check', en: 'Workflow controlled print', mr: 'प्रिंट आणि रिपोर्ट स्थिती व परवानगीनुसार उपलब्ध असतात.' }
+  ];
+
+  readonly technicalSecurity = [
+    {
+      icon: 'https',
+      en: 'SSL / HTTPS encrypted connection',
+      mr: 'वेबसाइट HTTPS/SSL वर चालते, त्यामुळे browser आणि server मधील माहिती encrypted राहते.'
+    },
+    {
+      icon: 'cloud_done',
+      en: 'Cloud data-center hosting',
+      mr: 'डेटा cloud data center मध्ये host होतो, जिथे server access आणि infrastructure नियंत्रणाखाली असते.'
+    },
+    {
+      icon: 'login',
+      en: 'Google login for students',
+      mr: 'विद्यार्थ्यांसाठी Google login वापरल्याने password handling कमी होते आणि trusted authentication मिळते.'
+    },
+    {
+      icon: 'data_object',
+      en: 'SQL injection protection',
+      mr: 'Backend मध्ये ORM/parameterized database access वापरल्याने raw SQL injection चा धोका कमी होतो.'
+    },
+    {
+      icon: 'rule',
+      en: 'Server-side validation',
+      mr: 'महत्त्वाची validation server-side होते, त्यामुळे चुकीचा किंवा manipulated data थेट स्वीकारला जात नाही.'
+    },
+    {
+      icon: 'shield',
+      en: 'Layered protection from hackers',
+      mr: 'Authentication, role permission, input checks आणि controlled APIs यांचे अनेक सुरक्षा स्तर hacker risk कमी करतात.'
+    }
   ];
 
   readonly accessRows = [
