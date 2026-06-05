@@ -79,6 +79,22 @@ import { BrandingService } from '../core/branding.service';
         </div>
       </section>
 
+      <section class="section feature-update">
+        <div class="section-heading compact">
+          <span class="eyebrow">New Board Dashboard</span>
+          <h2>Institute monitoring is now available inside Board Login.</h2>
+          <p>बोर्ड लॉगिनमध्ये संस्था यादी, जिल्हानिहाय विभागणी, HSC/SSC प्रकार आणि सद्यस्थिती पाहता येते.</p>
+        </div>
+
+        <div class="feature-grid">
+          <article *ngFor="let item of instituteDashboard" class="feature-card">
+            <mat-icon>{{ item.icon }}</mat-icon>
+            <strong>{{ item.en }}</strong>
+            <span>{{ item.mr }}</span>
+          </article>
+        </div>
+      </section>
+
       <section class="section" id="security">
         <div class="section-heading compact">
           <span class="eyebrow">Data Safety</span>
@@ -516,6 +532,50 @@ import { BrandingService } from '../core/branding.service';
       min-height: 218px;
     }
 
+    .feature-update {
+      background:
+        radial-gradient(circle at 92% 18%, rgba(102,126,234,0.14), transparent 28%),
+        #ffffff;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .feature-card {
+      display: grid;
+      gap: 8px;
+      padding: 18px;
+      border: 1px solid #e0e7ff;
+      border-radius: 20px;
+      background: linear-gradient(180deg, #ffffff, #f8fafc);
+      box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+    }
+
+    .feature-card mat-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 16px;
+      background: #eef2ff;
+      color: #4f46e5;
+    }
+
+    .feature-card strong {
+      color: #0f172a;
+      font-size: 1rem;
+    }
+
+    .feature-card span {
+      color: #64748b;
+      font-family: 'Nirmala UI', sans-serif;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
     .technical-security {
       background: #10172a;
       color: white;
@@ -742,6 +802,7 @@ import { BrandingService } from '../core/branding.service';
 
       .workflow-grid,
       .security-grid,
+      .feature-grid,
       .technical-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
@@ -764,6 +825,7 @@ import { BrandingService } from '../core/branding.service';
 
       .workflow-grid,
       .security-grid,
+      .feature-grid,
       .technical-grid,
       .demo-steps {
         grid-template-columns: 1fr;
@@ -798,6 +860,13 @@ export class BoardPresentationLandingComponent {
     'Monitor submitted applications and verification status | अर्ज व पडताळणी स्थिती निरीक्षण',
     'Track payments, receipts and printable forms | पेमेंट, पावती आणि प्रिंट फॉर्म ट्रॅकिंग',
     'Publish news, notices and exam updates | सूचना, बातम्या आणि अपडेट्स प्रसिद्ध करणे'
+  ];
+
+  readonly instituteDashboard = [
+    { icon: 'apartment', en: 'All institute list', mr: 'सर्व संस्था एकाच यादीत पाहता येतात.' },
+    { icon: 'map', en: 'District-wise view', mr: 'जिल्ह्यानुसार संस्था संख्या आणि फिल्टर उपलब्ध.' },
+    { icon: 'verified', en: 'Current status', mr: 'APPROVED, PENDING, DISABLED स्थिती स्पष्ट दिसते.' },
+    { icon: 'school', en: 'HSC / SSC visibility', mr: 'संस्था HSC किंवा SSC प्रकारानुसार ओळखता येते.' }
   ];
 
   readonly security = [

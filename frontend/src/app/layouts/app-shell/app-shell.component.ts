@@ -76,6 +76,12 @@ import { API_BASE_URL } from '../../core/api';
             <a mat-list-item routerLink="/app/board/news" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">feed</mat-icon><span class="label">News</span></a>
 
             <div class="section-header">
+              <span>Institutes</span>
+              <div class="section-indicator"></div>
+            </div>
+            <a mat-list-item routerLink="/app/board/institutes" routerLinkActive="active" class="nav-item" (click)="closeOnMobile()"><mat-icon class="icon">apartment</mat-icon><span class="label">Institute Dashboard</span></a>
+
+            <div class="section-header">
               <span>Academic</span>
               <div class="section-indicator"></div>
             </div>

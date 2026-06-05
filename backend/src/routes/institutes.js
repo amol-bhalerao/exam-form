@@ -451,6 +451,68 @@ institutesRouter.get('/all', requireAuth, requireRole(['SUPER_ADMIN']), async (r
   }
 });
 
+// Board: dashboard + read-only institute list for board monitoring
+institutesRouter.get('/board/summary', requireAuth, requireRole(['BOARD']), async (req, res) => {
+  try {
+    const institutes = await prisma.institute.findMany({
+      orderBy: [{ district: 'asc' }, { name: 'asc' }],
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        collegeNo: true,
+        udiseNo: true,
+        district: true,
+        city: true,
+        address: true,
+        contactPerson: true,
+        contactEmail: true,
+        contactMobile: true,
+        status: true,
+        acceptingApplications: true,
+        createdAt: true
+      }
+    });
+    const normalized = (await enrichInstitutesWithBoardType(institutes)).map(withInstituteDisplayCode);
+    const byStatus = {};
+    const byDistrict = {};
+    const byBoardType = {};
+    let acceptingApplications = 0;
+
+    for (const institute of normalized) {
+      const status = institute.status || 'UNKNOWN';
+      const district = institute.district || 'UNKNOWN';
+      const boardType = institute.boardType || 'HSC';
+      byStatus[status] = (byStatus[status] || 0) + 1;
+      byDistrict[district] = (byDistrict[district] || 0) + 1;
+      byBoardType[boardType] = (byBoardType[boardType] || 0) + 1;
+      if (institute.acceptingApplications) acceptingApplications += 1;
+    }
+
+    const districtSummary = Object.entries(byDistrict)
+      .map(([district, count]) => ({ district, count }))
+      .sort((a, b) => b.count - a.count || a.district.localeCompare(b.district));
+
+    return res.json({
+      institutes: normalized,
+      dashboard: {
+        total: normalized.length,
+        acceptingApplications,
+        byStatus,
+        byBoardType,
+        byDistrict: districtSummary,
+        approved: byStatus.APPROVED || 0,
+        pending: byStatus.PENDING || 0,
+        disabled: byStatus.DISABLED || 0,
+        rejected: byStatus.REJECTED || 0
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching board institute summary:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
 // Super admin: get institute statistics (status breakdown)
 institutesRouter.get('/admin/stats', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
   try {
