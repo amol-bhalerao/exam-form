@@ -16,3 +16,10 @@ export function canStudentPrintApplication(application: any): boolean {
 
   return status !== 'DRAFT' && isPaymentCompleted(application);
 }
+
+export function canStaffPrintApplication(application: any): boolean {
+  if (!application) return false;
+
+  const status = String(application.status || '').toUpperCase();
+  return ['SUBMITTED', 'INSTITUTE_VERIFIED', 'BOARD_APPROVED'].includes(status);
+}

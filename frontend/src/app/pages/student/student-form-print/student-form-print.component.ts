@@ -7,7 +7,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { API_BASE_URL } from '../../../core/api';
 import { AuthService } from '../../../core/auth.service';
 import { BrandingService } from '../../../core/branding.service';
-import { canStudentPrintApplication } from '../../../core/printable-form-policy';
+import { canStaffPrintApplication, canStudentPrintApplication } from '../../../core/printable-form-policy';
 
 @Component({
   selector: 'app-student-form-print',
@@ -1295,7 +1295,7 @@ export class StudentFormPrintComponent implements OnInit {
         this.printBlockedReason.set(
           role === 'STUDENT'
             ? 'प्रिंट फॉर्म सबमिशननंतर आणि संस्थेच्या पडताळणीनंतर उपलब्ध होईल. पेमेंट यशस्वी झालेल्या सबमिट अर्जांसाठीही प्रिंट उपलब्ध आहे.'
-            : 'प्रिंट फॉर्म फक्त संस्थेकडून पडताळणी झालेल्या अर्जांसाठी उपलब्ध आहे.'
+            : 'प्रिंट फॉर्म फक्त सबमिट किंवा संस्थेकडून पडताळणी झालेल्या अर्जांसाठी उपलब्ध आहे.'
         );
         return;
       }
@@ -1336,11 +1336,11 @@ export class StudentFormPrintComponent implements OnInit {
 
     const status = String(application.status || '').toUpperCase();
     const role = this.auth.user()?.role;
-    const boardPrintable = ['INSTITUTE_VERIFIED', 'BOARD_APPROVED'].includes(status);
     if (role === 'BOARD' || role === 'SUPER_ADMIN' || role === 'INSTITUTE') {
-      return boardPrintable;
+      return canStaffPrintApplication(application);
     }
 
+    const boardPrintable = canStaffPrintApplication(application) && status !== 'SUBMITTED';
     if (boardPrintable) return true;
     return canStudentPrintApplication(application);
   }
