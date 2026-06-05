@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, computed, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -150,6 +150,7 @@ function formatSubjectsCell(subjects: Row['subjects']): string {
           [columnDefs]="columnDefs"
           [defaultColDef]="defaultColDef"
           (rowClicked)="onRowSelected($event)"
+          (cellClicked)="onGridCellClicked($event)"
           [pagination]="true"
           [paginationPageSize]="15"
         ></ag-grid-angular>
@@ -430,6 +431,13 @@ function formatSubjectsCell(subjects: Row['subjects']): string {
 
       .grid-table { margin-top: 8px; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
       .grid-actions { display: flex; flex-wrap: wrap; gap: 10px; padding: 12px; border-top: 1px solid #e2e8f0; background: #f8fafc; }
+      ::ng-deep .institute-row-actions { display: flex; gap: 6px; align-items: center; height: 100%; }
+      ::ng-deep .row-action { border: 0; border-radius: 999px; padding: 4px 9px; font-size: 12px; font-weight: 800; cursor: pointer; }
+      ::ng-deep .row-action:disabled { opacity: 0.45; cursor: not-allowed; }
+      ::ng-deep .row-action--edit { background: #dbeafe; color: #1d4ed8; }
+      ::ng-deep .row-action--print { background: #f1f5f9; color: #334155; }
+      ::ng-deep .row-action--verify { background: #dcfce7; color: #166534; }
+      ::ng-deep .row-action--reject { background: #fee2e2; color: #b91c1c; }
 
       @media (max-width: 768px) {
         .card {
@@ -514,12 +522,33 @@ export class InstituteApplicationsComponent implements OnInit {
       headerName: 'Updated',
       flex: 1,
       valueFormatter: (p) => (p.value ? new Date(p.value).toLocaleString() : '')
+    },
+    {
+      headerName: 'Actions',
+      field: 'actions',
+      flex: 1.4,
+      minWidth: 300,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params: any) => {
+        const row = params.data as Row;
+        if (!row?.id) return '';
+        const verifyTitle = this.canVerify(row) ? 'Verify submitted form' : this.getVerifyBlockedTitle(row);
+        return `
+          <div class="institute-row-actions">
+            <button data-action="edit" class="row-action row-action--edit">Edit</button>
+            <button data-action="print" class="row-action row-action--print">Print</button>
+            <button data-action="verify" class="row-action row-action--verify" title="${verifyTitle}" ${this.canVerify(row) ? '' : 'disabled'}>Verify</button>
+            <button data-action="reject" class="row-action row-action--reject" ${this.canReject(row) ? '' : 'disabled'}>Reject</button>
+          </div>
+        `;
+      }
     }
   ];
 
   readonly defaultColDef: ColDef = { sortable: true, filter: true, resizable: true };
 
-  constructor(private readonly http: HttpClient) {}
+  constructor(private readonly http: HttpClient, private readonly router: Router) {}
 
   ngOnInit() {
     this.load();
@@ -563,12 +592,45 @@ export class InstituteApplicationsComponent implements OnInit {
     this.selectedRow = event?.data ?? null;
   }
 
+  onGridCellClicked(event: any) {
+    const action = event?.event?.target?.getAttribute?.('data-action');
+    const row = event?.data as Row | undefined;
+    if (!action || !row?.id) return;
+
+    event.event.preventDefault?.();
+    event.event.stopPropagation?.();
+    this.selectedRow = row;
+
+    if (action === 'edit') {
+      this.router.navigate(['/app/institute/applications', row.id]);
+      return;
+    }
+    if (action === 'print') {
+      this.openPrint(row);
+      return;
+    }
+    if (action === 'verify' && this.canVerify(row)) {
+      this.decide(row.id, 'VERIFY');
+      return;
+    }
+    if (action === 'reject' && this.canReject(row)) {
+      this.decide(row.id, 'REJECT');
+    }
+  }
+
   canReject(row: Row): boolean {
     return ['SUBMITTED', 'INSTITUTE_VERIFIED'].includes(row.status);
   }
 
   canVerify(row: Row): boolean {
     return row.status === 'SUBMITTED' && !!row.verification?.isReadyForVerification;
+  }
+
+  getVerifyBlockedTitle(row: Row): string {
+    if (row.status !== 'SUBMITTED') return 'Only submitted applications can be verified';
+    if (!row.verification?.hasStudentCoreDetails) return 'Student core details are incomplete';
+    if (!row.verification?.hasSubjects) return 'Subjects are not selected';
+    return 'Application is not ready for verification';
   }
 
   decide(id: number, action: 'VERIFY' | 'REJECT') {
