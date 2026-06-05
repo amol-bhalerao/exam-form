@@ -80,6 +80,7 @@ type Institute = {
           class="ag-theme-alpine"
           style="width:100%; height:100%;"
           (cellClicked)="onGridCellClicked($event)"
+          (rowClicked)="onRowClicked($event.data)"
         ></ag-grid-angular>
       </div>
       @if (selectedInstitute) {
@@ -134,6 +135,10 @@ type Institute = {
             <mat-form-field appearance="outline"><mat-label>Institute Name</mat-label><input matInput [(ngModel)]="createForm.name" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Institute Code</mat-label><input matInput [(ngModel)]="createForm.code" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Address</mat-label><input matInput [(ngModel)]="createForm.address" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>District</mat-label><input matInput [(ngModel)]="createForm.district" (ngModelChange)="createForm.district = toUpperText($event)" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Taluka</mat-label><input matInput [(ngModel)]="createForm.taluka" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>City / Place</mat-label><input matInput [(ngModel)]="createForm.city" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Pincode</mat-label><input matInput [(ngModel)]="createForm.pincode" maxlength="6" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Contact Person</mat-label><input matInput [(ngModel)]="createForm.contactPerson" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Contact Email</mat-label><input matInput type="email" [(ngModel)]="createForm.contactEmail" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Contact Mobile</mat-label><input matInput [(ngModel)]="createForm.contactMobile" /></mat-form-field>
@@ -172,6 +177,8 @@ type Institute = {
             <mat-form-field appearance="outline"><mat-label>Contact Mobile</mat-label><input matInput [(ngModel)]="editInstituteForm.contactMobile" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Pincode</mat-label><input matInput [(ngModel)]="editInstituteForm.pincode" /></mat-form-field>
             <mat-form-field appearance="outline" class="full"><mat-label>Address</mat-label><input matInput [(ngModel)]="editInstituteForm.address" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>District</mat-label><input matInput [(ngModel)]="editInstituteForm.district" (ngModelChange)="editInstituteForm.district = toUpperText($event)" /></mat-form-field>
+            <mat-form-field appearance="outline"><mat-label>Taluka</mat-label><input matInput [(ngModel)]="editInstituteForm.taluka" /></mat-form-field>
             <mat-form-field appearance="outline" class="full"><mat-label>City</mat-label><input matInput [(ngModel)]="editInstituteForm.city" /></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Status</mat-label><mat-select [(ngModel)]="editInstituteForm.status"><mat-option value="APPROVED">Approved</mat-option><mat-option value="PENDING">Pending</mat-option><mat-option value="DISABLED">Disabled</mat-option><mat-option value="REJECTED">Rejected</mat-option></mat-select></mat-form-field>
             <mat-form-field appearance="outline"><mat-label>Accepting Applications</mat-label><mat-select [(ngModel)]="editInstituteForm.acceptingApplications"><mat-option [value]="true">Yes</mat-option><mat-option [value]="false">No</mat-option></mat-select></mat-form-field>
@@ -312,11 +319,13 @@ export class SuperInstitutesComponent implements OnInit {
     { field: 'name', headerName: 'Name', flex: 1.5, sortable: true, filter: true, minWidth: 200 },
     { field: 'collegeNo', headerName: 'College No', flex: 1, sortable: true, filter: true, minWidth: 120, valueGetter: (params: any) => params.data.collegeNo || '—' },
     { field: 'udiseNo', headerName: 'UDISE No', flex: 1, sortable: true, filter: true, minWidth: 120, valueGetter: (params: any) => params.data.udiseNo || '—' },
+    { field: 'district', headerName: 'District', flex: 1, sortable: true, filter: true, minWidth: 130, valueGetter: (params: any) => params.data.district || '—' },
     { field: 'city', headerName: 'City', flex: 1, sortable: true, filter: true, minWidth: 120, valueGetter: (params: any) => params.data.city || '—' },
+    { field: 'status', headerName: 'Status', flex: 0.8, sortable: true, filter: true, minWidth: 120, valueGetter: (params: any) => params.data.status || '—' },
     { field: 'contactMobile', headerName: 'Mobile', flex: 1, sortable: true, filter: true, minWidth: 130, valueGetter: (params: any) => params.data.contactMobile || '—' },
     { field: 'contactEmail', headerName: 'Email', flex: 1.2, sortable: true, filter: true, minWidth: 180, valueGetter: (params: any) => params.data.contactEmail || '—' },
     { headerName: 'Actions', field: 'actions', flex: 0.8, minWidth: 110, cellRenderer: () => {
-        return `<div style="display:flex;flex-wrap:wrap;gap:6px;"><button data-action="view" class="grid-action-btn grid-action-btn--view">View</button></div>`;
+        return `<div style="display:flex;flex-wrap:wrap;gap:6px;"><button data-action="view" class="grid-action-btn grid-action-btn--view">View</button><button data-action="edit" class="grid-action-btn grid-action-btn--edit">Edit</button></div>`;
       } }
   ];
   readonly defaultColDef: ColDef = { sortable: true, filter: true, floatingFilter: true, resizable: true, minWidth: 120, flex: 1 };
@@ -326,6 +335,10 @@ export class SuperInstitutesComponent implements OnInit {
     name: '',
     code: '',
     address: '',
+    district: '',
+    taluka: '',
+    city: '',
+    pincode: '',
     contactPerson: '',
     contactEmail: '',
     contactMobile: '',
@@ -387,7 +400,17 @@ export class SuperInstitutesComponent implements OnInit {
       return;
     }
 
-    const payload = { ...this.createForm };
+    const payload = {
+      ...this.createForm,
+      code: this.cleanOptional(this.createForm.code),
+      address: this.cleanOptional(this.createForm.address),
+      district: this.cleanOptional(this.toUpperText(this.createForm.district)),
+      taluka: this.cleanOptional(this.createForm.taluka),
+      city: this.cleanOptional(this.createForm.city),
+      pincode: this.cleanOptional(this.createForm.pincode),
+      contactEmail: this.cleanOptional(this.createForm.contactEmail),
+      contactMobile: this.cleanOptional(this.createForm.contactMobile)
+    };
     this.http.post(`${API_BASE_URL}/institutes`, payload).subscribe({
       next: () => {
         this.createSuccess = 'Institute created successfully';
@@ -408,6 +431,10 @@ export class SuperInstitutesComponent implements OnInit {
       name: '',
       code: '',
       address: '',
+      district: '',
+      taluka: '',
+      city: '',
+      pincode: '',
       contactPerson: '',
       contactEmail: '',
       contactMobile: '',
@@ -456,7 +483,7 @@ export class SuperInstitutesComponent implements OnInit {
       name: this.editInstituteForm.name,
       code: this.editInstituteForm.code,
       address: this.editInstituteForm.address,
-      district: this.editInstituteForm.district,
+      district: this.toUpperText(this.editInstituteForm.district),
       taluka: this.editInstituteForm.taluka,
       city: this.editInstituteForm.city,
       pincode: this.editInstituteForm.pincode,
@@ -507,7 +534,21 @@ export class SuperInstitutesComponent implements OnInit {
     if (action === 'view') {
       this.selectedInstitute = row;
       this.viewingInstitute = row;
+      return;
     }
+    if (action === 'edit') {
+      this.selectedInstitute = row;
+      this.openEditInstitute();
+    }
+  }
+
+  toUpperText(value: unknown): string {
+    return String(value || '').trim().toUpperCase();
+  }
+
+  private cleanOptional(value: unknown): string | undefined {
+    const text = String(value || '').trim();
+    return text ? text : undefined;
   }
 
   approve(id: number) {

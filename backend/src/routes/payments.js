@@ -50,6 +50,11 @@ function groupedCounts(items = [], keyFn = () => '') {
   return [...map.values()].sort((a, b) => b.amountPaise - a.amountPaise || b.count - a.count);
 }
 
+function normalizeDistrict(value) {
+  const text = String(value || '').trim();
+  return text ? text.toUpperCase() : '';
+}
+
 function ensureCashfreeReady() {
   if (!env.CASHFREE_APP_ID || !env.CASHFREE_SECRET_KEY) {
     const error = new Error('Cashfree production credentials are not configured.');
@@ -79,6 +84,7 @@ function parseDashboardQuery(query = {}) {
 
   return {
     ...parsed,
+    district: normalizeDistrict(parsed.district) || undefined,
     fromDate: parsed.from ? new Date(parsed.from) : null,
     toDate: parsed.to ? new Date(parsed.to) : null
   };
@@ -99,8 +105,7 @@ async function getDashboardPayments(query) {
         : {}),
       application: {
         ...(params.examId ? { examId: params.examId } : {}),
-        ...(params.instituteId ? { instituteId: params.instituteId } : {}),
-        ...(params.district ? { institute: { district: params.district } } : {})
+        ...(params.instituteId ? { instituteId: params.instituteId } : {})
       }
     },
     include: {
@@ -151,12 +156,13 @@ async function getDashboardPayments(query) {
         status: getPaymentStatus(payment),
         application: {
           ...payment.application,
-          institute: payment.application?.institute ? { ...payment.application.institute, boardType } : payment.application?.institute,
+          institute: payment.application?.institute ? { ...payment.application.institute, district: normalizeDistrict(payment.application.institute.district), boardType } : payment.application?.institute,
           exam: payment.application?.exam ? { ...payment.application.exam, boardType: examBoardById.get(examId) || boardType } : payment.application?.exam
         }
       };
     })
     .filter((payment) => (params.status ? payment.status === params.status : true))
+    .filter((payment) => (params.district ? normalizeDistrict(payment.application?.institute?.district) === params.district : true))
     .filter((payment) => (params.boardType ? payment.boardType === params.boardType : true));
 
   const success = enriched.filter((payment) => payment.status === 'SUCCESS');
@@ -174,7 +180,7 @@ async function getDashboardPayments(query) {
     },
     grouped: {
       byBoardType: groupedCounts(success, (payment) => payment.boardType || 'HSC'),
-      byDistrict: groupedCounts(success, (payment) => payment.application?.institute?.district || 'Unknown'),
+      byDistrict: groupedCounts(success, (payment) => normalizeDistrict(payment.application?.institute?.district) || 'Unknown'),
       byInstitute: groupedCounts(success, (payment) => payment.application?.institute?.name || 'Unknown'),
       byExam: groupedCounts(success, (payment) => {
         const exam = payment.application?.exam;

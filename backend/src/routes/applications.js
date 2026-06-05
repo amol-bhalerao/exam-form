@@ -92,6 +92,11 @@ function asText(value, fallback = '') {
   return String(value);
 }
 
+function normalizeDistrict(value) {
+  const text = String(value || '').trim();
+  return text ? text.toUpperCase() : '';
+}
+
 function fullStudentName(student = {}) {
   return [student.lastName, student.firstName, student.middleName].filter(Boolean).join(' ').trim();
 }
@@ -114,7 +119,7 @@ function toBoardStudentMasterRow(application) {
     instituteId: application.institute?.id ?? null,
     instituteCode: application.institute?.code || application.institute?.collegeNo || '',
     instituteName: application.institute?.name || '',
-    instituteDistrict: application.institute?.district || '',
+    instituteDistrict: normalizeDistrict(application.institute?.district),
     studentId: application.student?.id ?? null,
     studentName: fullStudentName(application.student),
     firstName: asText(application.student?.firstName),
@@ -133,7 +138,7 @@ function toBoardStudentMasterRow(application) {
     mediumCode: asText(application.student?.mediumCode),
     divyangCode: asText(application.student?.divyangCode),
     address: asText(application.student?.address),
-    district: asText(application.student?.district),
+    district: normalizeDistrict(application.student?.district),
     taluka: asText(application.student?.taluka),
     village: asText(application.student?.village),
     pinCode: asText(application.student?.pinCode),
@@ -172,7 +177,7 @@ function buildApplicationDashboard(applications = [], totalCapacity = null) {
     bySubject: topGroupedCounts(subjects),
     byCaste: topGroupedCounts(applications.map((app) => app.student?.categoryCode)),
     byGender: topGroupedCounts(applications.map((app) => app.student?.gender)),
-    byDistrict: topGroupedCounts(applications.map((app) => app.student?.district || app.institute?.district)),
+    byDistrict: topGroupedCounts(applications.map((app) => normalizeDistrict(app.student?.district || app.institute?.district))),
     byExamType: topGroupedCounts(applications.map((app) => app.candidateType))
   };
 }
@@ -1302,7 +1307,7 @@ applicationsRouter.get('/board/student-master', requireAuth, requireRole(['BOARD
   const summaries = {
     byCaste: topGroupedCounts(applications.map((item) => item.student?.categoryCode)),
     byGender: topGroupedCounts(applications.map((item) => item.student?.gender)),
-    byDistrict: topGroupedCounts(applications.map((item) => item.student?.district || item.institute?.district)),
+    byDistrict: topGroupedCounts(applications.map((item) => normalizeDistrict(item.student?.district || item.institute?.district))),
     bySubject: topGroupedCounts(
       applications.flatMap((item) => (item.subjects || []).map((entry) => entry.subject?.name))
     )

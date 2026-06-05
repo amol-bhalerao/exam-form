@@ -84,6 +84,19 @@ function normalizeOptionalText(value) {
   return text ? text : null;
 }
 
+function normalizeDistrict(value) {
+  const text = normalizeOptionalText(value);
+  return text ? text.toUpperCase() : null;
+}
+
+function withNormalizedDistrict(institute) {
+  if (!institute) return institute;
+  return {
+    ...institute,
+    district: normalizeDistrict(institute.district) || institute.district || null
+  };
+}
+
 function parseOptionalNumber(value) {
   if (value === undefined || value === null || value === '') return null;
   const parsed = Number(value);
@@ -205,32 +218,34 @@ function getInstituteDisplayCode(institute) {
 }
 
 function withInstituteDisplayCode(institute) {
+  const normalizedInstitute = withNormalizedDistrict(institute);
   return {
-    ...institute,
-    code: getInstituteDisplayCode(institute),
-    centerNo: getInstituteDisplayCode(institute) ?? institute?.centerNo ?? null
+    ...normalizedInstitute,
+    code: getInstituteDisplayCode(normalizedInstitute),
+    centerNo: getInstituteDisplayCode(normalizedInstitute) ?? normalizedInstitute?.centerNo ?? null
   };
 }
 
 function toInstituteDetailsDto(institute) {
+  const normalizedInstitute = withNormalizedDistrict(institute);
   return {
-    id: institute.id,
-    name: institute.name,
-    code: getInstituteDisplayCode(institute),
-    centerNo: getInstituteDisplayCode(institute),
-    collegeNo: institute.collegeNo,
-    uniqueNo: institute.collegeNo,
-    udiseNo: institute.udiseNo,
-    address: institute.address,
-    district: institute.district,
-    taluka: institute.taluka,
-    city: institute.city,
-    pincode: institute.pincode,
-    contactPerson: institute.contactPerson,
-    contactEmail: institute.contactEmail,
-    contactMobile: institute.contactMobile,
-    status: institute.status,
-    createdAt: institute.createdAt
+    id: normalizedInstitute.id,
+    name: normalizedInstitute.name,
+    code: getInstituteDisplayCode(normalizedInstitute),
+    centerNo: getInstituteDisplayCode(normalizedInstitute),
+    collegeNo: normalizedInstitute.collegeNo,
+    uniqueNo: normalizedInstitute.collegeNo,
+    udiseNo: normalizedInstitute.udiseNo,
+    address: normalizedInstitute.address,
+    district: normalizedInstitute.district,
+    taluka: normalizedInstitute.taluka,
+    city: normalizedInstitute.city,
+    pincode: normalizedInstitute.pincode,
+    contactPerson: normalizedInstitute.contactPerson,
+    contactEmail: normalizedInstitute.contactEmail,
+    contactMobile: normalizedInstitute.contactMobile,
+    status: normalizedInstitute.status,
+    createdAt: normalizedInstitute.createdAt
   };
 }
 
@@ -263,7 +278,7 @@ async function handleInstituteDetailsUpdate(req, res) {
     }
     if (body.name !== undefined) updateData.name = body.name;
     if (body.address !== undefined) updateData.address = body.address;
-    if (body.district !== undefined) updateData.district = body.district;
+    if (body.district !== undefined) updateData.district = normalizeDistrict(body.district);
     if (body.taluka !== undefined) updateData.taluka = body.taluka;
     if (body.city !== undefined) updateData.city = body.city;
     if (body.pincode !== undefined) updateData.pincode = body.pincode;
@@ -435,7 +450,9 @@ institutesRouter.get('/all', requireAuth, requireRole(['SUPER_ADMIN']), async (r
         collegeNo: true,
         udiseNo: true,
         district: true,
+        taluka: true,
         city: true,
+        pincode: true,
         address: true,
         contactPerson: true,
         contactEmail: true,
@@ -466,7 +483,9 @@ institutesRouter.get('/board/summary', requireAuth, requireRole(['BOARD', 'SUPER
         collegeNo: true,
         udiseNo: true,
         district: true,
+        taluka: true,
         city: true,
+        pincode: true,
         address: true,
         contactPerson: true,
         contactEmail: true,
@@ -640,7 +659,9 @@ institutesRouter.get('/', async (req, res) => {
         name: true,
         code: true,
         district: true,
+        taluka: true,
         city: true,
+        pincode: true,
         collegeNo: true,
         udiseNo: true,
         address: true,
@@ -704,7 +725,7 @@ institutesRouter.post('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req
         collegeNo: body.collegeNo || 'TBD',
         udiseNo: body.udiseNo || 'TBD',
         address: body.address,
-        district: body.district,
+        district: normalizeDistrict(body.district),
         taluka: body.taluka,
         city: body.city,
         pincode: body.pincode,
@@ -766,6 +787,100 @@ institutesRouter.post('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req
       const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
       return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
     }
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Super admin: update institute details and configuration
+institutesRouter.patch('/:id', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+  try {
+    const instituteId = z.coerce.number().int().positive().parse(req.params.id);
+    const body = z
+      .object({
+        name: z.string().min(3).max(200).optional(),
+        code: z.string().max(50).nullable().optional(),
+        collegeNo: z.string().max(20).nullable().optional(),
+        udiseNo: z.string().max(20).nullable().optional(),
+        address: z.string().max(500).nullable().optional(),
+        district: z.string().max(100).nullable().optional(),
+        taluka: z.string().max(100).nullable().optional(),
+        city: z.string().max(100).nullable().optional(),
+        pincode: z.string().max(10).nullable().optional(),
+        contactPerson: z.string().max(100).nullable().optional(),
+        contactEmail: z.union([z.string().email(), z.literal(''), z.null()]).optional(),
+        contactMobile: z.union([z.string().max(10).regex(/^\d{1,10}$/), z.literal(''), z.null()]).optional(),
+        status: z.enum(['APPROVED', 'PENDING', 'REJECTED', 'DISABLED']).optional(),
+        acceptingApplications: z.boolean().optional()
+      })
+      .parse(req.body);
+
+    const existing = await prisma.institute.findUnique({ where: { id: instituteId } });
+    if (!existing) {
+      return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND', message: 'Institute not found' });
+    }
+
+    const updateData = {};
+    if (body.name !== undefined) updateData.name = String(body.name).trim();
+    if (body.code !== undefined) {
+      const normalizedCode = normalizeOptionalText(body.code)?.toUpperCase() || null;
+      if (normalizedCode) {
+        const duplicate = await prisma.institute.findFirst({
+          where: { code: normalizedCode, NOT: { id: instituteId } }
+        });
+        if (duplicate) {
+          return res.status(409).json({ error: 'INSTITUTE_CODE_ALREADY_EXISTS', message: 'An institute with this code already exists' });
+        }
+      }
+      updateData.code = normalizedCode;
+    }
+    if (body.collegeNo !== undefined) updateData.collegeNo = normalizeOptionalText(body.collegeNo);
+    if (body.udiseNo !== undefined) updateData.udiseNo = normalizeOptionalText(body.udiseNo);
+    if (body.address !== undefined) updateData.address = normalizeOptionalText(body.address);
+    if (body.district !== undefined) updateData.district = normalizeDistrict(body.district);
+    if (body.taluka !== undefined) updateData.taluka = normalizeOptionalText(body.taluka);
+    if (body.city !== undefined) updateData.city = normalizeOptionalText(body.city);
+    if (body.pincode !== undefined) updateData.pincode = normalizeOptionalText(body.pincode);
+    if (body.contactPerson !== undefined) updateData.contactPerson = normalizeOptionalText(body.contactPerson);
+    if (body.contactEmail !== undefined) updateData.contactEmail = normalizeOptionalText(body.contactEmail);
+    if (body.contactMobile !== undefined) updateData.contactMobile = normalizeOptionalText(body.contactMobile);
+    if (body.status !== undefined) updateData.status = body.status;
+    if (body.acceptingApplications !== undefined) updateData.acceptingApplications = body.acceptingApplications;
+
+    const updated = await prisma.institute.update({
+      where: { id: instituteId },
+      data: updateData
+    });
+
+    return res.json({ ok: true, institute: toInstituteDetailsDto(updated) });
+  } catch (err) {
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    console.error('Error updating institute:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Super admin: quick status update for institute approval workflow
+institutesRouter.patch('/:id/status', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
+  try {
+    const instituteId = z.coerce.number().int().positive().parse(req.params.id);
+    const body = z.object({ status: z.enum(['APPROVED', 'PENDING', 'REJECTED', 'DISABLED']) }).parse(req.body);
+    const updated = await prisma.institute.update({
+      where: { id: instituteId },
+      data: { status: body.status }
+    });
+    return res.json({ ok: true, institute: toInstituteDetailsDto(updated) });
+  } catch (err) {
+    if (err.name === 'ZodError') {
+      const issues = Array.isArray(err.errors) ? err.errors : (err.issues || []);
+      return res.status(422).json({ error: 'VALIDATION_ERROR', issues });
+    }
+    if (err.code === 'P2025') {
+      return res.status(404).json({ error: 'INSTITUTE_NOT_FOUND', message: 'Institute not found' });
+    }
+    console.error('Error updating institute status:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
   }
 });
@@ -991,6 +1106,10 @@ institutesRouter.get('/list', async (req, res) => {
       code: true,
       collegeNo: true,
       udiseNo: true,
+      district: true,
+      taluka: true,
+      city: true,
+      pincode: true,
       address: true,
       contactPerson: true,
       contactEmail: true,
