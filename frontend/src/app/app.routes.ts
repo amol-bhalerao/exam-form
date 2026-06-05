@@ -31,6 +31,7 @@ import { ContactUsComponent } from './pages/public/contact-us/contact-us.compone
 import { TermsAndConditionsComponent } from './pages/public/terms-and-conditions/terms-and-conditions.component';
 import { RefundPolicyComponent } from './pages/public/refund-policy/refund-policy.component';
 import { MarketingLandingComponent } from './pages/marketing-landing.component';
+import { BoardPresentationLandingComponent } from './pages/board-presentation-landing.component';
 import { DocumentVerificationComponent } from './pages/public/document-verification/document-verification.component';
 import { SuperInstitutesComponent } from './pages/super/super-institutes/super-institutes.component';
 import { SuperInstituteUsersComponent } from './pages/super/super-institute-users/super-institute-users.component';
@@ -54,6 +55,8 @@ import { HealthCheckComponent } from './pages/health/health-check.component';
 export const routes: Routes = [
   { path: '', component: LandingEnhancedComponent },
   { path: 'marketing', component: MarketingLandingComponent, data: { title: 'About HSC Exam Portal' } },
+  { path: 'board-presentation', component: BoardPresentationLandingComponent, data: { title: 'Board Portal Presentation' } },
+  { path: 'presentation', component: BoardPresentationLandingComponent, data: { title: 'Board Portal Presentation' } },
   
   // Public Health Check (no auth required)
   { path: 'health', component: HealthCheckComponent, data: { title: 'System Health Monitor' } },
