@@ -85,8 +85,8 @@ type Dashboard = {
         <div>
           <div class="eyebrow">Board Institute Dashboard</div>
           <h1>Institute monitoring across districts</h1>
-          <p>View {{ dashboard()?.boardType || 'your' }} board institutes, current status, accepting-application readiness, and district-wise distribution.</p>
-          <p class="mr">{{ dashboard()?.boardType || 'आपल्या' }} बोर्डच्या संस्था, सद्यस्थिती, अर्ज स्वीकारण्याची तयारी आणि जिल्हानिहाय वितरण येथे पाहता येते.</p>
+          <p>View {{ boardScopeLabel() }} institutes, current status, accepting-application readiness, and district-wise distribution.</p>
+          <p class="mr">{{ boardScopeMarathiLabel() }} संस्था, सद्यस्थिती, अर्ज स्वीकारण्याची तयारी आणि जिल्हानिहाय वितरण येथे पाहता येते.</p>
         </div>
         <button mat-stroked-button type="button" (click)="load()" [disabled]="loading()">
           <mat-icon>refresh</mat-icon>
@@ -103,7 +103,7 @@ type Dashboard = {
 
       <div class="summary-grid">
         <mat-card class="summary-card total">
-          <span>{{ dashboard()?.boardType || 'Board' }} Institutes</span>
+          <span>{{ boardScopeLabel() }} Institutes</span>
           <strong>{{ dashboard()?.total || 0 }}</strong>
           <small>एकूण संस्था</small>
         </mat-card>
@@ -170,7 +170,7 @@ type Dashboard = {
             <mat-icon>manage_accounts</mat-icon>
             Institute User Registration
           </div>
-          <p>Track how many {{ dashboard()?.boardType || 'board' }} institutes have registered login users and which districts still need onboarding.</p>
+          <p>Track how many {{ boardScopeLabel() }} institutes have registered login users and which districts still need onboarding.</p>
           <p class="mr">किती संस्थांचे लॉगिन user तयार झाले आहेत आणि कोणत्या जिल्ह्यात संस्था registration बाकी आहे हे येथे पाहता येते.</p>
         </div>
 
@@ -709,6 +709,8 @@ export class BoardInstitutesComponent implements OnInit {
   readonly statusOptions = computed(() => [...new Set(this.institutes().map((item) => item.status || 'UNKNOWN'))].sort());
   readonly districtOptions = computed(() => [...new Set(this.institutes().map((item) => item.district || 'UNKNOWN'))].sort());
   readonly boardTypeOptions = computed(() => [...new Set(this.institutes().map((item) => item.boardType || 'HSC'))].sort());
+  readonly boardScopeLabel = computed(() => this.dashboard()?.boardType === 'ALL' ? 'All HSC / SSC' : `${this.dashboard()?.boardType || 'Board'} Board`);
+  readonly boardScopeMarathiLabel = computed(() => this.dashboard()?.boardType === 'ALL' ? 'सर्व HSC / SSC' : `${this.dashboard()?.boardType || 'आपल्या'} बोर्डच्या`);
   readonly topDistricts = computed(() => (this.dashboard()?.byDistrict || []).slice(0, 12));
   readonly pendingRegistrationDistricts = computed(() => (this.dashboard()?.registration?.byDistrict || [])
     .filter((item) => item.pendingRegistration > 0)

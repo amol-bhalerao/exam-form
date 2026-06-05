@@ -104,6 +104,7 @@ export const routes: Routes = [
 
       // SUPER ADMIN
       { path: 'super/institutes', component: SuperInstitutesComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
+      { path: 'super/institute-dashboard', component: BoardInstitutesComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
       { path: 'super/institute-users', component: SuperInstituteUsersComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
       { path: 'super/users', component: SuperUsersComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },
       { path: 'super/masters', component: SuperMastersComponent, canActivate: [roleGuard(['SUPER_ADMIN'])] },

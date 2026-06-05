@@ -867,6 +867,7 @@ export class BoardPresentationLandingComponent {
     { icon: 'map', en: 'District-wise view', mr: 'जिल्ह्यानुसार संस्था संख्या आणि फिल्टर उपलब्ध.' },
     { icon: 'verified', en: 'Current status', mr: 'APPROVED, PENDING, DISABLED स्थिती स्पष्ट दिसते.' },
     { icon: 'manage_accounts', en: 'Institute user registration', mr: 'नोंदणीकृत आणि नोंदणी बाकी संस्था जिल्ह्यानुसार ट्रॅक करता येतात.' },
+    { icon: 'admin_panel_settings', en: 'Super Admin combined view', mr: 'Super Admin ला HSC आणि SSC दोन्ही संस्थांचा एकत्रित dashboard दिसतो.' },
     { icon: 'school', en: 'HSC / SSC visibility', mr: 'संस्था HSC किंवा SSC प्रकारानुसार ओळखता येते.' }
   ];
 

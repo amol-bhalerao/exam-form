@@ -451,10 +451,10 @@ institutesRouter.get('/all', requireAuth, requireRole(['SUPER_ADMIN']), async (r
   }
 });
 
-// Board: dashboard + read-only institute list for board monitoring
-institutesRouter.get('/board/summary', requireAuth, requireRole(['BOARD']), async (req, res) => {
+// Board/Super admin: dashboard + read-only institute list for monitoring
+institutesRouter.get('/board/summary', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
   try {
-    const scopedBoardType = await getAuthBoardType(req.auth);
+    const scopedBoardType = req.auth.role === 'SUPER_ADMIN' ? 'ALL' : await getAuthBoardType(req.auth);
     const institutes = await prisma.institute.findMany({
       orderBy: [{ district: 'asc' }, { name: 'asc' }],
       select: {
@@ -476,7 +476,7 @@ institutesRouter.get('/board/summary', requireAuth, requireRole(['BOARD']), asyn
     });
     const scopedInstitutes = (await enrichInstitutesWithBoardType(institutes))
       .map(withInstituteDisplayCode)
-      .filter((institute) => (institute.boardType || 'HSC') === scopedBoardType);
+      .filter((institute) => scopedBoardType === 'ALL' || (institute.boardType || 'HSC') === scopedBoardType);
     const scopedInstituteIds = scopedInstitutes.map((institute) => Number(institute.id)).filter(Number.isFinite);
     const instituteUsers = scopedInstituteIds.length
       ? await prisma.user.findMany({
