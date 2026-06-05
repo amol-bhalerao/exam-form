@@ -28,7 +28,20 @@ type Institute = {
   status?: string;
   acceptingApplications?: boolean;
   boardType?: string;
+  registrationStatus?: string;
+  instituteUserCount?: number;
+  activeInstituteUsers?: number;
+  pendingInstituteUsers?: number;
+  instituteUserStatus?: string | null;
+  instituteUsername?: string | null;
   createdAt?: string;
+};
+
+type RegistrationDistrict = {
+  district: string;
+  total: number;
+  registered: number;
+  pendingRegistration: number;
 };
 
 type Dashboard = {
@@ -42,6 +55,14 @@ type Dashboard = {
   byBoardType: Record<string, number>;
   byDistrict: Array<{ district: string; count: number }>;
   boardType?: string;
+  registration?: {
+    totalInstitutes: number;
+    registeredInstitutes: number;
+    pendingRegistration: number;
+    activeInstituteUsers: number;
+    pendingInstituteUsers: number;
+    byDistrict: RegistrationDistrict[];
+  };
 };
 
 @Component({
@@ -142,6 +163,50 @@ type Dashboard = {
           </div>
         </mat-card>
       </div>
+
+      <mat-card class="registration-panel">
+        <div class="registration-copy">
+          <div class="panel-title">
+            <mat-icon>manage_accounts</mat-icon>
+            Institute User Registration
+          </div>
+          <p>Track how many {{ dashboard()?.boardType || 'board' }} institutes have registered login users and which districts still need onboarding.</p>
+          <p class="mr">किती संस्थांचे लॉगिन user तयार झाले आहेत आणि कोणत्या जिल्ह्यात संस्था registration बाकी आहे हे येथे पाहता येते.</p>
+        </div>
+
+        <div class="registration-stats">
+          <div class="registration-stat registered">
+            <span>Registered Institutes</span>
+            <strong>{{ dashboard()?.registration?.registeredInstitutes || 0 }}</strong>
+            <small>लॉगिन user असलेल्या संस्था</small>
+          </div>
+          <div class="registration-stat pending">
+            <span>Pending Registration</span>
+            <strong>{{ dashboard()?.registration?.pendingRegistration || 0 }}</strong>
+            <small>लॉगिन user बाकी</small>
+          </div>
+          <div class="registration-stat users">
+            <span>Active Institute Users</span>
+            <strong>{{ dashboard()?.registration?.activeInstituteUsers || 0 }}</strong>
+            <small>सक्रिय संस्था user</small>
+          </div>
+        </div>
+
+        <div class="pending-districts">
+          <div class="sub-panel-title">District-wise Non-Registered Institutes</div>
+          <div class="pending-list">
+            @for (item of pendingRegistrationDistricts(); track item.district) {
+              <button type="button" class="pending-row" (click)="setDistrictFilter(item.district)">
+                <span>{{ item.district }}</span>
+                <strong>{{ item.pendingRegistration }}</strong>
+                <small>of {{ item.total }}</small>
+              </button>
+            } @empty {
+              <div class="empty">All institutes have registration users.</div>
+            }
+          </div>
+        </div>
+      </mat-card>
 
       <mat-card class="table-panel">
         <div class="table-header">
@@ -308,6 +373,7 @@ type Dashboard = {
     }
 
     .panel,
+    .registration-panel,
     .table-panel,
     .error-card {
       padding: 18px;
@@ -330,6 +396,100 @@ type Dashboard = {
       color: #1f2343;
       font-size: 18px;
       font-weight: 900;
+    }
+
+    .sub-panel-title {
+      color: #1f2343;
+      font-size: 15px;
+      font-weight: 900;
+    }
+
+    .registration-panel {
+      display: grid;
+      grid-template-columns: minmax(260px, .9fr) minmax(360px, .9fr) minmax(280px, .8fr);
+      gap: 16px;
+      align-items: start;
+      background:
+        radial-gradient(circle at 95% 10%, rgba(34, 197, 94, 0.12), transparent 24%),
+        #fff;
+    }
+
+    .registration-copy p {
+      margin-top: 8px;
+    }
+
+    .registration-copy .mr {
+      font-family: 'Nirmala UI', sans-serif;
+      font-weight: 700;
+    }
+
+    .registration-stats {
+      display: grid;
+      gap: 10px;
+    }
+
+    .registration-stat {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+
+    .registration-stat span,
+    .registration-stat small {
+      display: block;
+      color: #64748b;
+      font-weight: 800;
+    }
+
+    .registration-stat strong {
+      display: block;
+      margin: 7px 0 3px;
+      color: #1f2343;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: -0.05em;
+    }
+
+    .registration-stat.registered { border-left: 4px solid #22c55e; }
+    .registration-stat.pending { border-left: 4px solid #f59e0b; }
+    .registration-stat.users { border-left: 4px solid #667eea; }
+
+    .pending-districts {
+      display: grid;
+      gap: 10px;
+    }
+
+    .pending-list {
+      display: grid;
+      gap: 8px;
+      max-height: 250px;
+      overflow: auto;
+    }
+
+    .pending-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #fde68a;
+      border-radius: 14px;
+      background: #fffbeb;
+      color: #92400e;
+      cursor: pointer;
+      text-align: left;
+      font-weight: 900;
+    }
+
+    .pending-row:hover {
+      border-color: #f59e0b;
+      background: #fef3c7;
+    }
+
+    .pending-row small {
+      color: #b45309;
     }
 
     .district-list {
@@ -452,7 +612,8 @@ type Dashboard = {
 
     @media (max-width: 980px) {
       .hero-card,
-      .table-header {
+      .table-header,
+      .registration-panel {
         grid-template-columns: 1fr;
         display: grid;
       }
@@ -493,6 +654,9 @@ export class BoardInstitutesComponent implements OnInit {
   readonly columnDefs: ColDef[] = [
     { headerName: 'Institute', field: 'name', flex: 1.8, minWidth: 260 },
     { headerName: 'Board', field: 'boardType', width: 105 },
+    { headerName: 'Registration', field: 'registrationStatus', minWidth: 180 },
+    { headerName: 'User Status', field: 'instituteUserStatus', width: 135 },
+    { headerName: 'Username', field: 'instituteUsername', minWidth: 160 },
     { headerName: 'Status', field: 'status', width: 135 },
     { headerName: 'District', field: 'district', width: 170 },
     { headerName: 'City', field: 'city', width: 150 },
@@ -529,6 +693,9 @@ export class BoardInstitutesComponent implements OnInit {
         item.contactMobile,
         item.contactEmail,
         item.boardType,
+        item.registrationStatus,
+        item.instituteUsername,
+        item.instituteUserStatus,
         item.status
       ].some((value) => String(value || '').toLowerCase().includes(term));
 
@@ -543,6 +710,9 @@ export class BoardInstitutesComponent implements OnInit {
   readonly districtOptions = computed(() => [...new Set(this.institutes().map((item) => item.district || 'UNKNOWN'))].sort());
   readonly boardTypeOptions = computed(() => [...new Set(this.institutes().map((item) => item.boardType || 'HSC'))].sort());
   readonly topDistricts = computed(() => (this.dashboard()?.byDistrict || []).slice(0, 12));
+  readonly pendingRegistrationDistricts = computed(() => (this.dashboard()?.registration?.byDistrict || [])
+    .filter((item) => item.pendingRegistration > 0)
+    .slice(0, 12));
   readonly statusBreakdown = computed(() => Object.entries(this.dashboard()?.byStatus || {}).map(([status, count]) => ({ status, count })).sort((a, b) => b.count - a.count));
   readonly boardTypeBreakdown = computed(() => Object.entries(this.dashboard()?.byBoardType || {}).map(([type, count]) => ({ type, count })).sort((a, b) => a.type.localeCompare(b.type)));
 

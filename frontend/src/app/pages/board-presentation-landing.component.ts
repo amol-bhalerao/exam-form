@@ -866,6 +866,7 @@ export class BoardPresentationLandingComponent {
     { icon: 'apartment', en: 'All institute list', mr: 'सर्व संस्था एकाच यादीत पाहता येतात.' },
     { icon: 'map', en: 'District-wise view', mr: 'जिल्ह्यानुसार संस्था संख्या आणि फिल्टर उपलब्ध.' },
     { icon: 'verified', en: 'Current status', mr: 'APPROVED, PENDING, DISABLED स्थिती स्पष्ट दिसते.' },
+    { icon: 'manage_accounts', en: 'Institute user registration', mr: 'नोंदणीकृत आणि नोंदणी बाकी संस्था जिल्ह्यानुसार ट्रॅक करता येतात.' },
     { icon: 'school', en: 'HSC / SSC visibility', mr: 'संस्था HSC किंवा SSC प्रकारानुसार ओळखता येते.' }
   ];
 

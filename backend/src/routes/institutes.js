@@ -474,13 +474,54 @@ institutesRouter.get('/board/summary', requireAuth, requireRole(['BOARD']), asyn
         createdAt: true
       }
     });
-    const normalized = (await enrichInstitutesWithBoardType(institutes))
+    const scopedInstitutes = (await enrichInstitutesWithBoardType(institutes))
       .map(withInstituteDisplayCode)
       .filter((institute) => (institute.boardType || 'HSC') === scopedBoardType);
+    const scopedInstituteIds = scopedInstitutes.map((institute) => Number(institute.id)).filter(Number.isFinite);
+    const instituteUsers = scopedInstituteIds.length
+      ? await prisma.user.findMany({
+        where: {
+          instituteId: { in: scopedInstituteIds },
+          role: { name: 'INSTITUTE' }
+        },
+        select: {
+          id: true,
+          instituteId: true,
+          username: true,
+          status: true,
+          createdAt: true
+        },
+        orderBy: { createdAt: 'asc' }
+      })
+      : [];
+    const usersByInstituteId = new Map();
+    for (const user of instituteUsers) {
+      const instituteId = Number(user.instituteId);
+      const existing = usersByInstituteId.get(instituteId) || [];
+      existing.push(user);
+      usersByInstituteId.set(instituteId, existing);
+    }
+    const normalized = scopedInstitutes.map((institute) => {
+      const users = usersByInstituteId.get(Number(institute.id)) || [];
+      const primaryUser = users.find((user) => user.status === 'ACTIVE') || users[0] || null;
+      return {
+        ...institute,
+        registrationStatus: users.length ? 'REGISTERED' : 'PENDING_REGISTRATION',
+        instituteUserCount: users.length,
+        activeInstituteUsers: users.filter((user) => user.status === 'ACTIVE').length,
+        pendingInstituteUsers: users.filter((user) => user.status === 'PENDING').length,
+        instituteUserStatus: primaryUser?.status || null,
+        instituteUsername: primaryUser?.username || null
+      };
+    });
     const byStatus = {};
     const byDistrict = {};
     const byBoardType = {};
+    const registrationByDistrict = {};
     let acceptingApplications = 0;
+    let registeredInstitutes = 0;
+    let activeInstituteUsers = 0;
+    let pendingInstituteUsers = 0;
 
     for (const institute of normalized) {
       const status = institute.status || 'UNKNOWN';
@@ -490,11 +531,25 @@ institutesRouter.get('/board/summary', requireAuth, requireRole(['BOARD']), asyn
       byDistrict[district] = (byDistrict[district] || 0) + 1;
       byBoardType[boardType] = (byBoardType[boardType] || 0) + 1;
       if (institute.acceptingApplications) acceptingApplications += 1;
+      if (institute.registrationStatus === 'REGISTERED') registeredInstitutes += 1;
+      activeInstituteUsers += institute.activeInstituteUsers || 0;
+      pendingInstituteUsers += institute.pendingInstituteUsers || 0;
+      if (!registrationByDistrict[district]) {
+        registrationByDistrict[district] = { district, total: 0, registered: 0, pendingRegistration: 0 };
+      }
+      registrationByDistrict[district].total += 1;
+      if (institute.registrationStatus === 'REGISTERED') {
+        registrationByDistrict[district].registered += 1;
+      } else {
+        registrationByDistrict[district].pendingRegistration += 1;
+      }
     }
 
     const districtSummary = Object.entries(byDistrict)
       .map(([district, count]) => ({ district, count }))
       .sort((a, b) => b.count - a.count || a.district.localeCompare(b.district));
+    const registrationDistrictSummary = Object.values(registrationByDistrict)
+      .sort((a, b) => b.pendingRegistration - a.pendingRegistration || b.total - a.total || a.district.localeCompare(b.district));
 
     return res.json({
       institutes: normalized,
@@ -505,6 +560,14 @@ institutesRouter.get('/board/summary', requireAuth, requireRole(['BOARD']), asyn
         byBoardType,
         byDistrict: districtSummary,
         boardType: scopedBoardType,
+        registration: {
+          totalInstitutes: normalized.length,
+          registeredInstitutes,
+          pendingRegistration: normalized.length - registeredInstitutes,
+          activeInstituteUsers,
+          pendingInstituteUsers,
+          byDistrict: registrationDistrictSummary
+        },
         approved: byStatus.APPROVED || 0,
         pending: byStatus.PENDING || 0,
         disabled: byStatus.DISABLED || 0,
