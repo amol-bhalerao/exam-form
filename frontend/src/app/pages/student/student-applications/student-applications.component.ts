@@ -25,6 +25,7 @@ type Exam = {
   applicationsUsed?: number;
   remainingApplications?: number | null;
   isCapacityReached?: boolean;
+  boardType?: 'HSC' | 'SSC' | string | null;
 };
 type ManagedStudent = {
   id: number;
@@ -38,6 +39,7 @@ type ManagedStudent = {
   gender?: string | null;
   mobile?: string | null;
   profileCompletion?: number;
+  boardType?: 'HSC' | 'SSC' | string | null;
 };
 
 type Application = {
@@ -89,7 +91,7 @@ type Application = {
           />
           <mat-autocomplete #studentAuto="matAutocomplete">
             @for (s of filteredManagedStudents(); track s.id) {
-              <mat-option [value]="displayStudentName(s)" (onSelectionChange)="onStudentOptionPicked(s, $event.isUserInput)">{{ displayStudentName(s) }} • {{ s.instituteName || 'Institute N/A' }}</mat-option>
+              <mat-option [value]="displayStudentName(s)" (onSelectionChange)="onStudentOptionPicked(s, $event.isUserInput)">{{ displayStudentName(s) }} • {{ getStudentBoardType(s) }} • {{ s.instituteName || 'Institute N/A' }}</mat-option>
             }
             @if (!filteredManagedStudents().length) {
               <mat-option [disabled]="true">No matching students found</mat-option>
@@ -105,7 +107,7 @@ type Application = {
               <mat-option [value]="e.id" [disabled]="!canCreateForExam(e)">
                 {{ e.name }} ({{ e.session }} {{ e.academicYear }})
                 <span style="color: #9ca3af; font-size: 0.8rem; margin-left: 6px;">
-                  {{ !isExamOpen(e) ? 'Closed' : (e.isCapacityReached ? 'Full' : getExamCapacityLabel(e)) }}
+                  {{ getExamBoardType(e) }} • {{ !isExamOpen(e) ? 'Closed' : (e.isCapacityReached ? 'Full' : getExamCapacityLabel(e)) }}
                 </span>
               </mat-option>
             }
@@ -651,7 +653,6 @@ export class StudentApplicationsComponent implements OnInit {
     this.loadManagedStudents();
     // this.loadInstitutes(); // Removed unnecessary institutes search call
     this.reload();
-    this.loadExams();
   }
 
   private loadManagedStudents() {
@@ -669,6 +670,7 @@ export class StudentApplicationsComponent implements OnInit {
           // Keep search empty so dropdown shows all students by default.
           this.studentSearchText.set('');
         }
+        this.loadExams();
       },
       error: (err: any) => {
         this.error.set(this.toMarathiStudentFlowError(err, 'विद्यार्थी यादी लोड करण्यात अडचण आली.'));
@@ -745,7 +747,15 @@ export class StudentApplicationsComponent implements OnInit {
 
   private loadExams() {
     // FIX: Added error handling, type safety and deduplication
-    this.http.get<{ exams: Exam[] }>(`${API_BASE_URL}/exams`).subscribe({
+    const studentId = this.selectedStudentId();
+    if (!studentId) {
+      this.exams.set([]);
+      this.selectedExamId.set(null);
+      return;
+    }
+
+    const params = new URLSearchParams({ studentId: String(studentId) });
+    this.http.get<{ exams: Exam[] }>(`${API_BASE_URL}/exams?${params.toString()}`).subscribe({
       next: (r: any) => {
         // Deduplicate exams by ID to prevent duplicates in dropdown
         const examsArray = (r.exams || []) as Exam[];
@@ -756,7 +766,10 @@ export class StudentApplicationsComponent implements OnInit {
         const uniqueExams: Exam[] = Array.from(examsMap.values());
         this.exams.set(uniqueExams);
         const active = uniqueExams.filter((e: Exam) => this.isExamOpen(e)) || [];
-        if (!active.length) this.selectedExamId.set(null);
+        const currentExamStillAvailable = uniqueExams.some((exam) => exam.id === this.selectedExamId());
+        if (!active.length || !currentExamStillAvailable) {
+          this.selectedExamId.set(active[0]?.id ?? null);
+        }
       },
       error: (err: any) => {
         console.error('Failed to load exams:', err?.error?.message || err?.message);
@@ -828,12 +841,15 @@ export class StudentApplicationsComponent implements OnInit {
     const value = (event.target as HTMLInputElement | null)?.value ?? '';
     this.studentSearchText.set(value);
     this.selectedStudentId.set(null);
+    this.exams.set([]);
+    this.selectedExamId.set(null);
   }
 
   onStudentOptionPicked(student: ManagedStudent, isUserInput: boolean) {
     if (!isUserInput) return;
     this.selectedStudentId.set(student.id);
     this.studentSearchText.set(this.displayStudentName(student));
+    this.loadExams();
   }
 
   goToProfileManager() {
@@ -916,6 +932,14 @@ export class StudentApplicationsComponent implements OnInit {
   displayStudentName(student: ManagedStudent | null | undefined): string {
     if (!student) return '-';
     return student.fullName || [student.lastName, student.firstName, student.middleName].filter(Boolean).join(' ') || `Student #${student.id}`;
+  }
+
+  getStudentBoardType(student: ManagedStudent | null | undefined): 'HSC' | 'SSC' {
+    return String(student?.boardType || '').trim().toUpperCase() === 'SSC' ? 'SSC' : 'HSC';
+  }
+
+  getExamBoardType(exam: Exam | null | undefined): 'HSC' | 'SSC' {
+    return String(exam?.boardType || '').trim().toUpperCase() === 'SSC' ? 'SSC' : 'HSC';
   }
 
   private toMarathiStudentFlowError(err: any, fallback: string): string {

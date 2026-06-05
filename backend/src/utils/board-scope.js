@@ -76,12 +76,26 @@ export async function getScopedExamIds(auth) {
   if (auth?.role === 'SUPER_ADMIN') return null;
 
   const boardType = await getAuthBoardType(auth);
+  return getScopedExamIdsForBoardType(boardType);
+}
+
+export async function getScopedExamIdsForBoardType(boardType) {
+  if (!(await hasColumn('exams', 'boardType'))) return null;
   const rows = await prisma.$queryRawUnsafe('SELECT `id` FROM `exams` WHERE `boardType` = ?', boardType);
   return rows.map((row) => Number(row.id)).filter(Number.isFinite);
 }
 
 export async function applyExamBoardScope(where, auth) {
   const scopedExamIds = await getScopedExamIds(auth);
+  return applyScopedExamIds(where, scopedExamIds);
+}
+
+export async function applyExamBoardScopeForBoardType(where, boardType) {
+  const scopedExamIds = await getScopedExamIdsForBoardType(normalizeBoardType(boardType));
+  return applyScopedExamIds(where, scopedExamIds);
+}
+
+function applyScopedExamIds(where, scopedExamIds) {
   if (!Array.isArray(scopedExamIds)) return where;
 
   const scopedIdFilter = { in: scopedExamIds };
@@ -157,5 +171,18 @@ export async function enrichInstitutesWithBoardType(institutes = []) {
   return institutes.map((institute) => ({
     ...institute,
     boardType: boardByInstituteId.get(Number(institute.id)) || DEFAULT_BOARD_TYPE
+  }));
+}
+
+export async function enrichExamsWithBoardType(exams = []) {
+  if (!exams.length || !(await hasColumn('exams', 'boardType'))) return exams;
+  const ids = exams.map((exam) => Number(exam.id)).filter(Number.isFinite);
+  if (!ids.length) return exams;
+  const placeholders = ids.map(() => '?').join(',');
+  const rows = await prisma.$queryRawUnsafe(`SELECT id, boardType FROM exams WHERE id IN (${placeholders})`, ...ids);
+  const boardByExamId = new Map(rows.map((row) => [Number(row.id), normalizeBoardType(row.boardType)]));
+  return exams.map((exam) => ({
+    ...exam,
+    boardType: boardByExamId.get(Number(exam.id)) || DEFAULT_BOARD_TYPE
   }));
 }

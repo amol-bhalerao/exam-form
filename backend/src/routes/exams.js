@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
-import { applyExamBoardScope, getAuthBoardType, stampExamBoardType } from '../utils/board-scope.js';
+import { applyExamBoardScope, applyExamBoardScopeForBoardType, enrichExamsWithBoardType, getAuthBoardType, getInstituteBoardType, stampExamBoardType } from '../utils/board-scope.js';
 
 const STUDENT_STREAM_CODE_LOOKUP = {
   '1': 'Science',
@@ -27,11 +27,31 @@ function resolveStreamIdFromStudentCode(streamCode, streams = [], fallbackStream
 
 export const examsRouter = Router();
 
+async function getAccessibleStudentForExamList(auth, studentId = null) {
+  if (auth?.role !== 'STUDENT') return null;
+  return prisma.student.findFirst({
+    where: {
+      ...(studentId ? { id: studentId } : {}),
+      OR: [
+        { userId: auth.userId },
+        { managerUserId: auth.userId }
+      ]
+    },
+    select: {
+      id: true,
+      instituteId: true,
+      streamCode: true
+    },
+    orderBy: { id: 'asc' }
+  });
+}
+
 examsRouter.get('/', requireAuth, async (req, res) => {
   const q = z
     .object({
       search: z.string().optional(),
       streamId: z.coerce.number().int().positive().optional(),
+      studentId: z.coerce.number().int().positive().optional(),
       page: z.coerce.number().int().min(1).optional(),
       limit: z.coerce.number().int().min(1).max(200).optional()
     })
@@ -58,7 +78,17 @@ examsRouter.get('/', requireAuth, async (req, res) => {
     where.applicationClose = { gte: now };
   }
 
-  where = await applyExamBoardScope(where, req.auth);
+  let selectedStudent = null;
+  if (req.auth?.role === 'STUDENT') {
+    selectedStudent = await getAccessibleStudentForExamList(req.auth, q.studentId ?? null);
+    if (q.studentId && !selectedStudent) {
+      return res.status(404).json({ error: 'MANAGED_STUDENT_NOT_FOUND', message: 'Selected student was not found for this login.' });
+    }
+    const selectedBoardType = await getInstituteBoardType(selectedStudent?.instituteId);
+    where = await applyExamBoardScopeForBoardType(where, selectedBoardType);
+  } else {
+    where = await applyExamBoardScope(where, req.auth);
+  }
 
   const page = q.page ?? 1;
   const limit = q.limit ?? 25;
@@ -76,12 +106,9 @@ examsRouter.get('/', requireAuth, async (req, res) => {
   if (req.auth?.role === 'INSTITUTE') {
     instituteId = req.auth.instituteId ?? null;
   } else if (req.auth?.role === 'STUDENT') {
-    const [student, streams] = await Promise.all([
-      prisma.student.findUnique({ where: { userId: req.auth.userId } }),
-      prisma.stream.findMany({ orderBy: { name: 'asc' } })
-    ]);
-    instituteId = student?.instituteId ?? null;
-    studentStreamId = resolveStreamIdFromStudentCode(student?.streamCode, streams, null);
+    const streams = await prisma.stream.findMany({ orderBy: { name: 'asc' } });
+    instituteId = selectedStudent?.instituteId ?? null;
+    studentStreamId = resolveStreamIdFromStudentCode(selectedStudent?.streamCode, streams, null);
   }
 
   let examsWithCapacity = exams;
@@ -148,7 +175,7 @@ examsRouter.get('/', requireAuth, async (req, res) => {
     });
   }
 
-  return res.json({ exams: examsWithCapacity, metadata: { page, limit, total } });
+  return res.json({ exams: await enrichExamsWithBoardType(examsWithCapacity), metadata: { page, limit, total } });
 });
 
 examsRouter.post('/', requireAuth, requireRole(['BOARD', 'SUPER_ADMIN']), async (req, res) => {
