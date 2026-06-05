@@ -4,7 +4,7 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
-import { enrichInstitutesWithBoardType } from '../utils/board-scope.js';
+import { enrichInstitutesWithBoardType, getAuthBoardType } from '../utils/board-scope.js';
 
 export const institutesRouter = Router();
 
@@ -454,6 +454,7 @@ institutesRouter.get('/all', requireAuth, requireRole(['SUPER_ADMIN']), async (r
 // Board: dashboard + read-only institute list for board monitoring
 institutesRouter.get('/board/summary', requireAuth, requireRole(['BOARD']), async (req, res) => {
   try {
+    const scopedBoardType = await getAuthBoardType(req.auth);
     const institutes = await prisma.institute.findMany({
       orderBy: [{ district: 'asc' }, { name: 'asc' }],
       select: {
@@ -473,7 +474,9 @@ institutesRouter.get('/board/summary', requireAuth, requireRole(['BOARD']), asyn
         createdAt: true
       }
     });
-    const normalized = (await enrichInstitutesWithBoardType(institutes)).map(withInstituteDisplayCode);
+    const normalized = (await enrichInstitutesWithBoardType(institutes))
+      .map(withInstituteDisplayCode)
+      .filter((institute) => (institute.boardType || 'HSC') === scopedBoardType);
     const byStatus = {};
     const byDistrict = {};
     const byBoardType = {};
@@ -501,6 +504,7 @@ institutesRouter.get('/board/summary', requireAuth, requireRole(['BOARD']), asyn
         byStatus,
         byBoardType,
         byDistrict: districtSummary,
+        boardType: scopedBoardType,
         approved: byStatus.APPROVED || 0,
         pending: byStatus.PENDING || 0,
         disabled: byStatus.DISABLED || 0,

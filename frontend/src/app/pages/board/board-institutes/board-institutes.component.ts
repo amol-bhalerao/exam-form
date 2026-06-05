@@ -41,6 +41,7 @@ type Dashboard = {
   byStatus: Record<string, number>;
   byBoardType: Record<string, number>;
   byDistrict: Array<{ district: string; count: number }>;
+  boardType?: string;
 };
 
 @Component({
@@ -63,8 +64,8 @@ type Dashboard = {
         <div>
           <div class="eyebrow">Board Institute Dashboard</div>
           <h1>Institute monitoring across districts</h1>
-          <p>View all institutes, current status, board type, accepting-application readiness, and district-wise distribution.</p>
-          <p class="mr">सर्व संस्था, सद्यस्थिती, बोर्ड प्रकार, अर्ज स्वीकारण्याची तयारी आणि जिल्हानिहाय वितरण येथे पाहता येते.</p>
+          <p>View {{ dashboard()?.boardType || 'your' }} board institutes, current status, accepting-application readiness, and district-wise distribution.</p>
+          <p class="mr">{{ dashboard()?.boardType || 'आपल्या' }} बोर्डच्या संस्था, सद्यस्थिती, अर्ज स्वीकारण्याची तयारी आणि जिल्हानिहाय वितरण येथे पाहता येते.</p>
         </div>
         <button mat-stroked-button type="button" (click)="load()" [disabled]="loading()">
           <mat-icon>refresh</mat-icon>
@@ -81,7 +82,7 @@ type Dashboard = {
 
       <div class="summary-grid">
         <mat-card class="summary-card total">
-          <span>Total Institutes</span>
+          <span>{{ dashboard()?.boardType || 'Board' }} Institutes</span>
           <strong>{{ dashboard()?.total || 0 }}</strong>
           <small>एकूण संस्था</small>
         </mat-card>
