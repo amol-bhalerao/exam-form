@@ -35,23 +35,23 @@ import { BrandingService } from '../../core/branding.service';
       <div class="left-section">
         <div class="branding">
           <img [src]="branding.getLogoUrl()" alt="Board Logo" class="logo" />
-          <span>Institute Portal</span>
-          <h1>Manage HSC exam applications with confidence</h1>
-          <p class="tagline">Verify student forms, manage institute records, and keep the exam process moving from one secure workspace.</p>
+          <span>संस्था पोर्टल</span>
+          <h1>संस्था सेटअप पूर्ण करून परीक्षा अर्ज व्यवस्थापन सुरू करा</h1>
+          <p class="tagline">विद्यार्थ्यांचे अर्ज पडताळण्यासाठी आधी संस्थेची मूलभूत माहिती, शिक्षक माहिती, विषय मॅपिंग आणि परीक्षा क्षमता योग्यरीत्या सेट करा.</p>
         </div>
 
         <div class="portal-stats">
           <div>
             <strong>01</strong>
-            <span>Generate letter</span>
+            <span>संस्था माहिती</span>
           </div>
           <div>
             <strong>02</strong>
-            <span>Send signed copy</span>
+            <span>शिक्षक माहिती</span>
           </div>
           <div>
             <strong>03</strong>
-            <span>Login after approval</span>
+            <span>विषय व क्षमता</span>
           </div>
         </div>
 
@@ -60,17 +60,18 @@ import { BrandingService } from '../../core/branding.service';
             <div class="letter-header">
               <div class="letter-icon"><mat-icon>verified_user</mat-icon></div>
               <div>
-                <h3>नवीन इन्स्टिट्यूट लॉगिन कसे मिळेल?</h3>
-                <p>Follow these steps to request institute access.</p>
+                <h3>प्रथम लॉगिन केल्यानंतर सेटअप कसा करावा?</h3>
+                <p>खालील क्रमाने माहिती भरल्यास अर्ज पडताळणी आणि प्रिंट प्रक्रिया व्यवस्थित चालते.</p>
               </div>
             </div>
             <div class="letter-content">
               <ol>
-                <li>Click <strong>Generate Letter Of Concern</strong>.</li>
-                <li>Fill institute details and print the letter on official letterhead.</li>
-                <li>Sign and stamp the letter from the principal/authorized person.</li>
-                <li>Send the scanned copy to <a href="mailto:mail.hscinfo@gmail.com">mail.hscinfo&#64;gmail.com</a>.</li>
+                <li><strong>Institute Details</strong> मध्ये संस्थेचे नाव, पत्ता, संपर्क क्रमांक आणि आवश्यक मूलभूत माहिती पूर्ण भरा.</li>
+                <li><strong>Teachers and Staff</strong> मध्ये शिक्षक व कर्मचारी यांची माहिती, विषय आणि संपर्क तपशील जोडा.</li>
+                <li><strong>Stream Subjects</strong> मध्ये आपल्या संस्थेसाठी लागू असलेले स्ट्रीम आणि विषय मॅपिंग योग्यरीत्या सेट करा.</li>
+                <li><strong>Exam Capacity</strong> मध्ये प्रत्येक परीक्षेसाठी उपलब्ध आसन क्षमता शेवटी सेट करा.</li>
               </ol>
+              <p class="setup-note">वरील सेटअप पूर्ण झाल्यानंतरच विद्यार्थ्यांचे सबमिट केलेले अर्ज तपासणे, पडताळणे आणि प्रिंट करणे सोपे होईल.</p>
               <div class="support-actions">
                 <a mat-raised-button
                   type="button"
@@ -78,11 +79,11 @@ import { BrandingService } from '../../core/branding.service';
                   [href]="'https://wa.me/919922774144?text=Hello%20HSC%20Exam%20Support%2C%20I%20have%20a%20query%20regarding%20the%20institute%20login.'"
                   target="_blank">
                   <mat-icon>chat</mat-icon>
-                  WhatsApp Support
+                  WhatsApp मदत
                 </a>
                 <a mat-stroked-button class="mail-btn" href="mailto:mail.hscinfo@gmail.com">
                   <mat-icon>mail</mat-icon>
-                  Email Support
+                  ई-मेल मदत
                 </a>
               </div>
             </div>
@@ -95,13 +96,13 @@ import { BrandingService } from '../../core/branding.service';
           <mat-card-header>
             <img [src]="branding.getLogoUrl()" alt="HSC Exam Portal Logo" class="login-logo" />
             <mat-card-title>{{ i18n.t('instituteLogin') }}</mat-card-title>
-            <mat-card-subtitle>Use the credentials issued after institute verification.</mat-card-subtitle>
+            <mat-card-subtitle>संस्था पडताळणीनंतर मिळालेल्या युजरनेम आणि पासवर्डने लॉगिन करा.</mat-card-subtitle>
           </mat-card-header>
 
           <mat-card-content>
             <div class="login-help">
               <mat-icon>info</mat-icon>
-              <span>Institute users can verify applications, manage subject mapping, exam capacity, and teacher records after login.</span>
+              <span>लॉगिन केल्यानंतर प्रथम संस्था माहिती, नंतर शिक्षक माहिती, विषय मॅपिंग आणि शेवटी परीक्षा क्षमता पूर्ण करा.</span>
             </div>
 
             <form [formGroup]="loginForm" (ngSubmit)="onLogin()">
@@ -136,7 +137,7 @@ import { BrandingService } from '../../core/branding.service';
 
             <button mat-raised-button class="full-width secondary-action" type="button" (click)="goToLetterGenerator()">
               <mat-icon>description</mat-icon>
-              Generate Letter Of Concern
+              संस्था संमतीपत्र तयार करा
             </button>
 
             <button mat-stroked-button class="full-width back-action" (click)="goBack()">
@@ -159,11 +160,10 @@ import { BrandingService } from '../../core/branding.service';
       display: grid;
       grid-template-columns: 1fr 1fr;
       min-height: 100vh;
-      background:
-        radial-gradient(circle at 80% 12%, rgba(242, 169, 59, 0.18), transparent 28%),
-        linear-gradient(135deg, #f8f1e4 0%, #eef7f5 100%);
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       overflow: hidden;
-      color: #102033;
+      color: #25233a;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
     .ambient-shape {
@@ -179,7 +179,7 @@ import { BrandingService } from '../../core/branding.service';
       height: 220px;
       right: -70px;
       top: 60px;
-      background: rgba(242, 169, 59, 0.36);
+      background: rgba(255, 255, 255, 0.18);
     }
 
     .shape-two {
@@ -187,15 +187,15 @@ import { BrandingService } from '../../core/branding.service';
       height: 170px;
       left: 45%;
       bottom: -60px;
-      background: rgba(93, 183, 159, 0.3);
+      background: rgba(255, 255, 255, 0.14);
     }
 
     .left-section {
       position: relative;
       z-index: 1;
       background:
-        radial-gradient(circle at 20% 18%, rgba(242, 169, 59, 0.28), transparent 28%),
-        linear-gradient(145deg, #102a43 0%, #0f5f6f 100%);
+        radial-gradient(circle at 18% 16%, rgba(255, 255, 255, 0.18), transparent 30%),
+        rgba(255, 255, 255, 0.08);
       color: white;
       padding: clamp(28px, 5vw, 64px);
       display: flex;
@@ -224,8 +224,8 @@ import { BrandingService } from '../../core/branding.service';
       margin-bottom: 10px;
       padding: 7px 11px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.14);
-      color: #ffe6b0;
+      background: rgba(255, 255, 255, 0.2);
+      color: #fff;
       font-size: 0.78rem;
       font-weight: 900;
       letter-spacing: 0.12em;
@@ -238,6 +238,7 @@ import { BrandingService } from '../../core/branding.service';
       letter-spacing: -0.075em;
       margin: 0 0 1rem 0;
       font-weight: 900;
+      text-shadow: 0 18px 38px rgba(0, 0, 0, 0.18);
     }
 
     .tagline {
@@ -265,7 +266,7 @@ import { BrandingService } from '../../core/branding.service';
 
     .portal-stats strong {
       display: block;
-      color: #ffe6b0;
+      color: #fff;
       font-size: 1.4rem;
       line-height: 1;
       margin-bottom: 8px;
@@ -306,8 +307,8 @@ import { BrandingService } from '../../core/branding.service';
       display: grid;
       place-items: center;
       border-radius: 18px;
-      background: #f2a93b;
-      color: #102033;
+      background: #fff;
+      color: #667eea;
     }
 
     .letter-icon mat-icon {
@@ -336,9 +337,19 @@ import { BrandingService } from '../../core/branding.service';
     }
 
     .letter-content a {
-      color: #ffe6b0;
+      color: #fff;
       font-weight: 900;
       text-decoration: none;
+    }
+
+    .setup-note {
+      margin: 14px 0 0;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.55;
+      font-weight: 700;
     }
 
     .support-actions {
@@ -354,7 +365,7 @@ import { BrandingService } from '../../core/branding.service';
     }
 
     .whatsapp-btn {
-      background: #1b7f5a !important;
+      background: #4caf50 !important;
       color: #fff !important;
     }
 
@@ -376,12 +387,19 @@ import { BrandingService } from '../../core/branding.service';
     .login-card {
       width: min(100%, 470px);
       max-width: 470px;
-      border-radius: 32px;
-      border: 1px solid rgba(16, 42, 67, 0.08);
-      box-shadow: 0 32px 84px rgba(16, 42, 67, 0.18);
-      background: rgba(255, 255, 255, 0.92);
+      border-radius: 12px;
+      border: 0;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.16);
+      background: #fff;
       backdrop-filter: blur(16px);
       overflow: hidden;
+    }
+
+    .login-card::before {
+      content: '';
+      display: block;
+      height: 4px;
+      background: linear-gradient(90deg, #2196f3 0%, #1976d2 100%);
     }
 
     mat-card-header {
@@ -403,7 +421,7 @@ import { BrandingService } from '../../core/branding.service';
 
     mat-card-title {
       font-size: 1.75rem;
-      color: #102033;
+      color: #333;
       font-weight: 900;
       letter-spacing: -0.04em;
     }
@@ -423,16 +441,16 @@ import { BrandingService } from '../../core/branding.service';
       grid-template-columns: 24px 1fr;
       gap: 10px;
       padding: 14px;
-      border-radius: 18px;
-      background: #eef7f5;
-      color: #405267;
+      border-radius: 12px;
+      background: #f5f7ff;
+      color: #555;
       font-size: 0.9rem;
       line-height: 1.45;
       margin-bottom: 18px;
     }
 
     .login-help mat-icon {
-      color: #0f5f6f;
+      color: #667eea;
       width: 22px;
       height: 22px;
       font-size: 22px;
@@ -464,8 +482,8 @@ import { BrandingService } from '../../core/branding.service';
     }
 
     .secondary-action {
-      background: #f2a93b !important;
-      color: #102033 !important;
+      background: #2196f3 !important;
+      color: #fff !important;
       margin-bottom: 10px;
     }
 
@@ -521,11 +539,11 @@ import { BrandingService } from '../../core/branding.service';
       width: 18px;
       height: 18px;
       font-size: 18px;
-      color: #0f5f6f;
+      color: #667eea;
     }
 
     .mini-contact a {
-      color: #0f5f6f;
+      color: #667eea;
       text-decoration: none;
       font-weight: 800;
     }
