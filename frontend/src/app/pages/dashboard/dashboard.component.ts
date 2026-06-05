@@ -1310,9 +1310,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     if (role === 'INSTITUTE') {
       this.quickActions.set([
         { label: 'Student Applications', icon: 'fact_check', link: '/app/institute/applications', primary: true },
-        { label: 'Exam Capacity', icon: 'grid_view', link: '/app/institute/exam-capacity', primary: true },
         { label: 'Institute Details', icon: 'corporate_fare', link: '/app/institute/settings' },
-        { label: 'Teachers', icon: 'people', link: '/app/institute/teachers' },
+        { label: 'Teachers and Staff', icon: 'people', link: '/app/institute/teachers' },
+        { label: 'Stream Subjects', icon: 'category', link: '/app/institute/stream-subjects' },
+        { label: 'Exam Capacity', icon: 'grid_view', link: '/app/institute/exam-capacity', primary: true },
         { label: 'Edit Profile', icon: 'person', link: '/app/profile' }
       ]);
       return;
