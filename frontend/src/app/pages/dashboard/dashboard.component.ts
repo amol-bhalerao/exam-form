@@ -271,10 +271,12 @@ interface QuickAction {
        WELCOME BANNER - Responsive hero section
        ============================================================ */
     .welcome-banner {
-      background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+      background:
+        radial-gradient(circle at 92% 18%, rgba(34, 211, 238, 0.22), transparent 26%),
+        linear-gradient(135deg, #0f172a 0%, #1e3a8a 54%, #0369a1 100%);
       border-radius: var(--border-radius);
       padding: clamp(1.2rem, 3vw, 1.75rem);
-      color: #fff;
+      color: #f8fafc;
       box-shadow: 0 16px 30px rgba(30, 64, 175, 0.22);
       animation: slideBanner 0.5s ease-out both;
     }
@@ -308,10 +310,21 @@ interface QuickAction {
       flex: 1;
     }
 
+    .welcome-title {
+      color: #ffffff;
+      text-shadow: 0 1px 2px rgba(15, 23, 42, 0.35);
+    }
+
+    .welcome-sub {
+      color: #dbeafe;
+      font-weight: 700;
+    }
+
     .welcome-email {
       margin: 4px 0 0 0;
       font-size: clamp(0.7rem, 1.8vw, 0.8rem);
-      opacity: 0.8;
+      color: #e0f2fe;
+      opacity: 1;
       font-weight: 400;
       word-break: break-all;
     }
