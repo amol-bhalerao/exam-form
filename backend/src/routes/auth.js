@@ -19,6 +19,15 @@ function getGoogleClient() {
   return googleClient;
 }
 
+async function findUserIdByUsername(username) {
+  const rows = await prisma.$queryRawUnsafe(
+    'SELECT `id` FROM `users` WHERE `username` = CONVERT(? USING utf8mb4) COLLATE utf8mb4_unicode_ci LIMIT 1',
+    String(username || '').trim()
+  );
+  const id = Number(rows?.[0]?.id);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+
 authRouter.post('/login', async (req, res, next) => {
   try {
     const body = z
@@ -28,10 +37,13 @@ authRouter.post('/login', async (req, res, next) => {
       })
       .parse(req.body);
 
-    const user = await prisma.user.findUnique({
-      where: { username: body.username },
-      include: { role: true, institute: true }
-    });
+    const userId = await findUserIdByUsername(body.username);
+    const user = userId
+      ? await prisma.user.findUnique({
+          where: { id: userId },
+          include: { role: true, institute: true }
+        })
+      : null;
 
     if (!user || user.status !== 'ACTIVE') return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
 
@@ -43,7 +55,12 @@ authRouter.post('/login', async (req, res, next) => {
       });
     }
 
-    if (user.role.name === 'INSTITUTE' && user.institute?.status !== 'APPROVED') return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
+    if (user.role.name === 'INSTITUTE' && user.institute?.status !== 'APPROVED') {
+      return res.status(403).json({
+        error: 'INSTITUTE_NOT_APPROVED',
+        message: 'Institute login is active, but the linked institute is not approved yet.'
+      });
+    }
     const ok = await bcrypt.compare(body.password, user.passwordHash);
     if (!ok) return res.status(401).json({ error: 'INVALID_CREDENTIALS' });
 

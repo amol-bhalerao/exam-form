@@ -10,16 +10,11 @@ export const usersRouter = Router();
 // Get all users (for super admin)
 usersRouter.get('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
   const query = z.object({ search: z.string().optional() }).parse(req.query);
-  const where = query.search ? {
-    OR: [
-      { username: { contains: query.search } },
-      { email: { contains: query.search } },
-      { role: { name: { contains: query.search } } }
-    ]
-  } : {};
 
   const users = await prisma.user.findMany({
-    where,
+    where: {
+      role: { name: { in: ['BOARD', 'SUPER_ADMIN'] } }
+    },
     include: {
       role: true,
       institute: { select: { name: true, code: true } }
@@ -27,7 +22,20 @@ usersRouter.get('/', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res)
     orderBy: { createdAt: 'desc' }
   });
 
-  return res.json({ users: await enrichUsersWithBoardType(users) });
+  const search = String(query.search || '').trim().toLowerCase();
+  const filtered = search
+    ? users.filter((user) => [
+        user.username,
+        user.email,
+        user.mobile,
+        user.status,
+        user.role?.name,
+        user.institute?.name,
+        user.institute?.code
+      ].some((value) => String(value || '').toLowerCase().includes(search)))
+    : users;
+
+  return res.json({ users: await enrichUsersWithBoardType(filtered) });
 });
 
 // Create a new user (board user)
@@ -152,14 +160,7 @@ usersRouter.delete('/:id', requireAuth, requireRole(['SUPER_ADMIN']), async (req
 usersRouter.get('/board', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
   const query = z.object({ search: z.string().optional() }).parse(req.query);
   const where = {
-    role: { name: 'BOARD' },
-    ...(query.search ? {
-      OR: [
-        { username: { contains: query.search } },
-        { email: { contains: query.search } },
-        { mobile: { contains: query.search } }
-      ]
-    } : {})
+    role: { name: 'BOARD' }
   };
 
   const users = await prisma.user.findMany({
@@ -170,22 +171,20 @@ usersRouter.get('/board', requireAuth, requireRole(['SUPER_ADMIN']), async (req,
     orderBy: { createdAt: 'desc' }
   });
 
-  return res.json({ users: await enrichUsersWithBoardType(users) });
+  const search = String(query.search || '').trim().toLowerCase();
+  const filtered = search
+    ? users.filter((user) => [user.username, user.email, user.mobile, user.status]
+        .some((value) => String(value || '').toLowerCase().includes(search)))
+    : users;
+
+  return res.json({ users: await enrichUsersWithBoardType(filtered) });
 });
 
 // Get institute users only
 usersRouter.get('/institute', requireAuth, requireRole(['SUPER_ADMIN']), async (req, res) => {
   const query = z.object({ search: z.string().optional() }).parse(req.query);
   const where = {
-    role: { name: 'INSTITUTE' },
-    ...(query.search ? {
-      OR: [
-        { username: { contains: query.search } },
-        { email: { contains: query.search } },
-        { mobile: { contains: query.search } },
-        { institute: { name: { contains: query.search } } }
-      ]
-    } : {})
+    role: { name: 'INSTITUTE' }
   };
 
   const users = await prisma.user.findMany({
@@ -197,5 +196,17 @@ usersRouter.get('/institute', requireAuth, requireRole(['SUPER_ADMIN']), async (
     orderBy: { createdAt: 'desc' }
   });
 
-  return res.json({ users });
+  const search = String(query.search || '').trim().toLowerCase();
+  const filtered = search
+    ? users.filter((user) => [
+        user.username,
+        user.email,
+        user.mobile,
+        user.status,
+        user.institute?.name,
+        user.institute?.code
+      ].some((value) => String(value || '').toLowerCase().includes(search)))
+    : users;
+
+  return res.json({ users: filtered });
 });

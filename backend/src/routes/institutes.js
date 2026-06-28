@@ -1152,21 +1152,26 @@ institutesRouter.get('/users/all', requireAuth, requireRole(['SUPER_ADMIN']), as
     }).parse(req.query);
     const where = { role: { name: 'INSTITUTE' } };
     if (q.status) where.status = q.status;
-    if (q.search) {
-      where.OR = [
-        { username: { contains: q.search } },
-        { email: { contains: q.search } },
-        { mobile: { contains: q.search } },
-        { institute: { name: { contains: q.search } } }
-      ];
-    }
     const users = await prisma.user.findMany({ 
       where,
       include: { institute: true },
       orderBy: { createdAt: 'desc' },
       take: 500 
     });
-    return res.json({ users });
+    const search = String(q.search || '').trim().toLowerCase();
+    const filtered = search
+      ? users.filter((user) => [
+          user.username,
+          user.email,
+          user.mobile,
+          user.status,
+          user.institute?.name,
+          user.institute?.code,
+          user.institute?.collegeNo,
+          user.institute?.udiseNo
+        ].some((value) => String(value || '').toLowerCase().includes(search)))
+      : users;
+    return res.json({ users: filtered });
   } catch (err) {
     console.error('Error fetching institute users:', err.message);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
@@ -1214,6 +1219,12 @@ institutesRouter.patch('/users/:id', requireAuth, requireRole(['SUPER_ADMIN']), 
     if (Object.keys(data).length === 0) return res.status(400).json({ error: 'NO_CHANGES' });
 
     const updated = await prisma.user.update({ where: { id: userId }, data });
+    if (updated.status === 'ACTIVE' && updated.instituteId) {
+      await prisma.institute.update({
+        where: { id: updated.instituteId },
+        data: { status: 'APPROVED' }
+      });
+    }
     return res.json({ user: updated });
   } catch (err) {
     console.error('Error updating institute user:', err.message);
@@ -1385,25 +1396,8 @@ institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), asy
       .parse(req.query);
 
     const where = {};
-    if (q.search) {
-      where.OR = [
-        { fullName: { contains: q.search } },
-        { designation: { contains: q.search } },
-        { subjectSpecialization: { contains: q.search } },
-        { email: { contains: q.search } },
-        { mobile: { contains: q.search } }
-      ];
-    }
     if (q.active !== undefined) {
       where.active = q.active === 'true';
-    }
-    if (q.institute) {
-      where.institute = {
-        OR: [
-          { name: { contains: q.institute } },
-          { code: { contains: q.institute } }
-        ]
-      };
     }
 
     const page = q.page ?? 1;
@@ -1437,6 +1431,20 @@ institutesRouter.get('/board/teachers', requireAuth, requireRole(['BOARD']), asy
           .join(' ')
           .toLowerCase()
           .includes(searchTerm)
+      );
+    }
+
+    if (q.institute) {
+      const instituteTerm = q.institute.trim().toLowerCase();
+      mergedTeachers = mergedTeachers.filter((teacher) =>
+        [
+          teacher.instituteNames,
+          ...(teacher.institutes || []).flatMap((institute) => [institute.name, institute.code, institute.district])
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase()
+          .includes(instituteTerm)
       );
     }
 
@@ -1542,18 +1550,8 @@ institutesRouter.get('/search', requireAuth, async (req, res) => {
       query: z.string().optional().default('')
     }).parse(req.query);
 
-    const searchTerm = q.query.toLowerCase();
+    const searchTerm = q.query.trim().toLowerCase();
     const institutes = await prisma.institute.findMany({
-      where: {
-        OR: [
-          { name: { contains: searchTerm, mode: 'insensitive' } },
-          { code: { contains: searchTerm, mode: 'insensitive' } },
-          { collegeNo: { contains: searchTerm, mode: 'insensitive' } },
-          { udiseNo: { contains: searchTerm, mode: 'insensitive' } },
-          { district: { contains: searchTerm, mode: 'insensitive' } },
-          { city: { contains: searchTerm, mode: 'insensitive' } }
-        ]
-      },
       select: {
         id: true,
         name: true,
@@ -1564,10 +1562,22 @@ institutesRouter.get('/search', requireAuth, async (req, res) => {
         city: true,
         status: true
       },
-      take: 20
+      orderBy: [{ name: 'asc' }],
+      take: 1000
     });
 
-    return res.json({ institutes: institutes.map(withInstituteDisplayCode) });
+    const filtered = searchTerm
+      ? institutes.filter((institute) => [
+          institute.name,
+          institute.code,
+          institute.collegeNo,
+          institute.udiseNo,
+          institute.district,
+          institute.city
+        ].some((value) => String(value || '').toLowerCase().includes(searchTerm)))
+      : institutes;
+
+    return res.json({ institutes: filtered.slice(0, 20).map(withInstituteDisplayCode) });
   } catch (err) {
     console.error('Error searching institutes:', err);
     return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });

@@ -32,12 +32,12 @@ export class HealthService {
 
   // API endpoints to test - only endpoints that actually exist
   private backendApiTests = [
-    { endpoint: '/students', method: 'GET', name: 'Students API' },
+    { endpoint: '/students', method: 'GET', name: 'Students API', authRequired: true },
     { endpoint: '/institutes', method: 'GET', name: 'Institutes API' },
     { endpoint: '/masters/streams', method: 'GET', name: 'Streams Data' },
     { endpoint: '/masters/subjects', method: 'GET', name: 'Subjects Data' },
     { endpoint: '/exams', method: 'GET', name: 'Exams API' },
-    { endpoint: '/users', method: 'GET', name: 'Users List' },
+    { endpoint: '/users', method: 'GET', name: 'Users List', authRequired: true },
     { 
       endpoint: '/auth/login', 
       method: 'POST', 
@@ -48,6 +48,7 @@ export class HealthService {
       endpoint: '/students/select-institute',
       method: 'POST',
       name: 'Institute Selection',
+      authRequired: true,
       payload: { instituteId: 1, streamCode: 'COMMERCE' }
     }
   ];
@@ -138,6 +139,10 @@ export class HealthService {
       return [200, 201, 400, 401, 403].includes(statusCode);
     }
 
+    if (test.authRequired && [401, 403].includes(statusCode)) {
+      return true;
+    }
+
     if (test.method === 'POST') {
       return [200, 201, 400, 401, 403, 409].includes(statusCode);
     }
@@ -152,6 +157,10 @@ export class HealthService {
 
     if (test.endpoint === '/auth/login' && [400, 401, 403].includes(statusCode)) {
       return `${statusCode} endpoint reachable (authentication validation working)`;
+    }
+
+    if (test.authRequired && [401, 403].includes(statusCode)) {
+      return `${statusCode} endpoint reachable (auth protection working)`;
     }
 
     if (test.method === 'POST' && [400, 401, 403, 409].includes(statusCode)) {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, computed, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,6 +12,7 @@ import { AgGridModule } from 'ag-grid-angular';
 import type { ColDef } from 'ag-grid-community';
 
 import { API_BASE_URL } from '../../../core/api';
+import { AuthService } from '../../../core/auth.service';
 
 type Institute = {
   id: number;
@@ -282,9 +283,52 @@ type Dashboard = {
             [defaultColDef]="defaultColDef"
             [pagination]="true"
             [paginationPageSize]="20"
+            (cellClicked)="onGridAction($event)"
           ></ag-grid-angular>
         </div>
       </mat-card>
+
+      @if (showCreateUserModal()) {
+        <div class="app-modal-backdrop">
+          <mat-card class="app-modal-panel app-modal-panel--sm app-modal-panel--tight">
+            <div class="modal-title-row">
+              <div>
+                <strong>Create institute user</strong>
+                <p>{{ selectedInstituteForUser()?.name }}</p>
+              </div>
+              <button mat-icon-button type="button" (click)="closeCreateUserModal()"><mat-icon>close</mat-icon></button>
+            </div>
+            <div class="create-user-grid">
+              <mat-form-field appearance="outline">
+                <mat-label>Username</mat-label>
+                <input matInput [(ngModel)]="createUsername" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Password</mat-label>
+                <input matInput type="password" [(ngModel)]="createPassword" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Email (optional)</mat-label>
+                <input matInput [(ngModel)]="createEmail" />
+              </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Mobile (optional)</mat-label>
+                <input matInput [(ngModel)]="createMobile" maxlength="10" />
+              </mat-form-field>
+            </div>
+            <div class="modal-actions">
+              <button mat-stroked-button type="button" (click)="closeCreateUserModal()">Cancel</button>
+              <button mat-flat-button color="primary" type="button" (click)="createInstituteUser()" [disabled]="creatingUser()">Create User</button>
+            </div>
+            @if (createUserMessage()) {
+              <div class="success-message">{{ createUserMessage() }}</div>
+            }
+            @if (createUserError()) {
+              <div class="error-message">{{ createUserError() }}</div>
+            }
+          </mat-card>
+        </div>
+      }
     </section>
   `,
   styles: [`
@@ -665,6 +709,51 @@ type Dashboard = {
       padding: 10px;
     }
 
+    .modal-title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .modal-title-row p {
+      margin-top: 4px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .create-user-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .create-user-grid mat-form-field {
+      width: 100%;
+      margin: 0;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .success-message,
+    .error-message {
+      margin-top: 10px;
+      font-weight: 800;
+    }
+
+    .success-message {
+      color: #065f46;
+    }
+
+    .error-message {
+      color: #b91c1c;
+    }
+
     @media (max-width: 980px) {
       .hero-card,
       .table-header,
@@ -697,16 +786,27 @@ type Dashboard = {
   `]
 })
 export class BoardInstitutesComponent implements OnInit {
+  private readonly auth = inject(AuthService);
   readonly institutes = signal<Institute[]>([]);
   readonly dashboard = signal<Dashboard | null>(null);
   readonly loading = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly filterVersion = signal(0);
+  readonly selectedInstituteForUser = signal<Institute | null>(null);
+  readonly showCreateUserModal = signal(false);
+  readonly creatingUser = signal(false);
+  readonly createUserError = signal<string | null>(null);
+  readonly createUserMessage = signal<string | null>(null);
+  readonly isSuperAdmin = computed(() => this.auth.user()?.role === 'SUPER_ADMIN');
 
   search = '';
   statusFilter = '';
   districtFilter = '';
   boardTypeFilter = '';
+  createUsername = '';
+  createPassword = '';
+  createEmail = '';
+  createMobile = '';
 
   readonly columnDefs: ColDef[] = [
     { headerName: 'Institute', field: 'name', flex: 1.8, minWidth: 260 },
@@ -727,7 +827,16 @@ export class BoardInstitutesComponent implements OnInit {
       valueFormatter: (params) => params.value ? 'YES' : 'NO'
     },
     { headerName: 'Contact', field: 'contactMobile', width: 150 },
-    { headerName: 'Email', field: 'contactEmail', minWidth: 220 }
+    { headerName: 'Email', field: 'contactEmail', minWidth: 220 },
+    {
+      headerName: 'Actions',
+      field: 'actions',
+      width: 150,
+      pinned: 'right',
+      cellRenderer: () => this.isSuperAdmin()
+        ? '<button data-action="create-user" style="border:none;background:#dbeafe;color:#1d4ed8;padding:5px 9px;border-radius:7px;font-weight:800;cursor:pointer;">Create User</button>'
+        : ''
+    }
   ];
 
   readonly defaultColDef: ColDef = {
@@ -818,5 +927,68 @@ export class BoardInstitutesComponent implements OnInit {
     const total = this.dashboard()?.total || 0;
     if (!total) return '0';
     return ((Number(count || 0) / total) * 100).toFixed(1);
+  }
+
+  onGridAction(event: any): void {
+    const action = (event.event?.target as HTMLElement)?.closest('button')?.dataset?.['action'];
+    if (action !== 'create-user' || !this.isSuperAdmin() || !event.data) return;
+    this.openCreateUserModal(event.data as Institute);
+  }
+
+  openCreateUserModal(institute: Institute): void {
+    this.selectedInstituteForUser.set(institute);
+    this.createUsername = institute.code || institute.collegeNo || '';
+    this.createPassword = 'Pass@123';
+    this.createEmail = institute.contactEmail || '';
+    this.createMobile = institute.contactMobile || '';
+    this.createUserError.set(null);
+    this.createUserMessage.set(null);
+    this.showCreateUserModal.set(true);
+  }
+
+  closeCreateUserModal(): void {
+    this.showCreateUserModal.set(false);
+    this.selectedInstituteForUser.set(null);
+    this.createUserError.set(null);
+    this.createUserMessage.set(null);
+  }
+
+  createInstituteUser(): void {
+    const institute = this.selectedInstituteForUser();
+    if (!institute?.id) {
+      this.createUserError.set('Institute is required.');
+      return;
+    }
+    if (!this.createUsername.trim() || !this.createPassword.trim()) {
+      this.createUserError.set('Username and password are required.');
+      return;
+    }
+
+    this.creatingUser.set(true);
+    this.createUserError.set(null);
+    this.createUserMessage.set(null);
+    this.http.post(`${API_BASE_URL}/institutes/users/create`, {
+      instituteId: institute.id,
+      username: this.createUsername.trim(),
+      password: this.createPassword.trim(),
+      email: this.createEmail.trim() || undefined,
+      mobile: this.createMobile.trim() || undefined
+    }).subscribe({
+      next: () => {
+        this.creatingUser.set(false);
+        this.createUserMessage.set('Institute user created and institute approved.');
+        this.load();
+        setTimeout(() => this.closeCreateUserModal(), 900);
+      },
+      error: (error) => {
+        this.creatingUser.set(false);
+        const err = error?.error;
+        if (err?.error === 'INSTITUTE_ADMIN_ALREADY_EXISTS' && err?.existingUser) {
+          this.createUserError.set(`Institute user already exists: ${err.existingUser.username} (${err.existingUser.status}).`);
+          return;
+        }
+        this.createUserError.set(err?.message || err?.error || 'Could not create institute user.');
+      }
+    });
   }
 }
