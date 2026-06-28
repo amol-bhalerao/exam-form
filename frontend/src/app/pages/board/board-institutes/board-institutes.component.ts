@@ -301,24 +301,30 @@ type Dashboard = {
             <div class="create-user-grid">
               <mat-form-field appearance="outline">
                 <mat-label>Username</mat-label>
-                <input matInput [(ngModel)]="createUsername" />
+                <input matInput [(ngModel)]="createUsername" [disabled]="!!selectedInstituteForUser()?.instituteUsername" />
               </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Password</mat-label>
-                <input matInput type="password" [(ngModel)]="createPassword" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Email (optional)</mat-label>
-                <input matInput [(ngModel)]="createEmail" />
-              </mat-form-field>
-              <mat-form-field appearance="outline">
-                <mat-label>Mobile (optional)</mat-label>
-                <input matInput [(ngModel)]="createMobile" maxlength="10" />
-              </mat-form-field>
+              @if (!selectedInstituteForUser()?.instituteUsername) {
+                <mat-form-field appearance="outline">
+                  <mat-label>Password</mat-label>
+                  <input matInput type="password" [(ngModel)]="createPassword" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Email (optional)</mat-label>
+                  <input matInput [(ngModel)]="createEmail" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Mobile (optional)</mat-label>
+                  <input matInput [(ngModel)]="createMobile" maxlength="10" />
+                </mat-form-field>
+              } @else {
+                <div class="existing-user-note">
+                  User already exists for this institute. Username cannot be changed from this popup.
+                </div>
+              }
             </div>
             <div class="modal-actions">
               <button mat-stroked-button type="button" (click)="closeCreateUserModal()">Cancel</button>
-              <button mat-flat-button color="primary" type="button" (click)="createInstituteUser()" [disabled]="creatingUser()">Create User</button>
+              <button mat-flat-button color="primary" type="button" (click)="createInstituteUser()" [disabled]="creatingUser() || !!selectedInstituteForUser()?.instituteUsername">Create User</button>
             </div>
             @if (createUserMessage()) {
               <div class="success-message">{{ createUserMessage() }}</div>
@@ -741,7 +747,8 @@ type Dashboard = {
     }
 
     .success-message,
-    .error-message {
+    .error-message,
+    .existing-user-note {
       margin-top: 10px;
       font-weight: 800;
     }
@@ -752,6 +759,14 @@ type Dashboard = {
 
     .error-message {
       color: #b91c1c;
+    }
+
+    .existing-user-note {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #fff7ed;
+      color: #9a3412;
+      line-height: 1.45;
     }
 
     @media (max-width: 980px) {
@@ -937,12 +952,12 @@ export class BoardInstitutesComponent implements OnInit {
 
   openCreateUserModal(institute: Institute): void {
     this.selectedInstituteForUser.set(institute);
-    this.createUsername = institute.code || institute.collegeNo || '';
-    this.createPassword = 'Pass@123';
+    this.createUsername = institute.instituteUsername || institute.code || institute.collegeNo || '';
+    this.createPassword = institute.instituteUsername ? '' : 'Pass@123';
     this.createEmail = institute.contactEmail || '';
     this.createMobile = institute.contactMobile || '';
     this.createUserError.set(null);
-    this.createUserMessage.set(null);
+    this.createUserMessage.set(institute.instituteUsername ? `Existing username: ${institute.instituteUsername}` : null);
     this.showCreateUserModal.set(true);
   }
 
@@ -957,6 +972,10 @@ export class BoardInstitutesComponent implements OnInit {
     const institute = this.selectedInstituteForUser();
     if (!institute?.id) {
       this.createUserError.set('Institute is required.');
+      return;
+    }
+    if (institute.instituteUsername) {
+      this.createUserError.set('Institute user already exists. Existing username cannot be changed from here.');
       return;
     }
     if (!this.createUsername.trim() || !this.createPassword.trim()) {
