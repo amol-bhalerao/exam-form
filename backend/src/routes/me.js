@@ -4,6 +4,7 @@ import { requireAuth } from '../auth/middleware.js';
 import { prisma } from '../prisma.js';
 import { attachStudentAssets } from '../utils/student-assets.js';
 import { getInstituteBoardType, getUserBoardType } from '../utils/board-scope.js';
+import { languageFieldsFor, saveLanguage, normalizeLanguage, defaultLanguageForRole } from '../services/user-preferences.js';
 
 export const meRouter = Router();
 
@@ -47,6 +48,7 @@ meRouter.get('/', requireAuth, async (req, res) => {
       email: user.email,
       mobile: user.mobile,
       status: user.status,
+      ...(await languageFieldsFor(prisma, user.id, user.role.name)),
       ...(userBoardType ? { boardType: userBoardType } : {}),
       institute: user.role.name === 'STUDENT' 
         ? (student?.institute ? { id: student.institute.id, name: student.institute.name, status: student.institute.status, boardType: userBoardType } : null)
@@ -96,6 +98,24 @@ meRouter.get('/', requireAuth, async (req, res) => {
       signatureUrl: student.signatureUrl || null
     } : null
   });
+});
+
+// Language preference — remembered per user so it is restored on the next login.
+meRouter.get('/preferences', requireAuth, async (req, res) => {
+  const fields = await languageFieldsFor(prisma, req.auth.userId, req.auth.role);
+  return res.json({ language: fields.preferredLanguage ?? fields.defaultLanguage, ...fields });
+});
+
+meRouter.put('/preferences', requireAuth, async (req, res) => {
+  const language = normalizeLanguage(req.body?.language);
+  if (!language) return res.status(400).json({ error: 'UNSUPPORTED_LANGUAGE', supported: ['mr', 'en', 'hi'] });
+  try {
+    await saveLanguage(prisma, req.auth.userId, language);
+    return res.json({ language, preferredLanguage: language, defaultLanguage: defaultLanguageForRole(req.auth.role) });
+  } catch (error) {
+    // Preference storage unavailable (e.g. table not yet created) — the client keeps its local choice.
+    return res.status(503).json({ error: 'PREFERENCES_UNAVAILABLE', message: String(error?.message || error) });
+  }
 });
 
 meRouter.put('/', requireAuth, async (req, res) => {

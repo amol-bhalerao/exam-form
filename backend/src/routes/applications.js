@@ -5,6 +5,7 @@ import { requireAuth, requireRole } from '../auth/middleware.js';
 import { env } from '../env.js';
 import { attachStudentAssets } from '../utils/student-assets.js';
 import { assignSequenceNumbers } from '../services/sequence-service.js';
+import { checkSubjectScheme } from '../services/subject-scheme.js';
 import { applyApplicationBoardScope, applyExamBoardScope, enrichApplicationBoardTypes, getInstituteBoardType, getScopedExamIds } from '../utils/board-scope.js';
 
 const STUDENT_STREAM_CODE_LOOKUP = {
@@ -823,57 +824,23 @@ applicationsRouter.post('/:id/submit', requireAuth, requireRole(['STUDENT']), as
 
   const isBacklogStyleCandidate = ['BACKLOG', 'ATKT', 'REPEATER', 'IMPROVEMENT'].includes(app.candidateType);
   if (!isBacklogStyleCandidate) {
-    const selectedCategories = [...new Set(
-      app.subjects
-        .map((entry) => String(entry.subject?.category || '').trim().toLowerCase())
-        .filter(Boolean)
-    )];
-
-    const instituteId = app.student?.instituteId ?? app.instituteId ?? null;
+    // 2019 GR subject scheme (Annexure A): 8 subjects, Group A compulsory,
+    // minimum 3 from Group B and 4 from Group B + C (MCVC / Bifocal variants).
     const streamsForSubmit = await prisma.stream.findMany({ orderBy: { name: 'asc' } });
     const streamId = resolveExamStreamId(
       { streamId: app.exam?.streamId ?? null },
       app.student,
       streamsForSubmit
     );
-
-    const availableCategories = [];
-    if (instituteId && streamId) {
-      const instituteMappedSubjects = await prisma.instituteStreamSubject.findMany({
-        where: { instituteId, streamId },
-        include: { subject: { select: { category: true } } }
-      });
-
-      if (instituteMappedSubjects.length > 0) {
-        availableCategories.push(...instituteMappedSubjects.map((row) => String(row.subject?.category || '').trim().toLowerCase()).filter(Boolean));
-      } else {
-        const streamMappedSubjects = await prisma.streamSubject.findMany({
-          where: { streamId },
-          include: { subject: { select: { category: true } } }
-        });
-        availableCategories.push(...streamMappedSubjects.map((row) => String(row.subject?.category || '').trim().toLowerCase()).filter(Boolean));
-      }
-    }
-
-    const normalizedAvailableCategories = [...new Set(availableCategories)];
-
-    // Enforce language/compulsory only when mapping categories are known for this institute/stream.
-    // If mappings are unavailable, do not hard-fail on category mix.
-    const languageAvailable = normalizedAvailableCategories.some((category) => category === 'language' || category.includes('lang'));
-    const compulsoryAvailable = normalizedAvailableCategories.some((category) => category === 'compulsory' || category.includes('compulsory'));
-    const hasMappedCategories = normalizedAvailableCategories.length > 0;
-    const requireLanguage = hasMappedCategories && languageAvailable;
-    const requireCompulsory = hasMappedCategories && compulsoryAvailable;
-
-    const hasLanguage = selectedCategories.some((category) => category === 'language' || category.includes('lang'));
-    const hasCompulsory = selectedCategories.some((category) => category === 'compulsory' || category.includes('compulsory'));
-
-    if ((requireLanguage && !hasLanguage) || (requireCompulsory && !hasCompulsory)) {
+    const streamRow = streamsForSubmit.find((row) => row.id === streamId) || app.student?.streamCode || null;
+    const verdict = checkSubjectScheme(streamRow, app.subjects);
+    if (verdict.block) {
       return res.status(400).json({
-        error: 'INVALID_SUBJECT_CATEGORY',
-        message: 'Please select at least one language and one compulsory subject before submitting.',
-        selectedCategories,
-        availableCategories: normalizedAvailableCategories
+        error: 'INVALID_SUBJECT_SCHEME',
+        message: verdict.result.errors.map((e) => e.message.en).join(' '),
+        errors: verdict.result.errors,
+        warnings: verdict.result.warnings,
+        summary: verdict.result.summary
       });
     }
   }

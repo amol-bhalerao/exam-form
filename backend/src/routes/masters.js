@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../prisma.js';
 import { requireAuth, requireRole } from '../auth/middleware.js';
+import { describeScheme, validateSubjectSelection, GR_REFERENCE } from '../services/subject-scheme.js';
 
 export const mastersRouter = Router();
 
@@ -47,7 +48,52 @@ mastersRouter.delete('/streams/:id', requireAuth, requireRole(['SUPER_ADMIN', 'B
   return res.json({ ok: true });
 });
 
-const subjectCategories = ['language', 'Compulsory', 'Optional Subjects', 'Bifocal Subjects', 'Vocational Subjects'];
+const subjectCategories = ['language', 'Language', 'Compulsory', 'Optional Subjects', 'Bifocal Subjects', 'Vocational Subjects'];
+
+// PUBLIC: 2019 GR subject scheme for a stream (Group A / B / C with the
+// database subject ids matched by board code). Used by the guided subject picker.
+async function findStreamForScheme(query) {
+  const streams = await prisma.stream.findMany({ orderBy: { name: 'asc' } });
+  if (query.streamId) return streams.find((row) => row.id === Number(query.streamId)) || null;
+  if (query.stream) {
+    const needle = String(query.stream).trim().toLowerCase();
+    return streams.find((row) => row.name.toLowerCase() === needle || String(row.shortCode || '').toLowerCase() === needle)
+      || String(query.stream);
+  }
+  return null;
+}
+
+mastersRouter.get('/subject-scheme', async (req, res) => {
+  try {
+    const query = z.object({ streamId: z.coerce.number().int().positive().optional(), stream: z.string().optional() }).parse(req.query);
+    const stream = await findStreamForScheme(query);
+    if (!stream) return res.status(400).json({ error: 'STREAM_REQUIRED', message: 'Pass streamId or stream.' });
+    const subjects = await prisma.subject.findMany({ select: { id: true, code: true, name: true, category: true } });
+    return res.json({ reference: GR_REFERENCE, ...describeScheme(stream, subjects) });
+  } catch (err) {
+    console.error('Error building subject scheme:', err);
+    return res.status(500).json({ error: 'INTERNAL_ERROR', message: err.message });
+  }
+});
+
+// Validate a selection against the scheme (used live by the exam form before payment).
+mastersRouter.post('/subject-scheme/validate', requireAuth, async (req, res) => {
+  try {
+    const body = z.object({
+      streamId: z.coerce.number().int().positive().optional(),
+      stream: z.string().optional(),
+      subjectIds: z.array(z.coerce.number().int().positive()).default([])
+    }).parse(req.body);
+    const stream = await findStreamForScheme(body);
+    const subjects = body.subjectIds.length
+      ? await prisma.subject.findMany({ where: { id: { in: body.subjectIds } }, select: { id: true, code: true, name: true } })
+      : [];
+    return res.json(validateSubjectSelection({ stream, subjects }));
+  } catch (err) {
+    console.error('Error validating subject scheme:', err);
+    return res.status(400).json({ error: 'INVALID_REQUEST', message: err.message });
+  }
+});
 
 // PUBLIC: Get all subjects for form display (no auth required)
 mastersRouter.get('/subjects', async (_req, res) => {
@@ -130,7 +176,7 @@ mastersRouter.post('/subjects', requireAuth, requireRole(['SUPER_ADMIN', 'BOARD'
   const body = z
     .object({
       name: z.string().min(2),
-      code: z.string().min(1).regex(/^[A-Z0-9]+$/, 'Subject code must contain only capital letters and numbers, no spaces'),
+      code: z.string().min(1).regex(/^[A-Z0-9/]+$/, 'Subject code must contain only capital letters, numbers and "/" (e.g. JA/JB/JC), no spaces'),
       category: z.enum(subjectCategories)
     })
     .parse(req.body);
@@ -155,7 +201,7 @@ mastersRouter.put('/subjects/:id', requireAuth, requireRole(['SUPER_ADMIN', 'BOA
   const body = z
     .object({
       name: z.string().min(2).optional(),
-      code: z.string().min(1).regex(/^[A-Z0-9]+$/, 'Subject code must contain only capital letters and numbers, no spaces').optional(),
+      code: z.string().min(1).regex(/^[A-Z0-9/]+$/, 'Subject code must contain only capital letters, numbers and "/" (e.g. JA/JB/JC), no spaces').optional(),
       category: z.enum(subjectCategories).optional()
     })
     .parse(req.body);

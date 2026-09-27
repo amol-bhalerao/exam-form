@@ -590,3 +590,12 @@ ALTER TABLE `exam_form_sequences` ADD CONSTRAINT `exam_form_sequences_streamId_f
 
 -- AddForeignKey
 ALTER TABLE `exam_form_sequences` ADD CONSTRAINT `exam_form_sequences_instituteId_fkey` FOREIGN KEY (`instituteId`) REFERENCES `institutes`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- CreateTable (per-user interface language; see backend/src/services/user-preferences.js)
+CREATE TABLE IF NOT EXISTS `user_preferences` (
+    `userId` INTEGER NOT NULL,
+    `language` VARCHAR(5) NOT NULL DEFAULT 'mr',
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+
+    PRIMARY KEY (`userId`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
