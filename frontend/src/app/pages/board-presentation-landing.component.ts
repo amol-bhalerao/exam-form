@@ -339,12 +339,18 @@ import { BrandingService } from '../core/branding.service';
     .demo-actions button:first-child {
       background: #fff;
       color: #1d4ed8;
+      --mdc-filled-button-container-color: #fff;
+      --mdc-filled-button-label-text-color: #1d4ed8;
+      --mdc-protected-button-container-color: #fff;
+      --mdc-protected-button-label-text-color: #1d4ed8;
     }
 
     .hero-actions button:last-child,
     .demo-actions button:last-child {
       color: #fff;
       border-color: rgba(255,255,255,0.72);
+      --mdc-outlined-button-label-text-color: #fff;
+      --mdc-outlined-button-outline-color: rgba(255,255,255,0.72);
     }
 
     .hero-panel {
@@ -450,7 +456,7 @@ import { BrandingService } from '../core/branding.service';
     }
 
     .workflow-card .step {
-      color: #c7d2fe;
+      color: #5b77d0;
       font-size: 2.5rem;
       font-weight: 900;
       line-height: 1;

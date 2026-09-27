@@ -38,19 +38,11 @@ export class HealthService {
     { endpoint: '/masters/subjects', method: 'GET', name: 'Subjects Data' },
     { endpoint: '/exams', method: 'GET', name: 'Exams API' },
     { endpoint: '/users', method: 'GET', name: 'Users List', authRequired: true },
-    { 
-      endpoint: '/auth/login', 
-      method: 'POST', 
-      name: 'Auth Login',
-      payload: { username: 'test', password: 'test' }
-    },
-    {
-      endpoint: '/students/select-institute',
-      method: 'POST',
-      name: 'Institute Selection',
-      authRequired: true,
-      payload: { instituteId: 1, streamCode: 'COMMERCE' }
-    }
+    // Read-only probes only. The old checks POSTed bad credentials to /auth/login
+    // (each run counted as a failed login against the admin's IP rate limit) and
+    // POSTed to /students/select-institute (a write endpoint).
+    { endpoint: '/auth/verify', method: 'POST', name: 'Auth Session', authRequired: true, payload: {} },
+    { endpoint: '/me', method: 'GET', name: 'Current User', authRequired: true }
   ];
 
   constructor(private http: HttpClient) {}
@@ -135,10 +127,6 @@ export class HealthService {
       return false;
     }
 
-    if (test.endpoint === '/auth/login') {
-      return [200, 201, 400, 401, 403].includes(statusCode);
-    }
-
     if (test.authRequired && [401, 403].includes(statusCode)) {
       return true;
     }
@@ -153,10 +141,6 @@ export class HealthService {
   private getStatusMessage(test: any, statusCode: number, fallback = 'OK'): string {
     if (statusCode === 0) {
       return 'Request timed out or server is unreachable';
-    }
-
-    if (test.endpoint === '/auth/login' && [400, 401, 403].includes(statusCode)) {
-      return `${statusCode} endpoint reachable (authentication validation working)`;
     }
 
     if (test.authRequired && [401, 403].includes(statusCode)) {

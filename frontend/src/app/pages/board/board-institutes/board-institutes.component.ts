@@ -398,6 +398,8 @@ type Dashboard = {
       color: #fff;
       border-color: rgba(255,255,255,0.6);
       flex: 0 0 auto;
+      --mdc-outlined-button-label-text-color: #fff;
+      --mdc-outlined-button-outline-color: rgba(255, 255, 255, 0.7);
     }
 
     .summary-grid {

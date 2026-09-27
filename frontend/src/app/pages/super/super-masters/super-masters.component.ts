@@ -13,7 +13,7 @@ import { AgGridModule } from 'ag-grid-angular';
 import type { ColDef } from 'ag-grid-community';
 import { API_BASE_URL } from '../../../core/api';
 
-type StreamRow = { id: number; name: string; createdAt: string };
+type StreamRow = { id: number; name: string; shortCode?: string | null };
 type SubjectRow = { id: number; code: string; name: string; category: string };
 
 @Component({
@@ -187,7 +187,7 @@ export class SuperMastersComponent implements OnInit {
 
   readonly streamColumnDefs: ColDef[] = [
     { field: 'name', headerName: 'Name', sortable: true, filter: true, flex: 1 },
-    { field: 'createdAt', headerName: 'Created', valueGetter: (params: any) => new Date(params.data.createdAt).toLocaleDateString(), flex: 1, sortable: true, filter: true },
+    { field: 'shortCode', headerName: 'Short code', valueGetter: (params: any) => params.data?.shortCode || '—', flex: 1, sortable: true, filter: true },
     { headerName: 'Actions', field: 'actions', flex: 1, minWidth: 190, cellRenderer: () => `<div style="display:flex;gap:6px;flex-wrap:wrap;"><button data-action="edit" class="grid-action-btn grid-action-btn--edit">Edit</button><button data-action="delete" class="grid-action-btn grid-action-btn--delete">Delete</button></div>` }
   ];
 

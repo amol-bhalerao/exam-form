@@ -573,6 +573,7 @@ import { LanguageSwitcherComponent } from '../../components/language-switcher/la
       margin: 8px 0 4px;
       font-size: 0.9rem;
       font-weight: 600;
+      color: #fff;
     }
 
     .feature-card p {

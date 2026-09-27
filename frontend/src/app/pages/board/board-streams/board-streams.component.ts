@@ -11,7 +11,7 @@ import { AgGridModule } from 'ag-grid-angular';
 import type { ColDef } from 'ag-grid-community';
 import { API_BASE_URL } from '../../../core/api';
 
-type StreamRow = { id: number; name: string; createdAt: string };
+type StreamRow = { id: number; name: string; shortCode?: string | null };
 
 @Component({
   selector: 'app-board-streams',
@@ -93,7 +93,7 @@ export class BoardStreamsComponent implements OnInit {
 
   readonly columnDefs: ColDef[] = [
     { field: 'name', headerName: 'Name', sortable: true, filter: true, flex: 1 },
-    { field: 'createdAt', headerName: 'Created', valueGetter: (params: any) => new Date(params.data.createdAt).toLocaleDateString(), flex: 1, sortable: true, filter: true },
+    { field: 'shortCode', headerName: 'Short code', valueGetter: (params: any) => params.data?.shortCode || '—', flex: 1, sortable: true, filter: true },
     { headerName: 'Actions', field: 'actions', flex: 1, minWidth: 180, cellRenderer: (params: any) => `<div style="display:flex;gap:4px;"><button data-action=edit style="border:none;background:#fef3c7;color:#92400e;padding:3px 8px;border-radius:4px;">Edit</button><button data-action=delete style="border:none;background:#fee2e2;color:#b91c1c;padding:3px 8px;border-radius:4px;">Delete</button></div>` }
   ];
 

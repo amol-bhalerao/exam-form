@@ -31,6 +31,8 @@ interface SessionStats {
   timestamp: string;
 }
 
+import { API_BASE_URL } from '../../core/api';
+
 @Component({
   selector: 'app-health-check',
   standalone: true,
@@ -635,7 +637,7 @@ export class HealthCheckComponent implements OnInit, OnDestroy {
   }
 
   private getHealth() {
-    return this.http.get<HealthStatus>('/api/health/metrics/status').pipe(
+    return this.http.get<HealthStatus>(`${API_BASE_URL}/health/metrics/status`).pipe(
       catchError(err => {
         throw err;
       })
@@ -643,7 +645,7 @@ export class HealthCheckComponent implements OnInit, OnDestroy {
   }
 
   private getSessionStats() {
-    return this.http.get<SessionStats>('/api/health/metrics/sessions').pipe(
+    return this.http.get<SessionStats>(`${API_BASE_URL}/health/metrics/sessions`).pipe(
       catchError(() => of(null))
     ).pipe(
       switchMap(stats => {

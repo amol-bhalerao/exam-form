@@ -10,7 +10,8 @@ export const mastersRouter = Router();
 mastersRouter.get('/streams', async (req, res) => {
   try {
     const query = z.object({ search: z.string().optional() }).parse(req.query);
-    const where = query.search ? { name: { contains: query.search, mode: 'insensitive' } } : {};
+    // MySQL collations are case-insensitive already; `mode` is PostgreSQL-only and throws on MySQL.
+    const where = query.search ? { name: { contains: query.search } } : {};
     const streams = await prisma.stream.findMany({ where, orderBy: { name: 'asc' } });
     return res.json({ streams, count: streams.length });
   } catch (err) {

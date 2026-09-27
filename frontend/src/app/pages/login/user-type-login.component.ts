@@ -371,6 +371,8 @@ import { BrandingService } from '../../core/branding.service';
       margin-top: 0.8rem;
       color: #fff;
       border-color: rgba(255, 255, 255, 0.9);
+      --mdc-outlined-button-label-text-color: #fff;
+      --mdc-outlined-button-outline-color: rgba(255, 255, 255, 0.9);
     }
 
     @media (max-width: 1024px) {

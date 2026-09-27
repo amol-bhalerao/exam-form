@@ -478,15 +478,9 @@ interface QuickAction {
        ============================================================ */
     .stat-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: var(--spacing-md);
       width: 100%;
-    }
-
-    @media (min-width: 480px) {
-      .stat-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
     }
 
     @media (min-width: 768px) {
@@ -582,8 +576,7 @@ interface QuickAction {
       display: grid;
       place-items: center;
       flex-shrink: 0;
-      box-shadow: 0 8px 14px rgba(29, 78, 216, 0.24);
-      animation: iconPulse 2.8s ease-in-out infinite;
+      box-shadow: 0 6px 12px rgba(29, 78, 216, 0.18);
     }
 
     @keyframes iconPulse {
@@ -953,7 +946,13 @@ interface QuickAction {
       }
 
       .stat-grid {
-        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      .stat-card {
+        min-height: 96px;
+        padding: 12px;
+        gap: 8px;
       }
 
       .action-btn {

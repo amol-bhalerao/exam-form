@@ -361,17 +361,13 @@ html, body {
 /*  MATERIAL DESIGN OVERRIDES                                              */
 /* ═══════════════════════════════════════════════════════════════════════ */
 
+/* Card defaults. No !important, so a page can give its own card a coloured
+   background (hero/header cards); cards no longer jump on hover. */
 mat-card {
-  border-radius: var(--card-radius) !important;
-  background: var(--panel) !important;
-  border: 1px solid var(--border) !important;
-  box-shadow: var(--card-shadow) !important;
-  transition: box-shadow var(--transition), transform var(--transition);
-}
-
-mat-card:hover {
-  box-shadow: var(--card-shadow-hover) !important;
-  transform: translateY(-4px);
+  border-radius: var(--card-radius);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
 }
 
 .mat-mdc-form-field {
@@ -427,173 +423,47 @@ input[matInput]:focus ~ .mdc-notched-outline__trailing,
 
 /* ═══════════════════════════════════════════════════════════════════════ */
 /*  BUTTON STYLES - UNIFIED & RESPONSIVE                                   */
+/*  Shape and sizing only. Colours come from the Material tokens (see the  */
+/*  design system layer at the end), so color="warn"/"accent" and page-    */
+/*  level token overrides keep working. The old rules forced a blue        */
+/*  gradient and label colour with !important, which turned red Delete     */
+/*  buttons blue and made white-on-dark button labels invisible.          */
 /* ═══════════════════════════════════════════════════════════════════════ */
 
-button[mat-flat-button],
-button[mat-stroked-button],
-button[mat-raised-button],
-button[mat-icon-button] {
-  text-transform: none !important;
-  font-weight: 600 !important;
-  letter-spacing: -0.01em !important;
-  transition: var(--transition) !important;
-  position: relative !important;
-  overflow: hidden !important;
-  border-radius: var(--radius-md) !important;
-  min-height: 44px;
-  min-width: 44px;
-  padding: 8px 16px !important;
+.mat-mdc-button-base {
+  text-transform: none;
+  font-weight: 600;
 }
 
-/* Flat Buttons - Primary Action */
-button[mat-flat-button] {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%) !important;
-  color: white !important;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3) !important;
-  position: relative !important;
-  overflow: hidden !important;
+.mat-mdc-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-raised-button,
+.mat-mdc-outlined-button {
+  min-height: 40px;
+  padding-inline: 16px;
 }
 
-button[mat-flat-button]::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transform: translate(-50%, -50%);
-  transition: width var(--transition-fast), height var(--transition-fast);
+.mat-mdc-outlined-button:not(:disabled):hover {
+  background: var(--hsc-primary-soft, #eaf0ff);
 }
 
-button[mat-flat-button]:hover:not(:disabled) {
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4) !important;
-  transform: translateY(-2px) !important;
-}
-
-button[mat-flat-button]:hover:not(:disabled)::before {
-  width: 300px;
-  height: 300px;
-}
-
-button[mat-flat-button]:active:not(:disabled) {
-  transform: translateY(0) !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3) !important;
-}
-
-/* Stroked Buttons - Secondary Action */
-button[mat-stroked-button] {
-  border: 2px solid var(--primary) !important;
-  color: var(--primary) !important;
-  background: transparent !important;
-  position: relative !important;
-  overflow: hidden !important;
-  padding: 6px 14px !important;
-}
-
-button[mat-stroked-button]::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: var(--focus-ring);
-  z-index: -1;
-  transition: left var(--transition);
-}
-
-button[mat-stroked-button]:hover:not(:disabled) {
-  background: var(--focus-ring) !important;
-  border-color: var(--primary-dark) !important;
-  color: var(--primary-dark) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25) !important;
-}
-
-button[mat-stroked-button]:hover:not(:disabled)::before {
-  left: 0;
-}
-
-/* Icon Buttons - Compact & Circular */
-button[mat-icon-button] {
-  border-radius: var(--radius-full) !important;
-  transition: var(--transition) !important;
-  position: relative !important;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 8px !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-button[mat-icon-button]::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: var(--radius-full);
-  background: rgba(99, 102, 241, 0.08);
-  opacity: 0;
-  transition: opacity var(--transition);
-}
-
-button[mat-icon-button]:hover:not(:disabled) {
-  background: var(--hover-bg) !important;
-  transform: scale(1.1) !important;
-}
-
-button[mat-icon-button]:hover:not(:disabled)::before {
-  opacity: 1;
-}
-
-button[mat-icon-button]:active:not(:disabled) {
-  transform: scale(0.95) !important;
+/* Material aligns icons inside buttons; keep them centred with the label */
+.mat-mdc-button-base > .mat-icon {
+  vertical-align: middle;
 }
 
 /* Disabled Buttons */
 button:disabled {
-  opacity: 0.5 !important;
-  cursor: not-allowed !important;
+  cursor: not-allowed;
 }
 
-/* Responsive Button Sizing */
-@media (max-width: 768px) {
-  button[mat-flat-button],
-  button[mat-stroked-button],
-  button[mat-raised-button] {
-    padding: 8px 12px !important;
-    font-size: 14px !important;
-    min-height: 40px;
-  }
-
-  button[mat-icon-button] {
-    width: 40px;
-    height: 40px;
-    min-width: 40px;
-    min-height: 40px;
-    padding: 6px !important;
-  }
-}
-
-@media (max-width: 480px) {
-  button[mat-flat-button],
-  button[mat-stroked-button],
-  button[mat-raised-button] {
-    width: 100%;
-    padding: 10px 8px !important;
-    font-size: 13px !important;
-  }
-
-  button[mat-icon-button] {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
-    padding: 4px !important;
+/* Touch devices: comfortable tap targets */
+@media (pointer: coarse) {
+  .mat-mdc-button,
+  .mat-mdc-unelevated-button,
+  .mat-mdc-raised-button,
+  .mat-mdc-outlined-button {
+    min-height: 44px;
   }
 }
 
@@ -603,10 +473,9 @@ button:disabled {
 
 mat-card {
   border-radius: var(--card-radius) !important;
-  background: var(--panel) !important;
-  border: 1px solid var(--border) !important;
-  box-shadow: var(--card-shadow) !important;
-  transition: var(--transition) !important;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow);
   overflow: hidden !important;
   position: relative !important;
   padding: 24px !important;
@@ -1142,36 +1011,37 @@ p {
 /*  LINKS & INTERACTIVE TEXT                                               */
 /* ═══════════════════════════════════════════════════════════════════════ */
 
-a {
-  color: var(--primary) !important;
-  text-decoration: none !important;
-  transition: var(--transition) !important;
-  font-weight: 500 !important;
-  position: relative !important;
-  display: inline-block !important;
+/* Plain text links. Buttons rendered as <a mat-button> keep their own
+   label colour (the old !important rule made their text the same colour
+   as the button, i.e. invisible). */
+a:not(.mat-mdc-button-base) {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
 }
 
-a::after {
+a:not([class]) {
+  position: relative;
+  display: inline-block;
+}
+
+a:not([class])::after {
   content: '';
   position: absolute;
   width: 0;
   height: 2px;
   bottom: -2px;
   left: 0;
-  background: linear-gradient(90deg, var(--primary), var(--accent));
+  background: currentColor;
   transition: width var(--transition);
 }
 
-a:hover {
-  color: var(--primary-dark) !important;
+a:not(.mat-mdc-button-base):hover {
+  color: var(--primary-dark);
 }
 
-a:hover::after {
+a:not([class]):hover::after {
   width: 100%;
-}
-
-a:active {
-  transform: scale(0.95);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════ */
@@ -1851,7 +1721,6 @@ mat-sidenav-content {
   place-items: center;
   overflow: hidden;
   // margin-top: 64px;
-  background: var(--bg);
 }
 
 .hero-bg {
@@ -3194,6 +3063,7 @@ header.board-header {
   --mat-stepper-line-color: var(--hsc-border);
 
   --mdc-elevated-card-container-shape: var(--hsc-radius-lg);
+  --mdc-elevated-card-container-color: var(--hsc-surface);
   --mdc-outlined-card-container-shape: var(--hsc-radius-lg);
   --mdc-elevated-card-container-elevation: var(--hsc-shadow);
   --mat-card-title-text-font: var(--hsc-font);
@@ -3281,12 +3151,12 @@ html body .mat-warn.mat-warn {
   --mdc-fab-container-color: var(--hsc-danger);
 }
 
-/* Cards: flat surface, hairline border */
-.mat-mdc-card:not(.mat-mdc-card-outlined) {
+/* Cards: flat surface, hairline border. Zero specificity (:where) so any
+   page can still give a card its own background, e.g. a coloured header card. */
+:where(.mat-mdc-card:not(.mat-mdc-card-outlined)) {
   border: 1px solid var(--hsc-border);
-  box-shadow: var(--hsc-shadow) !important;
-  border-radius: var(--hsc-radius-lg) !important;
-  background: var(--hsc-surface);
+  box-shadow: var(--hsc-shadow);
+  border-radius: var(--hsc-radius-lg);
 }
 
 /* Buttons */

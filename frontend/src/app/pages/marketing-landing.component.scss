@@ -132,6 +132,9 @@ $white: #ffffff;
   .cta-btn-secondary {
     color: $white;
     border-color: $white;
+    // MDC reads the label/outline colour from these tokens, not from `color`
+    --mdc-outlined-button-label-text-color: #{$white};
+    --mdc-outlined-button-outline-color: #{rgba($white, 0.75)};
 
     &:hover {
       background: rgba($white, 0.2);
