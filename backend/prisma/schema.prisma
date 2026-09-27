@@ -569,6 +569,17 @@ model News {
   @@map("news")
 }
 
+// Per-user UI preferences (interface language: mr / en / hi).
+// Accessed with raw SQL in src/services/user-preferences.js so a missing table
+// never breaks authentication; created by scripts/sync-db-columns.mjs.
+model UserPreference {
+  userId    Int      @id
+  language  String   @default("mr") @db.VarChar(5)
+  updatedAt DateTime @default(now()) @db.DateTime(3)
+
+  @@map("user_preferences")
+}
+
 model Statistic {
   id        Int      @id @default(autoincrement())
   key       String   @unique @db.VarChar(100)

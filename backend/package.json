@@ -25,6 +25,8 @@
     "format:check": "prettier --check src/**/*.js",
     "test": "vitest",
     "test:flow": "vitest tests/flow-verification.test.js --run",
+    "test:scheme": "node --test tests/node/subject-scheme.nodetest.mjs",
+    "db:gr-subjects": "node scripts/sync-db-columns.mjs",
     "test:coverage": "vitest --coverage",
     "verify:predeploy": "node scripts/predeploy-e2e.mjs"
   },

@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import * as mariadb from 'mariadb';
 import dotenv from 'dotenv';
+import { ensureUserPreferencesTable, syncGrSubjects } from '../src/services/gr-subject-sync.js';
 
 const cwd = process.cwd();
 const envPath = path.join(cwd, '.env');
@@ -184,6 +185,14 @@ async function main() {
   await pool.query(
     "UPDATE streams SET shortCode = 'VOC' WHERE (name LIKE '%Vocational%' OR name LIKE '%HSC.VOC%') AND (shortCode IS NULL OR shortCode = '')"
   );
+
+  // 2019 GR subject scheme master data + language preference storage.
+  // Both steps are idempotent and never modify existing curated rows.
+  const query = (sql, params) => pool.query(sql, params);
+  await ensureUserPreferencesTable(query);
+  if (process.env.SKIP_GR_SUBJECT_SYNC !== 'true') {
+    await syncGrSubjects(query, (msg) => console.log(msg));
+  }
 
   console.log('DB column sync done on', database);
 }

@@ -8,6 +8,11 @@ import { requireAuth } from '../auth/middleware.js';
 import { writeAuditLog } from '../middleware/audit-log.js';
 import { env } from '../env.js';
 import { getInstituteBoardType, getUserBoardType } from '../utils/board-scope.js';
+import { languageFieldsFor } from '../services/user-preferences.js';
+
+// Mock Google credentials are for local development and automated tests only.
+// They are rejected in production unless ALLOW_MOCK_GOOGLE_LOGIN=true is set explicitly.
+const MOCK_GOOGLE_LOGIN_ALLOWED = process.env.NODE_ENV !== 'production' || process.env.ALLOW_MOCK_GOOGLE_LOGIN === 'true';
 
 export const authRouter = Router();
 
@@ -93,7 +98,7 @@ authRouter.post('/login', async (req, res, next) => {
     return res.json({
       accessToken,
       refreshToken,
-      user: { ...authUser }
+      user: { ...authUser, ...(await languageFieldsFor(prisma, authUser.userId, authUser.role)) }
     });
   } catch (error) {
     next(error);
@@ -162,7 +167,7 @@ authRouter.post('/refresh', async (req, res) => {
   };
 
   const accessToken = signAccessToken(authUser);
-  return res.json({ accessToken, user: authUser });
+  return res.json({ accessToken, user: { ...authUser, ...(await languageFieldsFor(prisma, authUser.userId, authUser.role)) } });
 });
 
 authRouter.post('/logout', async (req, res) => {
@@ -245,6 +250,9 @@ authRouter.post('/google', async (req, res) => {
 
   // Handle test tokens in development mode
   if (body.credential.startsWith('mock_google_token_for_testing_')) {
+    if (!MOCK_GOOGLE_LOGIN_ALLOWED) {
+      return res.status(401).json({ error: 'INVALID_GOOGLE_TOKEN', message: 'Test sign-in is disabled in production.' });
+    }
     const timestamp = body.credential.replace('mock_google_token_for_testing_', '');
     const testEmail = `test-student-${timestamp}@hsc-exam-dev.local`;
     const testName = 'Test Student';
@@ -308,7 +316,7 @@ authRouter.post('/google', async (req, res) => {
     return res.json({
       accessToken,
       refreshToken,
-      user: authUser
+      user: { ...authUser, ...(await languageFieldsFor(prisma, authUser.userId, authUser.role)) }
     });
   }
 
@@ -414,5 +422,5 @@ authRouter.post('/google', async (req, res) => {
     meta: { email }
   });
 
-  return res.json({ accessToken, refreshToken, user: authUser });
+  return res.json({ accessToken, refreshToken, user: { ...authUser, ...(await languageFieldsFor(prisma, authUser.userId, authUser.role)) } });
 });
