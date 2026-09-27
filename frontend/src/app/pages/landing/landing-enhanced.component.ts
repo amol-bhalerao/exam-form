@@ -49,9 +49,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
           <h2 class="hero-subtitle">{{ i18n.t('welcome') }}</h2>
           <h1 class="hero-title">{{ i18n.t('welcomeToExamPortal') }}</h1>
           <p class="hero-desc">
-            {{ selectedLanguage() === 'mr' 
-              ? 'सक्रिय परीक्षा, बोर्ड सूचना, सुरक्षित पेमेंट आणि प्रिंट करण्यायोग्य परीक्षा फॉर्म यासाठी एकच विद्यार्थी सहाय्य केंद्र.'
-              : 'Your student help desk for active exams, board updates, secure payments, receipts, and printable HSC exam forms.'
+            {{ tx('Your student help desk for active exams, board updates, secure payments, receipts, and printable HSC exam forms.', 'सक्रिय परीक्षा, बोर्ड सूचना, सुरक्षित पेमेंट आणि प्रिंट करण्यायोग्य परीक्षा फॉर्म यासाठी एकच विद्यार्थी सहाय्य केंद्र.', 'सक्रिय परीक्षाओं, बोर्ड सूचनाओं, सुरक्षित भुगतान, रसीदों और प्रिंट योग्य HSC परीक्षा फ़ॉर्म के लिए विद्यार्थियों का सहायता केंद्र।')
             }}
           </p>
           
@@ -63,7 +61,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
             </button>
             <button mat-stroked-button class="btn-large btn-outline" type="button" (click)="scrollToExams()">
               <mat-icon>event_available</mat-icon>
-              {{ selectedLanguage() === 'mr' ? 'सक्रिय परीक्षा पहा' : 'View Active Exams' }}
+              {{ tx('View Active Exams', 'सक्रिय परीक्षा पहा', 'सक्रिय परीक्षाएँ देखें') }}
             </button>
           </div>
         </div>
@@ -84,14 +82,14 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       </div> -->
 
       <div class="container">
-        <h2 class="section-title">{{ selectedLanguage() === 'mr' ? 'सक्रिय परीक्षा' : 'Active Exams' }}</h2>
+        <h2 class="section-title">{{ tx('Active Exams', 'सक्रिय परीक्षा', 'सक्रिय परीक्षाएँ') }}</h2>
         
         @if ((exams$ | async); as response) {
         @if (!response.exams.length) {
         <div class="empty-public-state">
           <mat-icon>event_busy</mat-icon>
-          <h3>{{ selectedLanguage() === 'mr' ? 'सध्या कोणतीही परीक्षा खुली नाही' : 'No active exams right now' }}</h3>
-          <p>{{ selectedLanguage() === 'mr' ? 'नवीन परीक्षा सुरु होताच ती येथे दिसेल. कृपया बोर्ड सूचना तपासत रहा.' : 'When a new exam application window opens, it will appear here. Please keep checking board updates.' }}</p>
+          <h3>{{ tx('No active exams right now', 'सध्या कोणतीही परीक्षा खुली नाही', 'अभी कोई परीक्षा खुली नहीं है') }}</h3>
+          <p>{{ tx('When a new exam application window opens, it will appear here. Please keep checking board updates.', 'नवीन परीक्षा सुरु होताच ती येथे दिसेल. कृपया बोर्ड सूचना तपासत रहा.', 'नई परीक्षा के आवेदन शुरू होते ही वह यहाँ दिखेगी। कृपया बोर्ड सूचनाएँ देखते रहें।') }}</p>
         </div>
         }
         <div class="exams-grid">
@@ -106,11 +104,11 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
               <p><mat-icon>domain</mat-icon> {{ exam.board }}</p>
             </div>
             <div class="exam-deadline">
-              <p>{{ selectedLanguage() === 'mr' ? 'आवेदन समय सीमा' : 'Application Deadline' }}: {{ exam.applicationDeadline | date: 'mediumDate' }}</p>
-              <p class="application-count">{{ selectedLanguage() === 'mr' ? 'नोंदणी' : 'Applications' }}: {{ exam.totalApplications || 0 }}</p>
+              <p>{{ tx('Application Deadline', 'आवेदन समय सीमा', 'आवेदन की अंतिम तिथि') }}: {{ exam.applicationDeadline | date: 'mediumDate' }}</p>
+              <p class="application-count">{{ tx('Applications', 'नोंदणी', 'आवेदन') }}: {{ exam.totalApplications || 0 }}</p>
             </div>
             <button mat-raised-button color="primary" class="exam-btn">
-              {{ selectedLanguage() === 'mr' ? 'आवेदन करा' : 'Apply Now' }}
+              {{ tx('Apply Now', 'आवेदन करा', 'अभी आवेदन करें') }}
               <mat-icon>arrow_forward</mat-icon>
             </button>
           </div>
@@ -120,7 +118,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
         @if (!(exams$ | async)) {
         <div class="loading-exams">
           <mat-spinner diameter="40"></mat-spinner>
-          <p>{{ selectedLanguage() === 'mr' ? 'परीक्षा लोड होत आहेत...' : 'Loading exams...' }}</p>
+          <p>{{ tx('Loading exams...', 'परीक्षा लोड होत आहेत...', 'परीक्षाएँ लोड हो रही हैं...') }}</p>
         </div>
         }
       </div>
@@ -129,9 +127,9 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
     <section class="student-info-section">
       <div class="container">
         <div class="section-intro">
-          <span>{{ selectedLanguage() === 'mr' ? 'विद्यार्थी माहिती केंद्र' : 'Student Information Hub' }}</span>
-          <h2>{{ selectedLanguage() === 'mr' ? 'फॉर्म भरण्यापूर्वी सर्व आवश्यक माहिती' : 'Everything students need before filling the form' }}</h2>
-          <p>{{ selectedLanguage() === 'mr' ? 'परीक्षा निवडण्यापासून पेमेंट आणि प्रिंटपर्यंत प्रत्येक टप्प्यावर ही माहिती मदत करेल.' : 'From selecting the right exam to payment and print, this guide helps students avoid common mistakes.' }}</p>
+          <span>{{ tx('Student Information Hub', 'विद्यार्थी माहिती केंद्र', 'विद्यार्थी सूचना केंद्र') }}</span>
+          <h2>{{ tx('Everything students need before filling the form', 'फॉर्म भरण्यापूर्वी सर्व आवश्यक माहिती', 'फ़ॉर्म भरने से पहले ज़रूरी सारी जानकारी') }}</h2>
+          <p>{{ tx('From selecting the right exam to payment and print, this guide helps students avoid common mistakes.', 'परीक्षा निवडण्यापासून पेमेंट आणि प्रिंटपर्यंत प्रत्येक टप्प्यावर ही माहिती मदत करेल.', 'सही परीक्षा चुनने से लेकर भुगतान और प्रिंट तक, यह मार्गदर्शिका आम गलतियों से बचने में मदद करती है।') }}</p>
         </div>
 
         <div class="info-grid">
@@ -140,8 +138,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
               <div class="info-icon">
                 <mat-icon>{{ item.icon }}</mat-icon>
               </div>
-              <h3>{{ selectedLanguage() === 'mr' ? item.titleMr : item.title }}</h3>
-              <p>{{ selectedLanguage() === 'mr' ? item.textMr : item.text }}</p>
+              <h3>{{ tx(item.title, item.titleMr, item.titleHi) }}</h3>
+              <p>{{ tx(item.text, item.textMr, item.textHi) }}</p>
             </article>
           }
         </div>
@@ -152,12 +150,12 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       <div class="container">
         <div class="split-heading">
           <div>
-            <span>{{ selectedLanguage() === 'mr' ? 'बोर्ड अपडेट्स' : 'Board Updates' }}</span>
-            <h2>{{ selectedLanguage() === 'mr' ? 'ताज्या बातम्या व कार्यक्रम' : 'Latest news and events' }}</h2>
+            <span>{{ tx('Board Updates', 'बोर्ड अपडेट्स', 'बोर्ड अपडेट') }}</span>
+            <h2>{{ tx('Latest news and events', 'ताज्या बातम्या व कार्यक्रम', 'ताज़ा समाचार और कार्यक्रम') }}</h2>
           </div>
           <button mat-stroked-button routerLink="/login">
             <mat-icon>login</mat-icon>
-            {{ selectedLanguage() === 'mr' ? 'लॉगिन करा' : 'Login' }}
+            {{ tx('Login', 'लॉगिन करा', 'लॉगिन') }}
           </button>
         </div>
 
@@ -176,7 +174,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
           } @else {
             <div class="empty-public-state compact">
               <mat-icon>campaign</mat-icon>
-              <p>{{ selectedLanguage() === 'mr' ? 'नवीन बोर्ड सूचना येथे प्रकाशित होतील.' : 'New board notices and events will be published here.' }}</p>
+              <p>{{ tx('New board notices and events will be published here.', 'नवीन बोर्ड सूचना येथे प्रकाशित होतील.', 'नई बोर्ड सूचनाएँ और कार्यक्रम यहाँ प्रकाशित होंगे।') }}</p>
             </div>
           }
         }
@@ -186,17 +184,17 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
     <section class="journey-section">
       <div class="container journey-layout">
         <div class="journey-copy">
-          <span>{{ selectedLanguage() === 'mr' ? 'पोर्टल कसे मदत करते' : 'How this portal helps' }}</span>
-          <h2>{{ selectedLanguage() === 'mr' ? 'चुकांशिवाय परीक्षा फॉर्म पूर्ण करा' : 'Complete the exam form with fewer mistakes' }}</h2>
-          <p>{{ selectedLanguage() === 'mr' ? 'प्रोफाइलमधील माहिती पुन्हा वापरली जाते, विषय निवड मार्गदर्शित असते, पेमेंट सुरक्षित आहे आणि सबमिशननंतर प्रिंट फॉर्म उपलब्ध होतो.' : 'Profile details are reused, subject selection is guided, payment is secure, and printable forms become available after submission.' }}</p>
+          <span>{{ tx('How this portal helps', 'पोर्टल कसे मदत करते', 'यह पोर्टल कैसे मदद करता है') }}</span>
+          <h2>{{ tx('Complete the exam form with fewer mistakes', 'चुकांशिवाय परीक्षा फॉर्म पूर्ण करा', 'कम गलतियों के साथ परीक्षा फ़ॉर्म पूरा करें') }}</h2>
+          <p>{{ tx('Profile details are reused, subject selection is guided, payment is secure, and printable forms become available after submission.', 'प्रोफाइलमधील माहिती पुन्हा वापरली जाते, विषय निवड मार्गदर्शित असते, पेमेंट सुरक्षित आहे आणि सबमिशननंतर प्रिंट फॉर्म उपलब्ध होतो.', 'प्रोफ़ाइल की जानकारी दोबारा उपयोग होती है, विषय चयन में मार्गदर्शन मिलता है, भुगतान सुरक्षित है और जमा करने के बाद फ़ॉर्म प्रिंट किया जा सकता है।') }}</p>
         </div>
         <div class="journey-steps">
           @for (step of formJourney; track step.title) {
             <div class="journey-step">
               <span>{{ step.no }}</span>
               <div>
-                <h3>{{ selectedLanguage() === 'mr' ? step.titleMr : step.title }}</h3>
-                <p>{{ selectedLanguage() === 'mr' ? step.textMr : step.text }}</p>
+                <h3>{{ tx(step.title, step.titleMr, step.titleHi) }}</h3>
+                <p>{{ tx(step.text, step.textMr, step.textHi) }}</p>
               </div>
             </div>
           }
@@ -207,14 +205,14 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
     <section class="checklist-section">
       <div class="container checklist-panel">
         <div>
-          <span>{{ selectedLanguage() === 'mr' ? 'तयारी तपासणी' : 'Before You Start' }}</span>
-          <h2>{{ selectedLanguage() === 'mr' ? 'ही माहिती जवळ ठेवा' : 'Keep these details ready' }}</h2>
+          <span>{{ tx('Before You Start', 'तयारी तपासणी', 'शुरू करने से पहले') }}</span>
+          <h2>{{ tx('Keep these details ready', 'ही माहिती जवळ ठेवा', 'यह जानकारी तैयार रखें') }}</h2>
         </div>
         <div class="checklist-grid">
-          @for (item of checklist; track item) {
+          @for (item of checklist; track item.en) {
             <div class="check-item">
               <mat-icon>task_alt</mat-icon>
-              <span>{{ item }}</span>
+              <span>{{ tx(item.en, item.mr, item.hi) }}</span>
             </div>
           }
         </div>
@@ -236,10 +234,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
             <div class="feature-icon">
               <mat-icon>security</mat-icon>
             </div>
-            <h3>{{ selectedLanguage() === 'mr' ? 'सुरक्षित लॉगिन' : 'Secure Login' }}</h3>
-            <p>{{ selectedLanguage() === 'mr' 
-              ? 'Google OAuth सह एंटरप्राइज-ग्रेड सुरक्षा'
-              : 'Enterprise-grade security with Google OAuth'
+            <h3>{{ tx('Secure Login', 'सुरक्षित लॉगिन', 'सुरक्षित लॉगिन') }}</h3>
+            <p>{{ tx('Enterprise-grade security with Google OAuth', 'Google OAuth सह एंटरप्राइज-ग्रेड सुरक्षा', 'Google OAuth के साथ उच्च स्तरीय सुरक्षा')
             }}</p>
           </div>
 
@@ -247,10 +243,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
             <div class="feature-icon">
               <mat-icon>language</mat-icon>
             </div>
-            <h3>{{ selectedLanguage() === 'mr' ? 'बहुभाषिक' : 'Multilingual' }}</h3>
-            <p>{{ selectedLanguage() === 'mr'
-              ? 'मराठी आणि अंग्रेजी समर्थित'
-              : 'Support for Marathi and English'
+            <h3>{{ tx('Multilingual', 'बहुभाषिक', 'बहुभाषी') }}</h3>
+            <p>{{ tx('Available in Marathi, English and Hindi', 'मराठी, इंग्रजी आणि हिंदीमध्ये उपलब्ध', 'मराठी, अंग्रेज़ी और हिंदी में उपलब्ध')
             }}</p>
           </div>
 
@@ -258,10 +252,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
             <div class="feature-icon">
               <mat-icon>print</mat-icon>
             </div>
-            <h3>{{ selectedLanguage() === 'mr' ? 'प्रिंट करा' : 'Print Support' }}</h3>
-            <p>{{ selectedLanguage() === 'mr'
-              ? 'फॉर्म प्रिंट करा आणि जमा करा'
-              : 'Print forms with board branding'
+            <h3>{{ tx('Print Support', 'प्रिंट करा', 'प्रिंट सुविधा') }}</h3>
+            <p>{{ tx('Print forms with board branding', 'फॉर्म प्रिंट करा आणि जमा करा', 'बोर्ड ब्रांडिंग के साथ फ़ॉर्म प्रिंट करें')
             }}</p>
           </div>
 
@@ -269,10 +261,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
             <div class="feature-icon">
               <mat-icon>assessment</mat-icon>
             </div>
-            <h3>{{ selectedLanguage() === 'mr' ? 'परीक्षा नोंदणी' : 'Exam Registration' }}</h3>
-            <p>{{ selectedLanguage() === 'mr'
-              ? 'ऑनलाइन परीक्षा नोंदणी आणि व्यवस्थापन'
-              : 'Online exam registration and management'
+            <h3>{{ tx('Exam Registration', 'परीक्षा नोंदणी', 'परीक्षा पंजीकरण') }}</h3>
+            <p>{{ tx('Online exam registration and management', 'ऑनलाइन परीक्षा नोंदणी आणि व्यवस्थापन', 'ऑनलाइन परीक्षा पंजीकरण और प्रबंधन')
             }}</p>
           </div>
 
@@ -280,10 +270,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
             <div class="feature-icon">
               <mat-icon>speed</mat-icon>
             </div>
-            <h3>{{ selectedLanguage() === 'mr' ? 'वेगवान' : 'Fast & Reliable' }}</h3>
-            <p>{{ selectedLanguage() === 'mr'
-              ? '99.9% अपटाइम गारंटी'
-              : 'Lightning-fast performance guaranteed'
+            <h3>{{ tx('Fast & Reliable', 'वेगवान', 'तेज़ और भरोसेमंद') }}</h3>
+            <p>{{ tx('Lightning-fast performance guaranteed', '99.9% अपटाइम गारंटी', 'तेज़ और सुचारु कार्यप्रदर्शन')
             }}</p>
           </div>
 
@@ -291,10 +279,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
             <div class="feature-icon">
               <mat-icon>support_agent</mat-icon>
             </div>
-            <h3>{{ selectedLanguage() === 'mr' ? 'समर्थन' : '24/7 Support' }}</h3>
-            <p>{{ selectedLanguage() === 'mr'
-              ? '24/7 ग्राहक सहायता'
-              : 'Round-the-clock customer support'
+            <h3>{{ tx('24/7 Support', 'समर्थन', '24/7 सहायता') }}</h3>
+            <p>{{ tx('Round-the-clock customer support', '24/7 ग्राहक सहायता', 'चौबीसों घंटे सहायता')
             }}</p>
           </div>
         </div>
@@ -310,42 +296,34 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
     <!-- Information Section -->
     <section class="info-section">
       <div class="container">
-        <h2 class="section-title">{{ selectedLanguage() === 'mr' ? 'कसे सुरू करावे' : 'How to Get Started' }}</h2>
+        <h2 class="section-title">{{ tx('How to Get Started', 'कसे सुरू करावे', 'कैसे शुरू करें') }}</h2>
         
         <div class="steps-grid">
           <div class="step-card">
             <div class="step-number">1</div>
-            <h3>{{ selectedLanguage() === 'mr' ? 'लॉगिन करा' : 'Login' }}</h3>
-            <p>{{ selectedLanguage() === 'mr'
-              ? 'आपल्या Google खात्याद्वारे लॉगिन करा'
-              : 'Sign in with your Google account'
+            <h3>{{ tx('Login', 'लॉगिन करा', 'लॉगिन') }}</h3>
+            <p>{{ tx('Sign in with your Google account', 'आपल्या Google खात्याद्वारे लॉगिन करा', 'अपने Google खाते से साइन इन करें')
             }}</p>
           </div>
 
           <div class="step-card">
             <div class="step-number">2</div>
-            <h3>{{ selectedLanguage() === 'mr' ? 'फॉर्म भरा' : 'Fill Form' }}</h3>
-            <p>{{ selectedLanguage() === 'mr'
-              ? 'आपल्या तपशील भरा आणि विषय निवडा'
-              : 'Fill your details and select subjects'
+            <h3>{{ tx('Fill Form', 'फॉर्म भरा', 'फ़ॉर्म भरें') }}</h3>
+            <p>{{ tx('Fill your details and select subjects', 'आपल्या तपशील भरा आणि विषय निवडा', 'अपनी जानकारी भरें और विषय चुनें')
             }}</p>
           </div>
 
           <div class="step-card">
             <div class="step-number">3</div>
-            <h3>{{ selectedLanguage() === 'mr' ? 'प्रिंट करा' : 'Print Form' }}</h3>
-            <p>{{ selectedLanguage() === 'mr'
-              ? 'फॉर्म प्रिंट करा व साक्षरे करा'
-              : 'Print and sign your form'
+            <h3>{{ tx('Print Form', 'प्रिंट करा', 'फ़ॉर्म प्रिंट करें') }}</h3>
+            <p>{{ tx('Print and sign your form', 'फॉर्म प्रिंट करा व साक्षरे करा', 'फ़ॉर्म प्रिंट करें और हस्ताक्षर करें')
             }}</p>
           </div>
 
           <div class="step-card">
             <div class="step-number">4</div>
-            <h3>{{ selectedLanguage() === 'mr' ? 'जमा करा' : 'Submit' }}</h3>
-            <p>{{ selectedLanguage() === 'mr'
-              ? 'आपल्या संस्थेला जमा करा'
-              : 'Submit to your institute'
+            <h3>{{ tx('Submit', 'जमा करा', 'जमा करें') }}</h3>
+            <p>{{ tx('Submit to your institute', 'आपल्या संस्थेला जमा करा', 'अपनी संस्था में जमा करें')
             }}</p>
           </div>
         </div>
@@ -361,10 +339,8 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       </div>
 
       <div class="cta-content">
-        <h2>{{ selectedLanguage() === 'mr' ? 'सुरू करण्यास तयार?' : 'Ready to Get Started?' }}</h2>
-        <p>{{ selectedLanguage() === 'mr'
-          ? 'आज ही आपले परीक्षा अर्ज सादर करा'
-          : 'Submit your exam application today'
+        <h2>{{ tx('Ready to Get Started?', 'सुरू करण्यास तयार?', 'शुरू करने के लिए तैयार?') }}</h2>
+        <p>{{ tx('Submit your exam application today', 'आज ही आपले परीक्षा अर्ज सादर करा', 'आज ही अपना परीक्षा आवेदन जमा करें')
         }}</p>
         <button mat-raised-button color="accent" class="btn-cta" routerLink="/google-login">
           <mat-icon>arrow_forward</mat-icon>
@@ -378,15 +354,13 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       <div class="container">
         <div class="footer-content">
           <div class="footer-section">
-            <h4>{{ selectedLanguage() === 'mr' ? 'अंतर्गत माहिती' : 'About' }}</h4>
-            <p>{{ selectedLanguage() === 'mr'
-              ? 'HSC परीक्षा व्यवस्थापन प्रणाली - Hisoft IT Solutions'
-              : 'HSC Exam Management System - Powered by Hisoft IT Solutions'
+            <h4>{{ tx('About', 'अंतर्गत माहिती', 'परिचय') }}</h4>
+            <p>{{ tx('HSC Exam Management System - Powered by Hisoft IT Solutions', 'HSC परीक्षा व्यवस्थापन प्रणाली - Hisoft IT Solutions', 'HSC परीक्षा प्रबंधन प्रणाली - Hisoft IT Solutions द्वारा संचालित')
             }}</p>
           </div>
 
           <div class="footer-section">
-            <h4>{{ selectedLanguage() === 'mr' ? 'त्वरित लिंक्स' : 'Quick Links' }}</h4>
+            <h4>{{ tx('Quick Links', 'त्वरित लिंक्स', 'त्वरित लिंक') }}</h4>
             <ul>
               <li><a (click)="scrollToFeatures()">{{ i18n.t('features') }}</a></li>
               <li><a routerLink="/google-login">{{ i18n.t('login') }}</a></li>
@@ -397,13 +371,13 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
           </div>
 
           <div class="footer-section">
-            <h4>{{ selectedLanguage() === 'mr' ? 'संपर्क' : 'Contact' }}</h4>
+            <h4>{{ tx('Contact', 'संपर्क', 'संपर्क') }}</h4>
             <p>📧 {{ branding.getEmail() }}</p>
             <p>📞 {{ branding.getContactNumber() }}</p>
           </div>
 
           <div class="footer-section">
-            <h4>{{ selectedLanguage() === 'mr' ? 'समर्थन' : 'Support' }}</h4>
+            <h4>{{ tx('Support', 'समर्थन', 'सहायता') }}</h4>
             <ul>
               <li><a href="{{ branding.getWebsite() }}" target="_blank">{{ i18n.t('about') }}</a></li>
               <li><a routerLink="/contact-us">Contact Us</a></li>
@@ -414,7 +388,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
         </div>
 
         <div class="footer-bottom">
-          <p>&copy; 2026 {{ branding.getBoardNameShort() }}. {{ selectedLanguage() === 'mr' ? 'सर्व हक्क राखीव' : 'All rights reserved' }}</p>
+          <p>&copy; 2026 {{ branding.getBoardNameShort() }}. {{ tx('All rights reserved', 'सर्व हक्क राखीव', 'सर्वाधिकार सुरक्षित') }}</p>
         </div>
       </div>
     </footer>
@@ -1694,28 +1668,36 @@ export class LandingEnhancedComponent implements OnInit {
       title: 'Active Exam Windows',
       titleMr: 'सक्रिय परीक्षा कालावधी',
       text: 'See which HSC exams are currently accepting applications and note the deadline before you start.',
-      textMr: 'कोणत्या HSC परीक्षा अर्जासाठी खुल्या आहेत आणि अंतिम तारीख काय आहे हे लगेच पहा.'
+      textMr: 'कोणत्या HSC परीक्षा अर्जासाठी खुल्या आहेत आणि अंतिम तारीख काय आहे हे लगेच पहा.',
+      titleHi: 'सक्रिय परीक्षा अवधि',
+      textHi: 'कौन-सी HSC परीक्षाएँ आवेदन के लिए खुली हैं और अंतिम तिथि क्या है, तुरंत देखें।'
     },
     {
       icon: 'assignment',
       title: 'Guided Form Filling',
       titleMr: 'मार्गदर्शित फॉर्म प्रक्रिया',
       text: 'Complete profile, exam, subject, document, payment, and print steps in the correct order.',
-      textMr: 'प्रोफाइल, परीक्षा, विषय, कागदपत्रे, पेमेंट आणि प्रिंट हे सर्व टप्पे योग्य क्रमाने पूर्ण करा.'
+      textMr: 'प्रोफाइल, परीक्षा, विषय, कागदपत्रे, पेमेंट आणि प्रिंट हे सर्व टप्पे योग्य क्रमाने पूर्ण करा.',
+      titleHi: 'मार्गदर्शित फ़ॉर्म प्रक्रिया',
+      textHi: 'प्रोफ़ाइल, परीक्षा, विषय, दस्तावेज़, भुगतान और प्रिंट के सभी चरण सही क्रम में पूरे करें।'
     },
     {
       icon: 'payments',
       title: 'Secure Fee Payment',
       titleMr: 'सुरक्षित शुल्क पेमेंट',
       text: 'Pay online through the live payment gateway and keep your receipt available for records.',
-      textMr: 'लाईव्ह पेमेंट गेटवेद्वारे शुल्क भरा आणि पावती रेकॉर्डसाठी जतन करा.'
+      textMr: 'लाईव्ह पेमेंट गेटवेद्वारे शुल्क भरा आणि पावती रेकॉर्डसाठी जतन करा.',
+      titleHi: 'सुरक्षित शुल्क भुगतान',
+      textHi: 'ऑनलाइन पेमेंट गेटवे से शुल्क भरें और रसीद रिकॉर्ड के लिए सहेजें।'
     },
     {
       icon: 'print',
       title: 'Printable Exam Form',
       titleMr: 'प्रिंट करण्यायोग्य परीक्षा फॉर्म',
       text: 'After submission and payment, print the exam form for institute verification.',
-      textMr: 'सबमिशन आणि पेमेंटनंतर संस्थेकडून पडताळणीसाठी परीक्षा फॉर्म प्रिंट करा.'
+      textMr: 'सबमिशन आणि पेमेंटनंतर संस्थेकडून पडताळणीसाठी परीक्षा फॉर्म प्रिंट करा.',
+      titleHi: 'प्रिंट योग्य परीक्षा फ़ॉर्म',
+      textHi: 'जमा करने और भुगतान के बाद संस्था के सत्यापन के लिए परीक्षा फ़ॉर्म प्रिंट करें।'
     }
   ];
 
@@ -1725,41 +1707,55 @@ export class LandingEnhancedComponent implements OnInit {
       title: 'Login with Google',
       titleMr: 'Google ने लॉगिन करा',
       text: 'Use the email account that should remain linked with the student profile.',
-      textMr: 'विद्यार्थी प्रोफाइलशी जोडले जाणारे ईमेल खाते वापरा.'
+      textMr: 'विद्यार्थी प्रोफाइलशी जोडले जाणारे ईमेल खाते वापरा.',
+      titleHi: 'Google से लॉगिन करें',
+      textHi: 'वह ईमेल खाता उपयोग करें जो विद्यार्थी प्रोफ़ाइल से जुड़ा रहेगा।'
     },
     {
       no: '02',
       title: 'Complete Student Profile',
       titleMr: 'विद्यार्थी प्रोफाइल पूर्ण करा',
       text: 'Fill personal, institute, stream, bank, and previous exam details once.',
-      textMr: 'वैयक्तिक, संस्था, शाखा, बँक आणि मागील परीक्षेची माहिती एकदाच भरा.'
+      textMr: 'वैयक्तिक, संस्था, शाखा, बँक आणि मागील परीक्षेची माहिती एकदाच भरा.',
+      titleHi: 'विद्यार्थी प्रोफ़ाइल पूरी करें',
+      textHi: 'व्यक्तिगत, संस्था, संकाय, बैंक और पिछली परीक्षा की जानकारी एक बार भरें।'
     },
     {
       no: '03',
       title: 'Select Exam and Subjects',
       titleMr: 'परीक्षा आणि विषय निवडा',
       text: 'Choose the active exam, candidate type, language of answer, and applicable subjects.',
-      textMr: 'सक्रिय परीक्षा, उमेदवार प्रकार, उत्तर भाषा आणि लागू विषय निवडा.'
+      textMr: 'सक्रिय परीक्षा, उमेदवार प्रकार, उत्तर भाषा आणि लागू विषय निवडा.',
+      titleHi: 'परीक्षा और विषय चुनें',
+      textHi: 'सक्रिय परीक्षा, उम्मीदवार प्रकार, उत्तर की भाषा और लागू विषय चुनें।'
     },
     {
       no: '04',
       title: 'Pay, Submit, Print',
       titleMr: 'पेमेंट, सबमिट, प्रिंट',
       text: 'Complete payment, submit the application, then print the form and receipt.',
-      textMr: 'पेमेंट पूर्ण करा, अर्ज सबमिट करा आणि फॉर्म व पावती प्रिंट करा.'
+      textMr: 'पेमेंट पूर्ण करा, अर्ज सबमिट करा आणि फॉर्म व पावती प्रिंट करा.',
+      titleHi: 'भुगतान, जमा, प्रिंट',
+      textHi: 'भुगतान पूरा करें, आवेदन जमा करें और फ़ॉर्म व रसीद प्रिंट करें।'
     }
   ];
 
   readonly checklist = [
-    'Google email account access',
-    'Institute / college details',
-    'Student personal and address details',
-    'SSC / previous exam information',
-    'Subject and medium selection',
-    'Photo and signature files',
-    'Bank details for student profile',
-    'Online payment method'
+    { en: 'Google email account access', mr: 'Google ईमेल खात्याचा प्रवेश', hi: 'Google ईमेल खाते तक पहुँच' },
+    { en: 'Institute / college details', mr: 'संस्था / महाविद्यालयाची माहिती', hi: 'संस्था / महाविद्यालय की जानकारी' },
+    { en: 'Student personal and address details', mr: 'विद्यार्थ्याची वैयक्तिक व पत्त्याची माहिती', hi: 'विद्यार्थी की व्यक्तिगत और पते की जानकारी' },
+    { en: 'SSC / previous exam information', mr: 'SSC / मागील परीक्षेची माहिती', hi: 'SSC / पिछली परीक्षा की जानकारी' },
+    { en: 'Subject and medium selection', mr: 'विषय व माध्यम निवड', hi: 'विषय और माध्यम का चयन' },
+    { en: 'Photo and signature files', mr: 'फोटो व स्वाक्षरी फाइल', hi: 'फ़ोटो और हस्ताक्षर फ़ाइलें' },
+    { en: 'Bank details for student profile', mr: 'विद्यार्थी प्रोफाइलसाठी बँक तपशील', hi: 'विद्यार्थी प्रोफ़ाइल के लिए बैंक विवरण' },
+    { en: 'Online payment method', mr: 'ऑनलाइन पेमेंट पद्धत', hi: 'ऑनलाइन भुगतान का तरीका' }
   ];
+
+  /** Pick English / Marathi / Hindi text for the current language. */
+  tx(en: string, mr: string, hi?: string): string {
+    const lang = this.selectedLanguage();
+    return lang === 'mr' ? mr : lang === 'hi' ? (hi || en) : en;
+  }
 
   ngOnInit() {
     // Redirect logged-in users to the dashboard

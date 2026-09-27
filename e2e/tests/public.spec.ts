@@ -16,6 +16,15 @@ test.describe('public pages', () => {
     await expectNoHorizontalScroll(page);
   });
 
+  test('landing page is fully available in Hindi', async ({ page }) => {
+    await page.goto('/');
+    await page.getByRole('radio', { name: 'हिंदी' }).click();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'hi');
+    await expect(page.getByText('यह जानकारी तैयार रखें')).toBeVisible();
+    await expect(page.getByText('Google ईमेल खाते तक पहुँच')).toBeVisible();
+    await expect(page.getByText('Keep these details ready')).toHaveCount(0);
+  });
+
   test('login chooser offers student, institute and board portals @responsive', async ({ page }) => {
     await page.goto('/login');
     for (const name of ['Student', 'Institute', 'Board']) {
