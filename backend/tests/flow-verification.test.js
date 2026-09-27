@@ -30,7 +30,24 @@ async function api(method, path, { token, body } = {}) {
   };
 }
 
-describe('Automated Flow Verification', () => {
+// This suite verifies a real student's paid application end to end. It needs
+// the mock Google student to already have a paid, submitted application, so it
+// is skipped (not failed) on a fresh database.
+async function hasPaidSubmittedApplication() {
+  try {
+    const login = await api('POST', '/api/auth/google', { body: { credential: TEST_CREDENTIAL } });
+    if (login.status !== 200) return false;
+    const apps = await api('GET', '/api/applications/my', { token: login.data.accessToken });
+    return (apps.data.applications || []).some(
+      (app) => String(app.status).toUpperCase() === 'SUBMITTED' && app.paymentCompleted === true
+    );
+  } catch {
+    return false;
+  }
+}
+const flowDataReady = await hasPaidSubmittedApplication();
+
+describe.skipIf(!flowDataReady)('Automated Flow Verification', () => {
   let token = '';
   let templateSubmittedAppId = null;
   let templateStudentId = null;

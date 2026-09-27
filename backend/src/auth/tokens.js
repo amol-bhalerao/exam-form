@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import { createHash, randomUUID } from 'crypto';
 import { env } from '../env.js';
 
 /**
@@ -20,7 +21,8 @@ export function signAccessToken(user) {
 export function signRefreshToken(user) {
   const payload = { ...user, typ: 'refresh' };
   const expiresIn = `${env.REFRESH_TOKEN_TTL_DAYS}d`;
-  return jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn });
+  // jwtid makes every refresh token unique, even for two logins in the same second
+  return jwt.sign(payload, env.JWT_REFRESH_SECRET, { expiresIn, jwtid: randomUUID() });
 }
 
 /**
@@ -42,20 +44,36 @@ export function verifyRefreshToken(token) {
 }
 
 /**
- * Hash token using bcrypt
+ * bcrypt only looks at the first 72 bytes of its input. Refresh tokens are
+ * JWTs whose first 72+ bytes (header + start of payload) are identical for
+ * every token of the same user, so hashing the raw JWT made any of a user's
+ * tokens match any of their stored hashes — logout could not reliably revoke
+ * a session. Pre-hashing with SHA-256 gives bcrypt a 64-char digest that is
+ * unique per token.
+ * @param {string} token
+ * @returns {string}
+ */
+export function digestToken(token) {
+  return createHash('sha256').update(String(token)).digest('hex');
+}
+
+/**
+ * Hash a refresh token for storage.
  * @param {string} token - Token to hash
  * @returns {Promise<string>} Hashed token
  */
 export async function hashToken(token) {
-  return bcrypt.hash(token, 10);
+  return bcrypt.hash(digestToken(token), 10);
 }
 
 /**
- * Compare token with hash
+ * Compare a raw token with a stored hash.
+ * Hashes written before the SHA-256 pre-hash no longer match, so sessions
+ * created before this change simply need to sign in again.
  * @param {string} token - Raw token
  * @param {string} hash - Hashed token
  * @returns {Promise<boolean>} True if match
  */
 export async function compareToken(token, hash) {
-  return bcrypt.compare(token, hash);
+  return bcrypt.compare(digestToken(token), hash);
 }

@@ -5,7 +5,7 @@ import { createServer } from 'http';
  * Test HTTP Client - minimal fetch-like interface for testing
  */
 export class TestClient {
-  constructor(baseURL = 'http://localhost:3000') {
+  constructor(baseURL = process.env.TEST_BASE_URL || 'http://localhost:3000') {
     this.baseURL = baseURL;
   }
 
@@ -27,7 +27,12 @@ export class TestClient {
       body
     });
 
-    const data = response.ok ? await response.json().catch(() => ({})) : {};
+    // Parse error bodies too, so tests can assert on error codes/messages.
+    const text = await response.text();
+    let data = {};
+    if (text) {
+      try { data = JSON.parse(text); } catch { data = { raw: text }; }
+    }
     return {
       status: response.status,
       body: data,

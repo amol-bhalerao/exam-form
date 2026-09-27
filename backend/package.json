@@ -23,12 +23,15 @@
     "lint": "eslint src/**/*.js",
     "format": "prettier --write src/**/*.js",
     "format:check": "prettier --check src/**/*.js",
-    "test": "vitest",
+    "test": "vitest --run",
     "test:flow": "vitest tests/flow-verification.test.js --run",
     "test:scheme": "node --test tests/node/subject-scheme.nodetest.mjs",
     "db:gr-subjects": "node scripts/sync-db-columns.mjs",
     "test:coverage": "vitest --coverage",
-    "verify:predeploy": "node scripts/predeploy-e2e.mjs"
+    "verify:predeploy": "node scripts/predeploy-e2e.mjs",
+    "test:watch": "vitest",
+    "test:unit": "vitest --run tests/unit tests/student-assets.unit.test.js tests/test-client.unit.test.js && node --test tests/node/subject-scheme.nodetest.mjs",
+    "test:api": "vitest --run tests/api"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.6.0",

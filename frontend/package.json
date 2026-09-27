@@ -7,7 +7,8 @@
     "build": "node ./scripts/generate-env.mjs && npx ng build --configuration production",
     "postbuild": "node -e \"const fs = require('fs'); const path = require('path'); const candidates = ['dist/exam-form', 'dist/exam-form/browser']; const outputDir = candidates.find((dir) => fs.existsSync(path.join(dir, 'index.html'))) || candidates.find((dir) => fs.existsSync(dir)); if (!outputDir) { console.warn('Warning: Angular output directory not found; skipping .htaccess copy'); process.exit(0); } if (fs.existsSync('src/assets/.htaccess')) { fs.copyFileSync('src/assets/.htaccess', path.join(outputDir, '.htaccess')); console.log('Copied .htaccess to ' + outputDir); } else { console.warn('Warning: src/assets/.htaccess not found'); }\"",
     "watch": "npx ng build --watch --configuration development",
-    "test": "npx ng test"
+    "test": "npx ng test",
+    "test:ci": "npx ng test --watch=false --browsers=ChromeHeadlessCI"
   },
   "private": true,
   "dependencies": {
