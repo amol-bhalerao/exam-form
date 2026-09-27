@@ -356,7 +356,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
     <section class="cta-section">
       <div class="cta-waves-top">
         <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
-          <path d="M0,50 Q300,0 600,50 T1200,50 L1200,0 L0,0 Z" fill="#667eea"/>
+          <path d="M0,50 Q300,0 600,50 T1200,50 L1200,0 L0,0 Z" fill="#1d4ed8"/>
         </svg>
       </div>
 
@@ -737,7 +737,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
 
     .feature-card:hover {
       transform: translateY(-8px);
-      box-shadow: 0 12px 32px rgba(102, 126, 234, 0.15);
+      box-shadow: 0 12px 32px rgba(29, 78, 216, 0.15);
       border-color: var(--primary-color);
     }
 
@@ -1088,25 +1088,25 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       background: white;
       border-radius: var(--border-radius);
       overflow: hidden;
-      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.1);
+      box-shadow: 0 4px 16px rgba(29, 78, 216, 0.1);
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
       display: flex;
       flex-direction: column;
       height: 100%;
-      border: 1px solid rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(29, 78, 216, 0.1);
     }
 
     .exam-card:hover {
       transform: translateY(-8px);
-      box-shadow: 0 12px 32px rgba(102, 126, 234, 0.2);
-      border-color: rgba(102, 126, 234, 0.3);
+      box-shadow: 0 12px 32px rgba(29, 78, 216, 0.2);
+      border-color: rgba(29, 78, 216, 0.3);
     }
 
     .exam-header {
       padding: var(--spacing-md);
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
-      border-bottom: 2px solid rgba(102, 126, 234, 0.2);
+      background: linear-gradient(135deg, rgba(29, 78, 216, 0.1) 0%, rgba(30, 58, 138, 0.1) 100%);
+      border-bottom: 2px solid rgba(29, 78, 216, 0.2);
       flex-shrink: 0;
     }
 
@@ -1481,7 +1481,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
       font-weight: 600;
       cursor: pointer;
       transition: all 0.3s ease;
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.3);
       text-transform: uppercase;
       letter-spacing: 0.5px;
       min-height: var(--button-height);
@@ -1489,7 +1489,7 @@ import { BoardHeaderComponent } from '../../components/board-header/board-header
 
     .exam-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 8px 20px rgba(29, 78, 216, 0.4);
     }
 
     .exam-btn:active {

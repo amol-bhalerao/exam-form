@@ -162,7 +162,7 @@ import { BrandingService } from '../../core/branding.service';
       display: grid;
       grid-template-columns: 1fr 1fr;
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       overflow: hidden;
       color: #25233a;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -315,7 +315,7 @@ import { BrandingService } from '../../core/branding.service';
       place-items: center;
       border-radius: 18px;
       background: #fff;
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     .letter-icon mat-icon {
@@ -462,7 +462,7 @@ import { BrandingService } from '../../core/branding.service';
     }
 
     .login-help mat-icon {
-      color: #667eea;
+      color: #1d4ed8;
       width: 22px;
       height: 22px;
       font-size: 22px;
@@ -551,11 +551,11 @@ import { BrandingService } from '../../core/branding.service';
       width: 18px;
       height: 18px;
       font-size: 18px;
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     .mini-contact a {
-      color: #667eea;
+      color: #1d4ed8;
       text-decoration: none;
       font-weight: 800;
     }

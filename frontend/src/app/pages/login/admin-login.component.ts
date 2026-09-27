@@ -137,7 +137,7 @@ import { BrandingService } from '../../core/branding.service';
       display: grid;
       grid-template-columns: 1fr 1fr;
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       overflow: hidden;
       color: #25233a;
     }
@@ -288,7 +288,7 @@ import { BrandingService } from '../../core/branding.service';
       content: '';
       display: block;
       height: 4px;
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(90deg, #1d4ed8 0%, #1e3a8a 100%);
     }
 
     mat-card-header {
@@ -302,7 +302,7 @@ import { BrandingService } from '../../core/branding.service';
     .admin-badge {
       width: 60px;
       height: 60px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -356,7 +356,7 @@ import { BrandingService } from '../../core/branding.service';
     }
 
     .login-help mat-icon {
-      color: #667eea;
+      color: #1d4ed8;
       width: 22px;
       height: 22px;
       font-size: 22px;
@@ -410,7 +410,7 @@ import { BrandingService } from '../../core/branding.service';
       margin-top: 2rem;
       padding: 1rem;
       background-color: rgba(255, 255, 255, 0.88);
-      border-left: 4px solid #667eea;
+      border-left: 4px solid #1d4ed8;
       border-radius: 14px;
       color: #34314f;
       font-size: 0.9rem;
@@ -421,7 +421,7 @@ import { BrandingService } from '../../core/branding.service';
 
     .warning-icon {
       flex-shrink: 0;
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     .footer-links {

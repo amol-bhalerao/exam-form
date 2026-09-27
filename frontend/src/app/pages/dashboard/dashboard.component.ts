@@ -582,7 +582,7 @@ interface QuickAction {
       display: grid;
       place-items: center;
       flex-shrink: 0;
-      box-shadow: 0 8px 14px rgba(99, 102, 241, 0.24);
+      box-shadow: 0 8px 14px rgba(29, 78, 216, 0.24);
       animation: iconPulse 2.8s ease-in-out infinite;
     }
 
@@ -596,12 +596,12 @@ interface QuickAction {
       font-size: clamp(20px, 4vw, 24px);
     }
 
-    .gradient-blue { background: linear-gradient(135deg, #2563eb, #7c3aed); }
+    .gradient-blue { background: linear-gradient(135deg, #2563eb, #1e3a8a); }
     .gradient-green { background: linear-gradient(135deg, #059669, #10b981); }
     .gradient-amber { background: linear-gradient(135deg, #d97706, #f59e0b); }
     .gradient-rose { background: linear-gradient(135deg, #dc2626, #f43f5e); }
     .gradient-cyan { background: linear-gradient(135deg, #0891b2, #06b6d4); }
-    .gradient-indigo { background: linear-gradient(135deg, #4f46e5, #818cf8); }
+    .gradient-indigo { background: linear-gradient(135deg, #1d4ed8, #818cf8); }
 
     .stat-value {
       font-size: clamp(1.5rem, 4vw, 1.8rem);
@@ -891,7 +891,7 @@ interface QuickAction {
     }
 
     .primary-action {
-      background: linear-gradient(135deg, #1d4ed8, #7c3aed) !important;
+      background: linear-gradient(135deg, #1d4ed8, #1e3a8a) !important;
       color: #fff !important;
       box-shadow: 0 2px 8px rgba(29, 78, 216, 0.3);
     }
@@ -1450,7 +1450,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         datasets: [{
           label: 'Count',
           data: values,
-          backgroundColor: ['#6366f1', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'].slice(0, labels.length),
+          backgroundColor: ['#1d4ed8', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'].slice(0, labels.length),
           borderRadius: 8,
           borderSkipped: false
         }]

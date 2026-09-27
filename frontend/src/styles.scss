@@ -12,16 +12,16 @@
   color-scheme: light;
   
   /* ‣ Primary Gradient Colors - Vibrant Modern Palette */
-  --primary: #6366f1;
-  --primary-light: #818cf8;
-  --primary-dark: #4f46e5;
-  --secondary: #ec4899;
-  --secondary-light: #f472b6;
-  --accent: #06b6d4;
-  --accent-light: #22d3ee;
+  --primary: #1d4ed8;
+  --primary-light: #3b82f6;
+  --primary-dark: #1e3a8a;
+  --secondary: #1e3a8a;
+  --secondary-light: #3151a6;
+  --accent: #c2410c;
+  --accent-light: #ea580c;
   
   /* ‣ Neutral Colors - Clean Light Background */
-  --bg: #f8fafc;
+  --bg: #f4f6fa;
   --bg-alt: #f1f5f9;
   --panel: #ffffff;
   --surface: #fafbfc;
@@ -37,12 +37,12 @@
   --text-muted: #cbd5e1;
   
   /* ‣ Sidebar Colors - Modern Indigo Palette */
-  --sidebar-bg: linear-gradient(135deg, #e0e7ff 0%, #f0f4ff 100%);
+  --sidebar-bg: #ffffff;
   --sidebar-text: #0f172a;
   --sidebar-text-secondary: #475569;
-  --sidebar-active: #6366f1;
-  --sidebar-hover: rgba(99, 102, 241, 0.12);
-  --sidebar-accent: #6366f1;
+  --sidebar-active: #1d4ed8;
+  --sidebar-hover: rgba(29, 78, 216, 0.08);
+  --sidebar-accent: #1d4ed8;
   
   /* ‣ Status Colors */
   --success: #10b981;
@@ -59,8 +59,8 @@
   --info-bg: #ecf8ff;
 
   /* ‣ Interactive Colors */
-  --hover-bg: rgba(99, 102, 241, 0.08);
-  --focus-ring: rgba(99, 102, 241, 0.2);
+  --hover-bg: rgba(29, 78, 216, 0.06);
+  --focus-ring: rgba(29, 78, 216, 0.25);
   --disabled-text: #cbd5e1;
   --disabled-bg: #f8fafc;
 
@@ -73,10 +73,10 @@
   --shadow-2xl: 0 25px 50px -12px rgba(15, 23, 42, 0.15);
   
   /* ‣ Card Styles */
-  --card-radius: 16px;
+  --card-radius: 12px;
   --card-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.1), 0 1px 2px 0 rgba(15, 23, 42, 0.06);
   --card-shadow-hover: 0 10px 25px -5px rgba(15, 23, 42, 0.15), 0 5px 10px -5px rgba(15, 23, 42, 0.05);
-  --card-shadow-active: 0 20px 40px -10px rgba(99, 102, 241, 0.2);
+  --card-shadow-active: 0 12px 28px -12px rgba(29, 78, 216, 0.28);
 
   /* ‣ Transitions & Animations */
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -105,7 +105,7 @@
   --form-control-margin: 10px;
 
   /* ‣ Layout Sizes */
-  --sidebar-width-desktop: 240px;
+  --sidebar-width-desktop: 264px;
   --sidebar-width-tablet: 200px;
   --sidebar-width-mobile: 60px;
   --toolbar-height: 64px;
@@ -140,7 +140,10 @@ body.dark-mode {
 
 *, *::before, *::after {
   box-sizing: border-box;
-  transition: background-color var(--transition-fast), color var(--transition-fast), 
+}
+
+a, button, input, select, textarea, .mat-mdc-card {
+  transition: background-color var(--transition-fast), color var(--transition-fast),
               border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -148,7 +151,7 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  font-family: var(--hsc-font);
   background: var(--bg);
   color: var(--text);
   font-size: 16px;
@@ -171,13 +174,13 @@ html, body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--primary) 0%, var(--accent) 100%);
+  background: #c3cbd8;
   border-radius: 10px;
   border: 2px solid var(--bg-alt);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, var(--primary-light) 0%, var(--accent-light) 100%);
+  background: #94a3b8;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════ */
@@ -1052,7 +1055,7 @@ table td {
 /* ═══════════════════════════════════════════════════════════════════════ */
 
 h1, h2, h3, h4, h5, h6 {
-  color: var(--text) !important;
+  /* colour is inherited so headings on dark banners stay light */
   font-weight: 700 !important;
   letter-spacing: -0.02em !important;
   line-height: 1.2 !important;
@@ -3095,3 +3098,245 @@ header.board-header {
 /*  ✓ Sidebar width responsive (240px/200px/60px)                          */
 /*  ✓ All animations preserved and properly organized                      */
 /* ═══════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════════ */
+/*  DESIGN SYSTEM v2 — "Board navy" redesign                               */
+/*  Loaded last so it wins over the legacy rules above. Pages that use     */
+/*  Angular Material pick this up automatically through the MDC tokens.   */
+/* ═══════════════════════════════════════════════════════════════════════ */
+:root {
+  /* Brand */
+  --hsc-navy: #1e3a8a;
+  --hsc-primary: #1d4ed8;
+  --hsc-primary-hover: #1e40af;
+  --hsc-primary-soft: #eaf0ff;
+  --hsc-saffron: #c2410c;
+  --hsc-saffron-soft: #fff4ec;
+
+  /* Neutrals */
+  --hsc-bg: #f4f6fa;
+  --hsc-surface: #ffffff;
+  --hsc-surface-muted: #eef2f7;
+  --hsc-border: #dde3ec;
+  --hsc-border-strong: #c5cedb;
+  --hsc-text: #0f172a;
+  --hsc-text-muted: #475569;
+  --hsc-text-subtle: #64748b;
+
+  /* Status */
+  --hsc-success: #047857;
+  --hsc-success-soft: #e8f7f0;
+  --hsc-warning: #b45309;
+  --hsc-warning-soft: #fff7e6;
+  --hsc-danger: #b91c1c;
+  --hsc-danger-soft: #fdeeee;
+
+  --hsc-radius: 10px;
+  --hsc-radius-lg: 14px;
+  --hsc-shadow: 0 1px 2px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --hsc-shadow-raised: 0 8px 24px -12px rgba(15, 23, 42, 0.22);
+  --hsc-font: 'Inter', 'Noto Sans Devanagari', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Angular Material (MDC) tokens */
+  --mdc-filled-button-container-color: var(--hsc-primary);
+  --mdc-filled-button-label-text-color: #fff;
+  --mdc-protected-button-container-color: var(--hsc-primary);
+  --mdc-protected-button-label-text-color: #fff;
+  --mdc-outlined-button-label-text-color: var(--hsc-primary);
+  --mdc-outlined-button-outline-color: var(--hsc-border-strong);
+  --mdc-text-button-label-text-color: var(--hsc-primary);
+  --mdc-filled-button-container-shape: 8px;
+  --mdc-protected-button-container-shape: 8px;
+  --mdc-outlined-button-container-shape: 8px;
+  --mdc-text-button-container-shape: 8px;
+  --mdc-protected-button-container-elevation-shadow: none;
+  --mdc-protected-button-hover-container-elevation-shadow: var(--hsc-shadow);
+  --mdc-filled-button-label-text-font: var(--hsc-font);
+  --mdc-protected-button-label-text-font: var(--hsc-font);
+  --mdc-outlined-button-label-text-font: var(--hsc-font);
+  --mdc-text-button-label-text-font: var(--hsc-font);
+  --mdc-filled-button-label-text-weight: 600;
+  --mdc-protected-button-label-text-weight: 600;
+  --mdc-outlined-button-label-text-weight: 600;
+  --mdc-text-button-label-text-weight: 600;
+
+  --mdc-outlined-text-field-outline-color: var(--hsc-border-strong);
+  --mdc-outlined-text-field-hover-outline-color: #94a3b8;
+  --mdc-outlined-text-field-focus-outline-color: var(--hsc-primary);
+  --mdc-outlined-text-field-focus-label-text-color: var(--hsc-primary);
+  --mdc-outlined-text-field-caret-color: var(--hsc-primary);
+  --mdc-outlined-text-field-container-shape: 8px;
+  --mdc-outlined-text-field-label-text-font: var(--hsc-font);
+  --mdc-outlined-text-field-input-text-color: var(--hsc-text);
+  --mat-form-field-container-text-font: var(--hsc-font);
+  --mat-select-focused-arrow-color: var(--hsc-primary);
+  --mat-option-selected-state-label-text-color: var(--hsc-primary);
+  --mat-option-label-text-font: var(--hsc-font);
+
+  --mdc-checkbox-selected-icon-color: var(--hsc-primary);
+  --mdc-checkbox-selected-focus-icon-color: var(--hsc-primary);
+  --mdc-checkbox-selected-hover-icon-color: var(--hsc-primary);
+  --mdc-radio-selected-icon-color: var(--hsc-primary);
+  --mdc-radio-selected-focus-icon-color: var(--hsc-primary);
+  --mdc-radio-selected-hover-icon-color: var(--hsc-primary);
+  --mat-radio-checked-ripple-color: var(--hsc-primary);
+  --mdc-switch-selected-handle-color: var(--hsc-primary);
+  --mdc-switch-selected-track-color: #93b4f5;
+  --mdc-switch-selected-focus-handle-color: var(--hsc-primary);
+  --mdc-switch-selected-hover-handle-color: var(--hsc-primary);
+
+  --mat-stepper-header-selected-state-icon-background-color: var(--hsc-primary);
+  --mat-stepper-header-done-state-icon-background-color: var(--hsc-success);
+  --mat-stepper-header-edit-state-icon-background-color: var(--hsc-primary);
+  --mat-stepper-header-icon-background-color: #94a3b8;
+  --mat-stepper-header-label-text-font: var(--hsc-font);
+  --mat-stepper-header-selected-state-label-text-color: var(--hsc-text);
+  --mat-stepper-line-color: var(--hsc-border);
+
+  --mdc-elevated-card-container-shape: var(--hsc-radius-lg);
+  --mdc-outlined-card-container-shape: var(--hsc-radius-lg);
+  --mdc-elevated-card-container-elevation: var(--hsc-shadow);
+  --mat-card-title-text-font: var(--hsc-font);
+  --mat-card-subtitle-text-font: var(--hsc-font);
+
+  --mdc-dialog-container-shape: var(--hsc-radius-lg);
+  --mdc-dialog-subhead-font: var(--hsc-font);
+  --mdc-dialog-supporting-text-font: var(--hsc-font);
+  --mat-table-header-headline-font: var(--hsc-font);
+  --mat-table-row-item-label-text-font: var(--hsc-font);
+  --mat-table-header-headline-color: var(--hsc-text-muted);
+  --mdc-plain-tooltip-container-color: #1f2937;
+  --mdc-plain-tooltip-supporting-text-font: var(--hsc-font);
+  --mat-tab-header-active-label-text-color: var(--hsc-primary);
+  --mdc-tab-indicator-active-indicator-color: var(--hsc-primary);
+  --mat-tab-header-label-text-font: var(--hsc-font);
+  --mdc-linear-progress-active-indicator-color: var(--hsc-primary);
+  --mdc-circular-progress-active-indicator-color: var(--hsc-primary);
+  --mdc-snackbar-container-color: #111827;
+  --mdc-snackbar-supporting-text-font: var(--hsc-font);
+  --mdc-chip-label-text-font: var(--hsc-font);
+  --mat-toolbar-title-text-font: var(--hsc-font);
+  --mdc-list-list-item-label-text-font: var(--hsc-font);
+}
+
+html, body {
+  font-family: var(--hsc-font);
+  background: var(--hsc-bg);
+  color: var(--hsc-text);
+  letter-spacing: normal;
+}
+
+/* Devanagari needs a little more line height than Latin text */
+html[lang='mr'] body, html[lang='hi'] body { line-height: 1.6; }
+
+.mat-typography, .mat-mdc-card, .mat-mdc-form-field, .mat-mdc-select, .mat-mdc-option,
+.mat-mdc-button-base, .mat-mdc-table, .mat-stepper-horizontal, .mat-stepper-vertical {
+  font-family: var(--hsc-font) !important;
+}
+
+
+/* Palette variants. The prebuilt indigo-pink theme sets these per component
+   with two-class selectors, so match them with extra specificity. */
+html body .mat-primary.mat-primary {
+  --mdc-filled-button-container-color: var(--hsc-primary);
+  --mdc-protected-button-container-color: var(--hsc-primary);
+  --mdc-outlined-button-label-text-color: var(--hsc-primary);
+  --mdc-text-button-label-text-color: var(--hsc-primary);
+  --mdc-fab-container-color: var(--hsc-primary);
+  --mdc-fab-small-container-color: var(--hsc-primary);
+  --mdc-extended-fab-container-color: var(--hsc-primary);
+  --mat-icon-color: inherit;
+  --mdc-outlined-text-field-focus-outline-color: var(--hsc-primary);
+  --mdc-outlined-text-field-focus-label-text-color: var(--hsc-primary);
+  --mdc-checkbox-selected-icon-color: var(--hsc-primary);
+  --mdc-radio-selected-icon-color: var(--hsc-primary);
+  --mdc-linear-progress-active-indicator-color: var(--hsc-primary);
+  --mdc-circular-progress-active-indicator-color: var(--hsc-primary);
+}
+html body .mat-accent.mat-accent {
+  --mdc-filled-button-container-color: var(--hsc-saffron);
+  --mdc-protected-button-container-color: var(--hsc-saffron);
+  --mdc-outlined-button-label-text-color: var(--hsc-saffron);
+  --mdc-text-button-label-text-color: var(--hsc-saffron);
+  --mdc-fab-container-color: var(--hsc-saffron);
+  --mdc-fab-small-container-color: var(--hsc-saffron);
+  --mdc-extended-fab-container-color: var(--hsc-saffron);
+  --mdc-outlined-text-field-focus-outline-color: var(--hsc-saffron);
+  --mdc-outlined-text-field-focus-label-text-color: var(--hsc-saffron);
+  --mdc-checkbox-selected-icon-color: var(--hsc-saffron);
+  --mdc-checkbox-selected-focus-icon-color: var(--hsc-saffron);
+  --mdc-checkbox-selected-hover-icon-color: var(--hsc-saffron);
+  --mdc-radio-selected-icon-color: var(--hsc-saffron);
+  --mdc-radio-selected-focus-icon-color: var(--hsc-saffron);
+  --mdc-radio-selected-hover-icon-color: var(--hsc-saffron);
+  --mdc-switch-selected-handle-color: var(--hsc-saffron);
+  --mdc-linear-progress-active-indicator-color: var(--hsc-saffron);
+  --mdc-circular-progress-active-indicator-color: var(--hsc-saffron);
+}
+html body .mat-warn.mat-warn {
+  --mdc-filled-button-container-color: var(--hsc-danger);
+  --mdc-protected-button-container-color: var(--hsc-danger);
+  --mdc-text-button-label-text-color: var(--hsc-danger);
+  --mdc-outlined-button-label-text-color: var(--hsc-danger);
+  --mdc-fab-container-color: var(--hsc-danger);
+}
+
+/* Cards: flat surface, hairline border */
+.mat-mdc-card:not(.mat-mdc-card-outlined) {
+  border: 1px solid var(--hsc-border);
+  box-shadow: var(--hsc-shadow) !important;
+  border-radius: var(--hsc-radius-lg) !important;
+  background: var(--hsc-surface);
+}
+
+/* Buttons */
+.mat-mdc-button-base { letter-spacing: 0 !important; }
+.mat-mdc-unelevated-button:not(:disabled):hover,
+.mat-mdc-raised-button:not(:disabled):hover { filter: brightness(0.94); }
+.mat-mdc-button-base:focus-visible { outline: 2px solid var(--hsc-primary); outline-offset: 2px; }
+
+/* Form fields — white inputs on any background */
+.mat-mdc-form-field-appearance-outline .mat-mdc-text-field-wrapper { background: var(--hsc-surface); border-radius: 8px; }
+.mat-mdc-form-field-appearance-outline .mdc-notched-outline__notch { border-right: none; }
+
+/* Stepper */
+.mat-stepper-horizontal, .mat-stepper-vertical { background: transparent !important; }
+.mat-step-header { border-radius: 10px; }
+.mat-step-header:hover { background: var(--hsc-primary-soft) !important; }
+.mat-step-header .mat-step-label-selected { font-weight: 700; }
+
+/* Tables (Material + ag-grid) */
+.mat-mdc-table { background: var(--hsc-surface) !important; }
+.mat-mdc-header-row { background: #f8fafc !important; }
+.mat-mdc-header-cell { font-weight: 600 !important; font-size: 0.8rem !important; text-transform: none; border-bottom-color: var(--hsc-border) !important; }
+.mat-mdc-row:hover { background: #f8faff; }
+.ag-theme-alpine {
+  --ag-header-background-color: #f8fafc;
+  --ag-header-foreground-color: var(--hsc-text-muted);
+  --ag-border-color: var(--hsc-border);
+  --ag-row-hover-color: #f3f7ff;
+  --ag-selected-row-background-color: var(--hsc-primary-soft);
+  --ag-alpine-active-color: var(--hsc-primary);
+  --ag-font-family: var(--hsc-font) !important;
+}
+
+/* Chips & status pills */
+.mat-mdc-standard-chip { --mdc-chip-container-shape-radius: 999px; }
+
+/* Dialogs */
+.mat-mdc-dialog-container .mdc-dialog__surface { border-radius: var(--hsc-radius-lg) !important; }
+
+/* Shared page heading used by the redesigned shell and new components */
+.hsc-page-header {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 16px;
+  flex-wrap: wrap; margin: 0 0 20px;
+}
+.hsc-page-header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+.hsc-page-header p { margin: 4px 0 0; color: var(--hsc-text-muted); }
+
+/* Keyboard focus */
+:focus-visible { outline-color: var(--hsc-primary); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

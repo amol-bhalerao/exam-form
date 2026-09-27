@@ -120,7 +120,7 @@ import { BrandingService } from '../../core/branding.service';
     .user-type-container {
       position: relative;
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -261,7 +261,7 @@ import { BrandingService } from '../../core/branding.service';
       left: 0;
       right: 0;
       height: 4px;
-      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(90deg, #1d4ed8 0%, #1e3a8a 100%);
     }
 
     .login-card:hover {

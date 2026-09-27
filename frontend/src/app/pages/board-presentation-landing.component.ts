@@ -204,7 +204,7 @@ import { BrandingService } from '../core/branding.service';
 
     .presentation-page {
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       color: #1f2937;
       font-family: 'Segoe UI', 'Nirmala UI', sans-serif;
       overflow-x: hidden;
@@ -281,7 +281,7 @@ import { BrandingService } from '../core/branding.service';
 
     .eyebrow {
       background: #eef2ff;
-      color: #667eea;
+      color: #1d4ed8;
       margin-bottom: 14px;
     }
 
@@ -338,7 +338,7 @@ import { BrandingService } from '../core/branding.service';
     .hero-actions button:first-child,
     .demo-actions button:first-child {
       background: #fff;
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     .hero-actions button:last-child,
@@ -363,7 +363,7 @@ import { BrandingService } from '../core/branding.service';
 
     .metric-card.primary {
       background: #fff;
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     .metric-card.no-public {
@@ -459,7 +459,7 @@ import { BrandingService } from '../core/branding.service';
 
     .workflow-card mat-icon,
     .security-icon mat-icon {
-      color: #667eea;
+      color: #1d4ed8;
       width: 34px;
       height: 34px;
       font-size: 34px;
@@ -534,7 +534,7 @@ import { BrandingService } from '../core/branding.service';
 
     .feature-update {
       background:
-        radial-gradient(circle at 92% 18%, rgba(102,126,234,0.14), transparent 28%),
+        radial-gradient(circle at 92% 18%, rgba(29, 78, 216,0.14), transparent 28%),
         #ffffff;
     }
 
@@ -561,7 +561,7 @@ import { BrandingService } from '../core/branding.service';
       place-items: center;
       border-radius: 16px;
       background: #eef2ff;
-      color: #4f46e5;
+      color: #1d4ed8;
     }
 
     .feature-card strong {
@@ -674,7 +674,7 @@ import { BrandingService } from '../core/branding.service';
       place-items: center;
       border-radius: 20px;
       background: #fff;
-      box-shadow: 0 12px 28px rgba(102,126,234,0.14);
+      box-shadow: 0 12px 28px rgba(29, 78, 216,0.14);
       margin-bottom: 12px;
     }
 
@@ -713,7 +713,7 @@ import { BrandingService } from '../core/branding.service';
     }
 
     .access-row strong {
-      color: #667eea;
+      color: #1d4ed8;
       font-size: 1.04rem;
     }
 
@@ -736,7 +736,7 @@ import { BrandingService } from '../core/branding.service';
     }
 
     .note-mr {
-      color: #667eea !important;
+      color: #1d4ed8 !important;
     }
 
     .governance-flow {
@@ -759,13 +759,13 @@ import { BrandingService } from '../core/branding.service';
     }
 
     .governance-flow span {
-      color: #667eea;
+      color: #1d4ed8;
       font-family: 'Nirmala UI', sans-serif;
       font-size: 0.88rem;
     }
 
     .governance-flow mat-icon {
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     .demo-section {

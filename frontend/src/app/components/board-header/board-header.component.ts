@@ -8,13 +8,14 @@ import { MatDividerModule } from '@angular/material/divider';
 import { RouterLink } from '@angular/router';
 import { BrandingService } from '../../core/branding.service';
 import { I18nService } from '../../core/i18n.service';
+import { LanguageSwitcherComponent } from '../language-switcher/language-switcher.component';
 import { GoogleAuthService } from '../../core/google-auth.service';
 import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-board-header',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, MatButtonModule, MatMenuModule, MatDividerModule],
+  imports: [CommonModule, FormsModule, RouterLink, MatIconModule, MatButtonModule, MatMenuModule, MatDividerModule, LanguageSwitcherComponent],
   template: `
     <header class="board-header">
       <div class="header-content">
@@ -26,12 +27,7 @@ import { Router } from '@angular/router';
           </div>
         </div>
         <div class="header-actions">
-          <div class="language-selector">
-            <select [(ngModel)]="selectedLanguage" (change)="changeLanguage()" class="language-select">
-              <option value="mr">मराठी</option>
-              <option value="en">English</option>
-            </select>
-          </div>
+          <app-language-switcher />
           @if (!isLoggedIn()) {
             <button mat-raised-button color="accent" class="login-btn" (click)="goToLogin()">
               <mat-icon>login</mat-icon> {{ i18n.t('login') }}
@@ -67,11 +63,6 @@ export class BoardHeaderComponent {
   // Expose isLoggedIn as a signal
   isLoggedIn = this.googleAuth.isLoggedIn;
   selectedLanguage = this.i18n.getLanguageSignal();
-
-  changeLanguage() {
-    const lang = this.selectedLanguage() as 'en' | 'mr';
-    this.i18n.setLanguage(lang);
-  }
 
   goToLogin() {
     // Redirect to unified auth page which shows login options

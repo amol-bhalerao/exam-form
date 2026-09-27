@@ -954,8 +954,8 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       --spacing-xl: 2.5rem;
       --border-radius: 12px;
       --border-radius-sm: 8px;
-      --primary-color: #667eea;
-      --primary-dark: #764ba2;
+      --primary-color: #1d4ed8;
+      --primary-dark: #1e3a8a;
       --text-primary: #333;
       --text-secondary: #666;
       --bg-light: #f5f7fa;
@@ -999,7 +999,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       background: white;
       padding: var(--spacing-sm);
       border-radius: 0;
-      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.14);
+      box-shadow: 0 8px 24px rgba(29, 78, 216, 0.14);
       animation: fadeInUp 0.45s ease-out;
     }
 
@@ -1010,7 +1010,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       gap: var(--spacing-sm);
       text-align: left;
       background: linear-gradient(135deg, #ffffff 0%, #f3f7ff 100%);
-      border: 1px solid rgba(102, 126, 234, 0.15);
+      border: 1px solid rgba(29, 78, 216, 0.15);
     }
 
     .header-main {
@@ -1022,7 +1022,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       align-items: center;
       padding: 0.25rem 0.65rem;
       border-radius: 999px;
-      background: rgba(102, 126, 234, 0.12);
+      background: rgba(29, 78, 216, 0.12);
       color: var(--primary-color);
       font-size: 0.78rem;
       font-weight: 700;
@@ -1220,7 +1220,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       background: linear-gradient(135deg, #ffffff 0%, #fafbfc 100%);
       border-radius: 16px;
       box-shadow: 0 32px 64px rgba(15, 23, 42, 0.15);
-      border: 1px solid rgba(102, 126, 234, 0.1);
+      border: 1px solid rgba(29, 78, 216, 0.1);
     }
 
     .managed-student-form-grid {
@@ -1283,7 +1283,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       margin-bottom: 12px;
       padding: var(--spacing-lg);
       background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
-      border: 1px solid rgba(102, 126, 234, 0.08);
+      border: 1px solid rgba(29, 78, 216, 0.08);
       border-radius: 12px;
       border-left: 4px solid var(--primary-color);
       box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
@@ -1305,7 +1305,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
     .form-card:hover {
       transform: translateY(-2px);
       box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08);
-      border-color: rgba(102, 126, 234, 0.15);
+      border-color: rgba(29, 78, 216, 0.15);
     }
 
     .card-title-row {
@@ -1328,7 +1328,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       width: 34px;
       height: 34px;
       border-radius: 50%;
-      background: rgba(102, 126, 234, 0.08);
+      background: rgba(29, 78, 216, 0.08);
       color: var(--primary-color);
     }
 
@@ -1618,7 +1618,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
     ::ng-deep .managed-student-modal .mat-mdc-tab-header {
       background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
-      border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+      border-bottom: 2px solid rgba(29, 78, 216, 0.1);
       border-radius: 12px 12px 0 0;
       margin-bottom: 0;
       padding: 0 1rem;
@@ -1633,7 +1633,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
     ::ng-deep .managed-student-modal .mat-mdc-tab.mdc-tab--active {
       background: #ffffff;
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+      box-shadow: 0 4px 12px rgba(29, 78, 216, 0.15);
       border-top: 3px solid var(--primary-color);
     }
 
@@ -2163,7 +2163,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       margin-bottom: 1rem;
       padding: 10px 12px;
       background: #f5f5f5;
-      border-left: 3px solid #667eea;
+      border-left: 3px solid #1d4ed8;
       border-radius: 4px;
       line-height: 1.5;
     }
@@ -2188,7 +2188,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
       gap: 16px;
       margin-top: 2rem;
       padding: 1.5rem;
-      border-top: 1px solid rgba(102, 126, 234, 0.1);
+      border-top: 1px solid rgba(29, 78, 216, 0.1);
       background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
       border-radius: 0 0 12px 12px;
     }
@@ -2209,7 +2209,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
     .nav-btn:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.2);
+      box-shadow: 0 6px 16px rgba(29, 78, 216, 0.2);
     }
 
     .back-btn {
@@ -2231,7 +2231,7 @@ class TouchedOnlyErrorStateMatcher implements ErrorStateMatcher {
 
     .next-btn:hover:not(:disabled) {
       background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
-      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 6px 16px rgba(29, 78, 216, 0.3);
     }
 
     .back-btn {

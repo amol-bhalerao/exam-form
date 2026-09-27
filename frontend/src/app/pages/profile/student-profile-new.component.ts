@@ -489,7 +489,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
   styles: [`
     .student-profile-container {
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       padding: 2rem 1rem;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
@@ -707,7 +707,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
     }
 
     .subject-table thead th {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       color: white;
       padding: 1rem;
       text-align: left;
@@ -743,7 +743,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
     .summary-card {
       border: none;
       border-radius: 8px;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+      background: linear-gradient(135deg, rgba(29, 78, 216, 0.05) 0%, rgba(30, 58, 138, 0.05) 100%);
     }
 
     .summary-grid {
@@ -760,7 +760,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      border-left: 4px solid #667eea;
+      border-left: 4px solid #1d4ed8;
       transition: all 0.3s ease;
     }
 
@@ -770,7 +770,7 @@ import { StudentImageUploadComponent } from '../../components/student-image-uplo
     }
 
     .summary-item mat-icon {
-      color: #667eea;
+      color: #1d4ed8;
       font-size: 24px;
       width: 24px;
       height: 24px;

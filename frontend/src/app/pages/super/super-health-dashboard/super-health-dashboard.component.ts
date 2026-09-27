@@ -229,7 +229,7 @@ import { HealthService, HealthCheckResult, ApiHealthCheck } from '../../../servi
       font-size: 2.5rem;
       width: 2.5rem;
       height: 2.5rem;
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     .subtitle {

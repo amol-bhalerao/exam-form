@@ -208,7 +208,7 @@ function formatSubjectsCell(subjects: Row['subjects']): string {
         text-transform: uppercase;
         letter-spacing: 0.08em;
         font-weight: 700;
-        color: #4f46e5;
+        color: #1d4ed8;
         margin-bottom: 4px;
       }
 

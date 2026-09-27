@@ -12,6 +12,7 @@ import { AuthService } from '../../core/auth.service';
 import { I18nService } from '../../core/i18n.service';
 import { BrandingService } from '../../core/branding.service';
 import { rateLimiter } from '../../core/rate-limiter';
+import { LanguageSwitcherComponent } from '../../components/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-google-login',
@@ -23,7 +24,8 @@ import { rateLimiter } from '../../core/rate-limiter';
     MatButtonModule,
     MatProgressSpinnerModule,
     MatTabsModule,
-    MatIconModule
+    MatIconModule,
+    LanguageSwitcherComponent
   ],
   template: `
     <div class="login-container">
@@ -98,10 +100,7 @@ import { rateLimiter } from '../../core/rate-limiter';
             <!-- Language Selector -->
             <div class="language-selector-login">
               <label>{{ i18n.t('language') }}:</label>
-              <select [(ngModel)]="selectedLanguage" (change)="changeLanguage()" class="language-select">
-                <option value="mr">{{ i18n.t('marathi') }}</option>
-                <option value="en">{{ i18n.t('english') }}</option>
-              </select>
+              <app-language-switcher />
             </div>
 
             <!-- Info Box -->
@@ -162,7 +161,7 @@ import { rateLimiter } from '../../core/rate-limiter';
       background:
         radial-gradient(circle at 12% 14%, rgba(255, 255, 255, 0.18), transparent 28%),
         radial-gradient(circle at 88% 16%, rgba(255, 255, 255, 0.14), transparent 30%),
-        linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       position: relative;
       overflow: hidden;
       padding: 20px;
@@ -354,7 +353,7 @@ import { rateLimiter } from '../../core/rate-limiter';
       width: 21px;
       height: 21px;
       font-size: 21px;
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     .google-signin-container {
@@ -467,8 +466,8 @@ import { rateLimiter } from '../../core/rate-limiter';
     }
 
     .language-select:hover {
-      border-color: #667eea;
-      box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+      border-color: #1d4ed8;
+      box-shadow: 0 2px 8px rgba(29, 78, 216, 0.1);
     }
 
     .info-box {
@@ -767,7 +766,7 @@ export class GoogleLoginComponent implements OnInit {
   }
 
   changeLanguage() {
-    const lang = this.selectedLanguage as 'en' | 'mr';
+    const lang = this.selectedLanguage;
     this.i18n.setLanguage(lang);
     this.selectedLanguage = lang;
   }

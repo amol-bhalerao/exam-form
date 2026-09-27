@@ -142,7 +142,7 @@ type Application = { id: number; applicationNo: string; status: string; candidat
 
     .header-card {
       padding: 20px;
-      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
       color: white;
     }
 

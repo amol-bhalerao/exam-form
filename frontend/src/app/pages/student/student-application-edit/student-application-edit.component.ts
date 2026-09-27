@@ -17,6 +17,8 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { InstituteSearchModalComponent } from '../../../components/institute-search-modal/institute-search-modal.component';
+import { GrSubjectGuideComponent } from '../../../components/gr-subject-guide/gr-subject-guide.component';
+import { I18nService } from '../../../core/i18n.service';
 
 import { API_BASE_URL } from '../../../core/api';
 import { AuthService } from '../../../core/auth.service';
@@ -49,7 +51,8 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
     MatTooltipModule,
     MatAutocompleteModule,
     DatePipe,
-    InstituteSearchModalComponent
+    InstituteSearchModalComponent,
+    GrSubjectGuideComponent
   ],
   template: `
     @if (loading()) {
@@ -533,6 +536,14 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
                     <mat-icon>verified</mat-icon>
                     <span>Compulsory subjects are auto-selected: 1-English, 30-Health & Physical Education, 31-Env.Edu. & Water Security.</span>
                   </div>
+                  <app-gr-subject-guide
+                    [stream]="form.get('academicGroup.streamCode')?.value || null"
+                    [selectedKey]="selectedSubjectKey()"
+                    [offered]="masterSubjects()"
+                    [editable]="isEditable()"
+                    (add)="addSubjectFromGuide($event)"
+                    (remove)="removeSubjectFromGuide($event)" />
+                  <h4 class="subject-list-heading">{{ i18n.t('grManualList') }}</h4>
                 }
 
                 <div class="subjects-list">
@@ -894,7 +905,7 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
     }
 
     ::ng-deep .application-stepper .mat-step-header .mat-step-icon-selected {
-      background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+      background: linear-gradient(135deg, #2563eb 0%, #1e3a8a 100%);
     }
 
     .step-label {
@@ -1020,18 +1031,17 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
     }
 
     .step-actions .next-cta {
-      background: linear-gradient(135deg, #0f766e 0%, #0ea5a4 100%);
+      background: var(--hsc-primary, #1d4ed8);
       color: #fff;
-      font-weight: 700;
-      border-radius: 999px;
+      font-weight: 600;
+      border-radius: 8px;
       padding: 0 18px;
-      box-shadow: 0 2px 8px rgba(15, 118, 110, 0.3);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: none;
+      transition: background-color 0.15s ease;
     }
 
     .step-actions .next-cta:hover:not(:disabled) {
-      transform: translateY(-1px);
-      box-shadow: 0 8px 18px rgba(15, 118, 110, 0.35);
+      background: var(--hsc-primary-hover, #1e40af);
     }
 
     .step-actions .next-cta:disabled {
@@ -1042,6 +1052,13 @@ const TAIL_COMPULSORY_CODES = ['30', '31'];
 
     .step-actions.final-actions {
       justify-content: flex-end;
+    }
+
+    .subject-list-heading {
+      margin: 4px 0 10px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--hsc-text, #0f172a);
     }
 
     .subjects-list {
@@ -1494,6 +1511,9 @@ export class StudentApplicationEditComponent implements OnInit {
   readonly loading = signal(false);
   readonly error = signal<string | null>(null);
   readonly personalInfoComplete = signal(false);
+  /** Selected subject ids as a stable string, fed to the GR subject guide. */
+  readonly selectedSubjectKey = signal('');
+  protected readonly i18n = inject(I18nService);
 
   form!: FormGroup;
   private subjectWatcherInitialized = false;
@@ -1519,6 +1539,7 @@ export class StudentApplicationEditComponent implements OnInit {
       this.form.get('academicGroup.streamCode')?.valueChanges.subscribe((value: any) => {
         this.refreshSubjectOptions(value);
       });
+      this.form.get('subjects')?.valueChanges.subscribe(() => this.syncSelectedSubjectKey());
       this.form.get('academicGroup.isDivyang')?.valueChanges.subscribe((value: any) => {
         if (value !== 'YES') {
           this.form.get('academicGroup.divyangCode')?.setValue('', { emitEvent: false });
@@ -1676,6 +1697,45 @@ export class StudentApplicationEditComponent implements OnInit {
       return;
     }
     this.subjects().removeAt(i);
+    // search labels are cached by row index; rows shifted, so rebuild them from the selected ids
+    this.subjectSearchTerms.clear();
+  }
+
+  private syncSelectedSubjectKey() {
+    const ids = this.getSubjectIndices()
+      .map((idx) => Number(this.getSubjectFormGroup(idx).get('subjectId')?.value))
+      .filter((id) => id > 0)
+      .sort((a, b) => a - b)
+      .join(',');
+    if (ids !== this.selectedSubjectKey()) this.selectedSubjectKey.set(ids);
+  }
+
+  /** Called by the GR subject guide when a subject chip is chosen. */
+  addSubjectFromGuide(subjectId: number) {
+    if (!this.isEditable()) return;
+    const indices = this.getSubjectIndices();
+    if (indices.some((idx) => this.getSubjectFormGroup(idx).get('subjectId')?.value === subjectId)) return;
+    const emptyIdx = indices.find((idx) => !this.getSubjectFormGroup(idx).get('subjectId')?.value);
+    const langOfAnsCode = this.getMappedLanguage(subjectId) || '';
+    if (emptyIdx !== undefined) {
+      const group = this.getSubjectFormGroup(emptyIdx);
+      group.patchValue({ subjectId, langOfAnsCode });
+      this.subjectSearchTerms.delete(emptyIdx);
+      this.onSubjectSelectionChange(emptyIdx);
+    } else {
+      if (this.subjects().length >= 9) return;
+      this.addSubject({ subjectId, langOfAnsCode });
+    }
+    this.syncSelectedSubjectKey();
+  }
+
+  /** Called by the GR subject guide when a selected chip is tapped again. */
+  removeSubjectFromGuide(subjectId: number) {
+    if (!this.isEditable()) return;
+    const idx = this.getSubjectIndices().find((i) => this.getSubjectFormGroup(i).get('subjectId')?.value === subjectId);
+    if (idx === undefined) return;
+    this.removeSubject(idx);
+    this.syncSelectedSubjectKey();
   }
 
   isCompulsorySubjectRow(index: number): boolean {
@@ -2559,6 +2619,7 @@ export class StudentApplicationEditComponent implements OnInit {
     }
 
     this.applyMappedLanguagesToSelectedRows();
+    this.syncSelectedSubjectKey();
 
     // Watch examType changes to toggle display
     this.form.get('examType')?.valueChanges.subscribe((value: any) => {

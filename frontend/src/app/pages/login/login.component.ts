@@ -157,7 +157,7 @@ declare const google: any;
 
     /* ── Brand Panel ─────────────────────── */
     .brand-panel {
-      background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 60%, #7c3aed 100%);
+      background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 60%, #1e3a8a 100%);
       color: #fff;
       position: relative;
       overflow: hidden;

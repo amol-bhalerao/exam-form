@@ -30,7 +30,7 @@ export const LIGHT_THEME: Theme = {
   isDark: false,
   colors: {
     primary: '#1d4ed8',
-    secondary: '#7c3aed',
+    secondary: '#1e3a8a',
     accent: '#ec4899',
     background: '#f0f4ff',
     surface: '#ffffff',

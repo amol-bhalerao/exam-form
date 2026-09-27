@@ -1,9 +1,10 @@
-import { Injectable, computed, signal } from '@angular/core';
+import { Injectable, computed, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs';
 import { API_BASE_URL } from './api';
 import type { AuthUser, LoginResponse, GoogleLoginResponse } from './auth.types';
 import { rateLimiter } from './rate-limiter';
+import { I18nService } from './i18n.service';
 
 type StoredAuth = {
   accessToken: string;
@@ -21,19 +22,27 @@ export class AuthService {
   readonly accessToken = computed(() => this._auth()?.accessToken ?? null);
   readonly isLoggedIn = computed(() => !!this._auth());
 
+  private readonly i18n = inject(I18nService);
+
   constructor(private readonly http: HttpClient) {}
 
   /** Credential login (BOARD, SUPER_ADMIN, INSTITUTE, and legacy students) */
   login(username: string, password: string) {
     return this.http.post<LoginResponse>(`${API_BASE_URL}/auth/login`, { username, password }).pipe(
-      tap((resp) => this.setAuth({ accessToken: resp.accessToken, refreshToken: resp.refreshToken, user: resp.user }))
+      tap((resp) => {
+        this.setAuth({ accessToken: resp.accessToken, refreshToken: resp.refreshToken, user: resp.user });
+        this.i18n.applyUserPreference(resp.user);
+      })
     );
   }
 
   /** Google SSO login (students only) — sends Google credential to backend for verification */
   googleLogin(credential: string) {
     return this.http.post<GoogleLoginResponse>(`${API_BASE_URL}/auth/google`, { credential }).pipe(
-      tap((resp) => this.setAuth({ accessToken: resp.accessToken, refreshToken: resp.refreshToken, user: resp.user }))
+      tap((resp) => {
+        this.setAuth({ accessToken: resp.accessToken, refreshToken: resp.refreshToken, user: resp.user });
+        this.i18n.applyUserPreference(resp.user);
+      })
     );
   }
 
@@ -56,6 +65,7 @@ export class AuthService {
       .then((resp) => {
         if (!resp?.accessToken) return null;
         this.setAuth({ ...current, accessToken: resp.accessToken, user: resp.user });
+        this.i18n.applyUserPreference(resp.user);
         return resp.accessToken;
       })
       .catch(() => null);

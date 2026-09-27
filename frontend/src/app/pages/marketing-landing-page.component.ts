@@ -430,7 +430,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 
     /* Hero Section */
     .hero-section {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       color: white;
       padding: 6rem 2rem;
       min-height: 80vh;
@@ -554,7 +554,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
       font-size: 48px !important;
       width: 48px !important;
       height: 48px !important;
-      color: #667eea;
+      color: #1d4ed8;
       margin-bottom: 1rem;
     }
 
@@ -663,18 +663,18 @@ import { MatExpansionModule } from '@angular/material/expansion';
     }
 
     .step-card {
-      background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+      background: linear-gradient(135deg, #1d4ed815 0%, #1e3a8a15 100%);
       padding: 2rem;
       border-radius: 12px;
       text-align: center;
-      border-left: 4px solid #667eea;
+      border-left: 4px solid #1d4ed8;
     }
 
     .step-number {
       display: inline-flex;
       width: 50px;
       height: 50px;
-      background: #667eea;
+      background: #1d4ed8;
       color: white;
       border-radius: 50%;
       align-items: center;
@@ -714,7 +714,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 
     mat-expansion-panel-header mat-icon {
       margin-right: 1rem;
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     mat-expansion-panel-header span {
@@ -740,7 +740,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
     }
 
     .contact-card {
-      background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
+      background: linear-gradient(135deg, #1d4ed815 0%, #1e3a8a15 100%);
       padding: 2rem;
       border-radius: 12px;
       text-align: center;
@@ -750,7 +750,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
       font-size: 48px !important;
       width: 48px !important;
       height: 48px !important;
-      color: #667eea;
+      color: #1d4ed8;
       margin-bottom: 1rem;
     }
 
@@ -768,7 +768,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 
     /* Final CTA */
     .final-cta {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       color: white;
       padding: 5rem 2rem;
       text-align: center;

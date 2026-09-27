@@ -207,7 +207,7 @@ interface SessionStats {
   styles: [`
     .health-container {
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       padding: 2rem;
       font-family: 'Segoe UI', Arial, sans-serif;
     }
@@ -316,7 +316,7 @@ interface SessionStats {
     .metric-value {
       font-size: 2rem;
       font-weight: 700;
-      color: #667eea;
+      color: #1d4ed8;
       margin: 0.5rem 0;
     }
 
@@ -384,7 +384,7 @@ interface SessionStats {
     .detail-value {
       font-size: 1.5rem;
       font-weight: 700;
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     .role-breakdown {
@@ -411,7 +411,7 @@ interface SessionStats {
 
     .role-name {
       font-weight: 600;
-      color: #667eea;
+      color: #1d4ed8;
       margin-bottom: 0.3rem;
     }
 

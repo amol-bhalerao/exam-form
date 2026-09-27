@@ -353,7 +353,7 @@ type Dashboard = {
       border-radius: 28px;
       background:
         radial-gradient(circle at 92% 20%, rgba(255, 152, 0, 0.2), transparent 24%),
-        linear-gradient(135deg, #1f2343, #667eea);
+        linear-gradient(135deg, #1f2343, #1d4ed8);
       color: #fff;
       box-shadow: 0 24px 72px rgba(31, 35, 67, 0.22);
     }
@@ -429,7 +429,7 @@ type Dashboard = {
       letter-spacing: -0.06em;
     }
 
-    .summary-card.total { border-top: 4px solid #667eea; }
+    .summary-card.total { border-top: 4px solid #1d4ed8; }
     .summary-card.approved { border-top: 4px solid #22c55e; }
     .summary-card.pending { border-top: 4px solid #f59e0b; }
     .summary-card.accepting { border-top: 4px solid #2196f3; }
@@ -475,7 +475,7 @@ type Dashboard = {
 
     .board-split-panel {
       background:
-        radial-gradient(circle at 95% 20%, rgba(102, 126, 234, 0.12), transparent 24%),
+        radial-gradient(circle at 95% 20%, rgba(29, 78, 216, 0.12), transparent 24%),
         #fff;
     }
 
@@ -558,7 +558,7 @@ type Dashboard = {
 
     .registration-stat.registered { border-left: 4px solid #22c55e; }
     .registration-stat.pending { border-left: 4px solid #f59e0b; }
-    .registration-stat.users { border-left: 4px solid #667eea; }
+    .registration-stat.users { border-left: 4px solid #1d4ed8; }
 
     .pending-districts {
       display: grid;
@@ -623,12 +623,12 @@ type Dashboard = {
     }
 
     .district-row:hover {
-      border-color: #667eea;
+      border-color: #1d4ed8;
       background: #eef2ff;
     }
 
     .district-row strong {
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     .status-stack {

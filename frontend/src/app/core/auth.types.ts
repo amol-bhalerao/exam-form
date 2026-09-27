@@ -7,6 +7,10 @@ export type AuthUser = {
   role: RoleName;
   instituteId: number | null;
   boardType?: 'HSC' | 'SSC';
+  /** Language saved on the account (null until the user picks one). */
+  preferredLanguage?: 'mr' | 'en' | 'hi' | null;
+  /** Role default: students 'mr', staff 'en'. */
+  defaultLanguage?: 'mr' | 'en' | 'hi';
 };
 
 export type LoginResponse = {

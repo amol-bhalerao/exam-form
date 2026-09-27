@@ -317,7 +317,7 @@ interface Stream {
   styles: [`
     .institute-select-container {
       min-height: 100vh;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       padding: 2rem 1rem;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
@@ -513,7 +513,7 @@ interface Stream {
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       color: white;
       display: flex;
       align-items: center;
@@ -660,10 +660,10 @@ interface Stream {
     /* Selected Card */
     .selected-card {
       margin-top: 1.5rem;
-      border: 2px solid #667eea;
+      border: 2px solid #1d4ed8;
       border-radius: 12px;
       overflow: hidden;
-      background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+      background: linear-gradient(135deg, rgba(29, 78, 216, 0.05) 0%, rgba(30, 58, 138, 0.05) 100%);
     }
 
     .selected-card.stream-card {
@@ -676,7 +676,7 @@ interface Stream {
       align-items: center;
       gap: 1rem;
       padding: 1.5rem;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       color: white;
     }
 
@@ -731,7 +731,7 @@ interface Stream {
       border-radius: 6px;
       font-family: 'Courier New', monospace;
       font-size: 0.9rem;
-      color: #667eea;
+      color: #1d4ed8;
     }
 
     .card-footer {
@@ -804,7 +804,7 @@ interface Stream {
     }
 
     .summary-item mat-icon {
-      color: #667eea;
+      color: #1d4ed8;
       flex-shrink: 0;
       margin-top: 0.2rem;
     }
@@ -864,12 +864,12 @@ interface Stream {
     }
 
     .submit-btn {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
       color: white;
     }
 
     .submit-btn:hover:not(:disabled) {
-      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 8px 24px rgba(29, 78, 216, 0.4);
       transform: translateY(-2px);
     }
 
@@ -884,9 +884,9 @@ interface Stream {
     }
 
     .logout-btn:hover:not(:disabled) {
-      border-color: #667eea;
-      color: #667eea;
-      background: rgba(102, 126, 234, 0.05);
+      border-color: #1d4ed8;
+      color: #1d4ed8;
+      background: rgba(29, 78, 216, 0.05);
     }
 
     mat-spinner {
