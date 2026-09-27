@@ -76,10 +76,13 @@ export class ClientSideRateLimiter {
 
     if (!data) return false;
 
-    // Check if block duration has expired
-    const now = Date.now();
-    if (now > data.blockedUntil) {
-      // Block expired, cleanup
+    // Not blocked yet: keep the failure history (the old code deleted it here,
+    // and since the login pages call isBlocked() before every attempt the
+    // counter was reset each time and the limiter never blocked anyone).
+    if (!data.blockedUntil) return false;
+
+    // Block expired: start fresh
+    if (Date.now() > data.blockedUntil) {
       localStorage.removeItem(key);
       return false;
     }
@@ -107,7 +110,10 @@ export class ClientSideRateLimiter {
     const key = this.getStorageKey(endpoint);
     let data = this.getStorageData(key);
 
-    if (!data) {
+    // Failures only count within one window; mistakes spread over days
+    // should never add up to a lock-out.
+    const windowExpired = !!data && !data.blockedUntil && Date.now() - (data.firstFailureTime || 0) > this.BLOCK_DURATION_MS;
+    if (!data || windowExpired) {
       data = {
         failures: 0,
         lastFailureTime: Date.now(),

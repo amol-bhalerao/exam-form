@@ -608,6 +608,16 @@ const SHARED_STRINGS: Record<string, { en: string; mr: string; hi: string }> = {
   openMenu: { en: 'Open menu', mr: 'मेनू उघडा', hi: 'मेनू खोलें' },
   languageSaved: { en: 'Language saved to your account', mr: 'भाषा तुमच्या खात्यात जतन केली', hi: 'भाषा आपके खाते में सहेजी गई' },
 
+  // Error messages shown by the HTTP error interceptor
+  errNetwork: { en: 'Cannot reach the server. Check your internet connection and try again.', mr: 'सर्व्हरशी संपर्क होत नाही. इंटरनेट तपासून पुन्हा प्रयत्न करा.', hi: 'सर्वर से संपर्क नहीं हो पा रहा। इंटरनेट जाँचकर फिर से प्रयास करें।' },
+  errSessionExpired: { en: 'Your session has expired. Please log in again.', mr: 'तुमचे सत्र संपले आहे. कृपया पुन्हा लॉगिन करा.', hi: 'आपका सत्र समाप्त हो गया है। कृपया फिर से लॉगिन करें।' },
+  errForbidden: { en: 'You do not have permission to do this.', mr: 'ही कृती करण्याची तुम्हाला परवानगी नाही.', hi: 'आपको यह करने की अनुमति नहीं है।' },
+  errNotFound: { en: 'The requested record was not found.', mr: 'मागितलेली नोंद सापडली नाही.', hi: 'माँगा गया रिकॉर्ड नहीं मिला।' },
+  errValidation: { en: 'Some details are missing or invalid. Please check the form.', mr: 'काही माहिती अपूर्ण किंवा चुकीची आहे. कृपया फॉर्म तपासा.', hi: 'कुछ जानकारी अधूरी या गलत है। कृपया फ़ॉर्म जाँचें।' },
+  errTooMany: { en: 'Too many attempts. Please wait a minute and try again.', mr: 'खूप प्रयत्न झाले. एक मिनिट थांबून पुन्हा प्रयत्न करा.', hi: 'बहुत अधिक प्रयास। एक मिनट रुककर फिर से प्रयास करें।' },
+  errServer: { en: 'Something went wrong on the server. Please try again shortly.', mr: 'सर्व्हरवर अडचण आली. थोड्या वेळाने पुन्हा प्रयत्न करा.', hi: 'सर्वर पर समस्या आई। थोड़ी देर बाद फिर से प्रयास करें।' },
+  errInvalidCredentials: { en: 'Incorrect username or password.', mr: 'वापरकर्तानाव किंवा पासवर्ड चुकीचा आहे.', hi: 'उपयोगकर्ता नाम या पासवर्ड गलत है।' },
+
   // GR subject guide
   grTitle: { en: 'Subject guide — 2019 GR scheme', mr: 'विषय मार्गदर्शक — २०१९ शासन निर्णय', hi: 'विषय मार्गदर्शिका — 2019 शासन निर्णय योजना' },
   grIntro: { en: 'Tap a subject to add or remove it. Rules are checked as you choose.', mr: 'विषय जोडण्यासाठी किंवा काढण्यासाठी त्यावर टॅप करा. निवडताना नियम तपासले जातात.', hi: 'विषय जोड़ने या हटाने के लिए उस पर टैप करें। चुनते समय नियम जाँचे जाते हैं।' },

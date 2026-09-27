@@ -101,7 +101,8 @@ export const studentGuard: CanActivateFn = (route, state) => {
   }
   
   if (user?.role && user.role !== 'STUDENT') {
-    router.navigate(['/unauthorized']);
+    // there is no /unauthorized route; send staff back to their own dashboard
+    router.navigate(['/app/dashboard']);
     return false;
   }
   
