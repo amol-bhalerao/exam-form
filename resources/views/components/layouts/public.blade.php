@@ -93,7 +93,7 @@
 
     <main id="main" class="flex-1">{{ $slot }}</main>
 
-    <footer class="no-print mt-20 text-white/80" style="background:linear-gradient(160deg,#14114a,#0a3f86 70%,#0f5f8a)">
+    <footer class="no-print text-white/80" style="background:linear-gradient(160deg,#14114a,#0a3f86 70%,#0f5f8a)">
         <div class="zari" aria-hidden="true"></div>
         <div class="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_1fr_1fr]">
             <div>

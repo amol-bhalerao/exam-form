@@ -128,6 +128,7 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     Route::delete('media/{media}', [Admin\MediaController::class, 'destroy'])->name('media.destroy');
     Route::get('settings', [Admin\SettingController::class, 'edit'])->name('settings.edit');
     Route::put('settings', [Admin\SettingController::class, 'update'])->name('settings.update');
+    Route::post('settings/refresh', [Admin\SettingController::class, 'refresh'])->name('settings.refresh');
     Route::get('payments', [Admin\PaymentController::class, 'index'])->name('payments.index');
     Route::get('audit', [Admin\AuditController::class, 'index'])->name('audit.index');
 });

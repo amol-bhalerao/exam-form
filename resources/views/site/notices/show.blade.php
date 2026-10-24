@@ -6,15 +6,15 @@
         'mainEntityOfPage' => route('notices.show', $notice),
         'publisher' => ['@type' => 'Organization', 'name' => \App\Models\Setting::get('site_name')],
     ]">
-    <article class="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+    <div class="bg-gradient-to-b from-board-soft via-paper to-paper"><article class="mx-auto max-w-3xl px-4 py-12 sm:px-6">
         <a href="{{ route('notices.index') }}" class="inline-flex items-center gap-1 text-sm font-semibold no-underline"><x-icon name="arrow-left" class="size-4" />{{ __('All notices') }}</a>
         <p class="mt-6 flex flex-wrap gap-3 text-sm">
-            <span class="font-semibold text-[#8a5d00]">{{ $notice->category_label }}</span>
+            <span class="badge-pending">{{ $notice->category_label }}</span>
             @if ($notice->board)<span class="text-ink-3">{{ $notice->board->label }}</span>@endif
             <time class="text-ink-3" datetime="{{ ($notice->published_at ?? $notice->created_at)->toDateString() }}">{{ ($notice->published_at ?? $notice->created_at)->translatedFormat('j F Y') }}</time>
         </p>
         <h1 class="display-lg mt-3">{{ $notice->title }}</h1>
-        <div class="prose-page mt-6">{!! $notice->body !!}</div>
+        <div class="prose-page sheet mt-6 max-w-none p-6 sm:p-8">{!! $notice->body !!}</div>
         @if ($notice->attachment_path || $notice->link_url)
             <div class="mt-8 flex flex-wrap gap-3">
                 @if ($notice->attachment_path)<a href="{{ $notice->attachmentUrl() }}" class="btn-primary" target="_blank" rel="noopener"><x-icon name="download" />{{ __('Download attachment') }}</a>@endif
@@ -27,5 +27,5 @@
                 @include('site.notices._list', ['notices' => $related])
             </aside>
         @endif
-    </article>
+    </article></div>
 </x-layouts.public>

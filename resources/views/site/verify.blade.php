@@ -1,8 +1,7 @@
 <x-layouts.public :title="__('Verify an exam form')" :noindex="(bool) $number">
-    <div class="mx-auto max-w-2xl px-4 py-12 sm:px-6">
-        <h1 class="display-xl">{{ __('Verify an exam form') }}</h1>
-        <p class="lede mt-3">{{ __('Enter the application number printed on the form, or scan its QR code.') }}</p>
-        <form method="GET" action="{{ route('verify.form') }}" class="mt-8 flex gap-2">
+    <x-page-hero :title="__('Verify an exam form')" :lede="__('Enter the application number printed on the form, or scan its QR code.')" width="max-w-2xl" />
+    <div class="mx-auto max-w-2xl px-4 py-10 sm:px-6">
+        <form method="GET" action="{{ route('verify.form') }}" class="sheet flex gap-2 p-4">
             <label for="number" class="sr-only">{{ __('Application number') }}</label>
             <input id="number" name="number" value="{{ $number }}" class="input uppercase" placeholder="HSC27-000123" required autocomplete="off">
             <button class="btn-primary"><x-icon name="search" />{{ __('Check') }}</button>

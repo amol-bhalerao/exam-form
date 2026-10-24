@@ -4,12 +4,16 @@
     @if ($page->status !== 'published')
         <div class="alert-warn mx-auto mt-6 max-w-5xl">{{ __('Preview: this page is a draft and is not visible to the public.') }}</div>
     @endif
-    <article @class(['mx-auto px-4 py-12 sm:px-6', 'max-w-3xl' => $page->layout === 'default', 'max-w-6xl' => $page->layout !== 'default'])>
-        @if ($page->parent)<a href="{{ route('page.show', $page->parent->slug) }}" class="text-sm font-semibold no-underline">{{ $page->parent->title }}</a>@endif
-        <h1 class="display-xl mt-2">{{ $page->title }}</h1>
-        @if ($page->summary)<p class="lede mt-4">{{ $page->summary }}</p>@endif
+    <x-page-hero :title="$page->title" :lede="$page->summary" :width="$page->layout === 'default' ? 'max-w-3xl' : 'max-w-6xl'">
+        <x-slot:before>
+            @if ($page->parent)
+                <a href="{{ route('page.show', $page->parent->slug) }}" class="mb-2 inline-block text-sm font-semibold text-marigold no-underline hover:text-white">{{ $page->parent->title }}</a>
+            @endif
+        </x-slot:before>
+    </x-page-hero>
+    <article @class(['mx-auto px-4 py-10 sm:px-6', 'max-w-3xl' => $page->layout === 'default', 'max-w-6xl' => $page->layout !== 'default'])>
         @if ($page->hero_image)<img src="{{ asset('storage/' . $page->hero_image) }}" alt="" class="mt-8 w-full rounded-lg border border-rule object-cover" loading="lazy">@endif
-        <div @class(['prose-page mt-8', 'max-w-none' => $page->layout !== 'default'])>{!! $page->body !!}</div>
+        <div @class(['prose-page sheet p-6 sm:p-10', 'max-w-none' => $page->layout !== 'default'])>{!! $page->body !!}</div>
         @if ($children->isNotEmpty())
             <div class="mt-12 grid gap-3 sm:grid-cols-2">
                 @foreach ($children as $c)

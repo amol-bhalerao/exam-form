@@ -1,9 +1,8 @@
 <x-layouts.public :title="__('Exam calendar')" :description="__('HSC and SSC exam form dates, late fee windows and exam dates.')">
-    <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6">
-        <h1 class="display-xl">{{ __('Exam calendar') }}</h1>
-        <p class="lede mt-3">{{ __('Form dates, late fee windows and fees for every published exam.') }}</p>
+    <x-page-hero :title="__('Exam calendar')" :lede="__('Form dates, late fee windows and fees for every published exam.')" />
+    <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         @forelse ($exams as $board => $list)
-            <section class="mt-12">
+            <section class="sheet mt-8 p-6 sm:p-8">
                 <h2 class="font-display text-4xl font-bold text-board" style="font-stretch:120%">{{ $board }}</h2>
                 <ol class="mt-5 border-l-2 border-rule-strong">
                     @foreach ($list as $exam)

@@ -82,7 +82,8 @@
     </section>
 
     {{-- Open exams --}}
-    <section class="mx-auto max-w-7xl px-4 pt-16 sm:px-6" aria-labelledby="open-exams">
+    <div class="bg-gradient-to-b from-board-soft to-mor-soft/40 py-14">
+    <section class="mx-auto max-w-7xl px-4 sm:px-6" aria-labelledby="open-exams">
         <div class="section-head">
             <h2 id="open-exams" class="display-lg">{{ __('Accepting forms now') }}</h2>
             <a href="{{ route('exams.calendar') }}" class="font-semibold">{{ __('Full exam calendar') }}</a>
@@ -113,9 +114,11 @@
             </x-empty>
         @endforelse
     </section>
+    </div>
 
     {{-- Notice board + guides --}}
-    <section class="mx-auto mt-16 grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[1.4fr_1fr]">
+    <div class="border-y border-rule bg-white py-14">
+    <section class="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-[1.4fr_1fr]">
         <div aria-labelledby="notices">
             <div class="section-head">
                 <h2 id="notices" class="display-lg">{{ __('Notice board') }}</h2>
@@ -139,9 +142,11 @@
             </div>
         </aside>
     </section>
+    </div>
 
     {{-- Process --}}
-    <section class="mx-auto mt-20 max-w-7xl px-4 sm:px-6" aria-labelledby="process">
+    <div class="bg-gradient-to-br from-rani-soft via-marigold-soft/70 to-plum-soft py-16">
+    <section class="mx-auto max-w-7xl px-4 sm:px-6" aria-labelledby="process">
         <h2 id="process" class="display-lg max-w-[22ch]">{{ __('From sign-in to board approval') }}</h2>
         <ol class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             @foreach ([
@@ -151,7 +156,7 @@
                 [__('Pay the exam fee'), __('UPI, card or net banking. Your receipt stays in your account.')],
                 [__('Verified and approved'), __('Your college checks and forwards the form; the board approves it. Track every step.')],
             ] as $i => [$h, $t])
-                <li class="tile {{ ['tone-board', 'tone-mor', 'tone-rani', 'tone-marigold', 'tone-leaf'][$i] }} p-6">
+                <li class="tile bg-white {{ ['tone-board', 'tone-mor', 'tone-rani', 'tone-marigold', 'tone-leaf'][$i] }} p-6">
                     <span class="tone-icon font-display text-lg font-bold">{{ $i + 1 }}</span>
                     <p class="title mt-4">{{ $h }}</p>
                     <p class="muted mt-2 text-[0.95rem]">{{ $t }}</p>
@@ -159,9 +164,10 @@
             @endforeach
         </ol>
     </section>
+    </div>
 
     {{-- Boards --}}
-    <section class="mx-auto mt-20 max-w-7xl px-4 sm:px-6">
+    <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <div class="peacock grid gap-6 overflow-hidden rounded-2xl p-8 sm:p-10 md:grid-cols-2">
             @foreach ($boards as $b)
                 <div>

@@ -41,4 +41,12 @@ class SettingController extends Controller
         AuditLog::record('settings.updated');
         return back()->with('status', __('Settings saved.'));
     }
+
+    /** After uploading new files on shared hosting (no SSH): rebuild compiled pages and caches. */
+    public function refresh()
+    {
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        AuditLog::record('settings.refresh');
+        return back()->with('status', __('Website refreshed. New files are now in use.'));
+    }
 }

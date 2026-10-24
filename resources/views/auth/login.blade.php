@@ -1,15 +1,16 @@
 <x-layouts.public :title="__('Student sign in')" :description="__('Sign in with Google to fill and track your HSC or SSC exam form.')">
+    <div class="peacock">
     <div class="mx-auto grid max-w-5xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-2 md:items-center">
         <div>
-            <h1 class="display-xl">{{ __('Sign in to fill your exam form') }}</h1>
-            <p class="lede mt-4">{{ __('Use any Google account. You can add yourself, your child or other students to the same account.') }}</p>
-            <ul class="mt-6 space-y-3 text-ink-2">
-                <li class="flex gap-3"><x-icon name="circle-check" class="mt-1 size-5 shrink-0 text-leaf" />{{ __('Details are saved, so the next form takes minutes.') }}</li>
-                <li class="flex gap-3"><x-icon name="circle-check" class="mt-1 size-5 shrink-0 text-leaf" />{{ __('See when your college verifies the form and when the board approves it.') }}</li>
-                <li class="flex gap-3"><x-icon name="circle-check" class="mt-1 size-5 shrink-0 text-leaf" />{{ __('Print the form and fee receipt any time.') }}</li>
+            <h1 class="display-xl text-white">{{ __('Sign in to fill your exam form') }}</h1>
+            <p class="mt-4 text-lg text-white/85">{{ __('Use any Google account. You can add yourself, your child or other students to the same account.') }}</p>
+            <ul class="mt-6 space-y-3 text-white/90">
+                <li class="flex gap-3"><x-icon name="circle-check" class="mt-1 size-5 shrink-0 text-marigold" />{{ __('Details are saved, so the next form takes minutes.') }}</li>
+                <li class="flex gap-3"><x-icon name="circle-check" class="mt-1 size-5 shrink-0 text-marigold" />{{ __('See when your college verifies the form and when the board approves it.') }}</li>
+                <li class="flex gap-3"><x-icon name="circle-check" class="mt-1 size-5 shrink-0 text-marigold" />{{ __('Print the form and fee receipt any time.') }}</li>
             </ul>
         </div>
-        <div class="sheet sheet-pad">
+        <div class="sheet sheet-pad text-ink">
             <x-flash />
             @error('google')<div class="alert-bad mb-5" role="alert"><x-icon name="circle-alert" class="mt-0.5 size-5 shrink-0" />{{ $message }}</div>@enderror
             <a href="{{ route('auth.google') }}" @class(['btn-secondary w-full text-base', 'pointer-events-none opacity-50' => ! $googleReady]) @if (! $googleReady) aria-disabled="true" @endif>
@@ -27,4 +28,6 @@
             <p class="muted mt-6 text-sm">{{ __('By continuing you agree to the') }} <a href="{{ route('page.show', 'terms') }}">{{ __('terms of use') }}</a> {{ __('and') }} <a href="{{ route('page.show', 'privacy') }}">{{ __('privacy policy') }}</a>.</p>
         </div>
     </div>
+    </div>
+    <div class="zari" aria-hidden="true"></div>
 </x-layouts.public>

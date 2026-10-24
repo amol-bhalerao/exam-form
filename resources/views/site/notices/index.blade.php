@@ -1,8 +1,7 @@
 <x-layouts.public :title="__('Notices')" :description="__('Board notices, circulars, timetables and results for HSC and SSC candidates.')">
-    <div class="mx-auto max-w-5xl px-4 py-12 sm:px-6">
-        <h1 class="display-xl">{{ __('Notices') }}</h1>
-        <p class="lede mt-3">{{ __('Circulars, timetables and announcements from the board.') }}</p>
-        <form method="GET" class="mt-8 flex flex-wrap gap-2" aria-label="{{ __('Filter notices') }}">
+    <x-page-hero :title="__('Notices')" :lede="__('Circulars, timetables and announcements from the board.')" />
+    <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+        <form method="GET" class="flex flex-wrap gap-2" aria-label="{{ __('Filter notices') }}">
             <a href="{{ route('notices.index', array_filter(['board' => $board])) }}" @class(['chip no-underline', 'border-transparent bg-gradient-to-r from-rani to-plum text-white hover:text-white' => ! $category])>{{ __('All') }}</a>
             @foreach (\App\Support\Codes::NOTICE_CATEGORIES as $key => $label)
                 <a href="{{ route('notices.index', array_filter(['category' => $key, 'board' => $board])) }}" @class(['chip no-underline', 'border-transparent bg-gradient-to-r from-rani to-plum text-white hover:text-white' => $category === $key])>{{ __($label) }}</a>
