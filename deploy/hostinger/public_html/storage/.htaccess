@@ -1,0 +1,5 @@
+# Uploaded photos, signatures and documents. Never run scripts from here.
+Options -Indexes -ExecCGI
+<FilesMatch "\.(php|phtml|phar|php\d|pl|py|cgi|sh|html?|svg|js)$">
+    Require all denied
+</FilesMatch>

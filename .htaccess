@@ -1,0 +1,28 @@
+# Lets the portal run from this folder as the web root — XAMPP (http://localhost/HSC-exam)
+# or Hostinger (public_html). Only files inside public/ are ever sent to the browser;
+# every other request goes through index.php, so .env, app/ and vendor/ stay private.
+<IfModule mod_negotiation.c>
+    Options -MultiViews -Indexes
+</IfModule>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Pass the Authorization header to PHP.
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Built assets, uploaded files and icons live in public/.
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteRule ^(build|storage|vendor-assets)/(.*)$ public/$1/$2 [L]
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteRule ^(favicon\.ico|favicon\.svg)$ public/$1 [L]
+
+    # Everything else is handled by the application.
+    RewriteCond %{ENV:REDIRECT_STATUS} ^$
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

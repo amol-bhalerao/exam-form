@@ -1,0 +1,1277 @@
+{
+ "catalogue": [
+  {
+   "code": "1",
+   "kind": "COMPULSORY",
+   "name": {
+    "en": "English Language and Literature",
+    "mr": "इंग्रजी भाषा व साहित्य",
+    "hi": "अंग्रेज़ी भाषा एवं साहित्य"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "31",
+   "kind": "COMPULSORY",
+   "name": {
+    "en": "Jal Suraksha and Environmental Education",
+    "mr": "जलसुरक्षा व पर्यावरण शिक्षण",
+    "hi": "जल सुरक्षा एवं पर्यावरण शिक्षा"
+   },
+   "theory": 30,
+   "internal": 20,
+   "graded": true
+  },
+  {
+   "code": "30",
+   "kind": "COMPULSORY",
+   "name": {
+    "en": "Health and Physical Education",
+    "mr": "आरोग्य व शारीरिक शिक्षण",
+    "hi": "स्वास्थ्य एवं शारीरिक शिक्षा"
+   },
+   "theory": 25,
+   "internal": 25,
+   "graded": true
+  },
+  {
+   "code": "2",
+   "kind": "MIL",
+   "name": {
+    "en": "Marathi",
+    "mr": "मराठी",
+    "hi": "मराठी"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "3",
+   "kind": "MIL",
+   "name": {
+    "en": "Gujarati",
+    "mr": "गुजराती",
+    "hi": "गुजराती"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "4",
+   "kind": "MIL",
+   "name": {
+    "en": "Hindi",
+    "mr": "हिंदी",
+    "hi": "हिंदी"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "5",
+   "kind": "MIL",
+   "name": {
+    "en": "Urdu",
+    "mr": "उर्दू",
+    "hi": "उर्दू"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "6",
+   "kind": "MIL",
+   "name": {
+    "en": "Kannada",
+    "mr": "कन्नड",
+    "hi": "कन्नड़"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "7",
+   "kind": "MIL",
+   "name": {
+    "en": "Sindhi",
+    "mr": "सिंधी",
+    "hi": "सिंधी"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "8",
+   "kind": "MIL",
+   "name": {
+    "en": "Malayalam",
+    "mr": "मल्याळम",
+    "hi": "मलयालम"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "9",
+   "kind": "MIL",
+   "name": {
+    "en": "Tamil",
+    "mr": "तमिळ",
+    "hi": "तमिल"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "10",
+   "kind": "MIL",
+   "name": {
+    "en": "Telugu",
+    "mr": "तेलुगु",
+    "hi": "तेलुगु"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "11",
+   "kind": "MIL",
+   "name": {
+    "en": "Punjabi",
+    "mr": "पंजाबी",
+    "hi": "पंजाबी"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "12",
+   "kind": "MIL",
+   "name": {
+    "en": "Bengali",
+    "mr": "बंगाली",
+    "hi": "बंगाली"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "13",
+   "kind": "MFL",
+   "name": {
+    "en": "French",
+    "mr": "फ्रेंच",
+    "hi": "फ़्रेंच"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "14",
+   "kind": "MFL",
+   "name": {
+    "en": "German",
+    "mr": "जर्मन",
+    "hi": "जर्मन"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "20",
+   "kind": "MFL",
+   "name": {
+    "en": "Russian",
+    "mr": "रशियन",
+    "hi": "रूसी"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "21",
+   "kind": "MFL",
+   "name": {
+    "en": "Japanese",
+    "mr": "जपानी",
+    "hi": "जापानी"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "25",
+   "kind": "MFL",
+   "name": {
+    "en": "Spanish",
+    "mr": "स्पॅनिश",
+    "hi": "स्पेनिश"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "26",
+   "kind": "MFL",
+   "name": {
+    "en": "Chinese",
+    "mr": "चिनी",
+    "hi": "चीनी"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "33",
+   "kind": "CLASSICAL",
+   "name": {
+    "en": "Sanskrit",
+    "mr": "संस्कृत",
+    "hi": "संस्कृत"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "35",
+   "kind": "CLASSICAL",
+   "name": {
+    "en": "Pali",
+    "mr": "पाली",
+    "hi": "पाली"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "16",
+   "kind": "CLASSICAL",
+   "name": {
+    "en": "Ardhamagadhi",
+    "mr": "अर्धमागधी",
+    "hi": "अर्धमागधी"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "27",
+   "kind": "CLASSICAL",
+   "name": {
+    "en": "Maharashtri Prakrit",
+    "mr": "महाराष्ट्री प्राकृत",
+    "hi": "महाराष्ट्री प्राकृत"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "36",
+   "kind": "CLASSICAL",
+   "name": {
+    "en": "Arabic",
+    "mr": "अरेबिक",
+    "hi": "अरबी"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "37",
+   "kind": "CLASSICAL",
+   "name": {
+    "en": "Persian",
+    "mr": "पर्शियन",
+    "hi": "फ़ारसी"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "87",
+   "kind": "CLASSICAL",
+   "name": {
+    "en": "Avesta Pahlavi",
+    "mr": "अवेस्ता पहलवी",
+    "hi": "अवेस्ता पहलवी"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "97",
+   "kind": "IT",
+   "name": {
+    "en": "Information Technology (Science)",
+    "mr": "माहिती तंत्रज्ञान (विज्ञान)",
+    "hi": "सूचना प्रौद्योगिकी (विज्ञान)"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "98",
+   "kind": "IT",
+   "name": {
+    "en": "Information Technology (Arts)",
+    "mr": "माहिती तंत्रज्ञान (कला)",
+    "hi": "सूचना प्रौद्योगिकी (कला)"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "99",
+   "kind": "IT",
+   "name": {
+    "en": "Information Technology (Commerce)",
+    "mr": "माहिती तंत्रज्ञान (वाणिज्य)",
+    "hi": "सूचना प्रौद्योगिकी (वाणिज्य)"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "38",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "History",
+    "mr": "इतिहास",
+    "hi": "इतिहास"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "39",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Geography",
+    "mr": "भूगोल",
+    "hi": "भूगोल"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "40",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Mathematics and Statistics (Arts and Science)",
+    "mr": "गणित आणि संख्याशास्त्र (कला आणि विज्ञान)",
+    "hi": "गणित एवं सांख्यिकी (कला एवं विज्ञान)"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "41",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Geology",
+    "mr": "भूशास्त्र",
+    "hi": "भूविज्ञान"
+   },
+   "theory": 70,
+   "internal": 30
+  },
+  {
+   "code": "42",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Political Science",
+    "mr": "राज्यशास्त्र",
+    "hi": "राजनीति विज्ञान"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "43",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Child Development",
+    "mr": "बाल विकास",
+    "hi": "बाल विकास"
+   },
+   "theory": 70,
+   "internal": 30
+  },
+  {
+   "code": "44",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Textile",
+    "mr": "वस्त्रशास्त्र",
+    "hi": "वस्त्र विज्ञान"
+   },
+   "theory": 70,
+   "internal": 30
+  },
+  {
+   "code": "45",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Sociology",
+    "mr": "समाजशास्त्र",
+    "hi": "समाजशास्त्र"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "46",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Philosophy",
+    "mr": "तत्त्वज्ञान",
+    "hi": "दर्शनशास्त्र"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "47",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Logic",
+    "mr": "तर्कशास्त्र",
+    "hi": "तर्कशास्त्र"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "48",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Psychology",
+    "mr": "मानसशास्त्र",
+    "hi": "मनोविज्ञान"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "49",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Economics",
+    "mr": "अर्थशास्त्र",
+    "hi": "अर्थशास्त्र"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "50",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Book Keeping and Accountancy",
+    "mr": "पुस्तपालन व लेखाकर्म",
+    "hi": "बहीखाता एवं लेखाकर्म"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "51",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Organisation of Commerce and Management",
+    "mr": "वाणिज्य संघटन आणि व्यवस्थापन",
+    "hi": "वाणिज्य संगठन एवं प्रबंधन"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "52",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Secretarial Practice",
+    "mr": "चिटणीसाची कार्यपद्धती",
+    "hi": "सचिवीय पद्धति"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "53",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Co-operation",
+    "mr": "सहकार",
+    "hi": "सहकारिता"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "54",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Physics",
+    "mr": "भौतिकशास्त्र",
+    "hi": "भौतिकी"
+   },
+   "theory": 70,
+   "internal": 30
+  },
+  {
+   "code": "55",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Chemistry",
+    "mr": "रसायनशास्त्र",
+    "hi": "रसायन विज्ञान"
+   },
+   "theory": 70,
+   "internal": 30
+  },
+  {
+   "code": "56",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Biology",
+    "mr": "जीवशास्त्र",
+    "hi": "जीव विज्ञान"
+   },
+   "theory": 70,
+   "internal": 30
+  },
+  {
+   "code": "60",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "History of Art and Appreciation",
+    "mr": "कलेचा इतिहास आणि रसग्रहण",
+    "hi": "कला का इतिहास एवं रसास्वादन"
+   },
+   "theory": 50,
+   "internal": 50
+  },
+  {
+   "code": "61",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Home Management",
+    "mr": "गृह व्यवस्थापन",
+    "hi": "गृह प्रबंधन"
+   },
+   "theory": 70,
+   "internal": 30
+  },
+  {
+   "code": "62",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Food Science and Technology",
+    "mr": "अन्नविज्ञान व तंत्रज्ञान",
+    "hi": "खाद्य विज्ञान एवं प्रौद्योगिकी"
+   },
+   "theory": 70,
+   "internal": 30
+  },
+  {
+   "code": "65",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "History and Development of Indian Music",
+    "mr": "भारतीय संगीताचा इतिहास व विकास",
+    "hi": "भारतीय संगीत का इतिहास एवं विकास"
+   },
+   "theory": 50,
+   "internal": 50
+  },
+  {
+   "code": "75",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Agricultural Science and Technology",
+    "mr": "कृषीविज्ञान आणि तंत्रज्ञान",
+    "hi": "कृषि विज्ञान एवं प्रौद्योगिकी"
+   },
+   "theory": 70,
+   "internal": 30
+  },
+  {
+   "code": "76",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Animal Science and Technology",
+    "mr": "पशुविज्ञान आणि तंत्रज्ञान",
+    "hi": "पशु विज्ञान एवं प्रौद्योगिकी"
+   },
+   "theory": 70,
+   "internal": 30
+  },
+  {
+   "code": "77",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Defence Studies",
+    "mr": "संरक्षणशास्त्र",
+    "hi": "रक्षा अध्ययन"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "78",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Education",
+    "mr": "शिक्षणशास्त्र",
+    "hi": "शिक्षाशास्त्र"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "88",
+   "kind": "ELECTIVE",
+   "name": {
+    "en": "Mathematics and Statistics (Commerce)",
+    "mr": "गणित आणि संख्याशास्त्र (वाणिज्य)",
+    "hi": "गणित एवं सांख्यिकी (वाणिज्य)"
+   },
+   "theory": 80,
+   "internal": 20
+  },
+  {
+   "code": "90",
+   "kind": "FOUNDATION",
+   "name": {
+    "en": "Foundation Course (MCVC)",
+    "mr": "पायाभूत अभ्यासक्रम (MCVC)",
+    "hi": "आधार पाठ्यक्रम (MCVC)"
+   }
+  },
+  {
+   "code": "A1",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Electrical Maintenance",
+    "mr": "विद्युत देखभाल",
+    "hi": "विद्युत रखरखाव"
+   },
+   "streams": [
+    "SCIENCE"
+   ]
+  },
+  {
+   "code": "A2",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Mechanical Maintenance",
+    "mr": "यांत्रिक देखभाल",
+    "hi": "यांत्रिक रखरखाव"
+   },
+   "streams": [
+    "SCIENCE"
+   ]
+  },
+  {
+   "code": "A3",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Scooter and Motorcycle Servicing",
+    "mr": "स्कूटर व मोटारसायकल सर्व्हिसिंग",
+    "hi": "स्कूटर एवं मोटरसाइकिल सर्विसिंग"
+   },
+   "streams": [
+    "SCIENCE"
+   ]
+  },
+  {
+   "code": "A4",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "General Civil Engineering",
+    "mr": "सामान्य स्थापत्य अभियांत्रिकी",
+    "hi": "सामान्य सिविल इंजीनियरिंग"
+   },
+   "streams": [
+    "SCIENCE"
+   ]
+  },
+  {
+   "code": "A5",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Banking",
+    "mr": "बँकिंग",
+    "hi": "बैंकिंग"
+   },
+   "streams": [
+    "COMMERCE"
+   ]
+  },
+  {
+   "code": "A7",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Office Management",
+    "mr": "कार्यालय व्यवस्थापन",
+    "hi": "कार्यालय प्रबंधन"
+   },
+   "streams": [
+    "COMMERCE"
+   ]
+  },
+  {
+   "code": "A8",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Marketing and Salesmanship",
+    "mr": "विपणन व विक्रयकला",
+    "hi": "विपणन एवं विक्रय कला"
+   },
+   "streams": [
+    "COMMERCE"
+   ]
+  },
+  {
+   "code": "A9",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Small Industries and Self-employment",
+    "mr": "लघुउद्योग व स्वयंरोजगार",
+    "hi": "लघु उद्योग एवं स्वरोज़गार"
+   },
+   "streams": [
+    "COMMERCE"
+   ]
+  },
+  {
+   "code": "B2",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Animal Science and Dairying",
+    "mr": "पशुविज्ञान व दुग्धव्यवसाय",
+    "hi": "पशु विज्ञान एवं डेयरी"
+   },
+   "streams": [
+    "SCIENCE"
+   ]
+  },
+  {
+   "code": "B4",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Crop Science",
+    "mr": "पीकशास्त्र",
+    "hi": "फसल विज्ञान"
+   },
+   "streams": [
+    "SCIENCE"
+   ]
+  },
+  {
+   "code": "B5",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Horticulture",
+    "mr": "उद्यानविद्या",
+    "hi": "बागवानी"
+   },
+   "streams": [
+    "SCIENCE"
+   ]
+  },
+  {
+   "code": "B9",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Fish Processing Technology",
+    "mr": "मत्स्य प्रक्रिया तंत्रज्ञान",
+    "hi": "मत्स्य प्रसंस्करण प्रौद्योगिकी"
+   },
+   "streams": [
+    "SCIENCE"
+   ]
+  },
+  {
+   "code": "C1",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Fresh Water Fish Culture",
+    "mr": "गोड्या पाण्यातील मत्स्यसंवर्धन",
+    "hi": "मीठे पानी में मत्स्य पालन"
+   },
+   "streams": [
+    "SCIENCE"
+   ]
+  },
+  {
+   "code": "C2",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Electronics",
+    "mr": "इलेक्ट्रॉनिक्स",
+    "hi": "इलेक्ट्रॉनिक्स"
+   },
+   "streams": [
+    "SCIENCE"
+   ]
+  },
+  {
+   "code": "D9",
+   "kind": "BIFOCAL",
+   "name": {
+    "en": "Computer Science",
+    "mr": "संगणकशास्त्र",
+    "hi": "कंप्यूटर विज्ञान"
+   },
+   "streams": [
+    "SCIENCE"
+   ]
+  },
+  {
+   "code": "EA/EB/EC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Electronics Technology",
+    "mr": "इलेक्ट्रॉनिक्स तंत्रज्ञान",
+    "hi": "इलेक्ट्रॉनिक्स प्रौद्योगिकी"
+   }
+  },
+  {
+   "code": "FA/FB/FC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Electrical Technology",
+    "mr": "विद्युत तंत्रज्ञान",
+    "hi": "विद्युत प्रौद्योगिकी"
+   }
+  },
+  {
+   "code": "GA/GB/GC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Automobile Technology",
+    "mr": "ऑटोमोबाईल तंत्रज्ञान",
+    "hi": "ऑटोमोबाइल प्रौद्योगिकी"
+   }
+  },
+  {
+   "code": "HA/HB/HC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Construction Technology",
+    "mr": "बांधकाम तंत्रज्ञान",
+    "hi": "निर्माण प्रौद्योगिकी"
+   }
+  },
+  {
+   "code": "IA/IB/IC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Mechanical Technology",
+    "mr": "यांत्रिक तंत्रज्ञान",
+    "hi": "यांत्रिक प्रौद्योगिकी"
+   }
+  },
+  {
+   "code": "JA/JB/JC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Computer Technology",
+    "mr": "संगणक तंत्रज्ञान",
+    "hi": "कंप्यूटर प्रौद्योगिकी"
+   }
+  },
+  {
+   "code": "KA/KB/KC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Horticulture",
+    "mr": "उद्यानविद्या",
+    "hi": "बागवानी"
+   }
+  },
+  {
+   "code": "LA/LB/LC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Crop Science",
+    "mr": "पीकशास्त्र",
+    "hi": "फसल विज्ञान"
+   }
+  },
+  {
+   "code": "MA/MB/MC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Animal Husbandry and Dairy",
+    "mr": "पशुसंवर्धन व दुग्धव्यवसाय",
+    "hi": "पशुपालन एवं डेयरी"
+   }
+  },
+  {
+   "code": "NA/NB/NC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Fisheries Technology",
+    "mr": "मत्स्यव्यवसाय तंत्रज्ञान",
+    "hi": "मत्स्य प्रौद्योगिकी"
+   }
+  },
+  {
+   "code": "OA/OB/OC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Medical Laboratory Technician",
+    "mr": "वैद्यकीय प्रयोगशाळा तंत्रज्ञ",
+    "hi": "चिकित्सा प्रयोगशाला तकनीशियन"
+   }
+  },
+  {
+   "code": "PA/PB/PC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Radiology Technician",
+    "mr": "रेडिओलॉजी तंत्रज्ञ",
+    "hi": "रेडियोलॉजी तकनीशियन"
+   }
+  },
+  {
+   "code": "QA/QB/QC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Child, Old Age and Health Care",
+    "mr": "बाल, वृद्ध व आरोग्य सेवा",
+    "hi": "बाल, वृद्ध एवं स्वास्थ्य देखभाल"
+   }
+  },
+  {
+   "code": "RA/RB/RC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Ophthalmic Technician",
+    "mr": "नेत्रचिकित्सा तंत्रज्ञ",
+    "hi": "नेत्र तकनीशियन"
+   }
+  },
+  {
+   "code": "SA/SB/SC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Food Products Technology",
+    "mr": "अन्नपदार्थ तंत्रज्ञान",
+    "hi": "खाद्य उत्पाद प्रौद्योगिकी"
+   }
+  },
+  {
+   "code": "TA/TB/TC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Tourism and Hospitality Management",
+    "mr": "पर्यटन व आतिथ्य व्यवस्थापन",
+    "hi": "पर्यटन एवं आतिथ्य प्रबंधन"
+   }
+  },
+  {
+   "code": "UA/UB/UC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Accounting and Office Management",
+    "mr": "लेखा व कार्यालय व्यवस्थापन",
+    "hi": "लेखा एवं कार्यालय प्रबंधन"
+   }
+  },
+  {
+   "code": "VA/VB/VC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Marketing and Retail Management",
+    "mr": "विपणन व किरकोळ विक्री व्यवस्थापन",
+    "hi": "विपणन एवं खुदरा प्रबंधन"
+   }
+  },
+  {
+   "code": "WA/WB/WC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Logistics and Supply Chain Management",
+    "mr": "लॉजिस्टिक्स व पुरवठा साखळी व्यवस्थापन",
+    "hi": "लॉजिस्टिक्स एवं आपूर्ति शृंखला प्रबंधन"
+   }
+  },
+  {
+   "code": "XA/XB/XC",
+   "kind": "VOCATIONAL",
+   "name": {
+    "en": "Banking, Financial Services and Insurance",
+    "mr": "बँकिंग, वित्तीय सेवा व विमा",
+    "hi": "बैंकिंग, वित्तीय सेवाएँ एवं बीमा"
+   }
+  }
+ ],
+ "scheme": {
+  "ARTS": {
+   "groupAChoice": [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "20",
+    "21",
+    "25",
+    "26",
+    "33",
+    "35",
+    "16",
+    "27",
+    "36",
+    "37",
+    "87",
+    "98"
+   ],
+   "groupB": [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "20",
+    "21",
+    "25",
+    "26",
+    "33",
+    "35",
+    "16",
+    "27",
+    "36",
+    "37",
+    "87",
+    "38",
+    "49",
+    "42",
+    "45",
+    "48",
+    "39",
+    "46",
+    "98"
+   ],
+   "groupC": [
+    "77",
+    "47",
+    "98",
+    "78",
+    "40",
+    "75",
+    "76",
+    "44",
+    "60",
+    "65",
+    "50",
+    "43",
+    "61",
+    "62",
+    "51",
+    "53"
+   ]
+  },
+  "COMMERCE": {
+   "groupAChoice": [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "20",
+    "21",
+    "25",
+    "26",
+    "33",
+    "35",
+    "16",
+    "27",
+    "36",
+    "37",
+    "87",
+    "99",
+    "A5",
+    "A7",
+    "A8",
+    "A9"
+   ],
+   "groupB": [
+    "88",
+    "49",
+    "50",
+    "51",
+    "52",
+    "53",
+    "99"
+   ],
+   "groupC": [
+    "77",
+    "47",
+    "99",
+    "38",
+    "42",
+    "75",
+    "76",
+    "46",
+    "45",
+    "39",
+    "48"
+   ]
+  },
+  "SCIENCE": {
+   "groupAChoice": [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "20",
+    "21",
+    "25",
+    "26",
+    "33",
+    "35",
+    "16",
+    "27",
+    "36",
+    "37",
+    "87",
+    "97",
+    "A1",
+    "A2",
+    "A3",
+    "A4",
+    "B2",
+    "B4",
+    "B5",
+    "B9",
+    "C1",
+    "C2",
+    "D9"
+   ],
+   "groupB": [
+    "40",
+    "54",
+    "55",
+    "56",
+    "97"
+   ],
+   "groupC": [
+    "77",
+    "47",
+    "97",
+    "38",
+    "49",
+    "75",
+    "76",
+    "46",
+    "45",
+    "39",
+    "48",
+    "50",
+    "43",
+    "61",
+    "62",
+    "51",
+    "44",
+    "41"
+   ]
+  },
+  "VOCATIONAL": {
+   "groupAChoice": [
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11",
+    "12",
+    "13",
+    "14",
+    "20",
+    "21",
+    "25",
+    "26",
+    "33",
+    "35",
+    "16",
+    "27",
+    "36",
+    "37",
+    "87"
+   ],
+   "foundation": "90",
+   "optional": [
+    "EA/EB/EC",
+    "FA/FB/FC",
+    "GA/GB/GC",
+    "HA/HB/HC",
+    "IA/IB/IC",
+    "JA/JB/JC",
+    "KA/KB/KC",
+    "LA/LB/LC",
+    "MA/MB/MC",
+    "NA/NB/NC",
+    "OA/OB/OC",
+    "PA/PB/PC",
+    "QA/QB/QC",
+    "RA/RB/RC",
+    "SA/SB/SC",
+    "TA/TB/TC",
+    "UA/UB/UC",
+    "VA/VB/VC",
+    "WA/WB/WC",
+    "XA/XB/XC"
+   ]
+  }
+ },
+ "compulsory": [
+  "1",
+  "31",
+  "30"
+ ],
+ "foundation": "90",
+ "biology": "56",
+ "reference": "GR SANKIRN-2019/PR.KR.(243/19)/SD-4 dated 08-08-2019"
+}
