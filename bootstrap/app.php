@@ -17,7 +17,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
         $middleware->alias(['role' => \App\Http\Middleware\EnsureRole::class]);
         $middleware->validateCsrfTokens(except: ['payments/cashfree/webhook']);
-        $middleware->redirectGuestsTo(fn () => route('login'));
+        // Guests opening a staff portal go to that role's sign-in page; everyone else to Google sign-in.
+        $middleware->redirectGuestsTo(function ($request) {
+            $role = ['admin' => 'super_admin', 'board' => 'board', 'institute' => 'institute', 'teacher' => 'teacher'][$request->segment(1)] ?? null;
+            return $role && \Illuminate\Support\Facades\Route::has("staff.login.$role") ? route("staff.login.$role") : route('login');
+        });
         $middleware->redirectUsersTo(fn ($request) => route($request->user()->homeRoute()));
         $middleware->trustProxies(at: '*');
     })

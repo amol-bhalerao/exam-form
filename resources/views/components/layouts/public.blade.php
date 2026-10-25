@@ -43,6 +43,11 @@
         </div>
     @endif
 
+    @if (config('portal.demo_logins'))
+        <a href="{{ route('demo') }}" class="no-print block bg-gradient-to-r from-marigold via-[#ffd04d] to-marigold px-4 py-2 text-center text-sm font-semibold text-ink no-underline hover:text-ink">
+            <x-icon name="info" class="mr-1 inline size-4 align-[-3px]" />{{ __('Testing mode: try every role — student, college, teacher, board and admin — with the demo logins') }} →
+        </a>
+    @endif
     <header class="no-print sticky top-0 z-30 border-b border-rule bg-white/95 shadow-[0_6px_20px_-16px_rgba(29,24,70,.5)] backdrop-blur" x-data="{ open: false }">
         <div class="zari" aria-hidden="true"></div>
         <div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
@@ -66,6 +71,7 @@
             @auth
                 <a href="{{ route(auth()->user()->homeRoute()) }}" class="btn-primary btn-sm hidden whitespace-nowrap sm:inline-flex">{{ __('My dashboard') }}</a>
             @else
+                @if (config('portal.demo_logins'))<a href="{{ route('demo') }}" class="btn-gold btn-sm hidden whitespace-nowrap 2xl:inline-flex"><x-icon name="users" />{{ __('Demo logins') }}</a>@endif
                 <a href="{{ route('login') }}" class="btn-primary btn-sm hidden whitespace-nowrap sm:inline-flex">{{ __('Student sign in') }}</a>
             @endauth
             <button type="button" class="btn-quiet btn-sm ml-auto xl:hidden" @click="open = !open" :aria-expanded="open" aria-controls="mobile-nav">
@@ -86,6 +92,7 @@
                     @auth
                         <a href="{{ route(auth()->user()->homeRoute()) }}" class="btn-primary btn-sm">{{ __('My dashboard') }}</a>
                     @else
+                        @if (config('portal.demo_logins'))<a href="{{ route('demo') }}" class="btn-gold btn-sm"><x-icon name="users" />{{ __('Demo logins') }}</a>@endif
                         <a href="{{ route('login') }}" class="btn-primary btn-sm">{{ __('Student sign in') }}</a>
                     @endauth
                 </div>
@@ -106,6 +113,12 @@
                 <h2 class="text-sm font-semibold text-white">{{ __('Information') }}</h2>
                 <ul class="mt-3 space-y-2 text-sm">
                     <li><a class="text-white/80 no-underline hover:text-white" href="{{ route('home') }}">{{ __('Home') }}</a></li>
+                    @if (config('portal.demo_logins'))
+                        <li><a class="text-white/80 no-underline hover:text-white" href="{{ route('demo') }}">{{ __('Demo logins') }}</a></li>
+                        @foreach (['super_admin' => __('Admin sign in'), 'board' => __('Board sign in'), 'institute' => __('College sign in'), 'teacher' => __('Teacher sign in')] as $r => $l)
+                            <li><a class="text-white/80 no-underline hover:text-white" href="{{ route("staff.login.$r") }}">{{ $l }}</a></li>
+                        @endforeach
+                    @endif
                     <li><a class="text-white/80 no-underline hover:text-white" href="{{ route('notices.index') }}">{{ __('Notices') }}</a></li>
                     <li><a class="text-white/80 no-underline hover:text-white" href="{{ route('exams.calendar') }}">{{ __('Exam calendar') }}</a></li>
                     @foreach ($footerPages as $p)

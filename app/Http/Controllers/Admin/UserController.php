@@ -52,19 +52,28 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $data = $this->validated($request);
+        $data['is_demo'] = (bool) $request->user()->is_demo; // logins made by the demo admin switch off with testing mode
         $user = User::create($data);
         AuditLog::record('user.created', $user, ['role' => $user->role]);
         return redirect()->route('admin.users.index', ['q' => $user->username ?? $user->email])
             ->with('status', __('Login created for :name. Share the username and password privately.', ['name' => $user->name]));
     }
 
-    public function edit(User $user)
+    /** A shared demo admin may manage demo accounts only — never real logins. */
+    private function guardDemo(Request $request, User $user): void
     {
+        abort_if($request->user()->is_demo && ! $user->is_demo, 403, __('The demo admin cannot change real accounts.'));
+    }
+
+    public function edit(Request $request, User $user)
+    {
+        $this->guardDemo($request, $user);
         return view('admin.users.form', ['user' => $user->load('institute', 'students'), 'boards' => Board::orderBy('sort')->get(), 'institute' => $user->institute, 'suggested' => $this->suggestPassword()]);
     }
 
     public function update(Request $request, User $user)
     {
+        $this->guardDemo($request, $user);
         $data = $this->validated($request, $user);
         if ($user->is($request->user())) {
             unset($data['role'], $data['is_active']); // never lock yourself out
@@ -77,6 +86,7 @@ class UserController extends Controller
 
     public function destroy(Request $request, User $user)
     {
+        $this->guardDemo($request, $user);
         abort_if($user->is($request->user()), 403, __('You cannot remove your own login.'));
         if ($user->role === User::STUDENT && $user->students()->whereHas('applications', fn ($q) => $q->whereNotNull('paid_at'))->exists()) {
             $user->update(['is_active' => false]);

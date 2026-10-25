@@ -41,4 +41,12 @@ class HomeController extends Controller
         }
         return back();
     }
+
+    /** Testing mode: demo logins for every role (hidden when DEMO_LOGINS is off). */
+    public function demo()
+    {
+        $demo = \Database\Seeders\DemoAccountsSeeder::cards();
+        abort_if(! $demo, 404);
+        return view('site.demo', $demo);
+    }
 }

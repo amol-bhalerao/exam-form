@@ -54,6 +54,7 @@ class SettingController extends Controller
             $artisan::call('optimize:clear');
             $artisan::call('migrate', ['--force' => true]);
             $artisan::call('db:seed', ['--class' => \Database\Seeders\QuestionBankSeeder::class, '--force' => true]);
+            $artisan::call('db:seed', ['--class' => \Database\Seeders\DemoAccountsSeeder::class, '--force' => true]);
         } catch (\Throwable $e) {
             report($e);
             return back()->with('warning', __('The update could not finish: :error', ['error' => mb_substr($e->getMessage(), 0, 300)]));

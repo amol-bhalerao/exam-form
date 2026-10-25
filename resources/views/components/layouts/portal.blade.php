@@ -132,6 +132,9 @@
               </div>
             </header>
             <main id="main" class="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8">
+                @if ($user->is_demo)
+                    <div class="mb-5 flex flex-wrap items-center gap-2 rounded-lg border border-marigold/50 bg-marigold-soft px-4 py-2.5 text-sm text-ink" role="status"><x-icon name="info" class="size-4 shrink-0 text-gold-deep" /><span>{{ __('You are using a shared demo account. Anyone can see what you enter here — do not use real personal data.') }}</span>@if (config('portal.demo_logins'))<a href="{{ route('demo') }}" class="ml-auto font-semibold">{{ __('Switch role') }} →</a>@endif</div>
+                @endif
                 @if ($user->role === 'student' && ($banner = \App\Models\Setting::get('maintenance_message')))
                     <div class="alert-info mb-5" role="status"><x-icon name="info" class="mt-0.5 size-5 shrink-0" /><p>{{ $banner }}</p></div>
                 @endif

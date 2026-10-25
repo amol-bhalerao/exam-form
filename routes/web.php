@@ -25,6 +25,7 @@ Route::get('/verify/{number}', [Site\VerifyController::class, 'show'])->name('ve
 Route::get('/certificate/{serial}', [Site\VerifyController::class, 'certificate'])->name('certificate.verify')->where('serial', '[A-Za-z0-9\-]+');
 Route::get('/sitemap.xml', [Site\SeoController::class, 'sitemap'])->name('sitemap');
 Route::get('/robots.txt', [Site\SeoController::class, 'robots']);
+Route::get('/demo', [Site\HomeController::class, 'demo'])->name('demo');
 Route::get('/language/{locale}', [Site\HomeController::class, 'language'])->name('language');
 
 /* ------------------------------------------------------------------ sign in */

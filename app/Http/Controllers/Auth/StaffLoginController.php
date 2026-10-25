@@ -55,6 +55,9 @@ class StaffLoginController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+        if ($request->input('next') === 'demo' && config('portal.demo_logins')) {
+            return redirect()->route('demo');
+        }
 
         return $role && $role !== User::STUDENT && isset(config('portal.login_paths')[$role])
             ? redirect()->route("staff.login.$role")->with('status', __('You have signed out.'))

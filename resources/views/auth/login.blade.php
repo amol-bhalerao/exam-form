@@ -22,8 +22,11 @@
             @endunless
             @if ($demo)
                 <form method="POST" action="{{ route('auth.demo') }}" class="mt-4 border-t border-dashed border-rule pt-4">@csrf
-                    <button class="btn-quiet w-full">{{ __('Use the demo student account (local testing only)') }}</button>
+                    <button class="{{ config('portal.demo_logins') ? 'btn-gold' : 'btn-quiet' }} w-full">{{ config('portal.demo_logins') ? __('Sign in as demo student') : __('Use the demo student account (local testing only)') }}</button>
                 </form>
+                @if (config('portal.demo_logins'))
+                    <a href="{{ route('demo') }}" class="btn-secondary mt-3 w-full"><x-icon name="users" />{{ __('Demo logins for board, college, teacher and admin') }}</a>
+                @endif
             @endif
             <p class="muted mt-6 text-sm">{{ __('By continuing you agree to the') }} <a href="{{ route('page.show', 'terms') }}">{{ __('terms of use') }}</a> {{ __('and') }} <a href="{{ route('page.show', 'privacy') }}">{{ __('privacy policy') }}</a>.</p>
         </div>

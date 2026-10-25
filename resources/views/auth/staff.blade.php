@@ -11,7 +11,7 @@
 <body class="peacock grid min-h-screen place-items-center px-4 py-10">
     <main class="w-full max-w-md">
         <div class="mb-6 flex items-center justify-between text-white">
-            <div class="flex items-center gap-3"><x-logo tone="paper" class="size-10" /><span class="font-display text-lg font-bold" style="font-stretch:112%">{{ $label }}</span></div>
+            <a href="{{ route('home') }}" class="flex items-center gap-3 text-white no-underline"><x-logo tone="paper" class="size-10" /><span class="font-display text-lg font-bold" style="font-stretch:112%">{{ $label }}</span></a>
             <x-lang-switch tone="dark" />
         </div>
         <div class="sheet sheet-pad text-ink">
@@ -32,6 +32,7 @@
                 <button class="btn-primary w-full"><x-icon name="lock" />{{ __('Sign in') }}</button>
             </form>
             <p class="muted mt-6 text-sm">{{ __('Forgot your password? Contact the board office to reset it.') }}</p>
+            @include('partials.demo-login')
         </div>
     </main>
 </body>

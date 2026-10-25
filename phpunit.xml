@@ -27,6 +27,11 @@
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
         <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DEMO_LOGINS" value="false"/>
+        <env name="ADMIN_LOGIN_PATH" value="control-room-test"/>
+        <env name="BOARD_LOGIN_PATH" value="board-desk-test"/>
+        <env name="INSTITUTE_LOGIN_PATH" value="college-desk-test"/>
+        <env name="TEACHER_LOGIN_PATH" value="teacher-desk-test"/>
         <env name="DB_DATABASE" value=":memory:"/>
         <env name="DB_URL" value=""/>
         <env name="MAIL_MAILER" value="array"/>
