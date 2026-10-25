@@ -99,7 +99,7 @@ class TeacherController extends Controller
                 'name' => $teacher->full_name, 'username' => $username,
                 'email' => $teacher->email && ! User::where('email', $teacher->email)->exists() ? $teacher->email : null,
                 'mobile' => $teacher->mobile, 'password' => $password, 'role' => User::TEACHER,
-                'institute_id' => $teacher->institute_id, 'board_id' => $request->user()->board_id ?? $request->user()->institute->board_id,
+                'institute_id' => $teacher->institute_id, 'division_id' => $request->user()->institute->division_id, 'board_id' => $request->user()->board_id ?? $request->user()->institute->board_id,
                 'is_active' => true, 'must_change_password' => true, 'is_demo' => (bool) $request->user()->is_demo,
             ]);
             $teacher->forceFill(['user_id' => $user->id])->save();

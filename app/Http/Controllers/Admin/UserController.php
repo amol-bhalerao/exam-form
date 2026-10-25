@@ -17,7 +17,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $users = User::query()->with('board', 'institute')
+        $users = User::query()->with('board', 'institute', 'division')
             ->when($request->query('role'), fn ($q, $r) => $q->where('role', $r))
             ->when($request->query('active') === 'no', fn ($q) => $q->where('is_active', false))
             ->when(trim((string) $request->query('q')), fn ($q, $t) => $q->where(fn ($w) => $w->where('name', 'like', "%{$t}%")
@@ -111,6 +111,7 @@ class UserController extends Controller
             'email' => ['nullable', 'email', 'max:150', Rule::unique('users')->ignore($user?->id)],
             'mobile' => ['nullable', 'regex:/^[6-9]\d{9}$/'],
             'board_id' => [$role === User::BOARD ? 'required' : 'nullable', 'exists:boards,id'],
+            'division_id' => ['nullable', 'exists:divisions,id'],
             'institute_id' => [in_array($role, [User::INSTITUTE, User::TEACHER], true) ? 'required' : 'nullable', 'exists:institutes,id'],
             'password' => [$user ? 'nullable' : ($isStaff ? 'required' : 'nullable'), Password::min(8)->letters()->numbers()],
         ], ['username.regex' => __('Use letters, numbers, dot, dash or underscore only.')]);
@@ -126,6 +127,9 @@ class UserController extends Controller
         if ($role === User::SUPER_ADMIN) {
             $v['board_id'] = null;
         }
+        // Colleges and teachers take the division of their institute; only board officers choose one.
+        $v['division_id'] = $role === User::BOARD ? ($v['division_id'] ?? null)
+            : (in_array($role, [User::INSTITUTE, User::TEACHER], true) ? Institute::whereKey($v['institute_id'] ?? 0)->value('division_id') : null);
         $v['is_active'] = $request->boolean('is_active');
         $v['must_change_password'] = $request->boolean('must_change_password');
         return $v;

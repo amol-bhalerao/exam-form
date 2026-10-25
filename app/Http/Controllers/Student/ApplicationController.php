@@ -37,7 +37,7 @@ class ApplicationController extends Controller
                 ->with('warning', __('Complete these details before filling the exam form: :fields', ['fields' => implode(', ', $missing)]));
         }
 
-        $exams = Exam::open()->where('board_id', $student->board_id)->with('fees', 'stream')->orderBy('closes_at')->get()
+        $exams = Exam::open()->where('board_id', $student->board_id)->forDivision($student->institute?->division_id)->with('fees', 'stream')->orderBy('closes_at')->get()
             ->filter(fn (Exam $e) => $e->appliesToStream($student->stream_id));
         $existing = $student->applications()->pluck('id', 'exam_id');
 
@@ -175,7 +175,8 @@ class ApplicationController extends Controller
     {
         $examId = $application?->exam_id ?? $request->input('exam_id');
         $exam = Exam::with('fees')->find($examId);
-        if (! $exam || $exam->board_id !== $student->board_id || ! $exam->appliesToStream($student->stream_id)) {
+        if (! $exam || $exam->board_id !== $student->board_id || ! $exam->appliesToStream($student->stream_id)
+            || ($exam->division_id && $exam->division_id !== $student->institute?->division_id)) {
             throw ValidationException::withMessages(['exam_id' => __('Choose an exam that is open for this student.')]);
         }
         if (! $application && ! $exam->isOpen()) {

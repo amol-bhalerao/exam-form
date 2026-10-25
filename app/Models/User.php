@@ -27,7 +27,7 @@ class User extends Authenticatable
     ];
 
     protected $fillable = [
-        'name', 'username', 'email', 'mobile', 'password', 'role', 'board_id', 'institute_id',
+        'name', 'username', 'email', 'mobile', 'password', 'role', 'board_id', 'division_id', 'institute_id',
         'google_id', 'avatar', 'locale', 'is_active', 'is_demo', 'must_change_password', 'last_login_at',
     ];
 
@@ -43,6 +43,11 @@ class User extends Authenticatable
             'is_demo' => 'boolean',
             'must_change_password' => 'boolean',
         ];
+    }
+
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
     }
 
     public function board(): BelongsTo

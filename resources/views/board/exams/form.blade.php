@@ -13,6 +13,7 @@
                 <x-form.input name="year" type="number" :label="__('Exam year')" :value="$exam->year" required />
                 <x-form.input name="academic_year" :label="__('Academic year')" :value="$exam->academic_year" required placeholder="2026-27" />
                 <x-form.select name="stream_id" :label="__('Stream')" :options="$streams->mapWithKeys(fn ($s) => [$s->id => $s->label])" :value="$exam->stream_id" :placeholder="__('All streams')" />
+                @if ($divisions)<x-form.select name="division_id" :label="__('Divisional board')" :options="$divisions" :value="$exam->division_id" :placeholder="__('All divisions')" :hint="__('Leave as All divisions for a state-wide exam.')" />@endif
             </div>
         </section>
         <section class="sheet sheet-pad">

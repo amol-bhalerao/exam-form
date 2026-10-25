@@ -37,7 +37,7 @@ class FormController extends Controller
         return view('institute.forms.index', [
             'forms' => $query->with('student', 'exam', 'stream')->latest('submitted_at')->paginate(25)->withQueryString(),
             'counts' => FormQuery::statusCounts($this->base($request)),
-            'exams' => Exam::where('board_id', $institute->board_id)->latest('opens_at')->get(['id', 'name']),
+            'exams' => Exam::where('board_id', $institute->board_id)->forDivision($institute->division_id)->latest('opens_at')->get(['id', 'name']),
             'streams' => $institute->streams,
             'drafts' => $this->base($request)->where('status', Application::DRAFT)->count(),
         ]);

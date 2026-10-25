@@ -16,13 +16,14 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $boardId = $request->user()->board_id;
-        $exams = Exam::where('board_id', $boardId)->latest('opens_at')->get(['id', 'name', 'code', 'opens_at', 'closes_at', 'late_closes_at', 'is_published']);
+        $user = $request->user();
+        $boardId = $user->board_id;
+        $exams = Exam::where('board_id', $boardId)->forDivision($user->division_id)->latest('opens_at')->get(['id', 'name', 'code', 'opens_at', 'closes_at', 'late_closes_at', 'is_published']);
         // Default to the published exam taking forms now, else the latest published, else the latest.
         $examId = $request->integer('exam') ?: ($exams->first(fn ($e) => $e->is_published && $e->opens_at->isPast() && ($e->late_closes_at ?? $e->closes_at)->isFuture())
             ?? $exams->firstWhere('is_published', true) ?? $exams->first())?->id;
 
-        $base = Application::where('board_id', $boardId)->when($examId, fn ($q) => $q->where('exam_id', $examId));
+        $base = Application::forOfficer($user)->when($examId, fn ($q) => $q->where('exam_id', $examId));
         $paid = (clone $base)->whereNotNull('paid_at');
 
         // Forms paid per day for the last 30 days (portable SQL: group in PHP).
@@ -40,10 +41,11 @@ class DashboardController extends Controller
         $byDistrict = \Illuminate\Support\Facades\DB::table('applications')
             ->join('institutes', 'institutes.id', '=', 'applications.institute_id')
             ->where('applications.board_id', $boardId)->whereNotNull('applications.paid_at')
+            ->when($user->division_id, fn ($q, $d) => $q->where('institutes.division_id', $d))
             ->when($examId, fn ($q) => $q->where('applications.exam_id', $examId))
             ->selectRaw('institutes.district as district, count(*) as n')->groupBy('institutes.district')->orderByDesc('n')->limit(10)->pluck('n', 'district');
 
-        $teachers = Teacher::whereHas('institute', fn ($q) => $q->where('board_id', $boardId))->where('is_active', true);
+        $teachers = Teacher::whereHas('institute', fn ($q) => $q->forOfficer($user))->where('is_active', true);
 
         return view('board.dashboard', [
             'exams' => $exams,
@@ -56,7 +58,7 @@ class DashboardController extends Controller
             'byType' => collect(Codes::CANDIDATE_TYPES)->map(fn ($l, $k) => ['label' => __($l), 'count' => (int) ($byType[$k] ?? 0)])->values(),
             'byDistrict' => $byDistrict->map(fn ($n, $d) => ['label' => $d ?: __('Not set'), 'count' => (int) $n])->values(),
             'institutes' => [
-                'total' => Institute::where('board_id', $boardId)->where('is_active', true)->count(),
+                'total' => Institute::forOfficer($user)->where('is_active', true)->count(),
                 'active' => (clone $paid)->distinct()->count('institute_id'),
             ],
             'examiners' => [

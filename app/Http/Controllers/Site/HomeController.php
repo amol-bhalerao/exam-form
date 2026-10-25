@@ -14,7 +14,7 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $openExams = Exam::open()->with(['board', 'stream', 'fees'])->orderBy('closes_at')->get();
+        $openExams = Exam::open()->with(['board', 'stream', 'fees', 'division'])->orderBy('closes_at')->get();
         $upcoming = Exam::where('is_published', true)->where('opens_at', '>', now())->with('board')->orderBy('opens_at')->limit(3)->get();
         $notices = Notice::live()->with('board')->orderByDesc('is_pinned')->latest('published_at')->limit(6)->get();
         $guides = Page::published()->where('in_header', true)->orderBy('menu_order')->limit(4)->get(['title', 'slug', 'summary']);
@@ -25,7 +25,7 @@ class HomeController extends Controller
 
     public function exams()
     {
-        $exams = Exam::where('is_published', true)->with(['board', 'stream', 'fees'])->orderByDesc('opens_at')->get()
+        $exams = Exam::where('is_published', true)->with(['board', 'stream', 'fees', 'division'])->orderByDesc('opens_at')->get()
             ->groupBy(fn ($e) => $e->board->short_name);
 
         return view('site.exams', compact('exams'));

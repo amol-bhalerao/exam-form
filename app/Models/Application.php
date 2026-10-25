@@ -157,4 +157,11 @@ class Application extends Model
         $n = $last ? ((int) substr($last, strlen($prefix))) + 1 : 1;
         return $prefix . str_pad((string) $n, 6, '0', STR_PAD_LEFT);
     }
+
+    /** Forms a board officer may see: their exam board and (if set) their division. */
+    public function scopeForOfficer($q, User $user)
+    {
+        return $q->where('applications.board_id', $user->board_id)
+            ->when($user->division_id, fn ($w, $d) => $w->whereIn('applications.institute_id', Institute::where('division_id', $d)->select('id')));
+    }
 }

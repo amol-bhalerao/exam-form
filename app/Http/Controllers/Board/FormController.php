@@ -21,7 +21,7 @@ class FormController extends Controller
 
     private function base(Request $request)
     {
-        return Application::where('board_id', $request->user()->board_id);
+        return Application::forOfficer($request->user());
     }
 
     public function index(Request $request)
@@ -35,10 +35,10 @@ class FormController extends Controller
         return view('board.forms.index', [
             'forms' => $query->with('student', 'exam', 'stream', 'institute')->latest('verified_at')->paginate(30)->withQueryString(),
             'counts' => FormQuery::statusCounts($this->base($request)),
-            'exams' => Exam::where('board_id', $board->id)->latest('opens_at')->get(['id', 'name']),
+            'exams' => Exam::where('board_id', $board->id)->forDivision($request->user()->division_id)->latest('opens_at')->get(['id', 'name']),
             'streams' => $board->streams()->orderBy('sort')->get(),
-            'districts' => $board->institutes()->whereNotNull('district')->distinct()->orderBy('district')->pluck('district'),
-            'institute' => $request->filled('institute') ? $board->institutes()->find($request->integer('institute')) : null,
+            'districts' => \App\Models\Institute::forOfficer($request->user())->whereNotNull('district')->distinct()->orderBy('district')->pluck('district'),
+            'institute' => $request->filled('institute') ? \App\Models\Institute::forOfficer($request->user())->find($request->integer('institute')) : null,
         ]);
     }
 
@@ -109,6 +109,6 @@ class FormController extends Controller
 
     private function authorizeForm(Request $request, Application $application): void
     {
-        abort_unless($application->board_id === $request->user()->board_id && $application->status !== Application::DRAFT, 404);
+        abort_unless(Application::forOfficer($request->user())->whereKey($application->id)->exists() && $application->status !== Application::DRAFT, 404);
     }
 }

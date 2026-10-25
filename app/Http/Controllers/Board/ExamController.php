@@ -16,7 +16,8 @@ class ExamController extends Controller
     public function index(Request $request)
     {
         $exams = Exam::where('board_id', $request->user()->board_id)
-            ->with('fees', 'stream')
+            ->when($request->user()->division_id, fn ($q, $d) => $q->forDivision($d))
+            ->with('fees', 'stream', 'division')
             ->withCount(['applications as paid_count' => fn ($q) => $q->whereNotNull('paid_at')])
             ->latest('opens_at')->get();
         return view('board.exams.index', ['exams' => $exams]);
@@ -75,7 +76,9 @@ class ExamController extends Controller
 
     private function authorizeExam(Request $request, Exam $exam): void
     {
-        abort_unless($exam->board_id === $request->user()->board_id, 404);
+        $division = $request->user()->division_id;
+        // A divisional officer manages only their division's exams; a state-level officer (no division) manages all.
+        abort_unless($exam->board_id === $request->user()->board_id && (! $division || $exam->division_id === $division), 404);
     }
 
     private function formData(Request $request, Exam $exam): array
@@ -85,6 +88,7 @@ class ExamController extends Controller
             'streams' => $request->user()->board->streams()->orderBy('sort')->get(),
             'fees' => collect(Codes::CANDIDATE_TYPES)->mapWithKeys(fn ($l, $k) => [$k => $exam->exists ? $exam->fees->firstWhere('candidate_type', $k) : null]),
             'hasForms' => $exam->exists && $exam->applications()->exists(),
+            'divisions' => $request->user()->division_id ? null : \App\Models\Division::options(),
         ];
     }
 
@@ -98,6 +102,7 @@ class ExamController extends Controller
             'year' => ['required', 'integer', 'between:2020,2100'],
             'academic_year' => ['required', 'regex:/^\d{4}-\d{2}$/'],
             'stream_id' => ['nullable', Rule::exists('streams', 'id')->where('board_id', $request->user()->board_id)],
+            'division_id' => ['nullable', 'exists:divisions,id'],
             'candidate_types' => ['required', 'array', 'min:1'],
             'candidate_types.*' => [Rule::in($types)],
             'opens_at' => ['required', 'date'],
@@ -121,6 +126,7 @@ class ExamController extends Controller
         $fees = collect($v['candidate_types'])->mapWithKeys(fn ($t) => [$t => ['fee' => (int) $v['fee'][$t], 'late_fee' => (int) ($v['late_fee'][$t] ?? 0)]])->all();
         $examData = collect($v)->except(['fee', 'late_fee'])->all();
         $examData['is_published'] = $request->boolean('is_published');
+        $examData['division_id'] = $request->user()->division_id ?? ($v['division_id'] ?? null);
         $examData['candidate_types'] = array_values(array_intersect($types, $v['candidate_types']));
         $examData['closes_at'] = \Illuminate\Support\Carbon::parse($v['closes_at'])->endOfDay();
         if (! empty($v['late_closes_at'])) {

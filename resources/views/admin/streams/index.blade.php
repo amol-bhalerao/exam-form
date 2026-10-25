@@ -17,6 +17,15 @@
                 @empty
                     <p class="px-6 py-5 muted">{{ __('This board has no streams.') }}</p>
                 @endforelse
+                <form method="POST" action="{{ route('admin.streams.store') }}" class="grid items-end gap-3 border-t border-dashed border-rule-strong bg-wash/50 px-6 py-4 sm:grid-cols-[5rem_1fr_1fr_1fr_5rem_auto]">
+                    @csrf <input type="hidden" name="board_id" value="{{ $b->id }}">
+                    <div class="field"><label class="label" for="nc{{ $b->id }}">{{ __('Code') }}</label><input id="nc{{ $b->id }}" name="code" class="input uppercase" required maxlength="10" placeholder="SCI"></div>
+                    <div class="field"><label class="label" for="nn{{ $b->id }}">{{ __('New stream') }}</label><input id="nn{{ $b->id }}" name="name" class="input" required placeholder="Science"></div>
+                    <div class="field"><label class="label" for="nm{{ $b->id }}">मराठी</label><input id="nm{{ $b->id }}" name="name_mr" class="input"></div>
+                    <div class="field"><label class="label" for="nh{{ $b->id }}">हिंदी</label><input id="nh{{ $b->id }}" name="name_hi" class="input"></div>
+                    <div class="field"><label class="label" for="nu{{ $b->id }}">{{ __('No.') }}</label><input id="nu{{ $b->id }}" name="number" type="number" class="input" min="0" max="99"></div>
+                    <button class="btn-primary"><x-icon name="plus" />{{ __('Add') }}</button>
+                </form>
             </section>
         @endforeach
     </div>

@@ -11,11 +11,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Institute extends Model
 {
     protected $fillable = [
-        'board_id', 'college_no', 'udise_no', 'name', 'district', 'taluka', 'address', 'pincode',
+        'board_id', 'division_id', 'college_no', 'udise_no', 'name', 'district', 'taluka', 'address', 'pincode',
         'principal_name', 'contact_email', 'contact_mobile', 'is_active', 'accepting_forms',
     ];
 
     protected $casts = ['is_active' => 'boolean', 'accepting_forms' => 'boolean'];
+
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
+    }
 
     public function board(): BelongsTo
     {
@@ -62,5 +67,12 @@ class Institute extends Model
     public function getDisplayNameAttribute(): string
     {
         return "{$this->name} ({$this->college_no})";
+    }
+
+    /** Institutes a board officer may see: their exam board and (if set) their division. */
+    public function scopeForOfficer($q, User $user)
+    {
+        return $q->where('institutes.board_id', $user->board_id)
+            ->when($user->division_id, fn ($w, $d) => $w->where('institutes.division_id', $d));
     }
 }

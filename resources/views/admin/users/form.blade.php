@@ -23,6 +23,9 @@
                 <x-form.input name="mobile" type="tel" :label="__('Mobile')" :value="$user->mobile" inputmode="numeric" maxlength="10" />
                 <div class="field" x-show="role === 'board'" x-cloak><label class="label" for="board_id">{{ __('Board') }}</label>
                     <select id="board_id" name="board_id" class="select" :required="role === 'board'"><option value="">{{ __('Select') }}</option>@foreach ($boards as $b)<option value="{{ $b->id }}" @selected(old('board_id', $user->board_id) == $b->id)>{{ $b->short_name }}</option>@endforeach</select></div>
+                <div class="field" x-show="role === 'board'" x-cloak><label class="label" for="division_id">{{ __('Divisional board') }}</label>
+                    <select id="division_id" name="division_id" class="select"><option value="">{{ __('All divisions (state level)') }}</option>@foreach (\App\Models\Division::options() as $id => $l)<option value="{{ $id }}" @selected(old('division_id', $user->division_id) == $id)>{{ $l }}</option>@endforeach</select>
+                    <p class="hint">{{ __('A divisional officer sees only that division’s colleges, forms and exams.') }}</p></div>
                 <div class="field sm:col-span-2" x-show="role === 'institute' || role === 'teacher'" x-cloak @click.outside="open = false"
                      x-data="institutePicker({ url: @js(route('lookup.institutes', ['all' => 1])), initialId: @js(old('institute_id', $user->institute_id)), initialLabel: @js($institute ? $institute->college_no . ' · ' . $institute->name : null) })">
                     <label class="label" for="institute_q">{{ __('Institute') }}</label>

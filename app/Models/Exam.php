@@ -11,7 +11,7 @@ use Illuminate\Support\Carbon;
 class Exam extends Model
 {
     protected $fillable = [
-        'board_id', 'code', 'name', 'session', 'year', 'academic_year', 'stream_id', 'candidate_types',
+        'board_id', 'division_id', 'code', 'name', 'session', 'year', 'academic_year', 'stream_id', 'candidate_types',
         'opens_at', 'closes_at', 'late_closes_at', 'exam_starts_on', 'exam_ends_on', 'instructions',
         'is_published', 'created_by',
     ];
@@ -25,6 +25,11 @@ class Exam extends Model
         'exam_ends_on' => 'date',
         'is_published' => 'boolean',
     ];
+
+    public function division(): BelongsTo
+    {
+        return $this->belongsTo(Division::class);
+    }
 
     public function board(): BelongsTo
     {
@@ -87,5 +92,11 @@ class Exam extends Model
     public function appliesToStream(?int $streamId): bool
     {
         return $this->stream_id === null || $this->stream_id === $streamId;
+    }
+
+    /** Exams for everyone (no division) or for the given division. */
+    public function scopeForDivision($q, ?int $divisionId)
+    {
+        return $q->where(fn ($w) => $w->whereNull('exams.division_id')->when($divisionId, fn ($x, $d) => $x->orWhere('exams.division_id', $d)));
     }
 }

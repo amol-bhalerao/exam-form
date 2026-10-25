@@ -8,6 +8,7 @@
                 <div class="fieldset">
                     <div class="field"><label class="label" for="board_id">{{ __('Board') }} <span class="text-omr">*</span></label>
                         <select id="board_id" name="board_id" class="select" x-model="board" required>@foreach ($boards as $b)<option value="{{ $b->id }}">{{ $b->short_name }} — {{ $b->name }}</option>@endforeach</select></div>
+                    <x-form.select name="division_id" :label="__('Divisional board')" :options="$divisions" :value="$institute->division_id" :placeholder="__('Not set')" />
                     <x-form.input name="college_no" :label="__('Index no.')" :value="$institute->college_no" required placeholder="56.01.001" />
                     <x-form.input name="name" :label="__('Name')" :value="$institute->name" required span class="uppercase" />
                     <x-form.input name="udise_no" :label="__('UDISE number')" :value="$institute->udise_no" inputmode="numeric" maxlength="11" />

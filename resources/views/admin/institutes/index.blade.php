@@ -12,26 +12,28 @@
     <form method="GET" class="filters">
         @if (request('board'))<input type="hidden" name="board" value="{{ request('board') }}">@endif
         <div class="field"><label class="label" for="q">{{ __('Search') }}</label><input id="q" name="q" value="{{ request('q') }}" class="input" placeholder="{{ __('Name, index no. or district') }}"></div>
+        <div class="field"><label class="label" for="division">{{ __('Division') }}</label><select id="division" name="division" class="select"><option value="">{{ __('All') }}</option>@foreach ($divisions as $id => $l)<option value="{{ $id }}" @selected(request('division') == $id)>{{ $l }}</option>@endforeach</select></div>
         <div class="field"><label class="label" for="district">{{ __('District') }}</label><select id="district" name="district" class="select"><option value="">{{ __('All') }}</option>@foreach ($districts as $d)<option value="{{ $d }}" @selected(request('district') === $d)>{{ $d }}</option>@endforeach</select></div>
         <div class="field"><label class="label" for="active">{{ __('Status') }}</label><select id="active" name="active" class="select"><option value="">{{ __('All') }}</option><option value="yes" @selected(request('active') === 'yes')>{{ __('Active') }}</option><option value="no" @selected(request('active') === 'no')>{{ __('Inactive') }}</option></select></div>
         <button class="btn-secondary"><x-icon name="filter" />{{ __('Apply') }}</button>
     </form>
     <div class="table-wrap">
         <table class="table">
-            <thead><tr><th>{{ __('Index no.') }}</th><th>{{ __('Name') }}</th><th>{{ __('Board') }}</th><th>{{ __('District') }}</th><th class="num">{{ __('Logins') }}</th><th class="num">{{ __('Paid forms') }}</th><th></th></tr></thead>
+            <thead><tr><th>{{ __('Index no.') }}</th><th>{{ __('Name') }}</th><th>{{ __('Board') }}</th><th>{{ __('Division') }}</th><th>{{ __('District') }}</th><th class="num">{{ __('Logins') }}</th><th class="num">{{ __('Paid forms') }}</th><th></th></tr></thead>
             <tbody>
             @forelse ($institutes as $i)
                 <tr @class(['opacity-60' => ! $i->is_active])>
                     <td class="tabular-nums whitespace-nowrap">{{ $i->college_no }}</td>
                     <td class="min-w-64"><a href="{{ route('admin.institutes.edit', $i) }}" class="font-semibold text-ink">{{ $i->name }}</a>@unless ($i->is_active)<span class="badge-muted ml-1">{{ __('Inactive') }}</span>@endunless</td>
                     <td>{{ $i->board->short_name }}</td>
+                    <td class="text-sm">{{ $i->division?->short_name ?? '—' }}</td>
                     <td class="text-sm">{{ $i->district ?: '—' }}</td>
                     <td class="num">@if ($i->users_count){{ $i->users_count }}@else<a href="{{ route('admin.users.create', ['institute' => $i->id]) }}" class="text-sm">{{ __('Create') }}</a>@endif</td>
                     <td class="num">{{ $i->forms_count ?: '—' }}</td>
                     <td class="text-right"><a href="{{ route('admin.institutes.edit', $i) }}" class="btn-secondary btn-sm"><x-icon name="pencil" />{{ __('Edit') }}</a></td>
                 </tr>
             @empty
-                <tr><td colspan="7" class="py-8 text-center muted">{{ __('No institutes match.') }}</td></tr>
+                <tr><td colspan="8" class="py-8 text-center muted">{{ __('No institutes match.') }}</td></tr>
             @endforelse
             </tbody>
         </table>

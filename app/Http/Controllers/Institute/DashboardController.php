@@ -24,7 +24,7 @@ class DashboardController extends Controller
             'feesCollected' => (int) (clone $base)->whereNotNull('paid_at')->sum('fee_amount'),
             'waiting' => (clone $base)->whereIn('status', [Application::SUBMITTED, Application::BOARD_RETURNED])
                 ->with('student', 'exam')->oldest('submitted_at')->limit(8)->get(),
-            'openExams' => Exam::open()->where('board_id', $institute->board_id)->withCount(['applications' => fn ($q) => $q->where('institute_id', $institute->id)])->get(),
+            'openExams' => Exam::open()->where('board_id', $institute->board_id)->forDivision($institute->division_id)->withCount(['applications' => fn ($q) => $q->where('institute_id', $institute->id)])->get(),
             'teacherStats' => [
                 'total' => $teachers->count(),
                 'examiners' => $teachers->filter->isExaminer()->count(),

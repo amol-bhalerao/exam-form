@@ -19,13 +19,13 @@ class LookupController extends Controller
         $rows = Institute::query()
             ->unless($all, fn ($w) => $w->where('is_active', true)->where('accepting_forms', true))
             ->when($request->query('board'), fn ($w, $b) => $w->where('board_id', $b))
-            ->search($q)->with('board:id,short_name')->orderBy('college_no')->limit(15)
-            ->get(['id', 'board_id', 'college_no', 'name', 'district']);
+            ->search($q)->with('board:id,short_name', 'division:id,short_name')->orderBy('college_no')->limit(15)
+            ->get(['id', 'board_id', 'division_id', 'college_no', 'name', 'district']);
 
         return response()->json(['data' => $rows->map(fn ($i) => [
             'id' => $i->id,
             'label' => "{$i->name} ({$i->college_no})",
-            'meta' => trim($i->board->short_name . ' · ' . $i->district, ' ·'),
+            'meta' => implode(' · ', array_filter([$i->board->short_name, $i->division?->short_name, $i->district])),
         ])]);
     }
 }

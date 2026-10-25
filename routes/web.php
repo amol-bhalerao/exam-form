@@ -172,7 +172,10 @@ Route::middleware(['auth', 'role:super_admin'])->prefix('admin')->name('admin.')
     Route::resource('institutes', Admin\InstituteController::class)->except('show');
     Route::resource('users', Admin\UserController::class)->except('show');
     Route::resource('subjects', Admin\SubjectController::class)->except('show');
+    Route::resource('divisions', Admin\DivisionController::class)->except('show');
+    Route::resource('boards', Admin\BoardController::class)->except('show');
     Route::get('streams', [Admin\StreamController::class, 'index'])->name('streams.index');
+    Route::post('streams', [Admin\StreamController::class, 'store'])->name('streams.store');
     Route::put('streams/{stream}', [Admin\StreamController::class, 'update'])->name('streams.update');
     Route::resource('pages', Admin\PageController::class)->except('show');
     Route::resource('notices', Admin\NoticeController::class)->except('show');

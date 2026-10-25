@@ -21,7 +21,7 @@
                 <tr @class(['opacity-60' => ! $u->is_active])>
                     <td class="min-w-48"><p class="font-semibold">{{ $u->name }}</p>@unless ($u->is_active)<span class="badge-muted">{{ __('Inactive') }}</span>@endunless @if ($u->must_change_password)<span class="badge-warn">{{ __('Must change password') }}</span>@endif</td>
                     <td class="text-sm">@if ($u->username)<span class="kbd-code">{{ $u->username }}</span>@endif<p class="muted break-all">{{ $u->email }}</p></td>
-                    <td class="text-sm">{{ __(User::ROLES[$u->role] ?? $u->role) }}</td>
+                    <td class="text-sm">{{ __(User::ROLES[$u->role] ?? $u->role) }}@if ($u->role === 'board')<p class="muted">{{ $u->board?->short_name }} · {{ $u->division?->short_name ?? __('All divisions') }}</p>@endif</td>
                     <td class="max-w-64 text-sm">{{ $u->institute ? $u->institute->college_no . ' · ' . \Illuminate\Support\Str::limit($u->institute->name, 40) : ($u->board?->short_name ?? ($u->role === 'student' ? trans_choice(':count student|:count students', $u->students_count, ['count' => $u->students_count]) : '—')) }}</td>
                     <td class="text-sm whitespace-nowrap">{{ $u->last_login_at?->diffForHumans() ?? '—' }}</td>
                     <td class="text-right"><a href="{{ route('admin.users.edit', $u) }}" class="btn-secondary btn-sm"><x-icon name="pencil" />{{ __('Edit') }}</a></td>

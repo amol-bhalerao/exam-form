@@ -95,7 +95,7 @@
                 <div>
                     <h3 class="title">{{ $exam->name }}</h3>
                     <p class="muted mt-1">
-                        {{ $exam->stream?->label ?? __('All streams') }} ·
+                        {{ $exam->stream?->label ?? __('All streams') }} ·@if ($exam->division) {{ $exam->division->label }} ·@endif
                         @if ($exam->inLateWindow()) {{ __('Late fee period until :date', ['date' => $exam->late_closes_at->translatedFormat('j M Y')]) }}
                         @else {{ __('Last date :date', ['date' => $exam->closes_at->translatedFormat('j M Y')]) }} @endif
                         @if ($fromFee) · {{ __('Fee from ₹:amount', ['amount' => number_format($fromFee)]) }} @endif

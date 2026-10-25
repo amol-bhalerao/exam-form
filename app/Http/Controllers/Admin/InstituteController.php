@@ -16,9 +16,10 @@ class InstituteController extends Controller
 {
     public function index(Request $request)
     {
-        $institutes = Institute::query()->with('board')
+        $institutes = Institute::query()->with('board', 'division')
             ->search($request->query('q'))
             ->when($request->query('board'), fn ($q, $b) => $q->where('board_id', $b))
+            ->when($request->query('division'), fn ($q, $d) => $q->where('division_id', $d))
             ->when($request->query('district'), fn ($q, $d) => $q->where('district', $d))
             ->when($request->query('active') === 'no', fn ($q) => $q->where('is_active', false))
             ->when($request->query('active') === 'yes', fn ($q) => $q->where('is_active', true))
@@ -29,6 +30,7 @@ class InstituteController extends Controller
         return view('admin.institutes.index', [
             'institutes' => $institutes,
             'boards' => Board::orderBy('sort')->withCount('institutes')->get(),
+            'divisions' => \App\Models\Division::options(),
             'districts' => Institute::whereNotNull('district')->distinct()->orderBy('district')->pluck('district'),
         ]);
     }
@@ -37,6 +39,7 @@ class InstituteController extends Controller
     {
         return view('admin.institutes.form', $this->formData(new Institute([
             'board_id' => $request->integer('board') ?: Board::orderBy('sort')->value('id'), 'is_active' => true, 'accepting_forms' => true,
+            'division_id' => $request->integer('division') ?: Institute::whereNotNull('division_id')->groupBy('division_id')->orderByRaw('count(*) desc')->value('division_id'),
         ])));
     }
 
@@ -84,18 +87,21 @@ class InstituteController extends Controller
 
     public function importForm()
     {
-        return view('admin.institutes.import', ['boards' => Board::orderBy('sort')->get()]);
+        return view('admin.institutes.import', ['boards' => Board::orderBy('sort')->get(), 'divisions' => \App\Models\Division::options()]);
     }
 
-    /** CSV columns: college_no, name (required); udise_no, district, taluka, address, pincode, principal_name, contact_email, contact_mobile, streams (codes split by |). */
+    /** CSV columns: college_no, name (required); division (code), udise_no, district, taluka, address, pincode, principal_name, contact_email, contact_mobile, streams (codes split by |). */
     public function import(Request $request)
     {
         $request->validate([
             'board_id' => ['required', 'exists:boards,id'],
+            'division_id' => ['nullable', 'exists:divisions,id'],
             'file' => ['required', 'file', 'mimes:csv,txt', 'max:10240'],
         ]);
         $board = Board::findOrFail($request->integer('board_id'));
         $streams = Stream::where('board_id', $board->id)->pluck('id', 'code');
+        $divisionCodes = \App\Models\Division::pluck('id', 'code');
+        $defaultDivision = $request->integer('division_id') ?: null;
 
         $fh = fopen($request->file('file')->getRealPath(), 'r');
         $header = array_map(fn ($h) => strtolower(trim(preg_replace('/^\xEF\xBB\xBF/', '', (string) $h))), fgetcsv($fh) ?: []);
@@ -106,7 +112,7 @@ class InstituteController extends Controller
         $created = $updated = $skipped = 0;
         $errors = [];
         $line = 1;
-        DB::transaction(function () use ($fh, $header, $allowed, $board, $streams, $request, &$created, &$updated, &$skipped, &$errors, &$line) {
+        DB::transaction(function () use ($fh, $header, $allowed, $board, $streams, $request, $divisionCodes, $defaultDivision, &$created, &$updated, &$skipped, &$errors, &$line) {
             while (($row = fgetcsv($fh)) !== false) {
                 $line++;
                 if (count(array_filter($row, fn ($v) => trim((string) $v) !== '')) === 0) {
@@ -127,7 +133,8 @@ class InstituteController extends Controller
                     continue;
                 }
                 $institute = $existing ?? new Institute(['board_id' => $board->id, 'is_active' => true, 'accepting_forms' => true]);
-                $institute->fill($values)->save();
+                $division = ! empty($r['division']) ? ($divisionCodes[trim($r['division'])] ?? null) : null;
+                $institute->fill($values + array_filter(['division_id' => $division ?? ($existing ? null : $defaultDivision)]))->save();
                 $existing ? $updated++ : $created++;
                 if (! empty($r['streams'])) {
                     $ids = collect(preg_split('/[|,;\s]+/', strtoupper($r['streams'])))->map(fn ($c) => $streams[$c] ?? null)->filter()->all();
@@ -148,13 +155,14 @@ class InstituteController extends Controller
     private function formData(Institute $institute): array
     {
         $boards = Board::orderBy('sort')->with(['streams' => fn ($q) => $q->orderBy('sort')])->get();
-        return ['institute' => $institute, 'boards' => $boards];
+        return ['institute' => $institute, 'boards' => $boards, 'divisions' => \App\Models\Division::options()];
     }
 
     private function validated(Request $request, ?Institute $institute = null): array
     {
         $v = $request->validate([
             'board_id' => ['required', 'exists:boards,id'],
+            'division_id' => ['nullable', 'exists:divisions,id'],
             'college_no' => ['required', 'string', 'max:20', Rule::unique('institutes')->where('board_id', $request->input('board_id'))->ignore($institute?->id)],
             'udise_no' => ['nullable', 'regex:/^\d{11}$/'],
             'name' => ['required', 'string', 'max:255'],

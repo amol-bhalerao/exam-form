@@ -19,6 +19,7 @@
                                 @if ($exam->late_closes_at)<div class="flex gap-2"><dt class="text-ink-3">{{ __('With late fee until') }}:</dt><dd>{{ $exam->late_closes_at->translatedFormat('j M Y') }}</dd></div>@endif
                                 @if ($exam->exam_starts_on)<div class="flex gap-2"><dt class="text-ink-3">{{ __('Exam') }}:</dt><dd>{{ $exam->exam_starts_on->translatedFormat('j M') }}{{ $exam->exam_ends_on ? ' – ' . $exam->exam_ends_on->translatedFormat('j M Y') : '' }}</dd></div>@endif
                                 <div class="flex gap-2"><dt class="text-ink-3">{{ __('Stream') }}:</dt><dd>{{ $exam->stream?->label ?? __('All streams') }}</dd></div>
+                                <div class="flex gap-2"><dt class="text-ink-3">{{ __('Division') }}:</dt><dd>{{ $exam->division?->label ?? __('All divisions') }}</dd></div>
                             </dl>
                             @if ($exam->fees->isNotEmpty())
                                 <div class="mt-3 flex flex-wrap gap-2">

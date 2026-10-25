@@ -4,6 +4,7 @@
         <form method="POST" enctype="multipart/form-data" class="sheet sheet-pad grid gap-5">
             @csrf
             <x-form.select name="board_id" :label="__('Board')" :options="$boards->pluck('short_name', 'id')" required />
+            <x-form.select name="division_id" :label="__('Divisional board')" :options="$divisions" :placeholder="__('From the division column, or not set')" :hint="__('Used for new rows that have no division column.')" />
             <div class="field"><label class="label" for="file">{{ __('CSV file') }} <span class="text-omr">*</span></label><input id="file" name="file" type="file" accept=".csv,text/csv" class="input py-2" required>@error('file')<p class="error">{{ $message }}</p>@enderror</div>
             <label class="flex items-center gap-3"><input type="checkbox" name="update_existing" value="1" class="check"> {{ __('Update institutes that already exist (matched by index no.)') }}</label>
             <div class="flex justify-end"><button class="btn-primary"><x-icon name="upload" />{{ __('Import') }}</button></div>
@@ -11,7 +12,7 @@
         <aside class="sheet sheet-pad self-start text-sm">
             <h2 class="title mb-3">{{ __('Columns') }}</h2>
             <p class="mb-2">{{ __('The first row must have column names. Required:') }} <code>college_no</code>, <code>name</code>.</p>
-            <p class="mb-3">{{ __('Optional:') }} <code>udise_no</code>, <code>district</code>, <code>taluka</code>, <code>address</code>, <code>pincode</code>, <code>principal_name</code>, <code>contact_email</code>, <code>contact_mobile</code>, <code>streams</code> (SCI|ART|COM|VOC).</p>
+            <p class="mb-3">{{ __('Optional:') }} <code>division</code> ({{ __('division code, e.g. 3') }}), <code>udise_no</code>, <code>district</code>, <code>taluka</code>, <code>address</code>, <code>pincode</code>, <code>principal_name</code>, <code>contact_email</code>, <code>contact_mobile</code>, <code>streams</code> (SCI|ART|COM|VOC).</p>
             <pre class="overflow-x-auto rounded-md bg-wash p-3 text-xs">college_no,name,district,streams
 56.01.001,DEOGIRI COLLEGE,Chh. Sambhajinagar,SCI|ART</pre>
         </aside>

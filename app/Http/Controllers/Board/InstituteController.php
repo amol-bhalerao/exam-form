@@ -14,7 +14,7 @@ class InstituteController extends Controller
     public function index(Request $request)
     {
         $board = $request->user()->board;
-        $institutes = Institute::where('board_id', $board->id)
+        $institutes = Institute::forOfficer($request->user())
             ->search($request->query('q'))
             ->when($request->query('district'), fn ($q, $d) => $q->where('district', $d))
             ->when($request->query('activity') === 'with', fn ($q) => $q->whereHas('applications', fn ($a) => $a->whereNotNull('paid_at')))
@@ -30,13 +30,13 @@ class InstituteController extends Controller
 
         return view('board.institutes.index', [
             'institutes' => $institutes,
-            'districts' => $board->institutes()->whereNotNull('district')->distinct()->orderBy('district')->pluck('district'),
+            'districts' => Institute::forOfficer($request->user())->whereNotNull('district')->distinct()->orderBy('district')->pluck('district'),
         ]);
     }
 
     public function show(Request $request, Institute $institute)
     {
-        abort_unless($institute->board_id === $request->user()->board_id, 404);
+        abort_unless(Institute::forOfficer($request->user())->whereKey($institute->id)->exists(), 404);
         $institute->load('streams', 'users');
         $base = Application::where('institute_id', $institute->id);
         return view('board.institutes.show', [

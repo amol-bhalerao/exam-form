@@ -4,6 +4,10 @@
     $menus = [
         'super_admin' => [
             [null, [['admin.dashboard', 'house', __('Overview')]]],
+            [__('Boards'), [
+                ['admin.divisions.index', 'map-pin', __('Divisional boards')],
+                ['admin.boards.index', 'layers', __('Exam boards')],
+            ]],
             [__('Records'), [
                 ['admin.institutes.index', 'school', __('Institutes')],
                 ['admin.users.index', 'users', __('Users and logins')],
@@ -61,7 +65,7 @@
         ],
     ][$user->role] ?? [];
     $roleLabel = __(\App\Models\User::ROLES[$user->role] ?? $user->role);
-    $context = $user->institute?->name ?? $user->board?->short_name ?? null;
+    $context = $user->institute?->name ?? ($user->board ? $user->board->short_name . ($user->division ? ' · ' . $user->division->short_name : '') : null);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">

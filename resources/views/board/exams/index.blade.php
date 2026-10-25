@@ -17,7 +17,7 @@
             <article class="sheet sheet-pad rise">
                 <div class="flex flex-wrap items-start justify-between gap-4">
                     <div class="min-w-0">
-                        <div class="flex flex-wrap items-center gap-2"><span class="kbd-code">{{ $exam->code }}</span><span class="{{ $state[0] }}">{{ $state[1] }}</span></div>
+                        <div class="flex flex-wrap items-center gap-2"><span class="kbd-code">{{ $exam->code }}</span>@if ($exam->division)<span class="badge-muted">{{ $exam->division->short_name }}</span>@endif<span class="{{ $state[0] }}">{{ $state[1] }}</span></div>
                         <h2 class="title mt-2">{{ $exam->name }}</h2>
                         <p class="text-sm muted">{{ $exam->stream?->label ?? __('All streams') }} · {{ __('Academic year') }} {{ $exam->academic_year }}</p>
                     </div>

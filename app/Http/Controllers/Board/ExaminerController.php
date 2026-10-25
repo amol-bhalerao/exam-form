@@ -15,9 +15,9 @@ class ExaminerController extends Controller
 {
     private function query(Request $request)
     {
-        $boardId = $request->user()->board_id;
+        $user = $request->user();
         return Teacher::query()
-            ->whereHas('institute', fn ($q) => $q->where('board_id', $boardId))
+            ->whereHas('institute', fn ($q) => $q->forOfficer($user))
             ->where('is_active', true)
             ->when($request->query('status'), fn ($q, $s) => $q->where('board_status', $s))
             ->when($request->query('role'), fn ($q, $r) => $q->whereJsonContains('duty_roles', $r))
@@ -31,7 +31,7 @@ class ExaminerController extends Controller
     public function index(Request $request)
     {
         $board = $request->user()->board;
-        $all = Teacher::whereHas('institute', fn ($q) => $q->where('board_id', $board->id))->where('is_active', true);
+        $all = Teacher::whereHas('institute', fn ($q) => $q->forOfficer($request->user()))->where('is_active', true);
         return view('board.examiners.index', [
             'teachers' => $this->query($request)->with('institute', 'subject')
                 ->orderByRaw("CASE board_status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END")->orderBy('full_name')
@@ -44,13 +44,13 @@ class ExaminerController extends Controller
                 'available' => (clone $all)->where('available_for_duty', true)->count(),
             ],
             'subjects' => Subject::where('board_id', $board->id)->orderBy('sort')->orderBy('code')->get(),
-            'districts' => $board->institutes()->whereNotNull('district')->distinct()->orderBy('district')->pluck('district'),
+            'districts' => \App\Models\Institute::forOfficer($request->user())->whereNotNull('district')->distinct()->orderBy('district')->pluck('district'),
         ]);
     }
 
     public function decide(Request $request, Teacher $teacher)
     {
-        abort_unless($teacher->institute->board_id === $request->user()->board_id, 404);
+        abort_unless(\App\Models\Institute::forOfficer($request->user())->whereKey($teacher->institute_id)->exists(), 404);
         $data = $request->validate([
             'decision' => ['required', Rule::in(['approved', 'rejected', 'pending'])],
             'note' => [$request->input('decision') === 'rejected' ? 'required' : 'nullable', 'string', 'max:300'],

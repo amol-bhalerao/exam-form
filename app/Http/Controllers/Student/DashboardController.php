@@ -17,7 +17,7 @@ class DashboardController extends Controller
 
         return view('student.dashboard', [
             'students' => $students,
-            'openExams' => Exam::open()->with('board', 'fees')->orderBy('closes_at')->get(),
+            'openExams' => Exam::open()->with('board', 'fees', 'division')->orderBy('closes_at')->get(),
             'notices' => Notice::live()->latest('published_at')->limit(4)->get(),
         ]);
     }
