@@ -39,7 +39,7 @@ Route::middleware('guest')->group(function () {
     // Unlisted staff sign-in pages (paths come from .env; never linked from the site).
     foreach (config('portal.login_paths') as $role => $path) {
         Route::get($path, [StaffLoginController::class, 'show'])->defaults('role', $role)->name("staff.login.$role");
-        Route::post($path, [StaffLoginController::class, 'login'])->defaults('role', $role)->middleware('throttle:8,1');
+        Route::post($path, [StaffLoginController::class, 'login'])->defaults('role', $role)->middleware('throttle:staff-login');
     }
 });
 Route::post('/logout', [StaffLoginController::class, 'logout'])->middleware('auth')->name('logout');
@@ -49,7 +49,7 @@ Route::middleware('auth')->prefix('account')->group(function () {
     Route::put('/password', [PasswordController::class, 'update'])->name('password.update');
 });
 
-Route::get('/lookup/institutes', [LookupController::class, 'institutes'])->middleware('throttle:60,1')->name('lookup.institutes');
+Route::get('/lookup/institutes', [LookupController::class, 'institutes'])->middleware('throttle:60,1,lookup.institutes')->name('lookup.institutes');
 
 /* ------------------------------------------------------------------ payments */
 Route::post('/payments/cashfree/webhook', [PaymentController::class, 'webhook'])->name('payments.webhook');
@@ -86,29 +86,29 @@ Route::middleware(['auth', 'role:student'])->prefix('learn')->name('learn.')->gr
     Route::get('/', [Learn\HubController::class, 'index'])->name('hub');
     Route::post('switch', [Learn\HubController::class, 'switch'])->name('switch');
     Route::get('practice', [Learn\PracticeController::class, 'create'])->name('practice.create');
-    Route::post('practice', [Learn\PracticeController::class, 'store'])->name('practice.store')->middleware('throttle:30,1');
-    Route::post('practice/weak', [Learn\PracticeController::class, 'weak'])->name('practice.weak')->middleware('throttle:30,1');
+    Route::post('practice', [Learn\PracticeController::class, 'store'])->name('practice.store')->middleware('throttle:30,1,practice.store');
+    Route::post('practice/weak', [Learn\PracticeController::class, 'weak'])->name('practice.weak')->middleware('throttle:30,1,practice.weak');
     Route::get('tests', [Learn\TestController::class, 'index'])->name('tests.index');
     Route::get('tests/{quiz}', [Learn\TestController::class, 'show'])->name('tests.show');
     Route::post('tests/{quiz}/start', [Learn\TestController::class, 'start'])->name('tests.start');
     Route::get('attempts/{attempt}', [Learn\AttemptController::class, 'show'])->name('attempts.show');
-    Route::post('attempts/{attempt}/answer', [Learn\AttemptController::class, 'answer'])->name('attempts.answer')->middleware('throttle:240,1');
+    Route::post('attempts/{attempt}/answer', [Learn\AttemptController::class, 'answer'])->name('attempts.answer')->middleware('throttle:240,1,attempts.answer');
     Route::post('attempts/{attempt}/heartbeat', [Learn\AttemptController::class, 'heartbeat'])->name('attempts.heartbeat');
     Route::post('attempts/{attempt}/warn', [Learn\AttemptController::class, 'warn'])->name('attempts.warn');
     Route::post('attempts/{attempt}/submit', [Learn\AttemptController::class, 'submit'])->name('attempts.submit');
     Route::get('attempts/{attempt}/result', [Learn\AttemptController::class, 'result'])->name('attempts.result');
-    Route::post('attempts/{attempt}/feedback', [Learn\AttemptController::class, 'feedback'])->name('attempts.feedback')->middleware('throttle:10,1');
+    Route::post('attempts/{attempt}/feedback', [Learn\AttemptController::class, 'feedback'])->name('attempts.feedback')->middleware('throttle:10,1,attempts.feedback');
     Route::get('materials', [Learn\MaterialController::class, 'index'])->name('materials.index');
     Route::get('materials/new', [Learn\MaterialController::class, 'create'])->name('materials.create');
-    Route::post('materials', [Learn\MaterialController::class, 'store'])->name('materials.store')->middleware('throttle:10,1');
+    Route::post('materials', [Learn\MaterialController::class, 'store'])->name('materials.store')->middleware('throttle:10,1,materials.store');
     Route::get('materials/{material}', [Learn\MaterialController::class, 'show'])->name('materials.show');
     Route::get('contribute', [Learn\ContributeController::class, 'index'])->name('contribute.index');
     Route::get('contribute/question', [Learn\ContributeController::class, 'create'])->name('contribute.create');
-    Route::post('contribute/question', [Learn\ContributeController::class, 'store'])->name('contribute.store')->middleware('throttle:20,1');
-    Route::post('questions/{question}/tip', [Learn\ContributeController::class, 'tip'])->name('tips.store')->middleware('throttle:20,1');
-    Route::post('tips/{tip}/like', [Learn\ContributeController::class, 'like'])->name('tips.like')->middleware('throttle:60,1');
+    Route::post('contribute/question', [Learn\ContributeController::class, 'store'])->name('contribute.store')->middleware('throttle:20,1,contribute.store');
+    Route::post('questions/{question}/tip', [Learn\ContributeController::class, 'tip'])->name('tips.store')->middleware('throttle:20,1,tips.store');
+    Route::post('tips/{tip}/like', [Learn\ContributeController::class, 'like'])->name('tips.like')->middleware('throttle:60,1,tips.like');
     Route::get('progress', [Learn\ProgressController::class, 'index'])->name('progress');
-    Route::post('progress/plan', [Learn\ProgressController::class, 'plan'])->name('progress.plan')->middleware('throttle:6,1');
+    Route::post('progress/plan', [Learn\ProgressController::class, 'plan'])->name('progress.plan')->middleware('throttle:6,1,progress.plan');
     Route::get('certificates/{certificate}', [Learn\ProgressController::class, 'certificate'])->name('certificates.show');
 });
 
@@ -116,7 +116,7 @@ Route::middleware(['auth', 'role:student'])->prefix('learn')->name('learn.')->gr
 Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/', [Teacher\DashboardController::class, 'index'])->name('dashboard');
     Route::get('questions/topics/{subject}', [Teacher\QuestionController::class, 'topics'])->name('questions.topics');
-    Route::post('questions/draft', [Teacher\QuestionController::class, 'draft'])->name('questions.draft')->middleware('throttle:6,1');
+    Route::post('questions/draft', [Teacher\QuestionController::class, 'draft'])->name('questions.draft')->middleware('throttle:6,1,questions.draft');
     Route::resource('questions', Teacher\QuestionController::class)->except('show');
     Route::get('reviews', [Teacher\ReviewController::class, 'index'])->name('reviews.index');
     Route::post('reviews/{kind}/{id}', [Teacher\ReviewController::class, 'decide'])->name('reviews.decide')->whereIn('kind', ['questions', 'materials', 'tips'])->whereNumber('id');
