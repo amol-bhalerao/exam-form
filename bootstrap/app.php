@@ -11,6 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Applies pending database changes after an upload (no terminal on shared hosting).
+        $middleware->prepend(\App\Http\Middleware\AutoUpdateDatabase::class);
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,
             \App\Http\Middleware\SecurityHeaders::class,
