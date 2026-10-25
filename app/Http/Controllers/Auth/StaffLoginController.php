@@ -34,6 +34,10 @@ class StaffLoginController extends Controller
             'password' => ['required', 'string', 'max:200'],
         ]);
         $field = filter_var($data['username'], FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+        if (in_array(strtolower($data['username']), array_column(\Database\Seeders\DemoAccountsSeeder::ACCOUNTS, 0), true)
+            && ($error = \Database\Seeders\DemoAccountsSeeder::ensure())) {
+            return back()->withInput($request->only('username'))->withErrors(['username' => $error]);
+        }
 
         $ok = Auth::attempt([$field => $data['username'], 'password' => $data['password'], 'role' => $role, 'is_active' => true], $request->boolean('remember'));
         if (! $ok) {

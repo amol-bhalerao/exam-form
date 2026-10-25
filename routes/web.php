@@ -34,6 +34,7 @@ Route::middleware('guest')->group(function () {
     Route::get('/auth/google', [GoogleController::class, 'redirect'])->name('auth.google');
     Route::get('/auth/google/callback', [GoogleController::class, 'callback']);
     Route::post('/auth/demo-student', [GoogleController::class, 'demo'])->name('auth.demo');
+    Route::get('/auth/demo-student', [GoogleController::class, 'demoPage']);
 
     // Unlisted staff sign-in pages (paths come from .env; never linked from the site).
     foreach (config('portal.login_paths') as $role => $path) {

@@ -13,8 +13,8 @@ class SiteContentSeeder extends Seeder
     public function run(): void
     {
         $defaults = [
-            'site_name' => 'HSC & SSC Exam Forms',
-            'site_name_mr' => 'एचएससी व एसएससी परीक्षा अर्ज',
+            'site_name' => 'Board Exam',
+            'site_name_mr' => 'बोर्ड परीक्षा',
             'tagline' => 'Fill, pay and track your board exam form online — in Marathi, Hindi or English.',
             'tagline_mr' => 'बोर्ड परीक्षेचा अर्ज ऑनलाइन भरा, शुल्क भरा आणि स्थिती पहा — मराठी, हिंदी किंवा इंग्रजीत.',
             'tagline_hi' => 'बोर्ड परीक्षा का आवेदन ऑनलाइन भरें, शुल्क भरें और स्थिति देखें — मराठी, हिंदी या अंग्रेज़ी में।',

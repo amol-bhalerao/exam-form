@@ -73,11 +73,20 @@ class GoogleController extends Controller
     public function demo(Request $request)
     {
         abort_unless(config('portal.allow_demo_student_login'), 404);
+        if ($error = \Database\Seeders\DemoAccountsSeeder::ensure()) {
+            return redirect()->route('login')->withErrors(['google' => $error]);
+        }
         $user = User::firstOrCreate(['email' => 'student.demo@example.com'], ['name' => 'Demo Student', 'role' => User::STUDENT]);
         abort_unless($user->role === User::STUDENT, 404);
         $user->forceFill(['is_active' => true, 'is_demo' => (bool) config('portal.demo_logins') || $user->is_demo])->save();
         Auth::login($user);
         $request->session()->regenerate();
         return redirect()->route('student.dashboard');
+    }
+
+    /** Opening the demo sign-in address directly goes to the page with the button. */
+    public function demoPage()
+    {
+        return redirect()->route(config('portal.demo_logins') ? 'demo' : 'login');
     }
 }

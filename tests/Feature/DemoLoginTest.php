@@ -64,4 +64,14 @@ class DemoLoginTest extends TestCase
         $this->seed(DemoAccountsSeeder::class);
         $this->assertSame(0, User::where('is_demo', true)->where('is_active', true)->count());
     }
+
+    public function test_demo_sign_in_works_even_if_apply_update_was_not_pressed(): void
+    {
+        config(['portal.demo_logins' => true, 'portal.allow_demo_student_login' => true]);
+        $this->assertFalse(User::where('username', 'demo.board')->exists());
+        $this->post(route('staff.login.board'), ['username' => 'demo.board', 'password' => 'Demo@1234'])->assertRedirect(route('board.dashboard'));
+        $this->post(route('logout'));
+        $this->get('/auth/demo-student')->assertRedirect(route('demo'));
+        $this->post(route('auth.demo'))->assertRedirect(route('student.dashboard'));
+    }
 }
