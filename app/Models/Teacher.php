@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Teacher extends Model
 {
     protected $fillable = [
-        'institute_id', 'full_name', 'gender', 'dob', 'mobile', 'email', 'qualification', 'subject_id', 'designation',
+        'institute_id', 'user_id', 'full_name', 'gender', 'dob', 'mobile', 'email', 'qualification', 'subject_id', 'designation',
         'appointment_type', 'joined_on', 'experience_years', 'duty_roles', 'examiner_years', 'last_appointment_no',
         'available_for_duty', 'board_status', 'board_note', 'reviewed_by', 'reviewed_at', 'is_active',
     ];
@@ -22,6 +22,11 @@ class Teacher extends Model
         'is_active' => 'boolean',
         'reviewed_at' => 'datetime',
     ];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function institute(): BelongsTo
     {

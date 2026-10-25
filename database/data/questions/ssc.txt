@@ -1,0 +1,107 @@
+@ SSC S33
+# Gravitation | गुरुत्वाकर्षण
+s ~ easy ~ The value of the gravitational constant G is ~ 6.67 × 10⁻¹¹ N m²/kg² ~ 9.8 m/s² ^ 6.67 × 10¹¹ N m²/kg² ~ 3 × 10⁸ m/s ^ 1.6 × 10⁻¹⁹ C ^ 6.023 × 10²³ ~ G is a universal constant — the same everywhere. ~ "Six-six-seven, ten to the minus eleven."
+s ~ medium ~ The weight of an object on the Moon is about ~ one-sixth of its weight on Earth ~ the same as on Earth ^ six times its weight on Earth ~ zero ^ half of its weight on Earth ^ one-tenth of its weight on Earth ~ The Moon's gravity is about 1/6 of Earth's; mass stays the same. ~ Moon = 1/6 — "Six times lighter on the Moon."
+tf ~ easy ~ The mass of an object changes when it is taken from the Earth to the Moon. ~ False ~ ~ Mass is the quantity of matter and stays constant; only weight changes. ~ Mass stays, weight sways.
+f ~ medium ~ Kepler's third law: the square of the period of revolution of a planet is proportional to the ____ of its mean distance from the Sun. ~ cube ~ ~ T² ∝ r³. ~ "Two for time, three for distance."
+# Periodic Classification of Elements | मूलद्रव्यांचे आवर्ती वर्गीकरण
+s ~ easy ~ The modern periodic table is based on ~ atomic number ~ atomic mass ^ number of neutrons ~ density ^ valency only ^ year of discovery ~ Moseley showed that properties depend on atomic number. ~ Modern = Moseley = number.
+s ~ medium ~ How many groups and periods does the modern periodic table have? ~ 18 groups and 7 periods ~ 7 groups and 18 periods ^ 8 groups and 7 periods ~ 18 groups and 9 periods ^ 16 groups and 7 periods ^ 9 groups and 18 periods ~ Groups are vertical columns (18), periods are horizontal rows (7). ~ "18 standing, 7 lying down."
+tf ~ medium ~ Atomic radius decreases from left to right across a period. ~ True ~ ~ Nuclear charge increases while electrons enter the same shell, pulling them closer. ~ Across: pulled in tighter; Down: new shells, bigger.
+m ~ medium ~ Which of these are noble gases? ~ Helium ^ Neon ^ Argon ~ Nitrogen ^ Oxygen ^ Chlorine ~ Group 18 elements have completely filled outer shells. ~ "He Never Argues" — Helium, Neon, Argon.
+# Chemical Reactions and Equations | रासायनिक अभिक्रिया व समीकरणे
+s ~ easy ~ Rusting of iron is an example of ~ oxidation ~ reduction only ^ neutralisation ~ decomposition ^ sublimation ^ displacement by zinc ~ Iron combines with oxygen and moisture to form hydrated iron oxide. ~ Rust = iron + oxygen + water.
+s ~ medium ~ The reaction CaCO₃ → CaO + CO₂ is a ~ decomposition reaction ~ combination reaction ^ displacement reaction ~ double displacement reaction ^ neutralisation reaction ^ redox reaction only ~ One reactant breaks into two simpler products on heating. ~ One breaks into many = decomposition.
+f ~ easy ~ A reaction in which heat is given out is called an ____ reaction. ~ exothermic ~ ~ e.g. burning of fuels, respiration. ~ EXO = exit — heat goes out.
+# Effects of Electric Current | विद्युतधारेचे परिणाम
+s ~ easy ~ The SI unit of electric power is ~ watt ~ joule ^ volt ~ ampere ^ ohm ^ coulomb ~ P = VI; 1 W = 1 J/s. ~ Power — Watt (James Watt).
+s ~ medium ~ Fleming's left-hand rule gives the direction of ~ force on a current-carrying conductor in a magnetic field ~ induced current ^ magnetic field around a wire ~ electric field ^ heat produced ^ resistance of a wire ~ Forefinger = Field, Centre finger = Current, thuMb = Motion (force). ~ Left hand for Motors; right hand for generators.
+tf ~ easy ~ The commercial unit of electrical energy is the kilowatt-hour (kWh). ~ True ~ ~ 1 kWh = 3.6 × 10⁶ J — the "unit" on your electricity bill. ~ One "unit" on the bill = one kWh.
+
+@ SSC S34
+# Heredity and Evolution | आनुवंशिकता व उत्क्रांती
+s ~ easy ~ The father of genetics is ~ Gregor Mendel ~ Charles Darwin ^ Hugo de Vries ~ Lamarck ^ Watson ^ Robert Hooke ~ Mendel experimented with pea plants. ~ Mendel + peas = genetics.
+s ~ medium ~ Darwin's theory of evolution is known as ~ natural selection ~ inheritance of acquired characters ^ mutation theory ~ special creation ^ use and disuse ^ spontaneous generation ~ Organisms best suited to the environment survive and reproduce. ~ Darwin = "survival of the fittest".
+tf ~ medium ~ Lamarck proposed the theory of inheritance of acquired characters. ~ True ~ ~ e.g. his giraffe-neck explanation. ~ Lamarck — Long neck — Learned (acquired) traits.
+# Life Processes in Living Organisms | सजीवांतील जीवनप्रक्रिया
+s ~ easy ~ The site of photosynthesis in a plant cell is the ~ chloroplast ~ mitochondrion ^ nucleus ~ ribosome ^ vacuole ^ cell wall ~ Chloroplasts contain chlorophyll which traps light energy. ~ Chloro = green — the green kitchen of the cell.
+s ~ medium ~ The powerhouse of the cell is the ~ mitochondrion ~ chloroplast ^ Golgi body ~ lysosome ^ ribosome ^ nucleus ~ Mitochondria produce ATP by cellular respiration. ~ Mitochondria — "Mighty" energy makers.
+f ~ medium ~ Cell division that produces gametes with half the number of chromosomes is called ____. ~ meiosis ~ ~ Meiosis is reduction division (2n → n). ~ MeiOSIS makes sex cells — "My-Oh-Sex cells".
+# Environmental Management | पर्यावरणीय व्यवस्थापन
+s ~ easy ~ The ozone layer protects us from ~ ultraviolet radiation ~ infrared radiation ^ radio waves ~ visible light ^ X-rays from the Sun only ^ sound waves ~ Stratospheric ozone absorbs most harmful UV rays. ~ Ozone = sunscreen of the Earth.
+tf ~ easy ~ Chlorofluorocarbons (CFCs) damage the ozone layer. ~ True ~ ~ CFCs release chlorine which breaks ozone molecules. ~ CFC = "Chlorine Finishes Coverage".
+
+@ SSC S31
+# Linear Equations in Two Variables | दोन चलांतील रेषीय समीकरणे
+s ~ easy ~ The solution of x + y = 7 and x − y = 3 is ~ x = 5, y = 2 ~ x = 2, y = 5 ^ x = 4, y = 3 ~ x = 3, y = 4 ^ x = 6, y = 1 ^ x = 7, y = 0 ~ Adding the equations: 2x = 10, so x = 5 and y = 2. ~ Add to kill y, subtract to kill x.
+s ~ medium ~ For the equations a₁x + b₁y = c₁ and a₂x + b₂y = c₂, if a₁/a₂ ≠ b₁/b₂ the lines ~ intersect at exactly one point ~ are parallel ^ coincide ~ have no solution ^ have infinitely many solutions ^ are perpendicular always ~ Different slopes mean a unique solution. ~ Different ratios = different directions = one meeting point.
+f ~ medium ~ By Cramer's rule, x = Dx / ____. ~ D ~ ~ x = Dx/D and y = Dy/D, where D ≠ 0. ~ "x is Dx over D."
+# Quadratic Equations | वर्गसमीकरणे
+s ~ medium ~ The roots of x² − 5x + 6 = 0 are ~ 2 and 3 ~ −2 and −3 ^ 1 and 6 ~ −1 and 6 ^ 5 and 6 ^ 2 and −3 ~ x² − 5x + 6 = (x − 2)(x − 3). ~ Find two numbers that multiply to 6 and add to 5.
+s ~ medium ~ If the discriminant b² − 4ac is negative, the roots are ~ not real ~ real and equal ^ real and unequal ~ rational ^ zero ^ positive ~ A negative number has no real square root. ~ Below zero — no real roots.
+tf ~ medium ~ The sum of the roots of ax² + bx + c = 0 is −b/a. ~ True ~ ~ α + β = −b/a and αβ = c/a. ~ Sum "minus b by a", product "c by a".
+# Arithmetic Progression | अंकगणिती श्रेढी
+s ~ easy ~ The common difference of the A.P. 3, 7, 11, 15, … is ~ 4 ~ 3 ^ 7 ~ 11 ^ −4 ^ 2 ~ d = 7 − 3 = 4. ~ Next term minus previous term.
+f ~ medium ~ The nth term of an A.P. is tₙ = a + (n − 1)____. ~ d ~ ~ a is the first term and d the common difference. ~ Start at a, take (n − 1) steps of size d.
+# Probability | संभाव्यता
+s ~ easy ~ When a fair die is thrown, the probability of getting an even number is ~ 1/2 ~ 1/3 ^ 1/6 ~ 2/3 ^ 1 ^ 5/6 ~ Even outcomes are 2, 4, 6: 3 out of 6. ~ Half the faces are even.
+
+@ SSC S32
+# Similarity and Pythagoras Theorem | समरूपता व पायथागोरसचे प्रमेय
+s ~ easy ~ The sides of a right-angled triangle are 6 cm and 8 cm. The hypotenuse is ~ 10 cm ~ 14 cm ^ 12 cm ~ 9 cm ^ 7 cm ^ 48 cm ~ √(6² + 8²) = √100 = 10. ~ 3-4-5 family: 6-8-10.
+s ~ medium ~ Ratio of areas of two similar triangles equals the ratio of ~ the squares of their corresponding sides ~ their corresponding sides ^ their perimeters ~ the cubes of their sides ^ their angles ^ their heights only ~ If sides are in ratio k, areas are in ratio k². ~ Area is two-dimensional → square the ratio.
+tf ~ easy ~ In a right-angled triangle, the hypotenuse is the longest side. ~ True ~ ~ It is opposite the largest angle (90°). ~ Biggest angle faces the biggest side.
+# Circle | वर्तुळ
+s ~ medium ~ The angle subtended by a semicircle at any point on the circle is ~ 90° ~ 180° ^ 60° ~ 45° ^ 120° ^ 360° ~ Angle in a semicircle is a right angle. ~ Semicircle makes a "right" angle.
+f ~ medium ~ A tangent to a circle is ____ to the radius at the point of contact. ~ perpendicular ^ at right angles ~ ~ Tangent-radius theorem. ~ Tangent and radius meet like a "T" — at 90°.
+# Trigonometry | त्रिकोणमिती
+s ~ easy ~ sin²θ + cos²θ = ~ 1 ~ 0 ^ 2 ~ tan²θ ^ sec²θ ^ −1 ~ Fundamental trigonometric identity. ~ "Sin square plus cos square is always one."
+s ~ easy ~ The value of tan 45° is ~ 1 ~ 0 ^ √3 ~ 1/√3 ^ undefined ^ 1/2 ~ At 45°, opposite = adjacent, so tan = 1. ~ 45° — the "equal sides" angle — tan = 1.
+
+@ SSC S35
+# History — Historiography and Modern India | इतिहासलेखन
+s ~ easy ~ The founder of the Archaeological Survey of India was ~ Alexander Cunningham ~ John Marshall ^ Mortimer Wheeler ~ James Prinsep ^ William Jones ^ R. D. Banerji ~ ASI was founded in 1861. ~ Cunningham Created ASI.
+s ~ medium ~ Who wrote the book "Discovery of India"? ~ Jawaharlal Nehru ~ Mahatma Gandhi ^ Dr. B. R. Ambedkar ~ Lokmanya Tilak ^ Rabindranath Tagore ^ Sardar Patel ~ Nehru wrote it in Ahmednagar Fort prison (1942–46). ~ Nehru "discovered" India while in jail.
+# Political Science — Elections and Parties | निवडणूक प्रक्रिया
+s ~ easy ~ Elections in India are conducted by the ~ Election Commission ~ Supreme Court ^ President ~ Parliament ^ Prime Minister ^ Lok Sabha Speaker ~ An independent constitutional body (Article 324). ~ EC = Election Conductor.
+tf ~ medium ~ The minimum age to vote in India is 18 years. ~ True ~ ~ Reduced from 21 to 18 by the 61st Amendment (1988–89). ~ Eighteen to vote.
+
+@ SSC S36
+# Field Visit, Location and Extent | स्थान व विस्तार
+s ~ medium ~ India and Brazil are compared in the SSC Geography textbook. The capital of Brazil is ~ Brasília ~ Rio de Janeiro ^ São Paulo ~ Buenos Aires ^ Lima ^ Salvador ~ Brasília became the capital in 1960. ~ Brazil's capital is "Bras-ília" — the name says it.
+s ~ easy ~ The Amazon is the main river of ~ Brazil ~ India ^ Egypt ~ China ^ Australia ^ Russia ~ It carries the largest volume of water of any river. ~ Amazon flows through Brazil's rainforest.
+tf ~ medium ~ The Tropic of Cancer passes through India. ~ True ~ ~ 23°30′N passes through eight Indian states including Gujarat and West Bengal. ~ Cancer crosses India; Capricorn crosses Brazil.
+
+@ SSC S15
+# Grammar | व्याकरण
+s ~ easy ~ Choose the correct form: She ____ to school every day. ~ goes ~ go ^ going ~ gone ^ is go ^ went every day ~ Third person singular in simple present takes -s/-es. ~ He/She/It — add S.
+s ~ medium ~ The plural of "child" is ~ children ~ childs ^ childes ~ childrens ^ child's ^ childer ~ Irregular plural. ~ One child, many children.
+f ~ easy ~ Write the opposite of "ancient": ____ ~ modern ^ new ~ ~ Ancient means very old. ~ Ancient history vs modern technology.
+tf ~ easy ~ "Quickly" is an adverb. ~ True ~ ~ It describes how an action is done. ~ Most -ly words are adverbs.
+
+@ SSC S04
+# Grammar | व्याकरण
+s ~ medium ~ Identify the tense: "I have finished my homework." ~ Present perfect ~ Simple past ^ Past perfect ~ Present continuous ^ Future perfect ^ Simple present ~ have/has + past participle. ~ "Have + done" = present perfect.
+s ~ medium ~ Choose the correct question tag: "You are coming, ____?" ~ aren't you ~ are you ^ don't you ~ isn't it ^ won't you ^ do you ~ Positive statement → negative tag with the same auxiliary. ~ Positive in front, negative behind.
+
+@ SSC S17
+# व्याकरण | Grammar
+s ~ easy ~ "सूर्य" या शब्दाचा समानार्थी शब्द कोणता? ~ रवी ~ चंद्र ^ तारा ~ नभ ^ मेघ ^ धरा ~ सूर्य = रवी, भानू, दिनकर. ~ "रविवार" — सूर्याचा वार.
+s ~ easy ~ "दिवस" या शब्दाचा विरुद्धार्थी शब्द कोणता? ~ रात्र ~ सकाळ ^ दुपार ~ संध्याकाळ ^ पहाट ^ वेळ ~ दिवस × रात्र. ~ दिवस-रात्र — नेहमी जोडीने.
+tf ~ medium ~ "अनाथ" हा शब्द "अ + नाथ" असा तयार झाला आहे. ~ True ~ ~ "अ" या उपसर्गाने नकारार्थी अर्थ येतो. ~ अ = नाही.
+
+@ SSC S01
+# व्याकरण | Grammar
+s ~ medium ~ "गंगेचे पाणी" यात "गंगेचे" हे कोणत्या विभक्तीचे रूप आहे? ~ षष्ठी ~ प्रथमा ^ द्वितीया ~ तृतीया ^ चतुर्थी ^ सप्तमी ~ "चा, ची, चे" हे षष्ठी विभक्तीचे प्रत्यय आहेत. ~ चा-ची-चे = षष्ठी (सहावी).
+s ~ easy ~ "हात दाखवून अवलक्षण करणे" या वाक्प्रचाराचा अर्थ काय? ~ स्वतःहून संकट ओढवून घेणे ~ मदत करणे ^ भविष्य पाहणे ~ हात धुणे ^ कौतुक करणे ^ भीक मागणे ~ आपणच कृती करून नुकसान करून घेणे. ~ स्वतःचा हात — स्वतःचे संकट.
+
+@ SSC S51
+# Introduction to ICT | माहिती व संप्रेषण तंत्रज्ञान
+s ~ easy ~ Which device is an input device? ~ Keyboard ~ Monitor ^ Printer ~ Speaker ^ Projector ^ Plotter ~ Input devices send data into the computer. ~ You "put in" with a keyboard.
+s ~ easy ~ The brain of the computer is the ~ CPU ~ RAM ^ hard disk ~ monitor ^ keyboard ^ mouse ~ The Central Processing Unit processes instructions. ~ Central = centre of thinking.
+tf ~ easy ~ RAM is volatile memory — its data is lost when power is switched off. ~ True ~ ~ ROM and hard disks keep data without power. ~ RAM forgets when you turn off the lights.
+
+@ SSC S42
+# Water Security | जलसुरक्षा
+s ~ easy ~ A small barrier built across a stream to slow water and recharge groundwater is a ~ check dam ~ canal ^ aqueduct ~ reservoir tower ^ overhead tank ^ borewell ~ Check dams hold water so it seeps into the ground. ~ It "checks" (stops) the water.
+tf ~ easy ~ Planting trees in a watershed helps reduce soil erosion. ~ True ~ ~ Roots bind soil and slow down run-off. ~ Roots hold the soil like a net.

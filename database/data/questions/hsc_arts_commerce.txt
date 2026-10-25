@@ -1,0 +1,93 @@
+@ HSC 1
+# Grammar — Voice and Speech | व्याकरण
+s ~ easy ~ Choose the passive voice: "She writes a letter." ~ A letter is written by her. ~ A letter was written by her. ^ A letter has been written by her. ^ A letter is being written by her. ^ A letter will be written by her. ^ She is written a letter. ~ Simple present active → "is/am/are + past participle" in passive. ~ Keep the tense: "writes" (present) → "is written".
+s ~ medium ~ Choose the indirect speech: He said, "I am tired." ~ He said that he was tired. ~ He said that I am tired. ^ He said that he is tired. ^ He says that he was tired. ^ He told that he had been tired. ^ He said he will be tired. ~ Reporting verb in past → present tense becomes past; "I" becomes "he". ~ Past reporting verb pushes the tense one step back.
+f ~ easy ~ Fill in the blank with the correct article: He is ____ honest man. ~ an ~ ~ "Honest" begins with a vowel sound (the h is silent). ~ Use "an" before a vowel SOUND, not just a vowel letter.
+tf ~ medium ~ "Neither of the boys was present" is grammatically correct. ~ True ~ ~ "Neither" is singular, so it takes "was". ~ Neither = not this ONE, not that ONE → singular.
+# Figures of Speech | अलंकार
+s ~ easy ~ "The wind whispered through the trees" is an example of ~ personification ~ simile ^ metaphor ~ hyperbole ^ alliteration ^ oxymoron ~ Human action (whispering) is given to a non-human thing (wind). ~ Person-ification: treating a thing like a person.
+s ~ easy ~ "As brave as a lion" is an example of ~ simile ~ metaphor ^ personification ~ irony ^ apostrophe ^ antithesis ~ A comparison using "as" or "like" is a simile. ~ Simile is "Similar" with as/like.
+s ~ medium ~ "Sweet sorrow" is an example of ~ oxymoron ~ alliteration ^ metonymy ~ simile ^ hyperbole ^ onomatopoeia ~ Two contradictory words are placed together. ~ Oxy-moron = "sharp-dull" — the name itself is an oxymoron.
+m ~ medium ~ Which of these lines use alliteration? ~ Peter Piper picked a peck of pickled peppers. ^ The soft, silent sea sang slowly. ~ The moon is a silver coin. ^ I have told you a million times. ^ Life is like a box of chocolates. ~ Alliteration repeats the same first consonant sound in nearby words. ~ Alliteration = A-A-A — the same starting sound again and again.
+
+@ HSC 49
+# Introduction to Micro and Macro Economics | सूक्ष्म व स्थूल अर्थशास्त्र
+s ~ easy ~ The study of individual units such as a consumer or a firm is called ~ micro economics ~ macro economics ^ econometrics ~ public finance ^ welfare economics ^ development economics ~ "Micro" means small — it studies individual economic units. ~ Micro = microscope = small units.
+s ~ medium ~ The term "macro economics" was first used by ~ Ragnar Frisch ~ Adam Smith ^ Alfred Marshall ~ J. M. Keynes ^ David Ricardo ^ Lionel Robbins ~ Ragnar Frisch introduced the terms micro and macro economics in 1933. ~ Frisch "Framed" both words.
+# Utility Analysis | उपयोगिता विश्लेषण
+s ~ medium ~ When total utility is maximum, marginal utility is ~ zero ~ maximum ^ negative ~ increasing ^ equal to total utility ^ constant and positive ~ TU rises while MU is positive and peaks when MU = 0. ~ Top of the hill (TU) has a flat slope (MU = 0).
+tf ~ easy ~ The law of diminishing marginal utility states that each additional unit of a commodity gives less satisfaction. ~ True ~ ~ Satisfaction from each extra unit falls as consumption continues. ~ The third glass of water is never as good as the first.
+# Elasticity of Demand | मागणीची लवचिकता
+s ~ medium ~ If a 10% fall in price leads to a 10% rise in quantity demanded, demand is ~ unitary elastic ~ perfectly elastic ^ perfectly inelastic ~ relatively elastic ^ relatively inelastic ^ zero elastic ~ Ed = 10% / 10% = 1. ~ Same percentage change = "unit" elasticity = 1.
+f ~ medium ~ Demand for necessities like salt is generally ____ elastic. ~ relatively inelastic ^ inelastic ^ less ~ ~ People buy roughly the same amount of salt whatever its price. ~ Salt doesn't stretch — inelastic.
+# Money and Banking | पैसा व बँकिंग
+s ~ easy ~ The central bank of India is ~ Reserve Bank of India ~ State Bank of India ^ NABARD ~ SIDBI ^ Bank of India ^ IDBI ~ RBI was established on 1 April 1935. ~ RBI — "Reserve" keeps the nation's reserves.
+s ~ medium ~ The repo rate is the rate at which ~ RBI lends to commercial banks ~ commercial banks lend to RBI ^ banks lend to the public ~ public deposits money in banks ^ government borrows abroad ^ banks pay interest on savings ~ Reverse repo is the rate at which RBI borrows from banks. ~ Repo = RBI gives; Reverse repo = RBI takes.
+
+@ HSC 50
+# Fundamentals of Partnership | भागीदारीची मूलतत्त्वे
+s ~ easy ~ In the absence of a partnership deed, profits are shared ~ equally ~ in the ratio of capital ^ in the ratio of 2:1 ~ in the ratio of experience ^ by the senior partner's decision ^ in the ratio of loans ~ Indian Partnership Act, 1932: without an agreement, profits are shared equally. ~ No deed? Divide it like friends — equally.
+s ~ medium ~ In the absence of a deed, interest on a partner's loan to the firm is allowed at ~ 6% per annum ~ 12% per annum ^ 9% per annum ~ no interest ^ bank rate ^ 10% per annum ~ The Partnership Act allows 6% p.a. on partners' loans. ~ Loan to firm → "six percent fix".
+tf ~ medium ~ Interest on capital is allowed to partners in the absence of a partnership deed. ~ False ~ ~ No interest on capital is allowed unless the deed provides for it. ~ No deed, no interest on capital.
+# Dissolution of Partnership Firm | भागीदारी संस्थेचे विसर्जन
+s ~ medium ~ On dissolution, assets are transferred to the debit side of the ~ Realisation Account ~ Capital Account ^ Cash Account ~ Profit and Loss Account ^ Revaluation Account ^ Loan Account ~ All assets (except cash/bank) go to the debit of the Realisation Account. ~ Realisation: assets Debit, liabilities Credit.
+f ~ medium ~ The account opened to find profit or loss on sale of assets during dissolution is called the ____ Account. ~ Realisation ^ Realization ~ ~ It records sale of assets and payment of liabilities. ~ "Realise" = turn assets into cash.
+
+@ HSC 51
+# Principles of Management | व्यवस्थापनाची तत्त्वे
+s ~ easy ~ The 14 principles of management were given by ~ Henri Fayol ~ F. W. Taylor ^ Peter Drucker ~ Elton Mayo ^ Max Weber ^ Philip Kotler ~ Fayol is known as the father of modern management. ~ "Fourteen from Fayol" — both start with F.
+s ~ easy ~ "Scientific Management" is associated with ~ F. W. Taylor ~ Henri Fayol ^ Abraham Maslow ~ Douglas McGregor ^ Max Weber ^ Peter Drucker ~ Taylor is called the father of scientific management. ~ Taylor tailored work scientifically.
+tf ~ medium ~ Unity of command means an employee should receive orders from only one superior. ~ True ~ ~ One boss per employee avoids confusion. ~ "One subordinate — one boss."
+# Consumer Protection | ग्राहक संरक्षण
+s ~ medium ~ The Consumer Protection Act currently in force in India is of the year ~ 2019 ~ 1986 ^ 2005 ~ 1991 ^ 2002 ^ 2010 ~ The Consumer Protection Act, 2019 replaced the 1986 Act. ~ New act for a new era — 2019.
+s ~ medium ~ National Consumer Day in India is observed on ~ 24 December ~ 15 March ^ 1 July ~ 5 June ^ 2 October ^ 14 November ~ World Consumer Rights Day is 15 March; National Consumer Day (India) is 24 December. ~ Consumers' Christmas Eve — 24 December.
+
+@ HSC 38
+# Colonialism and the Marathas | वसाहतवाद
+s ~ easy ~ The first Europeans to arrive in India by sea were the ~ Portuguese ~ British ^ Dutch ~ French ^ Danes ^ Spanish ~ Vasco da Gama reached Calicut in 1498. ~ "Portuguese first, Port of Calicut, 1498."
+s ~ medium ~ The Battle of Plassey was fought in ~ 1757 ~ 1764 ^ 1857 ~ 1761 ^ 1707 ^ 1803 ~ Robert Clive defeated Siraj-ud-Daula in 1757. ~ "17-57: Clive took a 'seat' in Bengal."
+s ~ medium ~ The Third Battle of Panipat (1761) was fought between the Marathas and ~ Ahmad Shah Abdali ~ Nadir Shah ^ the British ~ the Mughals ^ Tipu Sultan ^ the Nizam ~ Sadashivrao Bhau led the Maratha army against Abdali. ~ Panipat III — "Abdali, 1761."
+# Indian Freedom Struggle | भारतीय स्वातंत्र्य लढा
+s ~ easy ~ The Indian National Congress was founded in ~ 1885 ~ 1857 ^ 1905 ~ 1920 ^ 1906 ^ 1875 ~ It was founded in Bombay in December 1885 with A. O. Hume's help. ~ "1885 — Congress came alive."
+s ~ medium ~ The Quit India Movement was launched in ~ 1942 ~ 1930 ^ 1920 ~ 1919 ^ 1947 ^ 1935 ~ Gandhiji gave the call "Do or Die" on 8 August 1942 in Bombay. ~ "Do or Die in '42."
+tf ~ medium ~ The Dandi March was part of the Civil Disobedience Movement. ~ True ~ ~ Gandhiji broke the salt law at Dandi on 6 April 1930. ~ Salt + 1930 = Civil Disobedience.
+
+@ HSC 39
+# Population and Settlements | लोकसंख्या व वस्ती
+s ~ easy ~ The movement of people from one place to another is called ~ migration ~ urbanisation ^ population density ~ sex ratio ^ literacy ^ census ~ Migration can be internal or international. ~ Birds migrate — so do people.
+s ~ medium ~ A settlement that develops along a road, river or railway line is a ~ linear settlement ~ circular settlement ^ star-shaped settlement ~ dispersed settlement ^ T-shaped settlement ^ nucleated settlement ~ Houses line up along the route. ~ Linear = like a line.
+# Primary Activities | प्राथमिक व्यवसाय
+s ~ easy ~ Which of these is a primary activity? ~ Fishing ~ Banking ^ Teaching ~ Manufacturing cars ^ Transport ^ Software development ~ Primary activities take resources directly from nature. ~ Primary = straight from nature.
+m ~ medium ~ Which of the following are primary activities? ~ Mining ^ Agriculture ^ Lumbering ~ Weaving cloth ^ Trading ^ Tourism ~ Manufacturing is secondary; services and trade are tertiary. ~ Primary = take from nature (mine, farm, forest).
+
+@ HSC 42
+# Indian Constitution | भारतीय संविधान
+s ~ easy ~ The Indian Constitution came into force on ~ 26 January 1950 ~ 15 August 1947 ^ 26 November 1949 ~ 2 October 1950 ^ 26 January 1947 ^ 30 January 1948 ~ It was adopted on 26 November 1949 and came into force on 26 January 1950. ~ Republic Day = Constitution Day of action (26 Jan 1950).
+s ~ medium ~ The chairman of the Drafting Committee of the Constitution was ~ Dr. B. R. Ambedkar ~ Dr. Rajendra Prasad ^ Jawaharlal Nehru ~ Sardar Patel ^ Maulana Azad ^ B. N. Rau ~ Dr. Rajendra Prasad was President of the Constituent Assembly. ~ Ambedkar = Architect (Drafting); Prasad = President (Assembly).
+tf ~ medium ~ Fundamental Duties were added to the Constitution by the 42nd Amendment. ~ True ~ ~ Added in 1976 as Article 51A, on the Swaran Singh Committee's recommendation. ~ "42nd gave Duties" — like 4 + 2 = 6 → 1976.
+
+@ HSC 48
+# Psychology — Basics | मानसशास्त्राची ओळख
+s ~ easy ~ Psychology is the scientific study of ~ behaviour and mental processes ~ only the brain ^ only dreams ~ society ^ animals only ^ the soul ~ Modern psychology studies observable behaviour and mental processes. ~ Psyche (mind) + logos (study).
+s ~ medium ~ The first psychology laboratory was set up by ~ Wilhelm Wundt ~ Sigmund Freud ^ William James ~ B. F. Skinner ^ Ivan Pavlov ^ Carl Jung ~ Leipzig, Germany, 1879. ~ Wundt — "Wonderful lab" in 1879.
+
+@ HSC 31
+# Water Resources and Conservation | जलसंवर्धन
+s ~ easy ~ Collecting rainwater from rooftops for later use is called ~ rainwater harvesting ~ desalination ^ irrigation ~ watershed erosion ^ evaporation ^ percolation only ~ Stored rainwater recharges groundwater or is used directly. ~ Harvest the rain like a crop.
+tf ~ easy ~ Drip irrigation saves water compared with flood irrigation. ~ True ~ ~ Water goes drop by drop to the roots, reducing loss. ~ Drip = every drop counts.
+s ~ medium ~ Maharashtra's state-wide water conservation programme launched in 2015 to make villages drought-free is ~ Jalyukt Shivar Abhiyan ~ Swachh Bharat Abhiyan ^ Namami Gange ~ Har Ghar Jal ^ Pani Panchayat ^ Mahatma Phule Jal Bhumi ~ It aimed at watershed works such as deepening streams and building check dams. ~ "Jal-yukt" = full of water.
+
+@ HSC 97
+# Advanced Web Designing | प्रगत वेब डिझाइनिंग
+s ~ easy ~ HTML stands for ~ HyperText Markup Language ~ HighText Machine Language ^ HyperTool Multi Language ~ Home Tool Markup Language ^ HyperText Making Language ^ Hyper Transfer Markup Language ~ HTML describes the structure of web pages. ~ "Hyper-Text" links pages; "Markup" tags them.
+s ~ medium ~ Which HTML tag is used to insert an image? ~ <img> ~ <image> ^ <pic> ~ <src> ^ <picture-tag> ^ <graphic> ~ <img src="..." alt="..."> is an empty element. ~ img = image, short.
+tf ~ easy ~ CSS is used to style web pages. ~ True ~ ~ Cascading Style Sheets control colours, fonts and layout. ~ CSS = Colours, Spacing, Style.
+# Introduction to SEO | एसईओ ओळख
+s ~ medium ~ SEO stands for ~ Search Engine Optimization ~ Site Engine Order ^ Search Easy Option ~ Secure Electronic Operation ^ System Engine Optimization ^ Search Engine Operation ~ SEO improves a site's visibility in search results. ~ SEO helps people "See" your site.
+
+@ HSC 2
+# व्याकरण — समास व अलंकार | Grammar
+s ~ easy ~ "राजपुत्र" या शब्दातील समास ओळखा. ~ तत्पुरुष समास ~ द्वंद्व समास ^ बहुव्रीही समास ~ अव्ययीभाव समास ^ द्विगू समास ^ कर्मधारय समास ~ राजपुत्र = राजाचा पुत्र — षष्ठी तत्पुरुष. ~ "चा/ची/चे" लावून विग्रह होतो — तत्पुरुष.
+s ~ easy ~ "आईवडील" हा कोणता समास आहे? ~ द्वंद्व समास ~ तत्पुरुष समास ^ बहुव्रीही समास ~ अव्ययीभाव समास ^ द्विगू समास ^ कर्मधारय समास ~ आई आणि वडील — दोन्ही पदे प्रधान. ~ "आणि/व" ने जोडले तर द्वंद्व.
+s ~ medium ~ "चंद्रासारखे सुंदर मुख" यात कोणता अलंकार आहे? ~ उपमा ~ उत्प्रेक्षा ^ रूपक ~ अनुप्रास ^ यमक ^ अतिशयोक्ती ~ "सारखे" हा साम्यवाचक शब्द असल्याने उपमा. ~ सारखे, जसे, प्रमाणे — उपमा.
+tf ~ medium ~ "जणू" या शब्दाचा वापर उत्प्रेक्षा अलंकारात होतो. ~ True ~ ~ उत्प्रेक्षा अलंकारात "जणू, जसा काही, की काय" असे शब्द येतात. ~ जणू = उत्प्रेक्षा (कल्पना).

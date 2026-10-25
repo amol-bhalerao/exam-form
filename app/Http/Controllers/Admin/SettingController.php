@@ -43,10 +43,22 @@ class SettingController extends Controller
     }
 
     /** After uploading new files on shared hosting (no SSH): rebuild compiled pages and caches. */
+    /**
+     * After uploading new files: clear caches, apply database updates (new tables) and add any
+     * new questions to the question bank. Safe to run any number of times.
+     */
     public function refresh()
     {
-        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        $artisan = \Illuminate\Support\Facades\Artisan::class;
+        try {
+            $artisan::call('optimize:clear');
+            $artisan::call('migrate', ['--force' => true]);
+            $artisan::call('db:seed', ['--class' => \Database\Seeders\QuestionBankSeeder::class, '--force' => true]);
+        } catch (\Throwable $e) {
+            report($e);
+            return back()->with('warning', __('The update could not finish: :error', ['error' => mb_substr($e->getMessage(), 0, 300)]));
+        }
         AuditLog::record('settings.refresh');
-        return back()->with('status', __('Website refreshed. New files are now in use.'));
+        return back()->with('status', __('Website updated. New files and database changes are now in use.'));
     }
 }

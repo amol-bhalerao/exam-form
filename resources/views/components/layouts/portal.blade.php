@@ -38,8 +38,26 @@
                 ['institute.profile.edit', 'building-2', __('College details')],
             ]],
         ],
+        'teacher' => [
+            [null, [['teacher.dashboard', 'house', __('Overview')]]],
+            [__('Teaching'), [
+                ['teacher.questions.index', 'circle-help', __('Question bank')],
+                ['teacher.quizzes.index', 'timer', __('Tests and certificates')],
+                ['teacher.materials.index', 'book-marked', __('Study material')],
+                ['teacher.reviews.index', 'square-check-big', __('Review submissions')],
+            ]],
+            [__('Students'), [['teacher.progress.index', 'trending-up', __('Student progress')]]],
+        ],
         'student' => [
-            [null, [['student.dashboard', 'house', __('My students and forms')]]],
+            [__('Exam forms'), [['student.dashboard', 'file-check', __('My students and forms')]]],
+            [__('Study zone'), [
+                ['learn.hub', 'sparkles', __('Study home')],
+                ['learn.practice.create', 'brain', __('Practise')],
+                ['learn.tests.index', 'timer', __('My tests')],
+                ['learn.materials.index', 'book-marked', __('Study material')],
+                ['learn.contribute.index', 'lightbulb', __('Share questions and tips')],
+                ['learn.progress', 'trending-up', __('My progress')],
+            ]],
         ],
     ][$user->role] ?? [];
     $roleLabel = __(\App\Models\User::ROLES[$user->role] ?? $user->role);
@@ -78,7 +96,7 @@
                 @foreach ($menus as [$group, $items])
                     @if ($group)<p class="nav-group">{{ $group }}</p>@endif
                     @foreach ($items as [$route, $icon, $label])
-                        @php $active = request()->routeIs($route) || request()->routeIs(\Illuminate\Support\Str::beforeLast($route, '.') . '.*') && ! str_ends_with($route, 'dashboard'); @endphp
+                        @php $active = request()->routeIs($route) || (substr_count($route, '.') >= 2 && request()->routeIs(\Illuminate\Support\Str::beforeLast($route, '.') . '.*')) || ($route === 'learn.practice.create' && request()->routeIs('learn.attempts.*')); @endphp
                         <a href="{{ route($route) }}" class="nav-link" @if ($active) aria-current="page" @endif><x-icon :name="$icon" />{{ $label }}</a>
                     @endforeach
                 @endforeach

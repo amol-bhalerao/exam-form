@@ -9,6 +9,7 @@ return [
         'super_admin' => env('ADMIN_LOGIN_PATH', 'control-room'),
         'board' => env('BOARD_LOGIN_PATH', 'board-desk'),
         'institute' => env('INSTITUTE_LOGIN_PATH', 'college-desk'),
+        'teacher' => env('TEACHER_LOGIN_PATH', 'teacher-desk'),
     ],
 
     'cashfree' => [

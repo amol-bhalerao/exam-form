@@ -1,0 +1,58 @@
+# Chapter lists without questions yet — teachers and students can add questions to these.
+@ HSC 54
+# Kinetic Theory of Gases and Radiation | वायूंचा गतिज सिद्धांत व प्रारण
+# Oscillations | दोलन
+# Superposition of Waves | तरंगांचे अध्यारोपण
+# Magnetic Fields due to Electric Current | विद्युत धारेमुळे चुंबकीय क्षेत्र
+# Magnetic Materials | चुंबकीय पदार्थ
+# Electromagnetic Induction | विद्युतचुंबकीय प्रवर्तन
+# AC Circuits | AC परिपथ
+# Structure of Atoms and Nuclei | अणू व केंद्रकाची संरचना
+@ HSC 55
+# Ionic Equilibria | आयनिक संतुलन
+# Chemical Thermodynamics | रासायनिक ऊष्मागतिकी
+# Elements of Groups 16, 17 and 18 | गट 16, 17 व 18 ची मूलद्रव्ये
+# Transition and Inner Transition Elements | संक्रमण मूलद्रव्ये
+# Alcohols, Phenols and Ethers | अल्कोहोल, फिनॉल व ईथर
+# Aldehydes, Ketones and Carboxylic Acids | अल्डिहाइड, कीटोन व कार्बोक्झिलिक आम्ले
+# Amines | अमाइन
+# Introduction to Polymer Chemistry | बहुवारिक रसायनशास्त्र
+@ HSC 56
+# Reproduction in Lower and Higher Animals | प्राण्यांतील प्रजनन
+# Inheritance and Variation | अनुवंशिकता व विविधता
+# Origin and Evolution of Life | जीवनाची उत्पत्ती व उत्क्रांती
+# Plant Growth and Mineral Nutrition | वनस्पती वाढ व खनिज पोषण
+# Respiration and Circulation | श्वसन व अभिसरण
+# Control and Co-ordination | नियंत्रण व समन्वय
+# Enhancement of Food Production | अन्न उत्पादन वाढ
+# Organisms and Populations | सजीव व लोकसंख्या
+# Biodiversity, Conservation and Environmental Issues | जैवविविधता व संवर्धन
+@ HSC 40
+# Trigonometric Functions | त्रिकोणमितीय फलने
+# Pair of Straight Lines | सरळ रेषांची जोडी
+# Vectors | सदिश
+# Line and Plane | रेषा व प्रतल
+# Linear Programming | रेषीय आयोजन
+# Applications of Derivatives | विकलजांचे उपयोजन
+# Indefinite Integration | अनिश्चित संकलन
+# Definite Integration | निश्चित संकलन
+# Differential Equations | विकलन समीकरणे
+# Binomial Distribution | द्विपद वितरण
+@ SSC S31
+# Financial Planning | आर्थिक नियोजन
+# Statistics | सांख्यिकी
+@ SSC S32
+# Geometric Constructions | भौमितिक रचना
+# Co-ordinate Geometry | निर्देशक भूमिती
+# Mensuration | महत्त्वमापन
+@ SSC S33
+# Heat | उष्णता
+# Metallurgy | धातुविज्ञान
+# Carbon Compounds | कार्बनी संयुगे
+# Space Missions | अवकाश मोहिमा
+@ SSC S34
+# Animal Classification | प्राण्यांचे वर्गीकरण
+# Introduction to Microbiology | सूक्ष्मजीवशास्त्राची ओळख
+# Cell Biology and Biotechnology | पेशीविज्ञान व जैवतंत्रज्ञान
+# Social Health | सामाजिक आरोग्य
+# Disaster Management | आपत्ती व्यवस्थापन

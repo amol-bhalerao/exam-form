@@ -22,7 +22,7 @@ class EnsureRole
         if (! in_array($user->role, $roles, true)) {
             abort(403, __('This page is not available for your account.'));
         }
-        if ($user->role === 'institute' && ! $user->institute_id) {
+        if (in_array($user->role, ['institute', 'teacher'], true) && ! $user->institute_id) {
             abort(403, __('No institute is linked to this account.'));
         }
         if ($user->role === 'board' && ! $user->board_id) {

@@ -16,11 +16,13 @@ class User extends Authenticatable
     public const BOARD = 'board';
     public const INSTITUTE = 'institute';
     public const STUDENT = 'student';
+    public const TEACHER = 'teacher';
 
     public const ROLES = [
         self::SUPER_ADMIN => 'Super admin',
         self::BOARD => 'Board',
         self::INSTITUTE => 'Institute',
+        self::TEACHER => 'Teacher',
         self::STUDENT => 'Student account',
     ];
 
@@ -58,6 +60,11 @@ class User extends Authenticatable
         return $this->hasMany(Student::class, 'owner_id');
     }
 
+    public function teacher(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(Teacher::class);
+    }
+
     public function isRole(string ...$roles): bool
     {
         return in_array($this->role, $roles, true);
@@ -69,6 +76,7 @@ class User extends Authenticatable
             self::SUPER_ADMIN => 'admin.dashboard',
             self::BOARD => 'board.dashboard',
             self::INSTITUTE => 'institute.dashboard',
+            self::TEACHER => 'teacher.dashboard',
             default => 'student.dashboard',
         };
     }

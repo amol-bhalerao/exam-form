@@ -18,6 +18,7 @@ class StaffLoginController extends Controller
         'super_admin' => 'Administration',
         'board' => 'Board office',
         'institute' => 'College / school',
+        'teacher' => 'Teacher',
     ];
 
     public function show(Request $request, string $role)

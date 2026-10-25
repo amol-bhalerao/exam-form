@@ -4,6 +4,21 @@
         <x-slot:actions><a href="{{ route('institute.teachers.create') }}" class="btn-primary"><x-icon name="user-plus" />{{ __('Add a teacher') }}</a></x-slot:actions>
     </x-page-header>
 
+    @if ($card = session('login_card'))
+        <div class="rise mb-6 overflow-hidden rounded-xl border-2 border-leaf/40 bg-leaf-soft" role="status">
+            <div class="zari-thin" aria-hidden="true"></div>
+            <div class="p-5">
+                <p class="title flex items-center gap-2"><x-icon name="key-round" class="size-5 text-leaf" />{{ __('Portal login for :name', ['name' => $card['name']]) }}</p>
+                <p class="muted mt-1 text-sm">{{ __('Give these details to the teacher privately. The password is shown only now; the teacher sets a new one at first sign-in.') }}</p>
+                <dl class="mt-4 grid gap-3 sm:grid-cols-3">
+                    <div><dt class="text-xs font-semibold uppercase tracking-wide muted">{{ __('Sign-in address') }}</dt><dd class="font-mono text-sm break-all">{{ $card['url'] }}</dd></div>
+                    <div><dt class="text-xs font-semibold uppercase tracking-wide muted">{{ __('Username') }}</dt><dd class="font-mono text-lg font-bold">{{ $card['username'] }}</dd></div>
+                    <div><dt class="text-xs font-semibold uppercase tracking-wide muted">{{ __('Password') }}</dt><dd class="font-mono text-lg font-bold">{{ $card['password'] }}</dd></div>
+                </dl>
+            </div>
+        </div>
+    @endif
+
     <div class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
         <x-stat :label="__('Teachers')" :value="$stats['total']" />
         <x-stat :label="__('Examiners / moderators')" :value="$stats['examiners']" tone="board" />
@@ -38,6 +53,10 @@
                             @if ($t->board_note)<p class="mt-1 max-w-56 text-xs muted">{{ $t->board_note }}</p>@endif
                         </td>
                         <td class="text-right whitespace-nowrap">
+                            <form method="POST" action="{{ route('institute.teachers.login', $t) }}" class="inline" onsubmit="return confirm(@js($t->user_id ? __('Reset the portal password for :name?', ['name' => $t->full_name]) : __('Create a portal login for :name?', ['name' => $t->full_name])))">
+                                @csrf
+                                <button class="btn-quiet btn-sm" title="{{ __('Teacher portal: questions, tests, student progress') }}"><x-icon name="key-round" />{{ $t->user_id ? __('Reset login') : __('Portal login') }}</button>
+                            </form>
                             <a href="{{ route('institute.teachers.edit', $t) }}" class="btn-secondary btn-sm"><x-icon name="pencil" />{{ __('Edit') }}</a>
                         </td>
                     </tr>

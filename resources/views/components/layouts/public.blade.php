@@ -54,6 +54,7 @@
                 </span>
             </a>
             <nav class="ml-auto hidden items-center gap-1 whitespace-nowrap xl:flex" aria-label="{{ __('Main') }}">
+                <a href="{{ route('home') }}" class="rounded-full px-3 py-2 font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani" @if (request()->routeIs('home')) aria-current="page" @endif><x-icon name="house" class="mr-1 inline size-4 align-[-2px]" />{{ __('Home') }}</a>
                 <a href="{{ route('notices.index') }}" class="rounded-full px-3 py-2 font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani" @if (request()->routeIs('notices.*')) aria-current="page" @endif>{{ __('Notices') }}</a>
                 <a href="{{ route('exams.calendar') }}" class="rounded-full px-3 py-2 font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani" @if (request()->routeIs('exams.calendar')) aria-current="page" @endif>{{ __('Exams') }}</a>
                 @foreach ($headerPages as $p)
@@ -73,6 +74,7 @@
         </div>
         <nav id="mobile-nav" class="border-t border-rule bg-sheet xl:hidden" x-show="open" x-collapse x-cloak aria-label="{{ __('Main') }}">
             <div class="mx-auto flex max-w-7xl flex-col px-4 py-3 sm:px-6">
+                <a href="{{ route('home') }}" class="flex items-center gap-2 rounded-md px-3 py-3 font-medium text-ink no-underline"><x-icon name="house" class="size-4" />{{ __('Home') }}</a>
                 <a href="{{ route('notices.index') }}" class="rounded-md px-3 py-3 font-medium text-ink no-underline">{{ __('Notices') }}</a>
                 <a href="{{ route('exams.calendar') }}" class="rounded-md px-3 py-3 font-medium text-ink no-underline">{{ __('Exams') }}</a>
                 @foreach ($headerPages as $p)
@@ -103,6 +105,7 @@
             <div>
                 <h2 class="text-sm font-semibold text-white">{{ __('Information') }}</h2>
                 <ul class="mt-3 space-y-2 text-sm">
+                    <li><a class="text-white/80 no-underline hover:text-white" href="{{ route('home') }}">{{ __('Home') }}</a></li>
                     <li><a class="text-white/80 no-underline hover:text-white" href="{{ route('notices.index') }}">{{ __('Notices') }}</a></li>
                     <li><a class="text-white/80 no-underline hover:text-white" href="{{ route('exams.calendar') }}">{{ __('Exam calendar') }}</a></li>
                     @foreach ($footerPages as $p)

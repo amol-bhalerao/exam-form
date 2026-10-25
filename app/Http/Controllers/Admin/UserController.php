@@ -24,7 +24,7 @@ class UserController extends Controller
                 ->orWhere('username', 'like', "%{$t}%")->orWhere('email', 'like', "%{$t}%")->orWhere('mobile', 'like', "%{$t}%")
                 ->orWhereHas('institute', fn ($i) => $i->where('college_no', 'like', "{$t}%"))))
             ->withCount('students')
-            ->orderByRaw("CASE role WHEN 'super_admin' THEN 0 WHEN 'board' THEN 1 WHEN 'institute' THEN 2 ELSE 3 END")->orderBy('name')
+            ->orderByRaw("CASE role WHEN 'super_admin' THEN 0 WHEN 'board' THEN 1 WHEN 'institute' THEN 2 WHEN 'teacher' THEN 3 ELSE 4 END")->orderBy('name')
             ->paginate(40)->withQueryString();
 
         return view('admin.users.index', [
@@ -101,14 +101,14 @@ class UserController extends Controller
             'email' => ['nullable', 'email', 'max:150', Rule::unique('users')->ignore($user?->id)],
             'mobile' => ['nullable', 'regex:/^[6-9]\d{9}$/'],
             'board_id' => [$role === User::BOARD ? 'required' : 'nullable', 'exists:boards,id'],
-            'institute_id' => [$role === User::INSTITUTE ? 'required' : 'nullable', 'exists:institutes,id'],
+            'institute_id' => [in_array($role, [User::INSTITUTE, User::TEACHER], true) ? 'required' : 'nullable', 'exists:institutes,id'],
             'password' => [$user ? 'nullable' : ($isStaff ? 'required' : 'nullable'), Password::min(8)->letters()->numbers()],
         ], ['username.regex' => __('Use letters, numbers, dot, dash or underscore only.')]);
 
         if (blank($v['password'] ?? null)) {
             unset($v['password']);
         }
-        if ($role === User::INSTITUTE) {
+        if (in_array($role, [User::INSTITUTE, User::TEACHER], true)) {
             $v['board_id'] = Institute::whereKey($v['institute_id'])->value('board_id');
         } else {
             $v['institute_id'] = null;

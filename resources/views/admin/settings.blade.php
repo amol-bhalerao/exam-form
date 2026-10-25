@@ -44,9 +44,9 @@
     <form method="POST" action="{{ route('admin.settings.refresh') }}" class="sheet sheet-pad mt-6 flex max-w-4xl flex-wrap items-center gap-4">
         @csrf
         <div class="min-w-0 flex-1 basis-64">
-            <h2 class="title">{{ __('Refresh website') }}</h2>
-            <p class="muted mt-1 text-sm">{{ __('Use this after uploading new files to the server, so every page uses the new version.') }}</p>
+            <h2 class="title">{{ __('Apply update') }}</h2>
+            <p class="muted mt-1 text-sm">{{ __('Use this after uploading new files to the server. It clears old cached files, adds new database tables and loads new questions into the question bank. Safe to run again.') }}</p>
         </div>
-        <button class="btn-secondary"><x-icon name="history" />{{ __('Refresh now') }}</button>
+        <button class="btn-secondary"><x-icon name="history" />{{ __('Apply update now') }}</button>
     </form>
 </x-layouts.portal>

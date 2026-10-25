@@ -1,0 +1,94 @@
+# Format: one question per line
+#   type ~ level ~ question ~ correct ^ correct ~ wrong ^ wrong ^ ... ~ explanation ~ memory tip
+#   type: s = one answer, m = several answers, tf = true/false, f = fill in the blank (correct = accepted answers)
+# "@ BOARD CODE" starts a subject, "# Topic | मराठी" starts a topic.
+
+@ HSC 54
+# Rotational Dynamics | घूर्णन गतिकी
+s ~ easy ~ The SI unit of moment of inertia is ~ kg m² ~ kg m ^ kg/m² ~ N m ^ kg m/s ^ J s ~ I = Σ m r², so the unit is mass × distance². ~ "I = m r²" — mass times metre times metre: kg m².
+s ~ medium ~ The moment of inertia of a thin ring of mass M and radius R about its central axis perpendicular to its plane is ~ MR² ~ MR²/2 ^ 2MR²/5 ~ MR²/12 ^ 3MR²/2 ^ 2MR² ~ All the mass of a ring is at distance R from the axis, so I = MR². ~ Ring = all mass on the Rim = full MR².
+s ~ medium ~ The angular momentum of a rotating body is conserved when ~ the net external torque on it is zero ~ its moment of inertia is constant ^ its angular velocity is constant ~ no force acts on it at all ^ it rotates in a vertical plane ^ its kinetic energy is constant ~ dL/dt = τ, so L is constant when the net external torque is zero. ~ Spinning dancer pulls her arms in — no outside twist (torque) — so L stays the same and she spins faster.
+tf ~ easy ~ A ballet dancer spins faster when she pulls her arms in because her moment of inertia decreases. ~ True ~ ~ L = Iω stays constant; smaller I means larger ω. ~ Arms in → I down → spin up.
+f ~ medium ~ The minimum speed at the highest point of a vertical circle of radius r for a body to complete the circle is √(____). ~ rg ^ gr ~ ~ At the top, tension can be zero and gravity alone provides the centripetal force: mv²/r = mg, so v = √(rg). ~ Top of the loop: "just gravity" → v² = rg.
+# Mechanical Properties of Fluids | द्रवांचे यांत्रिक गुणधर्म
+s ~ easy ~ The SI unit of surface tension is ~ N/m ~ N m ^ N/m² ~ J m ^ Pa ^ kg/m ~ Surface tension is force per unit length. ~ Tension along a line: Newton per metre.
+s ~ medium ~ The rise of liquid in a capillary tube is ~ inversely proportional to the radius of the tube ~ directly proportional to the radius of the tube ^ independent of the radius ~ proportional to the square of the radius ^ proportional to the density of the liquid ^ proportional to g ~ h = 2T cosθ / (r ρ g), so h ∝ 1/r. ~ Thinner tube, higher climb.
+tf ~ easy ~ Bernoulli's principle is a statement of the conservation of energy for a flowing fluid. ~ True ~ ~ P + ½ρv² + ρgh = constant along a streamline — total energy per unit volume is conserved. ~ Bernoulli = Budget of energy.
+s ~ hard ~ A liquid with angle of contact greater than 90° in a glass capillary will ~ fall below the outside level ~ rise above the outside level ^ stay at the same level ~ rise and then overflow ^ freeze at the meniscus ^ form a flat meniscus ~ For θ > 90° (like mercury in glass), cos θ is negative, so h is negative — the liquid is depressed. ~ Mercury "hates" glass — it goes down.
+m ~ medium ~ Which of the following increase the terminal velocity of a small sphere falling through a viscous liquid? ~ Larger radius of the sphere ^ Greater density of the sphere ~ Greater viscosity of the liquid ^ Greater density of the liquid ^ Smaller radius of the sphere ~ v = 2r²(ρ − σ)g / 9η, so v rises with r² and with sphere density, and falls with viscosity and liquid density. ~ "2-r-squared over 9-eta": big, heavy balls fall faster; thick (viscous) liquids slow them.
+# Thermodynamics | ऊष्मागतिकी
+s ~ easy ~ In an isothermal process, which quantity stays constant? ~ Temperature ~ Pressure ^ Volume ~ Heat ^ Entropy ^ Internal energy of a real gas ~ "Iso-thermal" means same temperature. ~ Iso = same, therm = heat/temperature.
+s ~ medium ~ In an adiabatic process ~ no heat is exchanged with the surroundings ~ temperature remains constant ^ pressure remains constant ~ volume remains constant ^ internal energy remains constant ^ work done is zero ~ Adiabatic: Q = 0, so ΔU = −W. ~ "A-dia-batic" — heat cannot pass through.
+tf ~ medium ~ According to the first law of thermodynamics, heat supplied to a system is equal to the increase in internal energy plus the work done by the system. ~ True ~ ~ Q = ΔU + W. ~ Money in (Q) = savings (ΔU) + spending (W).
+f ~ hard ~ The efficiency of a Carnot engine working between 500 K and 300 K is ____ %. ~ 40 ^ 40% ~ ~ η = 1 − T₂/T₁ = 1 − 300/500 = 0.4 = 40%. ~ Carnot: "one minus cold over hot" — always kelvin.
+# Current Electricity | विद्युत धारा
+s ~ easy ~ Kirchhoff's current law is based on the conservation of ~ charge ~ energy ^ momentum ~ mass ^ current density ^ power ~ Charge cannot pile up at a junction, so current in = current out. ~ Junction law = "what goes in must come out" (charge).
+s ~ medium ~ A potentiometer is preferred over a voltmeter for measuring emf because ~ it draws no current from the cell at the null point ~ it has a very low resistance ^ it is cheaper ~ its wire is made of copper ^ it measures current directly ^ it works only with AC ~ At balance no current flows from the cell, so the full emf is measured. ~ Null point = no current = true emf.
+s ~ medium ~ The Wheatstone bridge is balanced when ~ P/Q = R/S ~ P + Q = R + S ^ PQ = RS + 1 ~ P/R = S/Q ^ P − Q = R − S ^ all four resistances are equal only ~ At balance no current flows through the galvanometer and P/Q = R/S. ~ "P over Q equals R over S" — alphabet in order.
+f ~ medium ~ To convert a galvanometer into an ammeter, a low resistance called a ____ is connected in parallel. ~ shunt ~ ~ The shunt bypasses most of the current, protecting the galvanometer. ~ Ammeter → shunt in parallel (A–P); Voltmeter → high resistance in series (V–S).
+# Semiconductor Devices | अर्धवाहक उपकरणे
+s ~ easy ~ In an n-type semiconductor the majority charge carriers are ~ electrons ~ holes ^ protons ~ positive ions ^ neutrons ^ negative ions ~ Pentavalent impurities (like phosphorus) donate extra electrons. ~ n-type = negative carriers = electrons.
+s ~ medium ~ A Zener diode is mainly used as a ~ voltage regulator ~ rectifier ^ amplifier ~ oscillator ^ current source ^ light source ~ In reverse breakdown the Zener keeps the voltage across it nearly constant. ~ Zener = "Zero change" in voltage.
+m ~ medium ~ Which of the following are universal logic gates? ~ NAND ^ NOR ~ AND ^ OR ^ NOT ^ XOR ~ Any logic circuit can be built from only NAND gates or only NOR gates. ~ The "N" gates (NAND, NOR) are the universal ones.
+tf ~ easy ~ A p-n junction diode conducts when it is reverse biased. ~ False ~ ~ It conducts in forward bias; in reverse bias only a tiny leakage current flows. ~ Forward = flow.
+
+@ HSC 55
+# Solid State | घन अवस्था
+s ~ easy ~ The number of atoms per unit cell in a body-centred cubic (bcc) lattice is ~ 2 ~ 1 ^ 4 ~ 6 ^ 8 ^ 12 ~ 8 corners × 1/8 + 1 body centre = 2. ~ Body centre adds one to the single corner atom: 1 + 1 = 2.
+s ~ medium ~ The coordination number of an atom in a face-centred cubic (fcc) structure is ~ 12 ~ 6 ^ 8 ~ 4 ^ 10 ^ 2 ~ fcc (ccp) is a close-packed structure; each atom touches 12 others. ~ Face-centred = close packed = 12 neighbours (like a dozen eggs).
+tf ~ medium ~ A Schottky defect lowers the density of a crystal. ~ True ~ ~ Equal numbers of cations and anions are missing, so mass per volume decreases. ~ Schottky = "Skipped" ions → lighter crystal.
+f ~ medium ~ In a Frenkel defect, an ion leaves its lattice site and occupies an ____ site. ~ interstitial ~ ~ The ion is displaced into an interstitial space, so density does not change. ~ Frenkel = "Friend moves in between" (interstitial).
+# Electrochemistry | विद्युत रसायनशास्त्र
+s ~ easy ~ In an electrochemical cell, oxidation takes place at the ~ anode ~ cathode ^ salt bridge ~ voltmeter ^ electrolyte only ^ external circuit ~ Oxidation at anode, reduction at cathode. ~ "An Ox and a Red Cat": ANode–OXidation, REDuction–CAThode.
+s ~ medium ~ The SI unit of molar conductivity is ~ S m² mol⁻¹ ~ S m⁻¹ ^ S mol⁻¹ ~ Ω m ^ S cm⁻¹ ^ mol S m⁻¹ ~ Λm = κ / c; κ in S m⁻¹ and c in mol m⁻³ give S m² mol⁻¹. ~ Conductivity divided by concentration → "m squared per mole".
+tf ~ medium ~ The standard electrode potential of the standard hydrogen electrode is taken as zero volts. ~ True ~ ~ SHE is the reference electrode with E° = 0.00 V at all temperatures by convention. ~ Hydrogen is the "zero" of the voltage ruler.
+f ~ hard ~ One faraday is approximately equal to ____ coulombs. ~ 96500 ^ 96487 ^ 96,500 ~ ~ 1 F = charge on one mole of electrons ≈ 96 500 C. ~ "96-5-hundred" — think of "96.5 FM", Faraday Mode.
+# Chemical Kinetics | रासायनिक गतिकी
+s ~ medium ~ The unit of the rate constant of a first order reaction is ~ s⁻¹ ~ mol L⁻¹ s⁻¹ ^ L mol⁻¹ s⁻¹ ~ mol² L⁻² s⁻¹ ^ s ^ mol L⁻¹ ~ For first order, rate = k[A], so k = rate/[A] = s⁻¹. ~ First order: just "per second".
+s ~ medium ~ The half-life of a first order reaction is ~ independent of initial concentration ~ directly proportional to initial concentration ^ inversely proportional to initial concentration ~ proportional to the square of concentration ^ zero ^ equal to the rate constant ~ t½ = 0.693/k — no concentration term. ~ "0.693 over k" — no [A] anywhere.
+tf ~ easy ~ A catalyst increases the rate of a reaction by lowering its activation energy. ~ True ~ ~ It provides an alternative path with lower Ea; it does not change ΔH or the equilibrium constant. ~ Catalyst builds a shorter bridge over the energy hill.
+# Biomolecules | जैवरेणू
+s ~ easy ~ Glucose is a ~ monosaccharide ~ disaccharide ^ polysaccharide ~ protein ^ lipid ^ nucleotide ~ Glucose (C₆H₁₂O₆) cannot be hydrolysed into simpler sugars. ~ Mono = one sugar unit.
+s ~ medium ~ Sucrose on hydrolysis gives ~ glucose and fructose ~ glucose and galactose ^ only glucose ~ fructose and galactose ^ maltose and glucose ^ only fructose ~ Sucrose is a disaccharide of α-D-glucose and β-D-fructose. ~ Sucrose = "table sugar" = G + F (Glucose and Fruit sugar).
+m ~ medium ~ Which of the following are water-soluble vitamins? ~ Vitamin B complex ^ Vitamin C ~ Vitamin A ^ Vitamin D ^ Vitamin E ^ Vitamin K ~ Vitamins A, D, E and K are fat-soluble; B and C are water-soluble. ~ Fat-soluble are "KADE" (K, A, D, E); the rest dissolve in water.
+f ~ medium ~ The bond that links amino acids in a protein is called a ____ bond. ~ peptide ^ amide ~ ~ –CO–NH– (amide) linkage between amino acids is the peptide bond. ~ Proteins = Peptide chains.
+# Halogen Derivatives | हॅलोजन व्युत्पन्ने
+s ~ medium ~ SN1 reactions are fastest for ~ tertiary alkyl halides ~ primary alkyl halides ^ methyl halides ~ secondary alkyl halides ^ vinyl halides ^ aryl halides ~ SN1 goes through a carbocation; tertiary carbocations are the most stable. ~ SN1 loves "3°" — the crowded carbon forms the most stable cation.
+tf ~ medium ~ SN2 reactions occur with inversion of configuration. ~ True ~ ~ The nucleophile attacks from the back side (Walden inversion). ~ SN2 = "umbrella flips" in the wind.
+
+@ HSC 56
+# Reproduction in Lower and Higher Plants | वनस्पतींतील प्रजनन
+s ~ easy ~ Double fertilization is a characteristic feature of ~ angiosperms ~ gymnosperms ^ pteridophytes ~ bryophytes ^ algae ^ fungi ~ One male gamete fuses with the egg, the other with the two polar nuclei — only in flowering plants. ~ "Angio" plants get a double dose.
+s ~ medium ~ The endosperm in angiosperms is ~ triploid ~ haploid ^ diploid ~ tetraploid ^ polyploid only in monocots ^ always absent ~ Male gamete (n) + two polar nuclei (n + n) = 3n. ~ Endosperm = 1 + 2 = 3 sets.
+tf ~ easy ~ Pollination by wind is called anemophily. ~ True ~ ~ Anemos = wind (Greek). Hydrophily = water, entomophily = insects. ~ "Anemometer" measures wind — anemophily is wind pollination.
+f ~ medium ~ Development of fruit without fertilization is called ____. ~ parthenocarpy ~ ~ e.g. seedless banana and grapes. ~ Parthenocarpy = "virgin fruit" — no seeds.
+# Molecular Basis of Inheritance | अनुवंशिकतेचा रेणवीय आधार
+s ~ easy ~ In DNA, adenine pairs with ~ thymine ~ guanine ^ cytosine ~ uracil ^ adenine ^ ribose ~ A=T (two hydrogen bonds), G≡C (three hydrogen bonds). ~ "Apple in the Tree, Car in the Garage" — A–T, C–G.
+s ~ medium ~ The process of copying DNA into mRNA is called ~ transcription ~ translation ^ replication ~ transformation ^ transduction ^ mutation ~ Transcription makes RNA from DNA; translation makes protein from mRNA. ~ Transcribe = copy the same "script" (nucleic acid → nucleic acid).
+m ~ medium ~ Which are stop (termination) codons? ~ UAA ^ UAG ^ UGA ~ AUG ^ UUU ^ GGG ~ AUG is the start codon; UAA, UAG and UGA end translation. ~ "U Are Away, U Are Gone, U Go Away".
+tf ~ medium ~ The genetic code is degenerate, meaning one amino acid can be coded by more than one codon. ~ True ~ ~ There are 61 sense codons for 20 amino acids. ~ Many keys (codons) for one door (amino acid).
+# Human Health and Diseases | मानवी आरोग्य व रोग
+s ~ easy ~ Malaria is caused by ~ Plasmodium ~ Entamoeba ^ Salmonella ~ Ascaris ^ a virus ^ Wuchereria ~ Plasmodium is transmitted by the female Anopheles mosquito. ~ Malaria = Mosquito (female Anopheles) + Plasmodium.
+s ~ medium ~ Typhoid is caused by ~ Salmonella typhi ~ Plasmodium vivax ^ Streptococcus pneumoniae ~ Rhino virus ^ Microsporum ^ Wuchereria bancrofti ~ Confirmed by the Widal test. ~ Typhoid → "T for Typhi" and "W for Widal".
+tf ~ easy ~ HIV mainly attacks helper T-lymphocytes. ~ True ~ ~ HIV infects CD4⁺ helper T-cells, weakening immunity (AIDS). ~ HIV hits the "Helpers".
+# Biotechnology | जैवतंत्रज्ञान
+s ~ medium ~ Restriction enzymes are also called ~ molecular scissors ~ molecular glue ^ DNA polymerases ~ RNA primers ^ plasmids ^ vectors ~ They cut DNA at specific recognition sequences. DNA ligase is the "molecular glue". ~ Restriction = cut; Ligase = link.
+f ~ medium ~ Bt cotton gets its insect resistance from the bacterium Bacillus ____. ~ thuringiensis ~ ~ The cry genes of Bacillus thuringiensis produce a toxin harmful to bollworms. ~ "Bt" = Bacillus thuringiensis.
+tf ~ medium ~ PCR (polymerase chain reaction) is used to make many copies of a DNA segment. ~ True ~ ~ Denaturation, annealing and extension are repeated in cycles using Taq polymerase. ~ PCR = "Photocopy" for DNA.
+
+@ HSC 40
+# Mathematical Logic | गणितीय तर्कशास्त्र
+s ~ easy ~ The negation of "All students are present" is ~ Some students are not present ~ No student is present ^ All students are absent ~ Some students are present ^ All students are not present ^ Every student is present ~ ¬(∀x, p(x)) ≡ ∃x such that ¬p(x). ~ To deny "all", find just "some" that fail.
+s ~ medium ~ The contrapositive of p → q is ~ ¬q → ¬p ~ q → p ^ ¬p → ¬q ~ p → ¬q ^ ¬p ∧ q ^ q ∧ ¬p ~ A statement and its contrapositive are logically equivalent. ~ Contrapositive: flip AND negate both.
+tf ~ easy ~ The conjunction p ∧ q is true only when both p and q are true. ~ True ~ ~ "And" needs both parts true. ~ AND = both must agree.
+# Matrices | आव्यूह
+s ~ medium ~ If A is a 3 × 3 matrix with |A| = 4, then |adj A| is ~ 16 ~ 4 ^ 64 ~ 12 ^ 8 ^ 1/4 ~ |adj A| = |A|ⁿ⁻¹ = 4² = 16. ~ adj: power is "order minus one".
+tf ~ medium ~ A matrix A is invertible only if |A| ≠ 0. ~ True ~ ~ A⁻¹ = adj A / |A| exists only when the determinant is non-zero. ~ Zero determinant = no inverse (singular).
+# Differentiation | विकलन
+s ~ easy ~ d/dx (sin x) = ~ cos x ~ −cos x ^ sin x ~ −sin x ^ sec²x ^ tan x ~ Standard result. ~ Derivative cycle: sin → cos → −sin → −cos → sin.
+s ~ medium ~ d/dx (eˣ · x) = ~ eˣ(x + 1) ~ eˣ ^ x eˣ⁻¹ ~ eˣ · 1 ^ eˣ(x − 1) ^ 2x eˣ ~ Product rule: (uv)' = u'v + uv'. ~ Product rule — "first times derivative of second, plus second times derivative of first".
+f ~ medium ~ d/dx (log x) = ____ (x > 0). ~ 1/x ^ x^-1 ~ ~ Standard derivative of the natural logarithm. ~ Log becomes "one over x".
+# Probability Distributions | संभाव्यता वितरणे
+s ~ medium ~ For a binomial distribution with n = 10 and p = 0.4, the mean is ~ 4 ~ 2.4 ^ 6 ~ 0.4 ^ 10 ^ 1.6 ~ Mean = np = 10 × 0.4 = 4. ~ Mean = n × p ("number times probability").
+s ~ hard ~ For a binomial distribution with n = 10 and p = 0.4, the variance is ~ 2.4 ~ 4 ^ 6 ~ 0.24 ^ 1.6 ^ 16 ~ Variance = npq = 10 × 0.4 × 0.6 = 2.4. ~ Variance adds q: "n p q".
+tf ~ easy ~ The sum of all probabilities in a probability distribution is 1. ~ True ~ ~ Σ P(x) = 1 for every probability distribution. ~ All the chances together make one whole.

@@ -5,6 +5,12 @@
         </x-slot:actions>
     </x-page-header>
 
+    <a href="{{ route('learn.hub') }}" class="peacock rise mb-6 flex flex-wrap items-center gap-4 overflow-hidden rounded-2xl p-5 text-white no-underline sm:p-6">
+        <span class="grid size-12 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-marigold to-rani shadow-lg"><x-icon name="sparkles" class="size-6" /></span>
+        <span class="min-w-0 flex-1"><span class="block font-display text-xl font-bold" style="font-stretch:110%">{{ __('New: Study zone') }}</span><span class="block text-white/85">{{ __('Practise topic-wise questions, take your teachers’ tests, read notes and get an AI study plan.') }}</span></span>
+        <span class="btn-gold">{{ __('Open study zone') }}<x-icon name="arrow-right" /></span>
+    </a>
+
     @if ($openExams->isNotEmpty())
         <section class="rise mb-8 overflow-hidden rounded-lg border border-board/20 bg-board-soft">
             <div class="flex flex-wrap items-center gap-x-6 gap-y-3 px-5 py-4">

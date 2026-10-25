@@ -1,0 +1,87 @@
+@ HSC 54
+# Wave Optics | तरंग प्रकाशशास्त्र
+s ~ medium ~ In Young's double slit experiment, fringe width is ~ directly proportional to the wavelength of light ~ inversely proportional to the wavelength ^ independent of the wavelength ~ inversely proportional to the screen distance ^ proportional to slit separation ^ zero for white light ~ β = λD/d. ~ "Beta = Lambda D by d" — longer waves, wider fringes.
+tf ~ medium ~ Polarisation proves that light is a transverse wave. ~ True ~ ~ Only transverse waves can be polarised. ~ Polaroid sunglasses only work because light waves wiggle sideways.
+# Electrostatics | स्थितिक विद्युतशास्त्र
+s ~ easy ~ The SI unit of capacitance is ~ farad ~ coulomb ^ volt ~ henry ^ tesla ^ ohm ~ C = Q/V; 1 F = 1 C/V. ~ Capacitance — Faraday — farad.
+f ~ medium ~ The electric field inside a charged conducting sphere is ____. ~ zero ^ 0 ~ ~ Charges reside on the outer surface, so E = 0 inside. ~ Inside a conductor — calm, zero field (Faraday cage).
+# Dual Nature of Radiation and Matter | द्वैत स्वरूप
+s ~ medium ~ Photoelectric emission does not occur if the frequency of incident light is ~ below the threshold frequency ~ above the threshold frequency ^ equal to twice the threshold ~ very high ^ in the ultraviolet range ^ of high intensity ~ Each photon needs energy hν ≥ work function. ~ No ticket (enough frequency), no ride — brightness doesn't help.
+s ~ hard ~ The de Broglie wavelength of a particle is ~ h/p ~ p/h ^ hp ~ h/mv² ^ mc²/h ^ E/h ~ λ = h/mv. ~ "Lambda equals h over p" — heavier/faster means shorter wavelength.
+
+@ HSC 55
+# Solutions | द्रावणे
+s ~ medium ~ Colligative properties depend on ~ the number of solute particles ~ the nature of the solute ^ the colour of the solution ~ the molar mass of solvent only ^ the shape of the molecules ^ the temperature only ~ e.g. elevation of boiling point and osmotic pressure. ~ Colligative = "collected" particles — count matters, not identity.
+tf ~ medium ~ Adding a non-volatile solute raises the boiling point of a solvent. ~ True ~ ~ Vapour pressure falls, so a higher temperature is needed to boil. ~ Salty water boils hotter.
+# Coordination Compounds | संयुग संयुगे
+s ~ medium ~ The coordination number of the central metal ion in [Co(NH₃)₆]³⁺ is ~ 6 ~ 3 ^ 4 ~ 2 ^ 9 ^ 5 ~ Six ammonia ligands attach to cobalt. ~ Count the ligand attachments: (NH₃)₆ → 6.
+# Green Chemistry and Nanochemistry | हरित रसायनशास्त्र
+tf ~ easy ~ Green chemistry aims to reduce or eliminate the use of hazardous substances. ~ True ~ ~ Its twelve principles include waste prevention and safer solvents. ~ Green = safe for nature.
+s ~ easy ~ One nanometre equals ~ 10⁻⁹ m ~ 10⁻⁶ m ^ 10⁻³ m ~ 10⁻¹² m ^ 10⁻¹⁰ m ^ 10⁹ m ~ Nano means one-billionth. ~ Nano = 9 zeros after the decimal.
+
+@ HSC 56
+# Plant Water Relation | वनस्पती व पाणी
+s ~ easy ~ Loss of water in the form of vapour from aerial parts of a plant is called ~ transpiration ~ guttation ^ imbibition ~ osmosis ^ plasmolysis ^ translocation ~ Most transpiration occurs through stomata. ~ Trans-pir-ation = water "perspires" out.
+s ~ medium ~ Loss of water as liquid drops through hydathodes is called ~ guttation ~ transpiration ^ bleeding ~ imbibition ^ diffusion ^ evaporation ~ Seen as droplets on leaf tips in the early morning. ~ Guttation = "drops" (gutta = drop).
+# Ecosystems and Energy Flow | परिसंस्था
+s ~ medium ~ The pyramid of energy in an ecosystem is always ~ upright ~ inverted ^ spindle-shaped ~ irregular ^ horizontal ^ sometimes inverted ~ Energy decreases at each trophic level (10% law). ~ Energy only goes "up" less and less — never inverted.
+f ~ medium ~ Lindeman's law says only about ____ % of energy is transferred to the next trophic level. ~ 10 ^ 10% ~ ~ The rest is lost mostly as heat. ~ Ten percent law — "tithe" to the next level.
+
+@ HSC 88
+# Commission, Brokerage and Discount | कमिशन, दलाली व सूट
+s ~ easy ~ An agent sells goods worth ₹20,000 at 5% commission. His commission is ~ ₹1,000 ~ ₹100 ^ ₹500 ~ ₹2,000 ^ ₹5,000 ^ ₹10,000 ~ 5% of 20,000 = 1,000. ~ 5% = "one-twentieth".
+# Ratio, Proportion and Partnership | गुणोत्तर व प्रमाण
+s ~ easy ~ The ratio 15 : 25 in its simplest form is ~ 3 : 5 ~ 5 : 3 ^ 15 : 25 ~ 1 : 5 ^ 3 : 25 ^ 5 : 15 ~ Divide both by their HCF 5. ~ Divide by the biggest common factor.
+
+@ HSC 45
+# Introduction to Sociology | समाजशास्त्राची ओळख
+s ~ easy ~ The term "sociology" was coined by ~ Auguste Comte ~ Emile Durkheim ^ Karl Marx ~ Max Weber ^ Herbert Spencer ^ G. S. Ghurye ~ Comte is called the father of sociology. ~ Comte Coined it.
+s ~ medium ~ The father of Indian sociology is often considered to be ~ G. S. Ghurye ~ M. N. Srinivas ^ Irawati Karve ~ Auguste Comte ^ B. R. Ambedkar ^ A. R. Desai ~ Ghurye headed the first sociology department at Bombay University. ~ Ghurye — Guru of Indian sociology.
+
+@ HSC 53
+# Co-operation — Principles | सहकाराची तत्त्वे
+s ~ easy ~ The basic principle of co-operation is ~ each for all and all for each ~ profit for owners ^ one share one vote ~ survival of the fittest ^ government control ^ unlimited liability for members ~ Co-operation means working together for mutual benefit. ~ "Each for all, all for each."
+tf ~ medium ~ In a co-operative society, each member has one vote irrespective of shares held. ~ True ~ ~ Democratic control: one member, one vote. ~ One member — one vote.
+
+@ HSC 52
+# Secretarial Practice — Company | कंपनी
+s ~ easy ~ The minimum number of members to form a public company is ~ 7 ~ 2 ^ 1 ~ 50 ^ 200 ^ 10 ~ Companies Act, 2013: public company — 7; private company — 2; OPC — 1. ~ Public = 7 days a week; Private = 2 friends.
+s ~ medium ~ The maximum number of members in a private company is ~ 200 ~ 50 ^ 100 ~ unlimited ^ 7 ^ 500 ~ Companies Act, 2013 raised the limit from 50 to 200. ~ Private — up to 200.
+
+@ HSC 77
+# National Security | राष्ट्रीय सुरक्षा
+s ~ easy ~ The Supreme Commander of the Indian Armed Forces is the ~ President of India ~ Prime Minister ^ Defence Minister ~ Chief of Defence Staff ^ Chief of Army Staff ^ Home Minister ~ Article 53(2) of the Constitution. ~ The President "commands" the forces.
+
+@ HSC 75
+# Soil Science | मृदा विज्ञान
+s ~ easy ~ The soil best suited for cotton in Maharashtra is ~ black soil ~ laterite soil ^ sandy soil ~ alluvial soil ^ red soil ^ peaty soil ~ Black (regur) soil retains moisture — ideal for cotton. ~ Black soil = "black cotton soil".
+
+@ HSC 4
+# व्याकरण | Grammar
+s ~ easy ~ "सूरज" का पर्यायवाची शब्द है ~ रवि ~ चाँद ^ तारा ~ बादल ^ धरती ^ अंबर ~ सूर्य, रवि, दिनकर, भानु — सब पर्यायवाची हैं. ~ रविवार = सूरज का दिन.
+tf ~ easy ~ "मीठा" का विलोम "कड़वा" है। ~ True ~ ~ मीठा × कड़वा. ~ मीठा-कड़वा — जीवन के दो स्वाद.
+
+@ SSC S16
+# व्याकरण | Grammar
+s ~ easy ~ "दिन" का विलोम शब्द है ~ रात ~ सुबह ^ शाम ~ दोपहर ^ समय ^ सप्ताह ~ दिन × रात. ~ दिन-रात — जोड़ी में.
+
+@ SSC S18
+# व्याकरणम् | Grammar
+s ~ medium ~ "रामः वनं गच्छति" — अत्र "वनम्" कस्यां विभक्तौ अस्ति? ~ द्वितीया ~ प्रथमा ^ तृतीया ~ चतुर्थी ^ पञ्चमी ^ षष्ठी ~ गन्तव्यं स्थानं (कर्म) — द्वितीया विभक्तिः. ~ जिथे जातो ते कर्म — द्वितीया.
+
+@ SSC S41
+# Health and Physical Education | आरोग्य व शारीरिक शिक्षण
+s ~ easy ~ The number of players of one team on the field in kabaddi is ~ 7 ~ 11 ^ 5 ~ 9 ^ 6 ^ 12 ~ Seven players per side are on court. ~ Kabaddi — 7, like the seven notes of music.
+tf ~ easy ~ Warming up before exercise helps prevent injuries. ~ True ~ ~ It raises muscle temperature and flexibility. ~ Warm muscles stretch, cold ones snap.
+
+@ SSC S33
+# Refraction of Light | प्रकाशाचे अपवर्तन
+s ~ medium ~ The refractive index of water is about ~ 1.33 ~ 1.5 ^ 2.42 ~ 1.0 ^ 0.75 ^ 3.0 ~ Glass ≈ 1.5, diamond ≈ 2.42. ~ Water 4/3, glass 3/2.
+# Lenses | भिंगे
+s ~ medium ~ The power of a lens with focal length 0.5 m is ~ 2 D ~ 0.5 D ^ 5 D ~ −2 D ^ 20 D ^ 0.2 D ~ P = 1/f (in metres) = 1/0.5 = 2 dioptre. ~ Power = 1 ÷ focal length in metres.
+tf ~ easy ~ A concave lens is used to correct myopia (near-sightedness). ~ True ~ ~ A diverging lens moves the image back onto the retina. ~ Myopia — Minus (concave) lens.
+
+@ SSC S34
+# Towards Green Energy | हरित ऊर्जेकडे
+s ~ easy ~ Which of these is a renewable source of energy? ~ Solar energy ~ Coal ^ Petroleum ~ Natural gas ^ Diesel ^ Lignite ~ Solar energy is not exhausted by use. ~ The Sun rises again tomorrow — renewable.
+m ~ easy ~ Select the renewable energy sources. ~ Wind energy ^ Solar energy ^ Hydroelectric energy ~ Coal ^ Petrol ^ Natural gas ~ Fossil fuels take millions of years to form. ~ Wind, Sun, Water — nature refills them.

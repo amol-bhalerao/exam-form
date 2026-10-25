@@ -166,6 +166,28 @@
     </section>
     </div>
 
+    {{-- Study zone --}}
+    <section class="mx-auto max-w-7xl px-4 pt-16 sm:px-6" aria-labelledby="study">
+        <div class="grid items-end gap-6 lg:grid-cols-[1fr_auto]">
+            <div>
+                <p class="text-sm font-bold uppercase tracking-[.18em] text-rani">{{ __('Study zone') }}</p>
+                <h2 id="study" class="display-lg mt-1 max-w-[24ch]">{{ __('Practise for HSC and SSC — topic by topic') }}</h2>
+                <p class="lede mt-3 max-w-2xl">{{ __('Questions for every board subject, unit tests from your own teachers, notes, memory tricks and an AI coach that shows what to revise next.') }}</p>
+            </div>
+            <a href="{{ auth()->check() ? route(auth()->user()->role === 'student' ? 'learn.hub' : auth()->user()->homeRoute()) : route('login') }}" class="btn-rani"><x-icon name="brain" />{{ __('Start practising — free') }}</a>
+        </div>
+        <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            @foreach ([
+                ['brain', 'tone-board', __('Practice your way'), __('Choose chapters, level, question types, number of questions and a timer. Options are shuffled every time.')],
+                ['timer', 'tone-rani', __('Teachers’ unit tests'), __('Scheduled, timed and protected tests with instant results and certificates.')],
+                ['sparkles', 'tone-plum', __('AI study coach'), __('After every set, see your weak topics and a 3-day plan to improve.')],
+                ['lightbulb', 'tone-marigold', __('Memory tricks and notes'), __('Learn from tips and notes shared by teachers and students — reviewed by teachers.')],
+            ] as [$i, $tone, $h, $t])
+                <div class="feature {{ $tone }}"><span class="tone-icon size-11 rounded-xl"><x-icon :name="$i" class="size-6" /></span><p class="title mt-1">{{ $h }}</p><p class="text-[0.95rem] muted">{{ $t }}</p></div>
+            @endforeach
+        </div>
+    </section>
+
     {{-- Boards --}}
     <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6">
         <div class="peacock grid gap-6 overflow-hidden rounded-2xl p-8 sm:p-10 md:grid-cols-2">

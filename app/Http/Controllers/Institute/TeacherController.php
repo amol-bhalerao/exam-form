@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\AuditLog;
 use App\Models\Subject;
 use App\Models\Teacher;
+use App\Models\User;
+use Illuminate\Support\Str;
 use App\Support\Codes;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -74,6 +76,39 @@ class TeacherController extends Controller
         $teacher->delete();
         AuditLog::record('teacher.deleted', null, ['name' => $teacher->full_name]);
         return redirect()->route('institute.teachers.index')->with('status', __(':name has been removed.', ['name' => $teacher->full_name]));
+    }
+
+    /**
+     * Create (or reset) the teacher's portal login for questions, tests and student progress.
+     * The password is shown once to the college; the teacher must change it at first sign-in.
+     */
+    public function portalLogin(Request $request, Teacher $teacher)
+    {
+        $this->authorizeTeacher($request, $teacher);
+        $password = ['Lotus', 'River', 'Tiger', 'Mango', 'Peacock', 'Banyan', 'Monsoon'][random_int(0, 6)] . '@' . random_int(1000, 9999) . Str::upper(Str::random(2));
+        $user = $teacher->user;
+        if ($user) {
+            $user->forceFill(['password' => $password, 'must_change_password' => true, 'is_active' => true])->save();
+        } else {
+            $base = 't' . ($teacher->mobile ?: Str::lower(Str::random(6)));
+            $username = $base;
+            for ($i = 2; User::where('username', $username)->exists(); $i++) {
+                $username = $base . '-' . $i;
+            }
+            $user = User::create([
+                'name' => $teacher->full_name, 'username' => $username,
+                'email' => $teacher->email && ! User::where('email', $teacher->email)->exists() ? $teacher->email : null,
+                'mobile' => $teacher->mobile, 'password' => $password, 'role' => User::TEACHER,
+                'institute_id' => $teacher->institute_id, 'board_id' => $request->user()->board_id ?? $request->user()->institute->board_id,
+                'is_active' => true, 'must_change_password' => true,
+            ]);
+            $teacher->forceFill(['user_id' => $user->id])->save();
+        }
+        AuditLog::record('teacher.login', $teacher);
+        return back()->with('login_card', [
+            'name' => $teacher->full_name, 'username' => $user->username, 'password' => $password,
+            'url' => route('staff.login.teacher'),
+        ]);
     }
 
     private function authorizeTeacher(Request $request, Teacher $teacher): void

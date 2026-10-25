@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Site;
 
 use App\Http\Controllers\Controller;
 use App\Models\Application;
+use App\Models\Certificate;
 use Illuminate\Http\Request;
 
 /** Public check for the QR code printed on every exam form. Shows only non-sensitive details. */
@@ -25,5 +26,12 @@ class VerifyController extends Controller
             ->first();
 
         return view('site.verify', ['application' => $application, 'number' => strtoupper($number)]);
+    }
+
+    /** QR on a test certificate: confirms the certificate is genuine. */
+    public function certificate(string $serial)
+    {
+        $certificate = Certificate::with('student', 'quiz.subject', 'quiz.institute', 'attempt')->where('serial', strtoupper($serial))->first();
+        return view('site.certificate', ['certificate' => $certificate, 'serial' => strtoupper($serial)]);
     }
 }

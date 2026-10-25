@@ -1,5 +1,6 @@
 import Alpine from 'alpinejs';
 import collapse from '@alpinejs/collapse';
+import { questionEditor, quizRunner } from './learn';
 
 window.Alpine = Alpine;
 Alpine.plugin(collapse);
@@ -79,5 +80,8 @@ Alpine.data('imageField', (initial = null) => ({
         this.preview = URL.createObjectURL(file);
     },
 }));
+
+Alpine.data('questionEditor', questionEditor);
+Alpine.data('quizRunner', quizRunner);
 
 Alpine.start();

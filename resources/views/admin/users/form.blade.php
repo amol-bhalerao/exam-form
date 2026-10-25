@@ -6,7 +6,7 @@
         @csrf @if ($editing) @method('PUT') @endif
         <section class="sheet sheet-pad">
             <h2 class="title mb-4">{{ __('Role') }}</h2>
-            <div class="grid gap-2 sm:grid-cols-4" role="radiogroup">
+            <div class="grid gap-2 sm:grid-cols-5" role="radiogroup">
                 @foreach (User::ROLES as $r => $l)
                     <label class="flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-rule-strong px-3 font-semibold has-[input:checked]:border-board has-[input:checked]:bg-board-soft has-[input:checked]:text-board">
                         <input type="radio" name="role" value="{{ $r }}" x-model="role" class="sr-only" @disabled($editing && $user->is(auth()->user()))> {{ __($l) }}
@@ -23,7 +23,7 @@
                 <x-form.input name="mobile" type="tel" :label="__('Mobile')" :value="$user->mobile" inputmode="numeric" maxlength="10" />
                 <div class="field" x-show="role === 'board'" x-cloak><label class="label" for="board_id">{{ __('Board') }}</label>
                     <select id="board_id" name="board_id" class="select" :required="role === 'board'"><option value="">{{ __('Select') }}</option>@foreach ($boards as $b)<option value="{{ $b->id }}" @selected(old('board_id', $user->board_id) == $b->id)>{{ $b->short_name }}</option>@endforeach</select></div>
-                <div class="field sm:col-span-2" x-show="role === 'institute'" x-cloak @click.outside="open = false"
+                <div class="field sm:col-span-2" x-show="role === 'institute' || role === 'teacher'" x-cloak @click.outside="open = false"
                      x-data="institutePicker({ url: @js(route('lookup.institutes', ['all' => 1])), initialId: @js(old('institute_id', $user->institute_id)), initialLabel: @js($institute ? $institute->college_no . ' · ' . $institute->name : null) })">
                     <label class="label" for="institute_q">{{ __('Institute') }}</label>
                     <div class="relative">

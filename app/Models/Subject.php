@@ -35,6 +35,16 @@ class Subject extends Model
         return $this->belongsToMany(Stream::class);
     }
 
+    public function topics(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Topic::class)->orderBy('sort');
+    }
+
+    public function questions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Question::class);
+    }
+
     public function isCompulsory(): bool
     {
         return $this->kind === 'COMPULSORY';

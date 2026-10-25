@@ -108,7 +108,9 @@
   .btn-danger { @apply bg-omr text-white hover:bg-[#b93222] hover:text-white; }
   .btn-ok { @apply bg-leaf text-white hover:bg-[#17633f] hover:text-white; }
   .btn-sm { min-height: 36px; @apply px-3 text-sm; }
-  :is(.btn, .btn-primary, .btn-secondary, .btn-quiet, .btn-danger, .btn-ok) svg { @apply size-5 shrink-0; }
+  :is(.btn, .btn-primary, .btn-secondary, .btn-quiet, .btn-danger, .btn-ok, .btn-rani, .btn-gold) svg { @apply size-5 shrink-0; }
+  :is(.btn-rani, .btn-gold) { white-space: nowrap; }
+  :is(.btn-rani, .btn-gold):disabled { @apply cursor-not-allowed opacity-50; }
   .btn-sm svg { @apply size-4; }
 
   /* ---------- Forms ---------- */
@@ -330,3 +332,43 @@
 @layer components {
   .card-link[class*='tone-']:hover { border-top-color: var(--tone); }
 }
+
+/* ---------- Study zone: activity heatmap, quiz options, question palette ---------- */
+@layer components {
+  .heat { @apply grid gap-1; grid-template-columns: repeat(var(--cols, 14), minmax(0, 1fr)); }
+  .heat > span { @apply relative block aspect-square rounded-[4px] bg-wash; }
+  .heat > span[data-n='1'] { background: #bfe7d0; }
+  .heat > span[data-n='2'] { background: #6fcf97; }
+  .heat > span[data-n='3'] { background: var(--color-leaf); }
+  .heat > span[data-today] { outline: 2px solid var(--color-rani); outline-offset: 1px; }
+  .heat > span:hover .tip { @apply block; }
+
+  .opt { @apply flex min-h-13 w-full cursor-pointer items-center gap-3 rounded-lg border-2 border-rule-strong bg-sheet px-4 py-3 text-left text-[1.02rem] transition-all; }
+  .opt:hover { @apply border-board/60 bg-board-soft/40; }
+  .opt[aria-checked='true'] { @apply border-board bg-board-soft; box-shadow: 0 6px 18px -12px var(--color-board); }
+  .opt .mark { @apply grid size-7 shrink-0 place-items-center rounded-full border-2 border-ink-3/50 bg-sheet text-sm font-bold text-ink-3; }
+  .opt[data-multi] .mark { @apply rounded-md; }
+  .opt[aria-checked='true'] .mark { @apply border-board bg-board text-white; }
+  .opt[data-right] { @apply border-leaf bg-leaf-soft; }
+  .opt[data-right] .mark { @apply border-leaf bg-leaf text-white; }
+  .opt[data-wrong] { @apply border-omr bg-omr-soft; }
+  .opt[data-wrong] .mark { @apply border-omr bg-omr text-white; }
+  .opt:disabled { @apply cursor-default; }
+
+  .qnav { @apply grid grid-cols-8 gap-1.5 sm:grid-cols-10 lg:grid-cols-5; }
+  .qnav button { @apply grid h-9 place-items-center rounded-md border border-rule-strong bg-sheet text-sm font-semibold tabular-nums text-ink-2; }
+  .qnav button[data-done] { @apply border-leaf bg-leaf-soft text-leaf; }
+  .qnav button[data-flag] { @apply border-marigold bg-marigold-soft text-ink; }
+  .qnav button[aria-current='true'] { @apply border-board bg-board text-white; }
+
+  .timer { @apply inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 font-display text-lg font-bold tabular-nums text-white; background: linear-gradient(120deg, var(--color-board), var(--color-plum)); }
+  .timer[data-low] { background: linear-gradient(120deg, var(--color-omr), var(--color-rani)); animation: tick 1s ease-in-out infinite; }
+
+  .tipcard { @apply rounded-lg border border-marigold/40 bg-marigold-soft/70 px-3.5 py-2.5 text-sm; }
+  .ring-score { --p: 0; @apply relative grid size-36 place-items-center rounded-full; background: conic-gradient(var(--ring, var(--color-leaf)) calc(var(--p) * 1%), var(--color-wash) 0); }
+  .ring-score::before { content: ''; @apply absolute inset-3 rounded-full bg-sheet; }
+  .ring-score > * { @apply relative; }
+  .feature { @apply relative flex flex-col gap-2 overflow-hidden rounded-xl border border-rule bg-sheet p-5 no-underline text-ink transition-all; border-top: 4px solid var(--tone); background: linear-gradient(180deg, var(--tone-soft), #fff 65%); }
+  .feature:hover { transform: translateY(-2px); box-shadow: 0 16px 34px -22px var(--tone); }
+}
+@keyframes tick { 50% { opacity: .75; } }
