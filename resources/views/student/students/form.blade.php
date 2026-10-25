@@ -25,7 +25,7 @@
         @if ($editing) @method('PUT') @endif
 
         <nav class="no-print hidden lg:block" aria-label="{{ __('Sections') }}">
-            <ol class="sticky top-24 grid gap-1 text-sm">
+            <ol class="sticky top-24 grid gap-1 rounded-xl border border-rule bg-sheet p-2 text-sm shadow-sm">
                 @foreach ($sections as $id => $label)
                     <li><a href="#{{ $id }}" class="nav-link py-2"><span class="kbd-code">{{ $loop->iteration }}</span>{{ $label }}</a></li>
                 @endforeach

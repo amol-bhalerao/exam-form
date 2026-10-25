@@ -48,6 +48,7 @@
   --color-omr-soft: #fdeceb;
   --color-marigold: #e7a10b;
   --color-marigold-soft: #fff3d3;
+  --color-gold-deep: #8a5a00; /* marigold for text on light backgrounds */
   --color-leaf: #1f8a46;
   --color-leaf-soft: #e1f5e7;
   --color-plum: #5b2a86;
@@ -178,12 +179,17 @@
   .seat span { @apply grid h-12 w-9 place-items-center border-2 border-ink bg-sheet font-display text-2xl font-bold tabular-nums sm:h-14 sm:w-11 sm:text-3xl; font-stretch: 100%; }
 
   /* ---------- Portal shell ---------- */
-  .nav-link { @apply flex items-center gap-3 rounded-md px-3 py-2.5 font-medium text-white/80 no-underline transition-colors; }
-  .nav-link:hover { @apply bg-white/10 text-white; }
-  .nav-link[aria-current='page'] { @apply bg-white font-semibold text-board-deep; box-shadow: inset 4px 0 0 var(--color-marigold), 0 8px 18px -12px rgb(0 0 0 / .6); }
+  /* Light surfaces (section lists, dropdown menus) */
+  .nav-link { @apply flex items-center gap-3 rounded-md px-3 py-2.5 font-medium text-ink-2 no-underline transition-colors; }
+  .nav-link:hover { @apply bg-board-soft text-board-deep; }
+  .nav-link[aria-current='page'] { @apply bg-board-soft font-semibold text-board-deep; box-shadow: inset 3px 0 0 var(--color-rani); }
   .nav-link svg { @apply size-5 shrink-0 opacity-90; }
   .nav-link[aria-current='page'] svg { @apply text-rani opacity-100; }
-  .nav-group { @apply mt-5 mb-1 px-3 text-sm font-semibold text-marigold/90; }
+  /* Dark sidebar */
+  .sidebar .nav-link { @apply text-white/85; }
+  .sidebar .nav-link:hover { @apply bg-white/10 text-white; }
+  .sidebar .nav-link[aria-current='page'] { @apply bg-white font-semibold text-board-deep; box-shadow: inset 4px 0 0 var(--color-marigold), 0 8px 18px -12px rgb(0 0 0 / .6); }
+  .nav-group { @apply mt-5 mb-1 px-3 text-sm font-semibold; color: #ffd66b; }
 
   .stat { @apply border-l-4 border-rule-strong pl-4; }
   .stat dt { @apply text-sm text-ink-3; }

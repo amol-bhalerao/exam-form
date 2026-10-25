@@ -120,7 +120,7 @@
             <div class="grid gap-3 sm:grid-cols-2">
                 @foreach ($notices as $n)
                     <a href="{{ route('notices.show', $n) }}" class="card-link">
-                        <p class="text-sm font-semibold text-marigold">{{ $n->category_label }} · {{ $n->published_at?->format('d M Y') }}</p>
+                        <p class="text-sm font-semibold text-gold-deep">{{ $n->category_label }} · {{ $n->published_at?->format('d M Y') }}</p>
                         <p class="mt-1 font-semibold">{{ $n->title }}</p>
                     </a>
                 @endforeach

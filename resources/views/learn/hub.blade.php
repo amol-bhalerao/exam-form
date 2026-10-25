@@ -2,7 +2,7 @@
     <section class="peacock rise relative mb-7 overflow-hidden rounded-2xl p-6 text-white sm:p-8">
         <div class="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
             <div>
-                <p class="text-sm font-semibold uppercase tracking-[.18em] text-marigold">{{ __('Study zone') }}</p>
+                <p class="text-sm font-semibold uppercase tracking-[.18em] text-[#ffd66b]">{{ __('Study zone') }}</p>
                 <h1 class="display-lg mt-1 text-white">{{ __('Hello, :name!', ['name' => $student->first_name ?: $student->full_name]) }}</h1>
                 <p class="mt-2 max-w-xl text-white/85">{{ $today ? trans_choice('You practised :count set today. One more?|You practised :count sets today. Keep the streak going!', $today, ['count' => $today]) : __('A short practice every day beats a long one once a week. Start today’s set!') }}</p>
                 <div class="mt-5 flex flex-wrap gap-2">
@@ -73,7 +73,7 @@
                 @forelse ($recent as $a)
                     <a href="{{ route('learn.attempts.result', $a) }}" class="flex items-center gap-3 border-t border-rule py-2.5 no-underline text-ink first:border-0">
                         <div class="min-w-0 flex-1"><p class="truncate font-semibold">{{ $a->quiz?->title ?? $a->subject->label }}</p><p class="text-xs muted">{{ $a->created_at->diffForHumans() }}</p></div>
-                        <span @class(['font-bold tabular-nums', 'text-leaf' => $a->percent() >= 60, 'text-marigold' => $a->percent() < 60 && $a->percent() >= 35, 'text-omr' => $a->percent() < 35])>{{ $a->percent() }}%</span>
+                        <span @class(['font-bold tabular-nums', 'text-leaf' => $a->percent() >= 60, 'text-gold-deep' => $a->percent() < 60 && $a->percent() >= 35, 'text-omr' => $a->percent() < 35])>{{ $a->percent() }}%</span>
                     </a>
                 @empty
                     <p class="text-sm muted">{{ __('Your results will appear here.') }}</p>

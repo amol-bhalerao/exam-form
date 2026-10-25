@@ -32,7 +32,7 @@
                                 <span class="kbd-code">{{ $subject->code }}</span>
                                 <span class="min-w-0 flex-1">
                                     <span class="block font-medium leading-snug">{{ $subject->label }}</span>
-                                    @if ($subject->papers > 1)<span class="text-xs font-semibold text-marigold">{{ trans_choice(':count paper|:count papers', $subject->papers, ['count' => $subject->papers]) }}</span>@endif
+                                    @if ($subject->papers > 1)<span class="text-xs font-semibold text-gold-deep">{{ trans_choice(':count paper|:count papers', $subject->papers, ['count' => $subject->papers]) }}</span>@endif
                                 </span>
                                 @if (in_array($subject->id, $locked, true))<x-icon name="lock" class="size-4 text-leaf" />@endif
                             </button>

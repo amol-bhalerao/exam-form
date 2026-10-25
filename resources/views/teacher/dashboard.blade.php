@@ -42,7 +42,7 @@
                 <a href="{{ route('teacher.progress.show', $a->student) }}" class="flex items-center gap-3 border-t border-rule px-5 py-3 no-underline text-ink hover:bg-wash/60">
                     <span class="tone-icon {{ $a->mode === 'test' ? 'tone-rani' : 'tone-mor' }} size-9 rounded-lg"><x-icon :name="$a->mode === 'test' ? 'timer' : 'brain'" class="size-5" /></span>
                     <div class="min-w-0 flex-1"><p class="truncate font-semibold">{{ $a->student->full_name }}</p><p class="truncate text-sm muted">{{ $a->quiz?->title ?? $a->subject->label }} · {{ $a->submitted_at?->diffForHumans() }}</p></div>
-                    <span @class(['font-bold tabular-nums', 'text-leaf' => $a->percent() >= 60, 'text-marigold' => $a->percent() < 60 && $a->percent() >= 35, 'text-omr' => $a->percent() < 35])>{{ $a->percent() }}%</span>
+                    <span @class(['font-bold tabular-nums', 'text-leaf' => $a->percent() >= 60, 'text-gold-deep' => $a->percent() < 60 && $a->percent() >= 35, 'text-omr' => $a->percent() < 35])>{{ $a->percent() }}%</span>
                 </a>
             @empty
                 <p class="px-5 pb-6 muted">{{ __('When your students practise, their latest sets appear here.') }}</p>
