@@ -51,21 +51,21 @@
     <header class="no-print sticky top-0 z-30 border-b border-rule bg-white/95 shadow-[0_6px_20px_-16px_rgba(29,24,70,.5)] backdrop-blur" x-data="{ open: false }">
         <div class="zari" aria-hidden="true"></div>
         <div class="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
-            <a href="{{ route('home') }}" class="flex min-w-0 items-center gap-3 text-ink no-underline">
+            <a href="{{ route('home') }}" class="flex min-w-0 shrink-0 items-center gap-3 text-ink no-underline xl:max-w-[13rem]">
                 <x-logo class="size-10 shrink-0" />
                 <span class="min-w-0">
-                    <span class="block truncate font-display text-[1.05rem] font-bold leading-tight" style="font-stretch:110%">{{ $siteName }}</span>
+                    <span class="block truncate font-display text-[1.15rem] font-bold leading-tight" style="font-stretch:110%">{{ $siteName }}</span>
                     <span class="block truncate text-xs text-ink-3">{{ Setting::get('division') }}</span>
                 </span>
             </a>
             <nav class="ml-auto hidden items-center gap-1 whitespace-nowrap xl:flex" aria-label="{{ __('Main') }}">
-                <a href="{{ route('home') }}" class="rounded-full px-3 py-2 font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani" @if (request()->routeIs('home')) aria-current="page" @endif><x-icon name="house" class="mr-1 inline size-4 align-[-2px]" />{{ __('Home') }}</a>
-                <a href="{{ route('notices.index') }}" class="rounded-full px-3 py-2 font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani" @if (request()->routeIs('notices.*')) aria-current="page" @endif>{{ __('Notices') }}</a>
-                <a href="{{ route('exams.calendar') }}" class="rounded-full px-3 py-2 font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani" @if (request()->routeIs('exams.calendar')) aria-current="page" @endif>{{ __('Exams') }}</a>
+                <a href="{{ route('home') }}" class="rounded-full px-2.5 py-2 text-[0.95rem] font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani" @if (request()->routeIs('home')) aria-current="page" @endif><x-icon name="house" class="mr-1 inline size-4 align-[-2px]" />{{ __('Home') }}</a>
+                <a href="{{ route('notices.index') }}" class="rounded-full px-2.5 py-2 text-[0.95rem] font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani" @if (request()->routeIs('notices.*')) aria-current="page" @endif>{{ __('Notices') }}</a>
+                <a href="{{ route('exams.calendar') }}" class="rounded-full px-2.5 py-2 text-[0.95rem] font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani" @if (request()->routeIs('exams.calendar')) aria-current="page" @endif>{{ __('Exams') }}</a>
                 @foreach ($headerPages as $p)
-                    <a href="{{ route('page.show', $p->slug) }}" class="rounded-full px-3 py-2 font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani">{{ $p->title }}</a>
+                    <a href="{{ route('page.show', $p->slug) }}" class="rounded-full px-2.5 py-2 text-[0.95rem] font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani">{{ $p->title }}</a>
                 @endforeach
-                <a href="{{ route('verify.form') }}" class="rounded-full px-3 py-2 font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani">{{ __('Verify a form') }}</a>
+                <a href="{{ route('verify.form') }}" class="rounded-full px-2.5 py-2 text-[0.95rem] font-medium text-ink-2 no-underline transition-colors hover:bg-board-soft hover:text-board aria-[current=page]:bg-rani-soft aria-[current=page]:text-rani">{{ __('Verify a form') }}</a>
             </nav>
             <x-lang-switch class="ml-auto hidden md:inline-flex xl:ml-0" />
             @auth
