@@ -1,7 +1,7 @@
 @php use App\Support\Codes; @endphp
 <x-layouts.portal :title="__('Teachers and examiners')">
     <x-page-header :title="__('Teachers and examiners')" :subtitle="__('Teachers sent by colleges for board duties. Approve them for appointment, or mark them not approved with a reason.')">
-        <x-slot:actions><a href="{{ route('board.examiners.export', request()->query()) }}" class="btn-secondary"><x-icon name="file-spreadsheet" />{{ __('Download Excel (CSV)') }}</a></x-slot:actions>
+        <x-slot:actions><a href="{{ route('board.panel', array_filter(['duties' => request('role') ? [request('role')] : null, 'subject' => request('subject'), 'district' => request('district'), 'institute' => request('institute'), 'status' => request('status')])) }}" class="btn-primary"><x-icon name="printer" />{{ __('Print panel list') }}</a><a href="{{ route('board.examiners.export', request()->query()) }}" class="btn-secondary"><x-icon name="file-spreadsheet" />{{ __('Download Excel (CSV)') }}</a></x-slot:actions>
     </x-page-header>
 
     <div class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">

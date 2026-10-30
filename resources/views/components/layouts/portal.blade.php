@@ -29,6 +29,7 @@
                 ['board.exams.index', 'calendar-days', __('Exams and fees')],
                 ['board.forms.index', 'file-check', __('Exam forms')],
                 ['board.examiners.index', 'badge-check', __('Teachers and examiners')],
+                ['board.panel', 'printer', __('Print panel list')],
                 ['board.institutes.index', 'school', __('Institutes')],
             ]],
             [__('Communication'), [['board.notices.index', 'megaphone', __('Notices')]]],
@@ -38,6 +39,7 @@
             [__('Exam forms'), [['institute.forms.index', 'file-check', __('Exam forms')]]],
             [__('College'), [
                 ['institute.teachers.index', 'users', __('Teachers and examiners')],
+                ['institute.panel', 'printer', __('Print panel list')],
                 ['institute.subjects.index', 'book-open', __('Subjects offered')],
                 ['institute.profile.edit', 'building-2', __('College details')],
             ]],

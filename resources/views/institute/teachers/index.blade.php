@@ -1,7 +1,7 @@
 @php use App\Support\Codes; @endphp
 <x-layouts.portal :title="__('Teachers and examiners')">
     <x-page-header :title="__('Teachers and examiners')" :subtitle="__('Keep the list of teachers and their board duties up to date. The board reviews examiners and moderators.')">
-        <x-slot:actions><a href="{{ route('institute.teachers.create') }}" class="btn-primary"><x-icon name="user-plus" />{{ __('Add a teacher') }}</a></x-slot:actions>
+        <x-slot:actions><a href="{{ route('institute.panel', array_filter(['duties' => request('role') ? [request('role')] : null, 'status' => request('status')])) }}" class="btn-secondary"><x-icon name="printer" />{{ __('Print panel list') }}</a><a href="{{ route('institute.teachers.create') }}" class="btn-primary"><x-icon name="user-plus" />{{ __('Add a teacher') }}</a></x-slot:actions>
     </x-page-header>
 
     @if ($card = session('login_card'))

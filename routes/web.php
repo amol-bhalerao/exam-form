@@ -139,6 +139,7 @@ Route::middleware(['auth', 'role:institute'])->prefix('institute')->name('instit
     Route::put('forms/{application}', [Institute\FormController::class, 'update'])->name('forms.update');
     Route::post('forms/{application}/check-subjects', [Institute\FormController::class, 'checkSubjects'])->name('forms.check');
     Route::post('forms/{application}/decision', [Institute\FormController::class, 'decide'])->name('forms.decide');
+    Route::get('teachers/panel', [\App\Http\Controllers\PanelController::class, 'index'])->name('panel');
     Route::resource('teachers', Institute\TeacherController::class)->except('show');
     Route::post('teachers/{teacher}/login', [Institute\TeacherController::class, 'portalLogin'])->name('teachers.login');
     Route::get('subjects', [Institute\SubjectController::class, 'index'])->name('subjects.index');
@@ -158,6 +159,7 @@ Route::middleware(['auth', 'role:board'])->prefix('board')->name('board.')->grou
     Route::post('forms/{application}/decision', [Board\FormController::class, 'decide'])->name('forms.decide');
     Route::get('examiners', [Board\ExaminerController::class, 'index'])->name('examiners.index');
     Route::get('examiners/export', [Board\ExaminerController::class, 'export'])->name('examiners.export');
+    Route::get('examiners/panel', [\App\Http\Controllers\PanelController::class, 'index'])->name('panel');
     Route::post('examiners/{teacher}/decision', [Board\ExaminerController::class, 'decide'])->name('examiners.decide');
     Route::get('institutes', [Board\InstituteController::class, 'index'])->name('institutes.index');
     Route::get('institutes/{institute}', [Board\InstituteController::class, 'show'])->name('institutes.show');
