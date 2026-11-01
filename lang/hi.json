@@ -1631,5 +1631,15 @@
     "Subject name": "विषय का नाम",
     "Examiner / appointment no.": "परीक्षक / नियुक्ति क्र.",
     "Experience (years)": "अनुभव (वर्ष)",
-    "Years as examiner": "परीक्षक के रूप में वर्ष"
+    "Years as examiner": "परीक्षक के रूप में वर्ष",
+    "EXAM.": "परीक्षा",
+    "Choosing an exam fills in its month and year.": "परीक्षा चुनने पर उसका महीना और वर्ष अपने आप भर जाता है।",
+    "Exam month and year": "परीक्षा का महीना और वर्ष",
+    "Printed after the title, e.g. FEB-2027.": "शीर्षक के बाद छपता है, उदा. FEB-2027.",
+    "Reference no. (optional)": "संदर्भ क्रमांक (वैकल्पिक)",
+    "e.g. HSC/Exam/2026/1284": "उदा. HSC/Exam/2026/1284",
+    "Ref. no.": "संदर्भ क्र.",
+    "Page": "पृष्ठ",
+    "Jr. college": "जूनियर कॉलेज",
+    "School": "स्कूल"
 }

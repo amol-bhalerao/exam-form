@@ -52,9 +52,14 @@
             <p class="mb-4 text-sm muted">{{ __('Printed at the top of every page. Edit the wording as needed.') }}</p>
             <div class="fieldset">
                 <div class="field"><label class="label" for="exam">{{ __('Exam (optional)') }}</label>
-                    <select id="exam" name="exam" class="select" onchange="document.getElementById('c_title').value=''"><option value="">{{ __('None') }}</option>@foreach ($exams as $e)<option value="{{ $e->id }}" @selected($f['exam'] === $e->id)>{{ $e->name }}</option>@endforeach</select>
-                    <p class="hint">{{ __('Choosing an exam adds its name to the title. Clear the title box to rebuild it.') }}</p></div>
+                    <select id="exam" name="exam" class="select" onchange="const o = this.selectedOptions[0]; if (o.dataset.month) document.getElementById('f_c_month').value = o.dataset.month">
+                        <option value="">{{ __('None') }}</option>
+                        @foreach ($exams as $e)<option value="{{ $e->id }}" data-month="{{ sprintf('%04d-%02d', $e->year, $e->session === 'JUL-AUG' ? 7 : 2) }}" @selected($f['exam'] === $e->id)>{{ $e->name }}</option>@endforeach
+                    </select>
+                    <p class="hint">{{ __('Choosing an exam fills in its month and year.') }}</p></div>
+                <x-form.input name="c_month" type="month" :label="__('Exam month and year')" :value="$cover['month']" :hint="__('Printed after the title, e.g. FEB-2027.')" />
                 <x-form.input name="c_due" type="date" :label="__('Return before (date)')" :value="$cover['due']" />
+                <x-form.input name="c_ref" :label="__('Reference no. (optional)')" :value="$cover['ref']" :placeholder="__('e.g. HSC/Exam/2026/1284')" />
                 <x-form.input name="c_title" :label="__('Title')" :value="$cover['title']" span />
                 <x-form.input name="c_subtitle" :label="__('Description')" :value="$cover['subtitle']" span />
                 <x-form.textarea name="c_note" :label="__('Instruction (:date is replaced by the date above)')" :value="$cover['note']" rows="2" />

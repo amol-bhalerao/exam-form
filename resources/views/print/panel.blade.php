@@ -1,4 +1,4 @@
-@php $landscape = $f['orientation'] === 'landscape'; $site = \App\Models\Setting::get('site_name', config('app.name')); @endphp
+@php $landscape = $f['orientation'] === 'landscape'; $site = app()->getLocale() !== 'en' ? \App\Models\Setting::get('site_name_' . app()->getLocale(), \App\Models\Setting::get('site_name', config('app.name'))) : \App\Models\Setting::get('site_name', config('app.name')); @endphp
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
 <head>
@@ -8,17 +8,26 @@
     <title>{{ $cover['title'] ?: __('Panel list') }}</title>
     @vite(['resources/css/app.css'])
     <style>
-        @page { size: A4 {{ $landscape ? 'landscape' : 'portrait' }}; margin: 10mm 10mm 12mm; }
+        @page { size: A4 {{ $landscape ? 'landscape' : 'portrait' }}; margin: 10mm 10mm 13mm; @bottom-right { content: "{{ __('Page') }} " counter(page) " / " counter(pages); font-size: 8pt; color: #555; } }
         body { background: #e9edf3; margin: 0; color: #111; }
         .toolbar { position: sticky; top: 0; z-index: 10; display: flex; gap: 8px; justify-content: center; padding: 10px; background: #1d1846; }
         .pl-page { background: #fff; width: {{ $landscape ? '297mm' : '210mm' }}; min-height: {{ $landscape ? '210mm' : '297mm' }}; margin: 12px auto; padding: 10mm; box-shadow: 0 4px 24px -12px rgba(21,35,63,.35); font-size: 9.6pt; line-height: 1.35; }
         .pl-page + .pl-page { break-before: page; page-break-before: always; }
-        .pl-head { text-align: center; border-bottom: 1.4px solid #111; padding-bottom: 3mm; }
-        .pl-site { font-size: 8pt; letter-spacing: .06em; text-transform: uppercase; color: #444; }
-        .pl-title { font-family: var(--font-display); font-weight: 700; font-size: 13pt; margin-top: 1mm; letter-spacing: .02em; }
-        .pl-sub { margin-top: 1.5mm; font-weight: 600; text-transform: uppercase; font-size: 9pt; }
-        .pl-note { margin-top: 1.5mm; font-size: 9pt; }
-        .pl-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2mm 6mm; margin: 3mm 0 2.5mm; font-weight: 700; font-size: 9.5pt; text-transform: uppercase; }
+        .pl-letter { display: grid; grid-template-columns: 16mm 1fr auto; gap: 4mm; align-items: center; padding-bottom: 2.5mm; }
+        .pl-letter svg { width: 16mm; height: 16mm; }
+        .pl-org { font-family: var(--font-display); font-weight: 800; font-size: 13.5pt; letter-spacing: .02em; text-transform: uppercase; line-height: 1.15; color: #14114a; }
+        .pl-org2 { font-size: 8.6pt; font-weight: 600; color: #333; margin-top: .6mm; }
+        .pl-contact { font-size: 7.8pt; color: #555; margin-top: .6mm; }
+        .pl-refs { font-size: 8.4pt; text-align: right; line-height: 1.6; white-space: nowrap; }
+        .pl-refs b { display: inline-block; min-width: 26mm; text-align: left; border-bottom: .6px dotted #777; font-weight: 600; }
+        .pl-rule { border: 0; border-top: 2.2px solid #14114a; border-bottom: .8px solid #14114a; height: 1.6mm; margin: 0 0 3mm; }
+        .pl-head { text-align: center; }
+        .pl-title { font-family: var(--font-display); font-weight: 800; font-size: 13pt; letter-spacing: .03em; display: inline-flex; align-items: center; gap: 2.5mm; flex-wrap: wrap; justify-content: center; }
+        .pl-month { display: inline-block; border: 1.4px solid #14114a; border-radius: 1.2mm; padding: .3mm 2.4mm; font-size: 12pt; letter-spacing: .06em; }
+        .pl-sub { margin-top: 1.8mm; font-weight: 700; text-transform: uppercase; font-size: 9.2pt; letter-spacing: .02em; }
+        .pl-note { margin: 2.4mm auto 0; max-width: 175mm; font-size: 8.8pt; border: .8px solid #999; border-left: 3px solid #14114a; background: #f6f7fb; padding: 1.6mm 3mm; text-align: left; }
+        .pl-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 2mm 6mm; margin: 3.4mm 0 2.4mm; padding: 2mm 3mm; background: #eef1f8; border: .8px solid #b9bfd3; font-weight: 700; font-size: 9.4pt; text-transform: uppercase; }
+        .pl-meta .k { color: #555; font-weight: 600; margin-right: 1.5mm; }
         .pl-table { width: 100%; border-collapse: collapse; }
         .pl-table th, .pl-table td { border: .7px solid #777; padding: 1.6mm 2mm; text-align: left; vertical-align: top; }
         .pl-table th { background: #eef1f8; font-size: 8pt; text-transform: uppercase; letter-spacing: .03em; }
@@ -44,15 +53,28 @@
     </div>
     @foreach ($groups as $g)
         <article class="pl-page">
+            @php $div = $cover['division']; @endphp
+            <div class="pl-letter">
+                <x-logo />
+                <div>
+                    <p class="pl-org">{{ $div?->label ?? $site }}</p>
+                    <p class="pl-org2">{{ $cover['board']?->label }}@if ($div && $div->label !== $site) · {{ $site }}@endif</p>
+                    @if ($div && ($div->address || $div->phone || $div->email))<p class="pl-contact">{{ collect([$div->address, $div->phone ? __('Phone') . ' ' . $div->phone : null, $div->email])->filter()->implode(' · ') }}</p>@endif
+                </div>
+                <div class="pl-refs">
+                    <p>{{ __('Ref. no.') }} <b>{{ $cover['ref'] ?: ' ' }}</b></p>
+                    <p>{{ __('Date') }} <b>{{ now()->format('d-m-Y') }}</b></p>
+                </div>
+            </div>
+            <hr class="pl-rule">
             <header class="pl-head">
-                <p class="pl-site">{{ $cover['division']?->label ?? $site }}</p>
-                @if ($cover['title'])<p class="pl-title">{{ $cover['title'] }}</p>@endif
+                <p class="pl-title"><span>{{ $cover['title'] }}</span>@if ($cover['month_text'])<span class="pl-month">{{ $cover['month_text'] }}</span>@endif</p>
                 @if ($cover['subtitle'])<p class="pl-sub">{{ $cover['subtitle'] }}</p>@endif
                 @if ($cover['note'])<p class="pl-note">{{ $cover['note_text'] }}</p>@endif
             </header>
             <div class="pl-meta">
                 @if ($g['institute'])
-                    <span>{{ __('College / school') }}: {{ $g['institute']->college_no }} &nbsp; {{ $g['institute']->name }}@if ($g['institute']->district), {{ $g['institute']->district }}@endif</span>
+                    <span><span class="k">{{ $cover['board']?->has_streams ? __('Jr. college') : __('School') }}:</span>{{ $g['institute']->college_no }} &nbsp; {{ $g['institute']->name }}@if ($g['institute']->district), {{ $g['institute']->district }}@endif @if ($g['institute']->pincode) {{ $g['institute']->pincode }}@endif</span>
                 @else
                     <span>{{ __('All colleges and schools') }}</span>
                 @endif

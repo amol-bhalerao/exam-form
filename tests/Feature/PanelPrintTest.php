@@ -40,6 +40,7 @@ class PanelPrintTest extends TestCase
         $board = $this->boardUser();
         $this->actingAs($board)->get(route('board.panel', ['print' => 1, 'status' => 'all', 'c_due' => '2026-11-16']))
             ->assertOk()->assertSee('INGLE A M')->assertSee($this->instituteUser()->institute->college_no)->assertSee('16-11-2026');
+        $this->actingAs($board)->get(route('board.panel', ['print' => 1, 'status' => 'all', 'c_month' => '2027-02', 'c_ref' => 'HSC/1284']))->assertSee('-2027')->assertSee('HSC/1284');
         $pune = User::create(['name' => 'Pune', 'username' => 'pune.x', 'password' => 'Password@123', 'role' => 'board', 'board_id' => $board->board_id,
             'division_id' => Division::where('code', '1')->value('id'), 'is_active' => true]);
         $this->actingAs($pune)->get(route('board.panel', ['print' => 1, 'status' => 'all']))->assertOk()->assertDontSee('INGLE A M');

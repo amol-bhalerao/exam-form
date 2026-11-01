@@ -51,7 +51,7 @@ class PanelController extends Controller
             'columns' => self::COLUMNS,
             'subjects' => Subject::where('board_id', $user->board_id ?? $user->institute->board_id)->orderBy('sort')->orderBy('code')->get(),
             'exams' => Exam::where('board_id', $user->board_id ?? $user->institute->board_id)
-                ->forDivision($isBoard ? $user->division_id : $user->institute->division_id)->latest('opens_at')->get(['id', 'name', 'code']),
+                ->forDivision($isBoard ? $user->division_id : $user->institute->division_id)->latest('opens_at')->get(['id', 'name', 'code', 'year', 'session']),
             'institutes' => $isBoard ? Institute::forOfficer($user)->whereHas('teachers', fn ($q) => $q->where('is_active', true))->orderBy('college_no')->get(['id', 'college_no', 'name']) : collect(),
             'districts' => $isBoard ? Institute::forOfficer($user)->whereNotNull('district')->distinct()->orderBy('district')->pluck('district') : collect(),
         ];
@@ -119,25 +119,35 @@ class PanelController extends Controller
         $user = $request->user();
         $board = $user->board ?? $user->institute->board;
         $exam = $f['exam'] ? Exam::find($f['exam']) : null;
-        $duties = collect($f['duties'] ?: ['examiner', 'moderator'])->map(fn ($d) => mb_strtoupper(__(Codes::DUTY_ROLES[$d])))->implode('/');
+        $duties = collect($f['duties'] ?: ['moderator', 'examiner'])->map(fn ($d) => mb_strtoupper(__(Codes::DUTY_ROLES[$d])))->implode('/');
+        // "Higher Secondary Certificate (Std XII)" → "HIGHER SECONDARY CERTIFICATE EXAM."
+        $boardName = trim(preg_replace('/\s*\(.*?\)\s*/u', ' ', (string) ($board?->label ?? '')));
+        // Exam month: from the chosen exam (FEB-MAR 2027 → Feb 2027), else the next February.
+        $examMonth = $exam ? sprintf('%04d-%02d', $exam->year, $exam->session === 'JUL-AUG' ? 7 : 2) : sprintf('%04d-02', now()->month > 3 ? now()->year + 1 : now()->year);
         $defaults = [
-            'title' => mb_strtoupper(($board?->label ?? '') . ($exam ? ' — ' . $exam->name : '')),
+            'title' => mb_strtoupper($boardName) . ' ' . __('EXAM.'),
+            'month' => $examMonth,
             'subtitle' => __('Subject-wise list of teachers appointed as :duties in the subject shown against their names', ['duties' => $duties]),
             'note' => $isBoard
                 ? __('Inform all concerned, obtain their signatures, and hand over the same copy, duly signed by the principal, to this office representative before :date.', ['date' => ':date'])
                 : __('Certified that the above teachers are working in this college and the details given are correct.'),
             'due' => '',
+            'ref' => '',
             'footer' => __('Signature of the principal with stamp'),
         ];
         $c = [];
         foreach ($defaults as $k => $v) {
             $given = $request->has("c_$k") ? trim((string) $request->query("c_$k")) : null;
-            // Title and description rebuild when cleared; note, date and signature line may stay empty.
+            // Title, month and description rebuild when cleared; note, date, reference and signature line may stay empty.
             $c[$k] = $given === null || ($given === '' && in_array($k, ['title', 'subtitle'], true)) ? $v : $given;
         }
         $due = $c['due'] ? \Illuminate\Support\Carbon::parse($c['due'])->format('d-m-Y') : '____________';
         $c['note_text'] = str_replace(':date', $due, $c['note']);
+        // Printed like the board's lists: FEB-2027.
+        $c['month_text'] = preg_match('/^(\d{4})-(\d{2})$/', $c['month'], $m)
+            ? mb_strtoupper(\Illuminate\Support\Carbon::create((int) $m[1], (int) $m[2], 1)->translatedFormat('M')) . '-' . $m[1] : '';
         $c['board'] = $board;
+        $c['exam'] = $exam;
         $c['division'] = $isBoard ? $user->division : $user->institute->division;
         return $c;
     }
