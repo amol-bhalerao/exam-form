@@ -29,8 +29,18 @@
         .pl-meta { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 2mm 6mm; margin: 3.4mm 0 2.4mm; padding: 2mm 3mm; background: #eef1f8; border: .8px solid #b9bfd3; font-weight: 700; font-size: 9.4pt; text-transform: uppercase; }
         .pl-meta .k { color: #555; font-weight: 600; margin-right: 1.5mm; }
         .pl-table { width: 100%; border-collapse: collapse; }
+        .pl-table td { overflow-wrap: break-word; }
+        /* Many columns: smaller text and tighter cells so the table stays inside the page */
+        .dense-1 .pl-table { font-size: 8.4pt; }
+        .dense-1 .pl-table th, .dense-1 .pl-table td { padding: 1.2mm 1.4mm; }
+        .dense-1 .pl-table th { font-size: 7pt; letter-spacing: 0; }
+        .dense-2 .pl-table { font-size: 7.4pt; }
+        .dense-2 .pl-table th, .dense-2 .pl-table td { padding: 1mm 1mm; }
+        .dense-2 .pl-table th { font-size: 6.4pt; letter-spacing: 0; }
+        .dense-2 .pl-table td.nm, .dense-2 .pl-table td.code { white-space: normal; }
+        .dense-2 .pl-table .sig { width: 22mm; }
         .pl-table th, .pl-table td { border: .7px solid #777; padding: 1.6mm 2mm; text-align: left; vertical-align: top; }
-        .pl-table th { background: #eef1f8; font-size: 8pt; text-transform: uppercase; letter-spacing: .03em; }
+        .pl-table th { background: #eef1f8; font-size: 8pt; text-transform: uppercase; letter-spacing: .03em; overflow-wrap: normal; hyphens: auto; }
         .pl-table thead { display: table-header-group; }
         .pl-table tr { break-inside: avoid; page-break-inside: avoid; }
         .pl-table td.num, .pl-table th.num { text-align: center; width: 1%; white-space: nowrap; }
@@ -46,7 +56,12 @@
         @media print { body { background: #fff; } .pl-page { margin: 0; box-shadow: none; width: auto; min-height: auto; padding: 0; } .toolbar { display: none; } }
     </style>
 </head>
-<body>
+@php
+    // Density by number of columns for the chosen paper width (landscape holds about 40% more).
+    $n = count($f['cols']); $room = $landscape ? 1.4 : 1;
+    $dense = $n > 12 * $room ? 'dense-2' : ($n > 8 * $room ? 'dense-1' : '');
+@endphp
+<body class="{{ $dense }}">
     <div class="toolbar no-print">
         <button type="button" onclick="window.print()" class="btn-gold btn-sm"><x-icon name="printer" />{{ __('Print') }}</button>
         <button type="button" onclick="history.length > 1 ? history.back() : window.close()" class="btn-secondary btn-sm">{{ __('Close') }}</button>
@@ -91,9 +106,23 @@
         (function () {
             const pages = () => document.querySelectorAll('.pl-page');
             const width = {{ $landscape ? 1123 : 794 }} + 24;
-            const fit = () => { const w = document.documentElement.clientWidth; pages().forEach(p => p.style.zoom = w < width ? (w / width).toFixed(3) : ''); };
+            // Shrink any table that is still wider than the printable width (A4 minus 10 mm margins) so it always fits.
+            const fitTables = () => pages().forEach(p => {
+                const t = p.querySelector('.pl-table');
+                if (!t) return;
+                t.style.zoom = '';
+                const cs = getComputedStyle(p), avail = p.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+                if (t.scrollWidth > avail + 1) t.style.zoom = (Math.floor(avail / t.scrollWidth * 1000) / 1000).toString();
+            });
+            const fit = () => {
+                pages().forEach(p => p.style.zoom = '');
+                fitTables();
+                const w = document.documentElement.clientWidth;
+                pages().forEach(p => p.style.zoom = w < width ? (w / width).toFixed(3) : '');
+            };
             fit(); addEventListener('resize', fit);
-            addEventListener('beforeprint', () => pages().forEach(p => p.style.zoom = ''));
+            document.fonts && document.fonts.ready.then(fit);
+            addEventListener('beforeprint', () => { pages().forEach(p => p.style.zoom = ''); fitTables(); });
             addEventListener('afterprint', fit);
         })();
     </script>

@@ -104,7 +104,8 @@ class PanelController extends Controller
             'serving' => $request->boolean('serving', true),
             'per_college' => $isBoard ? $request->boolean('per_college', true) : false,
             'cols' => $cols,
-            'orientation' => $request->query('orientation') === 'landscape' ? 'landscape' : 'portrait',
+            // More than 12 columns do not fit a portrait page legibly: use landscape automatically.
+            'orientation' => $request->query('orientation') === 'landscape' || count($cols) > 12 ? 'landscape' : 'portrait',
         ];
     }
 

@@ -48,6 +48,7 @@
             <div class="mt-4 flex flex-wrap gap-4">
                 <label class="flex items-center gap-2"><input type="radio" name="orientation" value="portrait" class="check" @checked($f['orientation'] === 'portrait')>{{ __('A4 portrait') }}</label>
                 <label class="flex items-center gap-2"><input type="radio" name="orientation" value="landscape" class="check" @checked($f['orientation'] === 'landscape')>{{ __('A4 landscape (many columns)') }}</label>
+                <p class="w-full text-sm muted">{{ __('With more than 12 columns the list prints in landscape automatically, with smaller text. Any table still too wide is shrunk to fit the page.') }}</p>
                 @if ($isBoard)<label class="flex items-center gap-2"><input type="hidden" name="per_college" value="0"><input type="checkbox" name="per_college" value="1" class="check" @checked($f['per_college'])>{{ __('Separate page for each college (to send for signatures)') }}</label>@endif
             </div>
         </section>

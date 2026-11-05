@@ -1686,5 +1686,6 @@
     "Second subject": "दुसरा विषय",
     "Age": "वय",
     "Date of joining": "रुजू दिनांक",
-    "Approval no. and date": "मान्यता क्र. व दिनांक"
+    "Approval no. and date": "मान्यता क्र. व दिनांक",
+    "With more than 12 columns the list prints in landscape automatically, with smaller text. Any table still too wide is shrunk to fit the page.": "१२ पेक्षा जास्त स्तंभ असल्यास यादी आपोआप आडव्या पानावर लहान अक्षरांत छापली जाते. तरीही रुंद असलेली तालिका पानात बसेल इतकी लहान केली जाते."
 }

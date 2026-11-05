@@ -1686,5 +1686,6 @@
     "Second subject": "दूसरा विषय",
     "Age": "आयु",
     "Date of joining": "कार्यभार ग्रहण तिथि",
-    "Approval no. and date": "मान्यता क्र. व तिथि"
+    "Approval no. and date": "मान्यता क्र. व तिथि",
+    "With more than 12 columns the list prints in landscape automatically, with smaller text. Any table still too wide is shrunk to fit the page.": "12 से अधिक कॉलम होने पर सूची अपने आप लैंडस्केप में छोटे अक्षरों में छपती है। फिर भी चौड़ी तालिका को पेज में फिट होने तक छोटा किया जाता है।"
 }
