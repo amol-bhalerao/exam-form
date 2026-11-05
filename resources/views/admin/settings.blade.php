@@ -39,6 +39,11 @@
             <label class="flex items-start gap-3"><input type="checkbox" name="registration_open" value="1" class="check mt-0.5" @checked($v['registration_open'] ?? true)><span><span class="font-semibold">{{ __('Student sign-up open') }}</span><span class="block text-sm muted">{{ __('When off, new Google accounts cannot sign up. Existing students can still sign in.') }}</span></span></label>
             <x-form.input name="maintenance_message" :label="__('Banner message (optional)')" :value="$v['maintenance_message']" :hint="__('Shown at the top of student pages, e.g. “Payments are slow today.”')" />
         </section>
+        <section class="sheet sheet-pad grid gap-4">
+            <h2 class="title">{{ __('Teachers') }}</h2>
+            <x-form.input name="teacher_retirement_age" type="number" min="50" max="70" :label="__('Retirement age of teachers')" :value="$v['teacher_retirement_age'] ?: \App\Support\Retirement::DEFAULT_AGE"
+                :hint="__('58 for teachers of private aided schools and junior colleges in Maharashtra (MEPS Rules). Teachers retire on the last day of the month in which they reach this age; those born on the 1st retire on the last day of the previous month. A different age can be set for a single teacher.')" />
+        </section>
         <div class="flex justify-end"><button class="btn-primary">{{ __('Save settings') }}</button></div>
     </form>
     <form method="POST" action="{{ route('admin.settings.refresh') }}" class="sheet sheet-pad mt-6 flex max-w-4xl flex-wrap items-center gap-4">

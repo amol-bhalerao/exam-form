@@ -27,9 +27,22 @@ class PanelController extends Controller
         'duties' => ['Duty', false],
         'designation' => ['Designation', false],
         'qualification' => ['Qualification', false],
+        'second_subject' => ['Second subject', false],
+        'medium' => ['Medium', false],
+        'classes' => ['Classes taught', false],
         'experience' => ['Experience (years)', true],
         'examiner_years' => ['Years as examiner', false],
         'appointment_type' => ['Appointment', false],
+        'gender' => ['Gender', false],
+        'category' => ['Category', false],
+        'dob' => ['Date of birth', false],
+        'age' => ['Age', false],
+        'joined_on' => ['Date of joining', false],
+        'service_here' => ['Service in this college', false],
+        'approval' => ['Approval no. and date', false],
+        'shalarth_id' => ['Shalarth ID', false],
+        'retirement' => ['Date of retirement', false],
+        'remaining' => ['Remaining service', false],
         'mobile' => ['Mobile no.', true],
         'email' => ['Email', false],
         'college' => ['College / school', false],
@@ -42,7 +55,16 @@ class PanelController extends Controller
         $user = $request->user();
         $isBoard = $user->role === 'board';
         $f = $this->filters($request, $isBoard);
-        $teachers = $this->query($request, $f)->get();
+        $teachers = $this->query($request, $f)->with('secondSubject')->get();
+        $exam = $f['exam'] ? Exam::find($f['exam']) : null;
+        // Duty is only possible while in service: leave out teachers already retired, or retiring before the exam ends.
+        $until = $exam?->exam_ends_on ?? now();
+        $teachers = $teachers
+            ->when($f['serving'], fn ($c) => $c->reject(fn ($t) => ($d = $t->retirementDate()) && $d->lt($until->copy()->startOfDay())))
+            ->when($f['retiring'], fn ($c) => $c->filter(fn ($t) => $t->retiresWithin($f['retiring'])))
+            ->when($f['order'] === 'retirement', fn ($c) => $c->sortBy(fn ($t) => $t->retirementDate()?->timestamp ?? PHP_INT_MAX))
+            ->when($f['order'] === 'experience', fn ($c) => $c->sortByDesc('experience_years'))
+            ->values();
 
         $data = [
             'isBoard' => $isBoard,
@@ -77,7 +99,9 @@ class PanelController extends Controller
             'institute' => $isBoard ? ($request->integer('institute') ?: null) : null,
             'district' => $isBoard ? $request->query('district') : null,
             'exam' => $request->integer('exam') ?: null,
-            'order' => in_array($request->query('order'), ['subject', 'name'], true) ? $request->query('order') : 'subject',
+            'order' => in_array($request->query('order'), ['subject', 'name', 'retirement', 'experience'], true) ? $request->query('order') : 'subject',
+            'retiring' => in_array($request->integer('retiring'), [6, 12, 24, 36], true) ? $request->integer('retiring') : null,
+            'serving' => $request->boolean('serving', true),
             'per_college' => $isBoard ? $request->boolean('per_college', true) : false,
             'cols' => $cols,
             'orientation' => $request->query('orientation') === 'landscape' ? 'landscape' : 'portrait',

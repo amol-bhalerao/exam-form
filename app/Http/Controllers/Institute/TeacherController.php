@@ -22,9 +22,10 @@ class TeacherController extends Controller
             ->when($request->query('role'), fn ($q, $r) => $q->whereJsonContains('duty_roles', $r))
             ->when($request->query('status'), fn ($q, $s) => $q->where('board_status', $s))
             ->when(trim((string) $request->query('q')), fn ($q, $t) => $q->where(fn ($w) => $w->where('full_name', 'like', "%{$t}%")->orWhere('mobile', 'like', "%{$t}%")))
+            ->when($request->integer('retiring'), fn ($q, $m) => $q->whereIn('id', $institute->teachers()->get()->filter(fn ($t) => $t->retiresWithin($m))->pluck('id')))
             ->orderBy('full_name')->paginate(30)->withQueryString();
 
-        $all = $institute->teachers()->get(['id', 'duty_roles', 'board_status', 'is_active']);
+        $all = $institute->teachers()->get(['id', 'duty_roles', 'board_status', 'is_active', 'dob', 'retirement_age']);
         return view('institute.teachers.index', [
             'teachers' => $teachers,
             'stats' => [
@@ -33,6 +34,8 @@ class TeacherController extends Controller
                 'approved' => $all->where('board_status', 'approved')->count(),
                 'pending' => $all->where('board_status', 'pending')->count(),
                 'rejected' => $all->where('board_status', 'rejected')->count(),
+                'retiring' => $all->filter(fn ($t) => $t->is_active && $t->retiresWithin(12))->count(),
+                'no_dob' => $all->where('is_active', true)->whereNull('dob')->count(),
             ],
         ]);
     }
@@ -126,11 +129,19 @@ class TeacherController extends Controller
         $v = $request->validate([
             'full_name' => ['required', 'string', 'max:150'],
             'gender' => ['nullable', Rule::in(array_keys(Codes::GENDERS))],
-            'dob' => ['nullable', 'date', 'before:-20 years'],
+            'dob' => ['nullable', 'date', 'before:-20 years', 'after:-75 years'],
             'mobile' => ['required', 'regex:/^[6-9]\d{9}$/'],
             'email' => ['nullable', 'email', 'max:150'],
             'qualification' => ['nullable', 'string', 'max:150'],
             'subject_id' => ['nullable', 'exists:subjects,id'],
+            'second_subject_id' => ['nullable', 'exists:subjects,id', 'different:subject_id'],
+            'medium' => ['nullable', Rule::in(array_keys(Codes::MEDIUMS))],
+            'teaches_classes' => ['nullable', 'string', 'max:30'],
+            'category' => ['nullable', Rule::in(array_keys(Codes::CATEGORIES))],
+            'shalarth_id' => ['nullable', 'string', 'max:30', 'regex:/^[A-Za-z0-9\/-]+$/'],
+            'approval_no' => ['nullable', 'string', 'max:60'],
+            'approval_date' => ['nullable', 'date', 'before_or_equal:today'],
+            'retirement_age' => ['nullable', 'integer', 'between:50,70'],
             'designation' => ['nullable', 'string', 'max:80'],
             'appointment_type' => ['nullable', Rule::in(array_keys(Codes::APPOINTMENT_TYPES))],
             'joined_on' => ['nullable', 'date', 'before_or_equal:today'],

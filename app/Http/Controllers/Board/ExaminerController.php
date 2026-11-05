@@ -78,14 +78,18 @@ class ExaminerController extends Controller
             $out = fopen('php://output', 'w');
             fwrite($out, "\xEF\xBB\xBF");
             fputcsv($out, ['College no', 'College', 'District', 'Name', 'Gender', 'Mobile', 'Email', 'Qualification', 'Designation',
-                'Subject', 'Appointment', 'Experience (years)', 'Duties', 'Examiner years', 'Last appointment no', 'Available', 'Board status', 'Board note']);
-            $q->chunk(500, function ($rows) use ($out) {
+                'Subject', 'Second subject', 'Medium', 'Appointment', 'Experience (years)', 'Duties', 'Examiner years', 'Last appointment no', 'Available', 'Board status', 'Board note',
+                'Category', 'Date of birth', 'Age', 'Date of joining', 'Shalarth ID', 'Approval no', 'Approval date', 'Date of retirement', 'Remaining service']);
+            $q->with('secondSubject')->chunk(500, function ($rows) use ($out) {
                 foreach ($rows as $t) {
                     fputcsv($out, [
                         $t->institute->college_no, $t->institute->name, $t->institute->district, $t->full_name, $t->gender, $t->mobile, $t->email,
                         $t->qualification, $t->designation, $t->subject ? $t->subject->code . ' ' . $t->subject->name : '',
+                        $t->secondSubject ? $t->secondSubject->code . ' ' . $t->secondSubject->name : '', Codes::label(Codes::MEDIUMS, $t->medium),
                         Codes::label(Codes::APPOINTMENT_TYPES, $t->appointment_type), $t->experience_years, $t->rolesLabel(),
                         $t->examiner_years, $t->last_appointment_no, $t->available_for_duty ? 'Yes' : 'No', $t->board_status, $t->board_note,
+                        $t->category, $t->dob?->format('d-m-Y'), $t->age(), $t->joined_on?->format('d-m-Y'), $t->shalarth_id, $t->approval_no,
+                        $t->approval_date?->format('d-m-Y'), $t->retirementDate()?->format('d-m-Y'), $t->isRetired() ? 'Retired' : $t->remainingService(),
                     ]);
                 }
             });

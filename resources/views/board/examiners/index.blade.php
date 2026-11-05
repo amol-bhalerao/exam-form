@@ -41,6 +41,11 @@
                             <div><dt class="inline muted">{{ __('Experience') }}:</dt> <dd class="inline font-medium">{{ $t->experience_years !== null ? __(':n yrs', ['n' => $t->experience_years]) : '—' }} @if ($t->examiner_years)({{ __(':n as examiner', ['n' => $t->examiner_years]) }})@endif</dd></div>
                             <div><dt class="inline muted">{{ __('Qualification') }}:</dt> <dd class="inline font-medium">{{ $t->qualification ?: '—' }}</dd></div>
                             <div><dt class="inline muted">{{ __('Mobile') }}:</dt> <dd class="inline font-medium tabular-nums">{{ $t->mobile }}</dd></div>
+                            @if ($rd = $t->retirementDate())
+                                <div><dt class="inline muted">{{ __('Retirement') }}:</dt> <dd @class(['inline font-medium', 'text-omr' => $t->isRetired() || $t->retiresWithin(12)])>{{ $rd->format('d-m-Y') }} ({{ $t->isRetired() ? __('Retired') : __(':time left', ['time' => $t->remainingService()]) }})</dd></div>
+                            @else
+                                <div><dt class="inline muted">{{ __('Retirement') }}:</dt> <dd class="inline font-medium text-gold-deep">{{ __('Date of birth not given') }}</dd></div>
+                            @endif
                         </dl>
                         @if ($t->board_note)<p class="mt-2 text-sm"><span class="muted">{{ __('Board note') }}:</span> {{ $t->board_note }}</p>@endif
                     </div>

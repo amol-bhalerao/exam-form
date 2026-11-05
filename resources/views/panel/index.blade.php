@@ -24,8 +24,13 @@
                         <select id="district" name="district" class="select"><option value="">{{ __('All') }}</option>@foreach ($districts as $d)<option value="{{ $d }}" @selected($f['district'] === $d)>{{ $d }}</option>@endforeach</select></div>
                 @endif
                 <div class="field"><label class="label" for="order">{{ __('Order') }}</label>
-                    <select id="order" name="order" class="select"><option value="subject" @selected($f['order'] === 'subject')>{{ __('Subject-wise') }}</option><option value="name" @selected($f['order'] === 'name')>{{ __('By name') }}</option></select></div>
-                <div class="field justify-end"><label class="flex min-h-11 items-center gap-2 font-semibold"><input type="checkbox" name="available" value="1" class="check" @checked($f['available'])>{{ __('Only teachers available for duty') }}</label></div>
+                    <select id="order" name="order" class="select"><option value="subject" @selected($f['order'] === 'subject')>{{ __('Subject-wise') }}</option><option value="name" @selected($f['order'] === 'name')>{{ __('By name') }}</option><option value="experience" @selected($f['order'] === 'experience')>{{ __('Most experienced first') }}</option><option value="retirement" @selected($f['order'] === 'retirement')>{{ __('Retiring soonest first') }}</option></select></div>
+                <div class="field"><label class="label" for="retiring">{{ __('Retirement') }}</label>
+                    <select id="retiring" name="retiring" class="select"><option value="">{{ __('All') }}</option>@foreach ([6 => __('Retiring within 6 months'), 12 => __('Retiring within 1 year'), 24 => __('Retiring within 2 years'), 36 => __('Retiring within 3 years')] as $k => $l)<option value="{{ $k }}" @selected($f['retiring'] === $k)>{{ $l }}</option>@endforeach</select></div>
+                <div class="field justify-end gap-1">
+                    <label class="flex min-h-10 items-center gap-2 font-semibold"><input type="checkbox" name="available" value="1" class="check" @checked($f['available'])>{{ __('Only teachers available for duty') }}</label>
+                    <label class="flex min-h-10 items-center gap-2 font-semibold"><input type="hidden" name="serving" value="0"><input type="checkbox" name="serving" value="1" class="check" @checked($f['serving'])>{{ __('Leave out teachers retired before the exam ends') }}</label>
+                </div>
             </div>
         </section>
 

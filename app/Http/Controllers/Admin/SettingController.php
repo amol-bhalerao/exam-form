@@ -19,6 +19,7 @@ class SettingController extends Controller
         'google_site_verification' => ['string', 120], 'analytics_id' => ['string', 40],
         'ticker_enabled' => ['bool'], 'registration_open' => ['bool'],
         'maintenance_message' => ['string', 300],
+        'teacher_retirement_age' => ['int', 70],
     ];
 
     public function edit()
@@ -29,7 +30,11 @@ class SettingController extends Controller
 
     public function update(Request $request)
     {
-        $rules = collect(self::FIELDS)->map(fn ($r) => $r[0] === 'bool' ? ['nullable', 'boolean'] : ['nullable', $r[0] === 'email' ? 'email' : 'string', 'max:' . $r[1]])->all();
+        $rules = collect(self::FIELDS)->map(fn ($r) => match ($r[0]) {
+            'bool' => ['nullable', 'boolean'],
+            'int' => ['nullable', 'integer', 'between:50,' . $r[1]],
+            default => ['nullable', $r[0] === 'email' ? 'email' : 'string', 'max:' . $r[1]],
+        })->all();
         $rules['analytics_id'][] = 'regex:/^(G|UA)-[A-Z0-9-]+$/';
         $v = $request->validate($rules + ['site_name' => ['required', 'string', 'max:150']]);
         foreach (self::FIELDS as $key => $rule) {

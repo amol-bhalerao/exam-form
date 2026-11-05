@@ -19,17 +19,19 @@
         </div>
     @endif
 
-    <div class="mb-6 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
+    <div class="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-6">
         <x-stat :label="__('Teachers')" :value="$stats['total']" />
         <x-stat :label="__('Examiners / moderators')" :value="$stats['examiners']" tone="board" />
         <x-stat :label="__('Approved by board')" :value="$stats['approved']" tone="leaf" />
         <x-stat :label="__('Pending review')" :value="$stats['pending']" tone="marigold" />
         <x-stat :label="__('Not approved')" :value="$stats['rejected']" tone="omr" />
+        <x-stat :label="__('Retiring within 12 months')" :value="$stats['retiring']" tone="plum" :href="route('institute.teachers.index', ['retiring' => 12])" :hint="$stats['no_dob'] ? __(':n without date of birth', ['n' => $stats['no_dob']]) : null" />
     </div>
 
     <form method="GET" class="filters">
         <div class="field"><label class="label" for="q">{{ __('Search') }}</label><input id="q" name="q" value="{{ request('q') }}" class="input" placeholder="{{ __('Name or mobile') }}"></div>
         <div class="field"><label class="label" for="role">{{ __('Duty') }}</label><select id="role" name="role" class="select"><option value="">{{ __('All') }}</option>@foreach (Codes::options(Codes::DUTY_ROLES) as $k => $l)<option value="{{ $k }}" @selected(request('role') === $k)>{{ $l }}</option>@endforeach</select></div>
+        <div class="field"><label class="label" for="retiring">{{ __('Retirement') }}</label><select id="retiring" name="retiring" class="select"><option value="">{{ __('All') }}</option>@foreach ([6 => __('Retiring within 6 months'), 12 => __('Retiring within 1 year'), 24 => __('Retiring within 2 years')] as $k => $l)<option value="{{ $k }}" @selected(request()->integer('retiring') === $k)>{{ $l }}</option>@endforeach</select></div>
         <div class="field"><label class="label" for="status">{{ __('Board review') }}</label><select id="status" name="status" class="select"><option value="">{{ __('All') }}</option>@foreach (['pending' => __('Pending'), 'approved' => __('Approved'), 'rejected' => __('Not approved')] as $k => $l)<option value="{{ $k }}" @selected(request('status') === $k)>{{ $l }}</option>@endforeach</select></div>
         <button class="btn-secondary"><x-icon name="filter" />{{ __('Apply') }}</button>
     </form>
@@ -40,7 +42,7 @@
     @else
         <div class="table-wrap">
             <table class="table">
-                <thead><tr><th>{{ __('Name') }}</th><th>{{ __('Subject') }}</th><th>{{ __('Duties') }}</th><th class="num">{{ __('Experience') }}</th><th>{{ __('Board review') }}</th><th></th></tr></thead>
+                <thead><tr><th>{{ __('Name') }}</th><th>{{ __('Subject') }}</th><th>{{ __('Duties') }}</th><th class="num">{{ __('Experience') }}</th><th>{{ __('Retirement') }}</th><th>{{ __('Board review') }}</th><th></th></tr></thead>
                 <tbody>
                 @foreach ($teachers as $t)
                     <tr @class(['opacity-60' => ! $t->is_active])>
@@ -48,6 +50,7 @@
                         <td class="text-sm">{{ $t->subject?->label ?? '—' }}</td>
                         <td class="text-sm">{{ $t->rolesLabel() }}@unless ($t->available_for_duty)<span class="badge-muted ml-1">{{ __('Not available') }}</span>@endunless</td>
                         <td class="num">{{ $t->experience_years ?? '—' }}@if ($t->examiner_years)<p class="text-xs muted">{{ __(':n as examiner', ['n' => $t->examiner_years]) }}</p>@endif</td>
+                        <td class="text-sm">@include('partials.retirement', ['t' => $t])</td>
                         <td>
                             <span class="{{ ['approved' => 'badge-ok', 'rejected' => 'badge-bad'][$t->board_status] ?? 'badge-pending' }}">{{ ['approved' => __('Approved'), 'rejected' => __('Not approved')][$t->board_status] ?? __('Pending') }}</span>
                             @if ($t->board_note)<p class="mt-1 max-w-56 text-xs muted">{{ $t->board_note }}</p>@endif
